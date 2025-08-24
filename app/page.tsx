@@ -251,7 +251,7 @@ export default function Home() {
         router.push('/auth')
         return
       }
-      setUser(session?.user || null)
+      setUser(session.user)
       setAuthLoading(false)
     }
     checkUser()
@@ -280,7 +280,18 @@ export default function Home() {
   const data = scenarios[currentScenario]
 
   const handleDayClick = (dayIndex) => {
-    setSelectedDay(selectedDay === dayIndex ? null : dayIndex)
+    // Reset selectedDay if clicking the same day, or if index is invalid
+    if (selectedDay === dayIndex) {
+      setSelectedDay(null)
+    } else if (dayIndex < 10 && dayIndex < weeklyData.length) {
+      // Weekly data (0-6)
+      setSelectedDay(dayIndex)
+    } else if (dayIndex >= 10 && (dayIndex - 10) < weekAheadData.length) {
+      // Upcoming data (10+)
+      setSelectedDay(dayIndex)
+    } else {
+      setSelectedDay(null)
+    }
   }
 
   const getCircleColor = (type) => {
@@ -331,30 +342,30 @@ export default function Home() {
       </header>
 
       {/* View Toggle */}
-      <div className="px-6 pt-6">
+      <div className="px-4 md:px-6 pt-6">
         <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex space-x-2">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-4 md:space-y-0">
+            <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg">
               <button 
                 onClick={() => setViewMode('weekly')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'weekly' ? 'bg-white text-black' : 'bg-gray-800 text-gray-400'
+                className={`flex-1 px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all ${
+                  viewMode === 'weekly' ? 'bg-white text-black' : 'text-gray-400'
                 }`}
               >
                 Trends
               </button>
               <button 
                 onClick={() => setViewMode('today')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'today' ? 'bg-white text-black' : 'bg-gray-800 text-gray-400'
+                className={`flex-1 px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all ${
+                  viewMode === 'today' ? 'bg-white text-black' : 'text-gray-400'
                 }`}
               >
                 Today
               </button>
               <button 
                 onClick={() => setViewMode('weekahead')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'weekahead' ? 'bg-white text-black' : 'bg-gray-800 text-gray-400'
+                className={`flex-1 px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all ${
+                  viewMode === 'weekahead' ? 'bg-white text-black' : 'text-gray-400'
                 }`}
               >
                 Upcoming
@@ -362,30 +373,30 @@ export default function Home() {
             </div>
 
             {viewMode === 'today' && (
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2 justify-center md:justify-end">
                 <button 
                   onClick={() => setCurrentScenario('optimal')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
                     currentScenario === 'optimal' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400'
                   }`}
                 >
-                  Optimal Day
+                  Optimal
                 </button>
                 <button 
                   onClick={() => setCurrentScenario('moderate')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
                     currentScenario === 'moderate' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-gray-400'
                   }`}
                 >
-                  Moderate Day
+                  Moderate
                 </button>
                 <button 
                   onClick={() => setCurrentScenario('poor')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
                     currentScenario === 'poor' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'
                   }`}
                 >
-                  Recovery Day
+                  Recovery
                 </button>
               </div>
             )}
@@ -394,64 +405,64 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main className="px-6 pb-8">
+      <main className="px-4 md:px-6 pb-8">
         <div className="max-w-4xl mx-auto">
 
           {viewMode === 'today' ? (
             <div>
               {/* Today View */}
-              <section className="mb-12">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <section className="mb-8 md:mb-12">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8">
                   
                   <div className="text-center">
-                    <div className="relative w-32 h-32 mx-auto mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-3 md:mb-4">
+                      <svg className="w-24 h-24 md:w-32 md:h-32 transform -rotate-90" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
                         <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor('readiness')} strokeWidth="6"
                                 strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(data.readiness)} strokeLinecap="round"/>
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{data.readiness}%</div>
+                          <div className="text-xl md:text-2xl font-bold text-white">{data.readiness}%</div>
                           <div className="text-xs text-gray-500">{data.status}</div>
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-400 uppercase tracking-wide">Professional Readiness</div>
+                    <div className="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Professional Readiness</div>
                   </div>
 
                   <div className="text-center">
-                    <div className="relative w-32 h-32 mx-auto mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-3 md:mb-4">
+                      <svg className="w-24 h-24 md:w-32 md:h-32 transform -rotate-90" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
                         <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor('recovery')} strokeWidth="6"
                                 strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(data.recovery)} strokeLinecap="round"/>
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{data.recovery}%</div>
+                          <div className="text-xl md:text-2xl font-bold text-white">{data.recovery}%</div>
                           <div className="text-xs text-gray-500">REC</div>
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-400 uppercase tracking-wide">Recovery</div>
+                    <div className="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Recovery</div>
                   </div>
 
                   <div className="text-center">
-                    <div className="relative w-32 h-32 mx-auto mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                    <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-3 md:mb-4">
+                      <svg className="w-24 h-24 md:w-32 md:h-32 transform -rotate-90" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
                         <circle cx="60" cy="60" r="54" fill="none" stroke="#007aff" strokeWidth="6"
                                 strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(Math.min(data.strain * 5, 100))} strokeLinecap="round"/>
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{data.strain}</div>
+                          <div className="text-xl md:text-2xl font-bold text-white">{data.strain}</div>
                           <div className="text-xs text-gray-500">STR</div>
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-400 uppercase tracking-wide">Daily Strain</div>
+                    <div className="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Daily Strain</div>
                   </div>
 
                 </div>
@@ -466,7 +477,7 @@ export default function Home() {
                       data.color === 'yellow' ? 'bg-orange-400' : 'bg-red-400'
                     }`}></div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Today&apos;s Focus</h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">Today's Focus</h3>
                       <p className="text-gray-300 leading-relaxed">{data.insight}</p>
                     </div>
                   </div>
@@ -474,8 +485,8 @@ export default function Home() {
               </section>
 
               {/* Schedule Optimization */}
-              <section className="mb-12">
-                <h2 className="text-lg font-semibold text-white mb-6 uppercase tracking-wide">Schedule Optimization</h2>
+              <section className="mb-8 md:mb-12">
+                <h2 className="text-base md:text-lg font-semibold text-white mb-4 md:mb-6 uppercase tracking-wide">Schedule Optimization</h2>
                 
                 <div className="space-y-3">
                   <div className={`rounded-lg p-4 flex justify-between items-center transition-all duration-300 ${
@@ -692,7 +703,7 @@ export default function Home() {
                 </div>
 
                 {/* Day Detail */}
-                {selectedDay !== null && (
+                {selectedDay !== null && selectedDay < weeklyData.length && (
                   <div className="bg-white rounded-lg p-8 mb-8 border-2 border-gray-300 text-black">
                     <div className="flex justify-between items-start mb-6">
                       <h3 className="text-2xl font-bold text-black">
@@ -846,7 +857,7 @@ export default function Home() {
                 </div>
 
                 {/* Day Detail for Upcoming */}
-                {selectedDay !== null && selectedDay >= 10 && selectedDay - 10 < weekAheadData.length && (
+                {selectedDay !== null && selectedDay >= 10 && selectedDay - 10 < weekAheadData.length && weekAheadData[selectedDay - 10] && (
                   <div className="bg-white rounded-lg p-8 mb-8 border-2 border-gray-300 text-black">
                     <div className="flex justify-between items-start mb-6">
                       <h3 className="text-2xl font-bold text-black">
