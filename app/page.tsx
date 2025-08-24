@@ -808,14 +808,14 @@ export default function Home() {
               <section className="mb-12">
                 <h2 className="text-2xl font-light text-white mb-8 text-center">Upcoming Week</h2>
                 
-                <div className="bg-gray-900 rounded-lg p-8 mb-8">
-                  <h3 className="text-lg font-semibold text-white mb-12 uppercase tracking-wide">Predicted Readiness Trend</h3>
+                <div className="bg-gray-900 rounded-lg p-4 md:p-8 mb-8">
+                  <h3 className="text-base md:text-lg font-semibold text-white mb-8 md:mb-12 uppercase tracking-wide">Predicted Readiness Trend</h3>
                   <div className="relative">
-                    <div className="flex items-end justify-between h-48 mb-4">
+                    <div className="flex items-end justify-between h-40 md:h-48 mb-4">
                       {weekAheadData.map((day, index) => (
                         <div key={index} className="flex flex-col items-center space-y-2 flex-1">
                           <div 
-                            className="relative flex flex-col items-center justify-end h-40 cursor-pointer group"
+                            className="relative flex flex-col items-center justify-end h-32 md:h-40 cursor-pointer group"
                             onClick={() => handleDayClick(index + 10)}
                           >
                             {/* Confidence interval (lighter bar) */}
@@ -824,7 +824,7 @@ export default function Home() {
                                 day.predictedReadiness >= 85 ? 'bg-green-500' :
                                 day.predictedReadiness >= 70 ? 'bg-yellow-500' : 'bg-red-500'
                               }`}
-                              style={{ height: `${(day.confidence / 100) * 160}px` }}
+                              style={{ height: `${(day.confidence / 100) * 128}px` }}
                             ></div>
                             {/* Predicted readiness (solid bar) */}
                             <div 
@@ -834,9 +834,9 @@ export default function Home() {
                                 day.predictedReadiness >= 85 ? 'bg-green-500' :
                                 day.predictedReadiness >= 70 ? 'bg-yellow-500' : 'bg-red-500'
                               }`}
-                              style={{ height: `${(day.predictedReadiness / 100) * 160}px` }}
+                              style={{ height: `${(day.predictedReadiness / 100) * 128}px` }}
                             ></div>
-                            <div className="absolute -top-10 text-white text-xs font-bold group-hover:scale-110 transition-transform text-center w-full">
+                            <div className="absolute -top-8 md:-top-10 text-white text-xs font-bold group-hover:scale-110 transition-transform text-center w-full">
                               {day.predictedReadiness}%
                             </div>
                           </div>
