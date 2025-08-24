@@ -251,7 +251,7 @@ export default function Home() {
         router.push('/auth')
         return
       }
-      setUser(session.user)
+      setUser(session?.user || null)
       setAuthLoading(false)
     }
     checkUser()
