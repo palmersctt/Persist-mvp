@@ -466,7 +466,7 @@ export default function Home() {
                       data.color === 'yellow' ? 'bg-orange-400' : 'bg-red-400'
                     }`}></div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Today's Focus</h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">Today&apos;s Focus</h3>
                       <p className="text-gray-300 leading-relaxed">{data.insight}</p>
                     </div>
                   </div>
