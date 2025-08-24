@@ -477,7 +477,7 @@ export default function Home() {
                       data.color === 'yellow' ? 'bg-orange-400' : 'bg-red-400'
                     }`}></div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Today's Focus</h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">Today&apos;s Focus</h3>
                       <p className="text-gray-300 leading-relaxed">{data.insight}</p>
                     </div>
                   </div>
@@ -681,28 +681,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Weekly Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gray-950 rounded-lg p-6 text-center border border-green-900">
-                    <div className="text-3xl font-bold text-green-400 mb-2">4</div>
-                    <div className="text-gray-500 text-sm uppercase tracking-wide">Optimal Days</div>
-                    <div className="text-green-500 text-xs mt-1">Tue, Fri, Sat, Today</div>
-                  </div>
-                  
-                  <div className="bg-gray-950 rounded-lg p-6 text-center border border-red-900">
-                    <div className="text-3xl font-bold text-red-400 mb-2">1</div>
-                    <div className="text-gray-500 text-sm uppercase tracking-wide">Recovery Day</div>
-                    <div className="text-red-500 text-xs mt-1">Wednesday crash</div>
-                  </div>
-
-                  <div className="bg-gray-950 rounded-lg p-6 text-center border border-blue-900">
-                    <div className="text-3xl font-bold text-blue-400 mb-2">83%</div>
-                    <div className="text-gray-500 text-sm uppercase tracking-wide">Weekly Average</div>
-                    <div className="text-blue-500 text-xs mt-1">Strong week overall</div>
-                  </div>
-                </div>
-
-                {/* Day Detail */}
+                {/* Day Detail - MOVED HERE (above Weekly Summary Cards) */}
                 {selectedDay !== null && selectedDay < weeklyData.length && (
                   <div className="bg-white rounded-lg p-8 mb-8 border-2 border-gray-300 text-black">
                     <div className="flex justify-between items-start mb-6">
@@ -800,6 +779,27 @@ export default function Home() {
                     </div>
                   </div>
                 )}
+
+                {/* Weekly Summary Cards - NOW APPEAR AFTER DAY DETAILS */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-gray-950 rounded-lg p-6 text-center border border-green-900">
+                    <div className="text-3xl font-bold text-green-400 mb-2">4</div>
+                    <div className="text-gray-500 text-sm uppercase tracking-wide">Optimal Days</div>
+                    <div className="text-green-500 text-xs mt-1">Tue, Fri, Sat, Today</div>
+                  </div>
+                  
+                  <div className="bg-gray-950 rounded-lg p-6 text-center border border-red-900">
+                    <div className="text-3xl font-bold text-red-400 mb-2">1</div>
+                    <div className="text-gray-500 text-sm uppercase tracking-wide">Recovery Day</div>
+                    <div className="text-red-500 text-xs mt-1">Wednesday crash</div>
+                  </div>
+
+                  <div className="bg-gray-950 rounded-lg p-6 text-center border border-blue-900">
+                    <div className="text-3xl font-bold text-blue-400 mb-2">83%</div>
+                    <div className="text-gray-500 text-sm uppercase tracking-wide">Weekly Average</div>
+                    <div className="text-blue-500 text-xs mt-1">Strong week overall</div>
+                  </div>
+                </div>
               </section>
             </div>
           ) : (
