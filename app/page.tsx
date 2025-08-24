@@ -246,14 +246,13 @@ export default function Home() {
   // Authentication check (FIRST useEffect)
   useEffect(() => {
     const checkUser = async () => {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    router.push('/auth')
-    return
-  }
-  setUser(session?.user || null)
-  setAuthLoading(false)
-}
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/auth')
+        return
+      }
+      setUser(session?.user || null)
+      setAuthLoading(false)
     }
     checkUser()
   }, [router])
