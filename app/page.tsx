@@ -635,7 +635,8 @@ class BiometricEngine {
 }
 
 export default function PersistDashboard() {
-  const [viewMode, setViewMode] = useState('dashboard');
+  const [mainView, setMainView] = useState('dashboard');
+  const [demoTab, setDemoTab] = useState('biometrics'); 
   const [calendarView, setCalendarView] = useState('today');
   const [selectedBiometric, setSelectedBiometric] = useState(null);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -755,7 +756,8 @@ export default function PersistDashboard() {
   if (!currentBiometrics) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
 
   const handleLogoClick = () => {
-    setViewMode('dashboard');
+    setMainView('dashboard');
+    setDemoTab('biometrics');
     setCalendarView('today');
     setSelectedBiometric(null);
     setSelectedMeeting(null);
@@ -978,29 +980,189 @@ export default function PersistDashboard() {
           <div className="flex justify-center mb-8">
             <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg">
               <button 
-                onClick={() => setViewMode('dashboard')}
+                onClick={() => setMainView('dashboard')}
                 className={`flex-1 px-6 py-3 rounded-md text-base font-medium transition-all touch-manipulation min-h-[44px] ${
-                  viewMode === 'dashboard' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                  mainView === 'dashboard' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 Dashboard
               </button>
               <button 
-                onClick={() => setViewMode('calendar')}
+                onClick={() => setMainView('demo')}
                 className={`flex-1 px-6 py-3 rounded-md text-base font-medium transition-all touch-manipulation min-h-[44px] ${
-                  viewMode === 'calendar' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                  mainView === 'demo' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
-                Calendar
+                Demo
               </button>
             </div>
           </div>
+          
+          {/* Demo Sub-navigation */}
+          {mainView === 'demo' && (
+            <div className="flex justify-center mb-8">
+              <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
+                <button 
+                  onClick={() => setDemoTab('biometrics')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[40px] ${
+                    demoTab === 'biometrics' ? 'bg-gray-600 text-white' : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  Biometrics
+                </button>
+                <button 
+                  onClick={() => setDemoTab('calendar')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[40px] ${
+                    demoTab === 'calendar' ? 'bg-gray-600 text-white' : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  Calendar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 pb-8">
 
-        {viewMode === 'dashboard' ? (
+        {mainView === 'dashboard' ? (
+          /* New Learning-Focused Dashboard */
+          <div className="space-y-12">
+            
+            {/* Single Readiness Score */}
+            <section>
+              <div className="text-center">
+                <div className="relative w-40 h-40 mx-auto mb-6">
+                  <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="4"/>
+                    <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor('readiness')} strokeWidth="4"
+                            strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(currentBiometrics.readiness)} strokeLinecap="round"/>
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-white">{currentBiometrics.readiness}%</div>
+                      <div className="text-sm text-gray-400">READY</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-lg text-gray-400 mb-2">Professional Readiness</div>
+                <div className="text-sm text-gray-500">Based on recovery, sleep, and stress resilience</div>
+              </div>
+            </section>
+
+            {/* Today's Focus Areas */}
+            <section>
+              <h2 className="text-xl font-semibold text-white mb-6">Today's Work Impact Focus</h2>
+              
+              <div className="space-y-4">
+                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-green-400"></div>
+                    <div className="flex-1">
+                      <p className="text-gray-300 leading-relaxed">
+                        <span className="text-white font-medium">High-impact window:</span> Next 4 hours optimal for strategic decisions and critical negotiations based on your biometric peak patterns.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-blue-400"></div>
+                    <div className="flex-1">
+                      <p className="text-gray-300 leading-relaxed">
+                        <span className="text-white font-medium">Meeting density alert:</span> 7 meetings scheduled today. Historical data shows 5+ meetings correlate with 15% recovery drop tomorrow.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Simple Today's Meetings */}
+            <section>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-white">Today's Meetings</h2>
+                <div className="text-sm text-gray-400">
+                  <span className="text-orange-400 font-medium">High</span> workload (7 meetings)
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                {engine.getTodaysMeetings().map((meeting) => (
+                  <div key={meeting.id} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="text-gray-400 text-sm font-mono w-20">
+                          {meeting.time.split(' - ')[0]}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-white font-medium">{meeting.title}</h3>
+                          <div className="text-sm text-gray-400">
+                            {meeting.type === 'client_meeting' ? 'Client meeting' : meeting.type.replace('_', ' ')}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          meeting.prediction.outcome === 'excellent' ? 'bg-green-400' :
+                          meeting.prediction.outcome === 'good' ? 'bg-blue-400' :
+                          meeting.prediction.outcome === 'adequate' ? 'bg-gray-400' : 'bg-red-400'
+                        }`} title={`Predicted: ${meeting.prediction.outcome}`}></div>
+                        <span className="text-xs text-gray-500">{meeting.prediction.confidence}%</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Correlation Tracking Preview */}
+            <section>
+              <h2 className="text-xl font-semibold text-white mb-6">Learning Correlations</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
+                  <h3 className="text-white font-medium mb-3">Meeting Density → Recovery Impact</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">≤4 meetings/day:</span>
+                      <span className="text-green-400">+3% recovery avg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">5-6 meetings/day:</span>
+                      <span className="text-yellow-400">-5% recovery avg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">7+ meetings/day:</span>
+                      <span className="text-red-400">-15% recovery avg</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
+                  <h3 className="text-white font-medium mb-3">Meeting Type → Performance</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Strategic meetings:</span>
+                      <span className="text-green-400">85% avg performance</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Client meetings:</span>
+                      <span className="text-yellow-400">72% avg performance</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Back-to-back blocks:</span>
+                      <span className="text-red-400">-20% effectiveness</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+          </div>
+        ) : mainView === 'demo' && demoTab === 'biometrics' ? (
           selectedBiometric ? (
             /* Biometric Detail View */
             <div className="space-y-6">
@@ -1199,7 +1361,7 @@ export default function PersistDashboard() {
 
             </div>
           )
-        ) : (
+        ) : mainView === 'demo' && demoTab === 'calendar' ? (
           /* Calendar View */
           <div className="space-y-8">
             
@@ -1250,7 +1412,7 @@ export default function PersistDashboard() {
                   onClick={() => setSelectedMeeting(null)}
                   className="text-gray-400 hover:text-white transition-colors mb-4"
                 >
-                  ← Back to {selectedDate ? `${engine.getDayName(selectedDate)}` : calendarView === 'today' ? 'Today' : calendarView === 'week' ? 'Week' : 'Calendar'}
+                  ← Back to {selectedDate ? `${engine.getDayName(selectedDate)}` : calendarView === 'today' ? 'Today' : calendarView === 'week' ? 'Work Week' : 'Calendar'}
                 </button>
                 
                 <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
@@ -1701,7 +1863,7 @@ export default function PersistDashboard() {
             )}
 
           </div>
-        )}
+        ) : null}
 
       </div>
 
