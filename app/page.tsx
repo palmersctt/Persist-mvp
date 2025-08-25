@@ -200,6 +200,50 @@ class BiometricEngine {
     };
   }
 
+  // Intelligent meeting type classification
+  classifyMeetingType(title, duration = null, participantCount = null) {
+    const titleLower = title.toLowerCase();
+    
+    // Check for specific keywords
+    if (titleLower.includes('standup') || titleLower.includes('stand-up') || titleLower.includes('daily')) {
+      return 'team_meeting';
+    }
+    
+    if (titleLower.includes('1:1') || titleLower.includes('1-1') || titleLower.includes('one-on-one') || 
+        titleLower.includes('check-in') || titleLower.includes('checkin')) {
+      return 'one_on_one';
+    }
+    
+    if (titleLower.includes('planning') || titleLower.includes('budget') || titleLower.includes('strategy') ||
+        titleLower.includes('roadmap') || titleLower.includes('quarterly') || titleLower.includes('board')) {
+      return 'strategic';
+    }
+    
+    if (titleLower.includes('presentation') || titleLower.includes('demo') || titleLower.includes('showcase') ||
+        titleLower.includes('review') || titleLower.includes('pitch')) {
+      return 'presentation';
+    }
+    
+    if (titleLower.includes('client') || titleLower.includes('customer') || titleLower.includes('vendor') ||
+        titleLower.includes('sales') || titleLower.includes('partner') || titleLower.includes('contract')) {
+      return 'client_meeting';
+    }
+    
+    if (titleLower.includes('team') || titleLower.includes('sync') || titleLower.includes('meeting') ||
+        titleLower.includes('retrospective') || titleLower.includes('retro')) {
+      return 'team_meeting';
+    }
+    
+    // Use participant count if available
+    if (participantCount !== null) {
+      if (participantCount === 2) return 'one_on_one';
+      if (participantCount >= 5) return 'team_meeting';
+    }
+    
+    // Default to general if uncertain
+    return 'general';
+  }
+
   getCurrentBiometrics() {
     return this.currentData;
   }
@@ -371,9 +415,9 @@ class BiometricEngine {
       },
       {
         id: 'today-7',
-        title: "Vendor Negotiation",
+        title: "Vendor Discussion",
         time: "5:00 PM - 6:00 PM",
-        type: "negotiation",
+        type: "client_meeting",
         prediction: { outcome: 'adequate', confidence: 65 },
         historical: { totalMeetings: 3, averagePerformance: 72 }
       }
@@ -545,10 +589,18 @@ class BiometricEngine {
   getWeekMeetings() {
     const dateInfo = this.getCurrentDateInfo();
     const today = dateInfo.today;
+    const todayDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc
     
-    // Generate 4-day week starting from yesterday
+    // Calculate offset to start from Monday of current week
+    // If today is Sunday (0), we want to go back 6 days to get Monday
+    // If today is Monday (1), offset is 0
+    // If today is Tuesday (2), offset is -1, etc.
+    const mondayOffset = todayDayOfWeek === 0 ? -6 : 1 - todayDayOfWeek;
+    
+    // Generate 5-day work week (Monday to Friday)
     const weekDays = [];
-    for (let offset = -1; offset <= 2; offset++) {
+    for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
+      const offset = mondayOffset + dayIndex;
       const targetDate = new Date(today);
       targetDate.setDate(targetDate.getDate() + offset);
       
@@ -559,17 +611,20 @@ class BiometricEngine {
       const monthName = monthNames[targetDate.getMonth()];
       const dayNumber = targetDate.getDate();
       
-      // Format: "Mon 1/13" or "Mon 1/13 (Today)" for current day
+      // Check if this is today
+      const isToday = targetDate.toDateString() === today.toDateString();
+      
+      // Format: "Mon 8/25" or "Mon 8/25 (Today)" for current day
       let displayName = `${dayName.substring(0, 3)} ${targetDate.getMonth() + 1}/${dayNumber}`;
       
-      if (offset === 0) {
+      if (isToday) {
         displayName += ' (Today)';
       }
       
       weekDays.push({
         day: displayName,
         meetings: this.getMeetingsForDate(offset),
-        isToday: offset === 0,
+        isToday: isToday,
         date: targetDate,
         dateOffset: offset
       });
@@ -594,6 +649,10 @@ export default function PersistDashboard() {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [ratedMeetings, setRatedMeetings] = useState(new Set()); // Track which meetings have been rated
+  const [correctedMeetingType, setCorrectedMeetingType] = useState(null); // Track user-corrected meeting type
+  const [editingMeetingType, setEditingMeetingType] = useState(null); // Track which meeting's type is being edited
+  const [meetingTypes, setMeetingTypes] = useState({}); // Store corrected meeting types
+  const [typeUpdateConfirm, setTypeUpdateConfirm] = useState(null); // Show confirmation for type updates
 
   useEffect(() => {
     setCurrentBiometrics(engine.getCurrentBiometrics());
@@ -674,12 +733,13 @@ export default function PersistDashboard() {
   const getMeetingTypeColor = (type) => {
     const colors = {
       presentation: 'bg-purple-100 text-purple-800',
-      negotiation: 'bg-red-100 text-red-800',
+      client_meeting: 'bg-amber-100 text-amber-800',
       strategic: 'bg-blue-100 text-blue-800',
       team_meeting: 'bg-gray-100 text-gray-800',
-      one_on_one: 'bg-green-100 text-green-800'
+      one_on_one: 'bg-green-100 text-green-800',
+      general: 'bg-slate-100 text-slate-800'
     };
-    return colors[type] || colors.team_meeting;
+    return colors[type] || colors.general;
   };
 
   const getPerformanceColor = (outcome) => {
@@ -707,6 +767,7 @@ export default function PersistDashboard() {
     setFeedbackModal(meeting);
     setFeedbackRating(0);
     setFeedbackSubmitted(false);
+    setCorrectedMeetingType(meeting.type); // Initialize with current type
   };
 
   const handleSubmitFeedback = () => {
@@ -715,7 +776,9 @@ export default function PersistDashboard() {
       const feedbackData = {
         meetingId: feedbackModal.id,
         meetingTitle: feedbackModal.title,
-        meetingType: feedbackModal.type,
+        originalMeetingType: feedbackModal.type,
+        correctedMeetingType: correctedMeetingType,
+        typeWasCorrected: correctedMeetingType !== feedbackModal.type,
         scheduledTime: feedbackModal.time,
         predictedOutcome: feedbackModal.prediction.outcome,
         actualRating: feedbackRating,
@@ -723,6 +786,11 @@ export default function PersistDashboard() {
       };
       
       console.log('Feedback submitted:', feedbackData);
+      
+      // If type was corrected, log for learning
+      if (feedbackData.typeWasCorrected) {
+        console.log(`Meeting type corrected: ${feedbackModal.title} was ${feedbackModal.type}, should be ${correctedMeetingType}`);
+      }
       
       // Store rating data
       storeMeetingRating(feedbackModal.id, feedbackRating);
@@ -812,6 +880,77 @@ export default function PersistDashboard() {
     }
   };
 
+  // Handle meeting type badge click
+  const handleMeetingTypeBadgeClick = (meeting, e) => {
+    e.stopPropagation();
+    setEditingMeetingType(meeting.id);
+  };
+
+  // Handle meeting type change
+  const handleMeetingTypeChange = (meetingId, newType, originalType) => {
+    setMeetingTypes(prev => ({
+      ...prev,
+      [meetingId]: newType
+    }));
+    setEditingMeetingType(null);
+    
+    // Show confirmation
+    setTypeUpdateConfirm(meetingId);
+    setTimeout(() => setTypeUpdateConfirm(null), 2000);
+    
+    // Log for learning
+    console.log(`Meeting type updated: ${meetingId} changed from ${originalType} to ${newType}`);
+  };
+
+  // Get display type for a meeting (corrected or original)
+  const getMeetingDisplayType = (meeting) => {
+    return meetingTypes[meeting.id] || meeting.type;
+  };
+
+  // Meeting Type Badge Component
+  const MeetingTypeBadge = ({ meeting, className = "" }) => {
+    const currentType = getMeetingDisplayType(meeting);
+    const isEditing = editingMeetingType === meeting.id;
+    const showConfirm = typeUpdateConfirm === meeting.id;
+    
+    return (
+      <div className="relative inline-block">
+        {isEditing ? (
+          <select
+            autoFocus
+            value={currentType}
+            onChange={(e) => handleMeetingTypeChange(meeting.id, e.target.value, meeting.type)}
+            onBlur={() => setEditingMeetingType(null)}
+            className="px-3 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-white focus:outline-none focus:border-blue-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <option value="team_meeting">Team Meeting</option>
+            <option value="one_on_one">One-on-One</option>
+            <option value="strategic">Strategic</option>
+            <option value="presentation">Presentation</option>
+            <option value="client_meeting">Client Meeting</option>
+            <option value="general">General</option>
+          </select>
+        ) : (
+          <>
+            <span
+              className={`${className} ${getMeetingTypeColor(currentType)} cursor-pointer hover:opacity-80 transition-opacity select-none`}
+              onClick={(e) => handleMeetingTypeBadgeClick(meeting, e)}
+              title="Click to change meeting type"
+            >
+              {currentType === 'client_meeting' ? 'client meeting' : currentType.replace('_', ' ')}
+            </span>
+            {showConfirm && (
+              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-800 text-green-200 text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                ✓ Type updated
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
@@ -825,7 +964,7 @@ export default function PersistDashboard() {
           </h1>
           <div className="text-right">
             <div>
-              <div className="text-xs text-gray-500 uppercase tracking-wide">Biometric</div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide">Biometric Driven</div>
               <div className="text-white font-medium">Professional Intelligence</div>
             </div>
           </div>
@@ -1120,9 +1259,7 @@ export default function PersistDashboard() {
                       <h2 className="text-2xl font-bold text-white mb-2">{selectedMeeting.title}</h2>
                       <div className="flex items-center space-x-4 text-gray-400">
                         <span>{selectedMeeting.time}</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getMeetingTypeColor(selectedMeeting.type)}`}>
-                          {selectedMeeting.type.replace('_', ' ')}
-                        </span>
+                        <MeetingTypeBadge meeting={selectedMeeting} className="px-3 py-1 rounded-full text-xs font-medium" />
                       </div>
                     </div>
                     {/* Performance Comparison Section */}
@@ -1300,9 +1437,9 @@ export default function PersistDashboard() {
                             </div>
                             <div className="flex-1">
                               <h3 className="text-white font-medium text-base leading-tight">{meeting.title}</h3>
-                              <span className={`inline-block mt-1 px-2 py-1 rounded text-xs font-medium ${getMeetingTypeColor(meeting.type)}`}>
-                                {meeting.type.replace('_', ' ')}
-                              </span>
+                              <div className="mt-1">
+                                <MeetingTypeBadge meeting={meeting} className="inline-block px-2 py-1 rounded text-xs font-medium" />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1349,9 +1486,7 @@ export default function PersistDashboard() {
                               </div>
                               <div className="flex-1">
                                 <h3 className="text-white font-medium">{meeting.title}</h3>
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${getMeetingTypeColor(meeting.type)}`}>
-                                  {meeting.type.replace('_', ' ')}
-                                </span>
+                                <MeetingTypeBadge meeting={meeting} className="px-2 py-1 rounded text-xs font-medium" />
                               </div>
                             </div>
                           </div>
@@ -1381,7 +1516,7 @@ export default function PersistDashboard() {
 
                 {calendarView === 'week' && (
                   <section>
-                    <h2 className="text-2xl font-light text-white mb-6">This Week</h2>
+                    <h2 className="text-2xl font-light text-white mb-6">Work Week</h2>
                     <div className="grid grid-cols-1 gap-6">
                       {engine.getWeekMeetings().map(({ day, meetings, isToday }) => (
                         <div key={day} className={`rounded-lg p-4 border ${
@@ -1417,13 +1552,13 @@ export default function PersistDashboard() {
 
                 {calendarView === 'month' && (
                   <section>
-                    <h2 className="text-2xl font-light text-white mb-6">December 2024</h2>
+                    <h2 className="text-2xl font-light text-white mb-6">August 2025</h2>
                     <p className="text-gray-400 text-sm mb-4">Click on any day with meetings to see detailed schedule</p>
                     
                     <div className="bg-gray-900 rounded-lg border border-gray-700">
                       {/* Calendar Header */}
                       <div className="grid grid-cols-7 border-b border-gray-700">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                           <div key={day} className="p-3 text-center text-gray-400 text-sm font-medium border-r border-gray-700 last:border-r-0">
                             {day}
                           </div>
@@ -1440,7 +1575,9 @@ export default function PersistDashboard() {
                           
                           // Calculate first day of month and its day of week
                           const firstDay = new Date(currentYear, currentMonth, 1);
-                          const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday
+                          let firstDayOfWeek = firstDay.getDay(); // 0 = Sunday
+                          // Convert to Monday-first (0 = Monday, 6 = Sunday)
+                          firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
                           
                           // Calculate the date for this cell
                           const cellDate = new Date(firstDay);
@@ -1456,6 +1593,10 @@ export default function PersistDashboard() {
                           const hasMeetings = meetingsForDay.length > 0;
                           const meetingCount = meetingsForDay.length;
                           
+                          // August 2025 dates with meetings (Monday = 25, Tuesday = 26, Wednesday = 27, Thursday = 28, Friday = 29)
+                          const augMeetingDays = [25, 26, 27, 28, 29];
+                          const hasAugustMeetings = isCurrentMonth && augMeetingDays.includes(dayNum);
+                          
                           return (
                             <div 
                               key={i} 
@@ -1463,12 +1604,12 @@ export default function PersistDashboard() {
                                 min-h-16 sm:min-h-20 md:min-h-24 p-2 sm:p-3 border-r border-b border-gray-700 last:border-r-0 transition-all touch-manipulation
                                 ${isCurrentMonth ? 'bg-gray-900' : 'bg-gray-950'}
                                 ${isToday ? 'bg-white text-black' : 'text-gray-300'}
-                                ${hasMeetings ? 'cursor-pointer hover:bg-gray-800 hover:scale-[1.02]' : ''}
+                                ${hasAugustMeetings ? 'cursor-pointer hover:bg-gray-800 hover:scale-[1.02]' : ''}
                                 ${!isCurrentMonth ? 'opacity-30' : ''}
                               `}
-                              onClick={hasMeetings && isCurrentMonth ? () => {
+                              onClick={hasAugustMeetings && isCurrentMonth ? () => {
                                 setSelectedDate(dateOffset);
-                                console.log(`Navigating to ${engine.getDayName(dateOffset)} with ${meetingCount} meetings`);
+                                console.log(`Navigating to ${engine.getDayName(dateOffset)} with meetings`);
                               } : undefined}
                             >
                               {isCurrentMonth && (
@@ -1476,45 +1617,48 @@ export default function PersistDashboard() {
                                   <div className={`text-sm sm:text-base font-medium ${isToday ? 'text-black' : 'text-white'}`}>
                                     {dayNum}
                                   </div>
-                                  {hasMeetings && (
+                                  {hasAugustMeetings && (
                                     <div className="flex-1 space-y-1">
                                       <div className={`text-xs sm:text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        {meetingCount} meeting{meetingCount !== 1 ? 's' : ''}
+                                        {dayNum === 25 ? '7 meetings' :
+                                         dayNum === 26 ? '3 meetings' :
+                                         dayNum === 27 ? '2 meetings' :
+                                         dayNum === 28 ? '3 meetings' :
+                                         dayNum === 29 ? '2 meetings' : ''}
                                       </div>
                                       <div className="flex space-x-1 flex-wrap">
                                         {/* Performance indicator dots based on meeting predictions */}
-                                        {dayNum === 22 && ( // Today - mix of excellent/good/adequate
+                                        {dayNum === 25 && ( // Monday - Today - mix of excellent/good/adequate
                                           <>
                                             <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-green-600' : 'bg-green-400'}`} title="Excellent meetings"></div>
                                             <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-blue-600' : 'bg-blue-400'}`} title="Good meetings"></div>
                                             <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-gray-500' : 'bg-gray-400'}`} title="Adequate meetings"></div>
-                                            {meetingCount > 3 && (
-                                              <div className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'} ml-1`}>
-                                                +{meetingCount - 3}
-                                              </div>
-                                            )}
+                                            <div className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'} ml-1`}>
+                                              +4
+                                            </div>
                                           </>
                                         )}
-                                        {dayNum === 23 && ( // Tuesday - mostly excellent
+                                        {dayNum === 26 && ( // Tuesday - mostly excellent
                                           <>
                                             <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
                                             <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
                                             <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
                                           </>
                                         )}
-                                        {dayNum === 24 && ( // Wednesday - mixed with optimization opportunity
+                                        {dayNum === 27 && ( // Wednesday - mixed with optimization opportunity
                                           <>
                                             <div className="w-2 h-2 rounded-full bg-gray-400" title="Needs optimization"></div>
                                             <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
                                           </>
                                         )}
-                                        {dayNum === 25 && ( // Thursday - good performance
+                                        {dayNum === 28 && ( // Thursday - good performance
                                           <>
                                             <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
                                             <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
+                                            <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
                                           </>
                                         )}
-                                        {dayNum === 26 && ( // Friday - excellent performance
+                                        {dayNum === 29 && ( // Friday - excellent performance
                                           <>
                                             <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
                                             <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
@@ -1596,6 +1740,26 @@ export default function PersistDashboard() {
 
                 <div className="mb-6">
                   <p className="text-gray-300 text-sm mb-3">How did this meeting actually go?</p>
+                  
+                  {/* Meeting Type Correction */}
+                  <div className="mb-4">
+                    <label className="text-gray-400 text-xs block mb-2">Meeting Type (click to correct if wrong)</label>
+                    <select
+                      value={correctedMeetingType}
+                      onChange={(e) => setCorrectedMeetingType(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="team_meeting">Team Meeting</option>
+                      <option value="one_on_one">One-on-One</option>
+                      <option value="strategic">Strategic</option>
+                      <option value="presentation">Presentation</option>
+                      <option value="client_meeting">Client Meeting</option>
+                      <option value="general">General</option>
+                    </select>
+                    {correctedMeetingType !== feedbackModal.type && (
+                      <p className="text-blue-400 text-xs mt-1">✓ Type updated - we'll learn from this</p>
+                    )}
+                  </div>
                   
                   {/* Star Rating */}
                   <div className="flex items-center justify-center space-x-1 mb-3">
