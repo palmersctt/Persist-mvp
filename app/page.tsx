@@ -2,6 +2,191 @@
 
 import { useState, useEffect } from 'react'
 
+// Meeting Monitor for tracking meeting completion and triggering feedback
+class MeetingMonitor {
+  constructor() {
+    this.activeMeetings = new Map(); // Track active meetings
+    this.completedMeetings = new Set(); // Track completed meetings
+    this.feedbackQueue = []; // Queue for feedback collection
+    this.checkInterval = null;
+    this.onMeetingEnd = null; // Callback for when meeting ends
+  }
+
+  // Parse time string to Date object for today
+  parseTimeToDate(timeStr) {
+    const [time, period] = timeStr.split(' ');
+    const [hours, minutes] = time.split(':').map(n => parseInt(n));
+    let hour = hours;
+    
+    if (period === 'PM' && hours !== 12) hour += 12;
+    if (period === 'AM' && hours === 12) hour = 0;
+    
+    const date = new Date();
+    date.setHours(hour, minutes, 0, 0);
+    return date;
+  }
+
+  // Extract start and end times from meeting time string
+  parseMeetingTime(timeString) {
+    const [startStr, endStr] = timeString.split(' - ');
+    return {
+      start: this.parseTimeToDate(startStr),
+      end: this.parseTimeToDate(endStr)
+    };
+  }
+
+  // Check if a meeting should have ended
+  isMeetingEnded(meeting, currentTime = new Date()) {
+    const { end } = this.parseMeetingTime(meeting.time);
+    return currentTime >= end;
+  }
+
+  // Check if a meeting is currently active
+  isMeetingActive(meeting, currentTime = new Date()) {
+    const { start, end } = this.parseMeetingTime(meeting.time);
+    return currentTime >= start && currentTime < end;
+  }
+
+  // Get meeting status
+  getMeetingStatus(meeting, currentTime = new Date()) {
+    const { start, end } = this.parseMeetingTime(meeting.time);
+    
+    if (currentTime < start) return 'upcoming';
+    if (currentTime >= start && currentTime < end) return 'active';
+    if (currentTime >= end) return 'completed';
+    
+    return 'unknown';
+  }
+
+  // Start monitoring meetings
+  startMonitoring(meetings, onMeetingEndCallback) {
+    this.onMeetingEnd = onMeetingEndCallback;
+    
+    // Clear any existing interval
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+    }
+
+    // Initial check
+    this.checkMeetings(meetings);
+
+    // Check every 30 seconds
+    this.checkInterval = setInterval(() => {
+      this.checkMeetings(meetings);
+    }, 30000);
+  }
+
+  // Check all meetings for status changes
+  checkMeetings(meetings) {
+    const currentTime = new Date();
+    
+    meetings.forEach(meeting => {
+      const status = this.getMeetingStatus(meeting, currentTime);
+      const wasActive = this.activeMeetings.has(meeting.id);
+      const wasCompleted = this.completedMeetings.has(meeting.id);
+      
+      // Meeting just started
+      if (status === 'active' && !wasActive) {
+        this.activeMeetings.set(meeting.id, {
+          ...meeting,
+          actualStartTime: currentTime,
+          status: 'active'
+        });
+        console.log(`Meeting started: ${meeting.title}`);
+      }
+      
+      // Meeting just ended
+      if (status === 'completed' && !wasCompleted) {
+        const activeMeeting = this.activeMeetings.get(meeting.id);
+        
+        // Mark as completed
+        this.completedMeetings.add(meeting.id);
+        this.activeMeetings.delete(meeting.id);
+        
+        // Calculate actual duration if it was tracked
+        const actualDuration = activeMeeting 
+          ? Math.round((currentTime - activeMeeting.actualStartTime) / 60000)
+          : null;
+        
+        // Add to feedback queue
+        const feedbackItem = {
+          meetingId: meeting.id,
+          meetingTitle: meeting.title,
+          scheduledTime: meeting.time,
+          completedAt: currentTime,
+          actualDuration,
+          status: 'pending_feedback',
+          type: meeting.type
+        };
+        
+        this.feedbackQueue.push(feedbackItem);
+        
+        // Trigger callback
+        if (this.onMeetingEnd) {
+          this.onMeetingEnd(feedbackItem);
+        }
+        
+        console.log(`Meeting ended: ${meeting.title} - Feedback requested`);
+      }
+    });
+  }
+
+  // Handle edge cases
+  handleMeetingOverrun(meetingId, additionalMinutes) {
+    const meeting = this.activeMeetings.get(meetingId);
+    if (meeting) {
+      meeting.overrunMinutes = additionalMinutes;
+      console.log(`Meeting overrun: ${meeting.title} by ${additionalMinutes} minutes`);
+    }
+  }
+
+  handleMeetingCancellation(meetingId) {
+    // Remove from active meetings
+    this.activeMeetings.delete(meetingId);
+    
+    // Add to completed with cancelled status
+    this.completedMeetings.add(meetingId);
+    
+    console.log(`Meeting cancelled: ${meetingId}`);
+  }
+
+  // Get pending feedback items
+  getPendingFeedback() {
+    return this.feedbackQueue.filter(item => item.status === 'pending_feedback');
+  }
+
+  // Mark feedback as complete
+  markFeedbackComplete(meetingId) {
+    const item = this.feedbackQueue.find(f => f.meetingId === meetingId);
+    if (item) {
+      item.status = 'feedback_complete';
+      item.feedbackCompletedAt = new Date();
+    }
+  }
+
+  // Stop monitoring
+  stopMonitoring() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+  }
+
+  // Get summary of meeting statuses
+  getMeetingSummary(meetings) {
+    const currentTime = new Date();
+    return meetings.map(meeting => ({
+      ...meeting,
+      status: this.getMeetingStatus(meeting, currentTime),
+      isActive: this.activeMeetings.has(meeting.id),
+      isCompleted: this.completedMeetings.has(meeting.id),
+      hasPendingFeedback: this.feedbackQueue.some(
+        f => f.meetingId === meeting.id && f.status === 'pending_feedback'
+      )
+    }));
+  }
+}
+
 // Enhanced Engine for biometric and meeting analysis
 class BiometricEngine {
   constructor() {
@@ -48,10 +233,10 @@ class BiometricEngine {
           { name: "Resting Heart Rate", value: 85, weight: 15, contribution: 13 },
           { name: "Previous Day Strain", value: 78, weight: 5, contribution: 4 }
         ],
-        explanation: "Your readiness score combines recovery metrics with sleep quality and physiological markers. Today's 87% indicates optimal conditions for high-performance activities.",
+        explanation: "Your readiness score combines recovery metrics with sleep quality and stress resilience indicators. Today's 87% indicates optimal conditions for peak professional performance - perfect for your most important meetings.",
         factors: {
-          positive: ["Excellent recovery (94%)", "Strong sleep performance (8.4h)", "HRV above baseline"],
-          negative: ["Slightly elevated previous strain"]
+          positive: ["Excellent recovery (94%)", "Strong sleep performance (8.4h)", "Stress resilience above optimal levels"],
+          negative: ["Yesterday's workload slightly impacting today's capacity"]
         }
       },
       recovery: {
@@ -62,9 +247,9 @@ class BiometricEngine {
           { name: "Resting Heart Rate", value: 52, weight: 30, contribution: 28 },
           { name: "Sleep Quality", value: 92, weight: 20, contribution: 18 }
         ],
-        explanation: "Recovery measures how well your body has adapted to recent training and stress. 94% indicates exceptional physiological recovery.",
+        explanation: "Recovery measures how well your body has bounced back from recent work demands and stress. 94% indicates exceptional recovery - you're primed for peak professional performance.",
         factors: {
-          positive: ["HRV significantly above baseline", "Low resting heart rate", "Deep sleep phases optimized"],
+          positive: ["Stress resilience significantly above baseline", "Optimal resting heart rate for performance", "Sleep quality optimized for cognitive function"],
           negative: []
         }
       },
@@ -72,19 +257,65 @@ class BiometricEngine {
         title: "Daily Strain",
         score: 12.1,
         components: [
-          { name: "Cardiovascular Load", value: 45, weight: 40, contribution: 4.8 },
-          { name: "Activity Intensity", value: 38, weight: 35, contribution: 4.2 },
-          { name: "Stress Response", value: 42, weight: 25, contribution: 3.1 }
+          { name: "Work Stress Load", value: 45, weight: 40, contribution: 4.8 },
+          { name: "Daily Demands", value: 38, weight: 35, contribution: 4.2 },
+          { name: "Stress Management", value: 42, weight: 25, contribution: 3.1 }
         ],
-        explanation: "Strain represents the cardiovascular and physiological load on your body. 12.1 is moderate - optimal for maintaining performance without overreaching.",
+        explanation: "Daily Strain reflects your body's response to work demands and daily stressors. 12.1 is moderate - optimal for sustained professional performance without burnout.",
         factors: {
-          positive: ["Balanced activity load", "Well-managed stress response"],
-          negative: ["Could handle slightly higher intensity"]
+          positive: ["Balanced workload management", "Well-regulated stress response"],
+          negative: ["Capacity for additional high-priority tasks"]
         }
       }
     };
     
     return breakdowns[type];
+  }
+
+  // Get current date info
+  getCurrentDateInfo() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return {
+      now,
+      today,
+      yesterday: new Date(today.getTime() - 24 * 60 * 60 * 1000),
+      tomorrow: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+      dayOfMonth: today.getDate(),
+      month: today.getMonth(),
+      year: today.getFullYear()
+    };
+  }
+
+  // Check if meeting has ended (for rating purposes)
+  hasMeetingEnded(dateOffset, timeString) {
+    const dateInfo = this.getCurrentDateInfo();
+    const meetingDate = new Date(dateInfo.today);
+    meetingDate.setDate(meetingDate.getDate() + dateOffset);
+    
+    // If meeting is in the past, it's ended
+    if (dateOffset < 0) return true;
+    
+    // If meeting is in the future, it hasn't ended
+    if (dateOffset > 0) return false;
+    
+    // If meeting is today, check the end time
+    if (dateOffset === 0) {
+      const endTime = timeString.split(' - ')[1];
+      const [time, period] = endTime.split(' ');
+      const [hours, minutes] = time.split(':').map(n => parseInt(n));
+      let hour = hours;
+      
+      if (period === 'PM' && hours !== 12) hour += 12;
+      if (period === 'AM' && hours === 12) hour = 0;
+      
+      const endDateTime = new Date();
+      endDateTime.setHours(hour, minutes, 0, 0);
+      
+      return dateInfo.now >= endDateTime;
+    }
+    
+    return false;
   }
 
   // Get today's meetings with realistic busy schedule (7 meetings)
@@ -149,11 +380,95 @@ class BiometricEngine {
     ];
   }
 
-  // Get meetings for specific dates
-  getMeetingsForDate(date) {
-    const meetingsByDate = {
-      22: this.getTodaysMeetings(), // Today
-      23: [ // Tuesday
+  // Get meetings for specific dates with realistic date offsets
+  getMeetingsForDate(dateOffset) {
+    const dateInfo = this.getCurrentDateInfo();
+    const targetDate = new Date(dateInfo.today);
+    targetDate.setDate(targetDate.getDate() + dateOffset);
+    
+    // Add dateOffset and hasEnded properties to each meeting
+    const addMeetingMetadata = (meetings, offset) => {
+      return meetings.map(meeting => ({
+        ...meeting,
+        dateOffset: offset,
+        hasEnded: this.hasMeetingEnded(offset, meeting.time),
+        date: new Date(dateInfo.today.getTime() + offset * 24 * 60 * 60 * 1000)
+      }));
+    };
+
+    const meetingsByOffset = {
+      '-2': addMeetingMetadata([ // 2 days ago
+        {
+          id: 'past-2-1',
+          title: "Board Meeting",
+          time: "10:00 AM - 11:30 AM",
+          type: "strategic",
+          prediction: { outcome: 'excellent', confidence: 95 },
+          historical: { totalMeetings: 8, averagePerformance: 92 }
+        },
+        {
+          id: 'past-2-2',
+          title: "Product Review",
+          time: "2:00 PM - 3:30 PM",
+          type: "team_meeting",
+          prediction: { outcome: 'good', confidence: 88 },
+          historical: { totalMeetings: 12, averagePerformance: 85 }
+        }
+      ], -2),
+      '-1': addMeetingMetadata([ // Yesterday
+        {
+          id: 'past-1-1',
+          title: "Client Presentation",
+          time: "11:00 AM - 12:00 PM",
+          type: "presentation",
+          prediction: { outcome: 'good', confidence: 82 },
+          historical: { totalMeetings: 6, averagePerformance: 78 }
+        },
+        {
+          id: 'past-1-2',
+          title: "Team Retrospective",
+          time: "3:00 PM - 4:00 PM",
+          type: "team_meeting",
+          prediction: { outcome: 'excellent', confidence: 90 },
+          historical: { totalMeetings: 15, averagePerformance: 88 }
+        },
+        {
+          id: 'past-1-3',
+          title: "Budget Review",
+          time: "4:30 PM - 5:30 PM",
+          type: "strategic",
+          prediction: { outcome: 'adequate', confidence: 75 },
+          historical: { totalMeetings: 4, averagePerformance: 72 }
+        }
+      ], -1),
+      '0': addMeetingMetadata(this.getTodaysMeetings(), 0), // Today
+      '1': addMeetingMetadata([ // Tomorrow
+        {
+          id: 'future-1-1',
+          title: "Leadership Team Meeting",
+          time: "8:00 AM - 9:00 AM",
+          type: "strategic",
+          prediction: { outcome: 'excellent', confidence: 90 },
+          historical: { totalMeetings: 12, averagePerformance: 88 }
+        },
+        {
+          id: 'future-1-2',
+          title: "Client Check-in",
+          time: "10:00 AM - 11:00 AM",
+          type: "one_on_one",
+          prediction: { outcome: 'good', confidence: 85 },
+          historical: { totalMeetings: 7, averagePerformance: 82 }
+        },
+        {
+          id: 'future-1-3',
+          title: "Sprint Planning",
+          time: "2:00 PM - 4:00 PM",
+          type: "team_meeting",
+          prediction: { outcome: 'good', confidence: 78 },
+          historical: { totalMeetings: 20, averagePerformance: 75 }
+        }
+      ], 1),
+      '2': addMeetingMetadata([ // Day after tomorrow
         {
           id: 'tue-1',
           title: "Leadership Team Meeting",
@@ -178,8 +493,8 @@ class BiometricEngine {
           prediction: { outcome: 'good', confidence: 78 },
           historical: { totalMeetings: 4, averagePerformance: 73 }
         }
-      ],
-      24: [ // Wednesday
+      ], 2),
+      '3': addMeetingMetadata([ // 3 days from now
         {
           id: 'wed-1',
           title: "Board Presentation",
@@ -201,67 +516,66 @@ class BiometricEngine {
           prediction: { outcome: 'excellent', confidence: 91 },
           historical: { totalMeetings: 15, averagePerformance: 87 }
         }
-      ],
-      25: [ // Thursday
-        {
-          id: 'thu-1',
-          title: "Product Demo",
-          time: "10:00 AM - 11:00 AM",
-          type: "presentation",
-          prediction: { outcome: 'good', confidence: 81 },
-          historical: { totalMeetings: 6, averagePerformance: 76 }
-        },
-        {
-          id: 'thu-2',
-          title: "Engineering Sync",
-          time: "2:00 PM - 3:00 PM",
-          type: "team_meeting",
-          prediction: { outcome: 'excellent', confidence: 89 },
-          historical: { totalMeetings: 20, averagePerformance: 84 }
-        }
-      ],
-      26: [ // Friday
-        {
-          id: 'fri-1',
-          title: "Client Check-in",
-          time: "9:00 AM - 9:30 AM",
-          type: "one_on_one",
-          prediction: { outcome: 'good', confidence: 85 },
-          historical: { totalMeetings: 11, averagePerformance: 81 }
-        },
-        {
-          id: 'fri-2',
-          title: "Team Retrospective",
-          time: "3:00 PM - 4:00 PM",
-          type: "team_meeting",
-          prediction: { outcome: 'excellent', confidence: 93 },
-          historical: { totalMeetings: 8, averagePerformance: 89 }
-        }
-      ]
+      ], 3)
     };
     
-    return meetingsByDate[date] || [];
+    return meetingsByOffset[dateOffset.toString()] || [];
   }
 
-  getDayName(dayNumber) {
-    const dayNames = {
-      22: 'Today',
-      23: 'Tuesday', 
-      24: 'Wednesday',
-      25: 'Thursday',
-      26: 'Friday'
+
+  getDayName(dateOffset) {
+    const dateInfo = this.getCurrentDateInfo();
+    const targetDate = new Date(dateInfo.today);
+    targetDate.setDate(targetDate.getDate() + dateOffset);
+    
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const relativeDayNames = {
+      '-2': '2 days ago',
+      '-1': 'Yesterday',
+      '0': 'Today',
+      '1': 'Tomorrow',
+      '2': dayNames[targetDate.getDay()],
+      '3': dayNames[targetDate.getDay()]
     };
-    return dayNames[dayNumber] || `Day ${dayNumber}`;
+    
+    return relativeDayNames[dateOffset.toString()] || dayNames[targetDate.getDay()];
   }
 
-  // Get week view data
+  // Get week view data with actual dates
   getWeekMeetings() {
-    return [
-      { day: 'Tuesday', meetings: this.getMeetingsForDate(23) },
-      { day: 'Wednesday', meetings: this.getMeetingsForDate(24) },
-      { day: 'Thursday', meetings: this.getMeetingsForDate(25) },
-      { day: 'Friday', meetings: this.getMeetingsForDate(26) }
-    ];
+    const dateInfo = this.getCurrentDateInfo();
+    const today = dateInfo.today;
+    
+    // Generate 4-day week starting from yesterday
+    const weekDays = [];
+    for (let offset = -1; offset <= 2; offset++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(targetDate.getDate() + offset);
+      
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      const dayName = dayNames[targetDate.getDay()];
+      const monthName = monthNames[targetDate.getMonth()];
+      const dayNumber = targetDate.getDate();
+      
+      // Format: "Mon 1/13" or "Mon 1/13 (Today)" for current day
+      let displayName = `${dayName.substring(0, 3)} ${targetDate.getMonth() + 1}/${dayNumber}`;
+      
+      if (offset === 0) {
+        displayName += ' (Today)';
+      }
+      
+      weekDays.push({
+        day: displayName,
+        meetings: this.getMeetingsForDate(offset),
+        isToday: offset === 0,
+        date: targetDate,
+        dateOffset: offset
+      });
+    }
+    
+    return weekDays;
   }
 }
 
@@ -272,15 +586,69 @@ export default function PersistDashboard() {
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [engine] = useState(() => new BiometricEngine());
+  const [meetingMonitor] = useState(() => new MeetingMonitor());
   const [currentBiometrics, setCurrentBiometrics] = useState(null);
   const [todaysRecommendations, setTodaysRecommendations] = useState([]);
   const [todaysMeetings, setTodaysMeetings] = useState([]);
+  const [feedbackModal, setFeedbackModal] = useState(null); // null or meeting object
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [ratedMeetings, setRatedMeetings] = useState(new Set()); // Track which meetings have been rated
 
   useEffect(() => {
     setCurrentBiometrics(engine.getCurrentBiometrics());
     setTodaysRecommendations(engine.getTodaysRecommendations());
     setTodaysMeetings(engine.getTodaysMeetings());
   }, [engine]);
+
+  // Load rated meetings from localStorage on mount
+  useEffect(() => {
+    // For fresh testing, we'll start with empty ratings
+    // Comment out the lines below if you want to persist ratings between sessions
+    
+    const savedRatedMeetings = localStorage.getItem('ratedMeetings');
+    if (savedRatedMeetings) {
+      try {
+        const parsed = JSON.parse(savedRatedMeetings);
+        setRatedMeetings(new Set(parsed));
+      } catch (error) {
+        console.warn('Error loading rated meetings from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Save rated meetings to localStorage whenever it changes
+  useEffect(() => {
+    if (ratedMeetings.size > 0) {
+      localStorage.setItem('ratedMeetings', JSON.stringify([...ratedMeetings]));
+    }
+  }, [ratedMeetings]);
+
+  // Initialize meeting monitoring (simplified - no banner needed)
+  useEffect(() => {
+    if (todaysMeetings.length > 0) {
+      // Define callback for when a meeting ends
+      const handleMeetingEnd = (feedbackItem) => {
+        console.log('Meeting ended:', feedbackItem.meetingTitle);
+        
+        // Optional: Show browser notification (requires permission)
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Meeting Feedback', {
+            body: `How was your ${feedbackItem.meetingTitle}?`,
+            icon: '/icon.png'
+          });
+        }
+      };
+
+      // Start monitoring meetings
+      meetingMonitor.startMonitoring(todaysMeetings, handleMeetingEnd);
+
+      // Cleanup on unmount
+      return () => {
+        meetingMonitor.stopMonitoring();
+      };
+    }
+  }, [todaysMeetings, meetingMonitor]);
 
   const getCircleColor = (type) => {
     if (!currentBiometrics) return '#ff9500';
@@ -318,7 +686,7 @@ export default function PersistDashboard() {
     const colors = {
       excellent: 'bg-green-900 text-green-300',
       good: 'bg-blue-900 text-blue-300',
-      adequate: 'bg-yellow-900 text-yellow-300',
+      adequate: 'bg-gray-700 text-gray-300',
       poor: 'bg-red-900 text-red-300'
     };
     return colors[outcome] || colors.adequate;
@@ -326,18 +694,144 @@ export default function PersistDashboard() {
 
   if (!currentBiometrics) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
 
+  const handleLogoClick = () => {
+    setViewMode('dashboard');
+    setCalendarView('today');
+    setSelectedBiometric(null);
+    setSelectedMeeting(null);
+    setSelectedDate(null);
+  };
+
+  const handleRateMeeting = (meeting, e) => {
+    e.stopPropagation(); // Prevent triggering meeting selection
+    setFeedbackModal(meeting);
+    setFeedbackRating(0);
+    setFeedbackSubmitted(false);
+  };
+
+  const handleSubmitFeedback = () => {
+    if (feedbackRating > 0) {
+      // Store feedback data (in real app, this would go to backend)
+      const feedbackData = {
+        meetingId: feedbackModal.id,
+        meetingTitle: feedbackModal.title,
+        meetingType: feedbackModal.type,
+        scheduledTime: feedbackModal.time,
+        predictedOutcome: feedbackModal.prediction.outcome,
+        actualRating: feedbackRating,
+        submittedAt: new Date(),
+      };
+      
+      console.log('Feedback submitted:', feedbackData);
+      
+      // Store rating data
+      storeMeetingRating(feedbackModal.id, feedbackRating);
+      
+      // Mark meeting as rated
+      setRatedMeetings(prev => new Set([...prev, feedbackModal.id]));
+      
+      // Show success state
+      setFeedbackSubmitted(true);
+      
+      // Close modal after brief delay
+      setTimeout(() => {
+        setFeedbackModal(null);
+        setFeedbackRating(0);
+        setFeedbackSubmitted(false);
+      }, 2000);
+    }
+  };
+
+  const getRatingLabel = (rating) => {
+    switch(rating) {
+      case 1: return 'Poor';
+      case 2: return 'Below Average';
+      case 3: return 'Average';
+      case 4: return 'Good';
+      case 5: return 'Excellent';
+      default: return '';
+    }
+  };
+
+  // Reset all meeting ratings (for testing/development)
+  const resetAllRatings = () => {
+    // Clear localStorage data
+    localStorage.removeItem('ratedMeetings');
+    localStorage.removeItem('meetingRatings');
+    
+    // Reset state variables
+    setRatedMeetings(new Set());
+    
+    console.log('✅ All meeting ratings have been reset');
+    console.log('📝 All eligible meetings should now show "Rate Meeting" buttons');
+    console.log('🔄 Meeting detail views will only show predicted performance');
+  };
+
+  // Get stored rating data for a meeting
+  const getMeetingRating = (meetingId) => {
+    // In a real app, this would come from your backend/database
+    // For now, we'll use localStorage to simulate stored ratings
+    try {
+      const storedRatings = localStorage.getItem('meetingRatings');
+      if (storedRatings) {
+        const ratings = JSON.parse(storedRatings);
+        return ratings[meetingId] || null;
+      }
+    } catch (error) {
+      console.warn('Error loading meeting ratings:', error);
+    }
+    return null;
+  };
+
+  // Store a meeting rating
+  const storeMeetingRating = (meetingId, rating) => {
+    try {
+      const storedRatings = localStorage.getItem('meetingRatings');
+      const ratings = storedRatings ? JSON.parse(storedRatings) : {};
+      ratings[meetingId] = rating;
+      localStorage.setItem('meetingRatings', JSON.stringify(ratings));
+    } catch (error) {
+      console.warn('Error storing meeting rating:', error);
+    }
+  };
+
+  // Get prediction accuracy comparison
+  const getPredictionAccuracy = (predicted, actualRating) => {
+    // Convert prediction to numeric scale
+    const predictionMap = { poor: 1, adequate: 2, good: 4, excellent: 5 };
+    const predictedNumeric = predictionMap[predicted.toLowerCase()] || 3;
+    
+    const difference = actualRating - predictedNumeric;
+    
+    if (Math.abs(difference) <= 1) {
+      return { status: 'accurate', message: 'Prediction was accurate' };
+    } else if (difference > 1) {
+      return { status: 'pessimistic', message: 'Prediction was pessimistic' };
+    } else {
+      return { status: 'optimistic', message: 'Prediction was optimistic' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="bg-black border-b border-gray-900 px-6 py-4">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold text-white tracking-wide">PERSIST</h1>
+          <h1 
+            className="text-xl font-bold text-white tracking-wide cursor-pointer hover:text-gray-300 transition-colors"
+            onClick={handleLogoClick}
+          >
+            PERSIST
+          </h1>
           <div className="text-right">
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Biometric Performance</div>
-            <div className="text-white font-medium">Professional Analytics</div>
+            <div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide">Biometric</div>
+              <div className="text-white font-medium">Professional Intelligence</div>
+            </div>
           </div>
         </div>
       </header>
+
 
       {/* Main Navigation */}
       <div className="px-6 pt-6">
@@ -346,16 +840,16 @@ export default function PersistDashboard() {
             <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg">
               <button 
                 onClick={() => setViewMode('dashboard')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  viewMode === 'dashboard' ? 'bg-white text-black' : 'text-gray-400'
+                className={`flex-1 px-6 py-3 rounded-md text-base font-medium transition-all touch-manipulation min-h-[44px] ${
+                  viewMode === 'dashboard' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 Dashboard
               </button>
               <button 
                 onClick={() => setViewMode('calendar')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  viewMode === 'calendar' ? 'bg-white text-black' : 'text-gray-400'
+                className={`flex-1 px-6 py-3 rounded-md text-base font-medium transition-all touch-manipulation min-h-[44px] ${
+                  viewMode === 'calendar' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 Calendar
@@ -572,33 +1066,41 @@ export default function PersistDashboard() {
             
             {/* Calendar Navigation */}
             {!selectedMeeting && !selectedDate && (
-              <div className="flex justify-center mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
                 <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg">
                   <button 
                     onClick={() => setCalendarView('today')}
-                    className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      calendarView === 'today' ? 'bg-white text-black' : 'text-gray-400'
+                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
+                      calendarView === 'today' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     Today
                   </button>
                   <button 
                     onClick={() => setCalendarView('week')}
-                    className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      calendarView === 'week' ? 'bg-white text-black' : 'text-gray-400'
+                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
+                      calendarView === 'week' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     Week
                   </button>
                   <button 
                     onClick={() => setCalendarView('month')}
-                    className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      calendarView === 'month' ? 'bg-white text-black' : 'text-gray-400'
+                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
+                      calendarView === 'month' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     Month
                   </button>
                 </div>
+                
+                <button
+                  onClick={resetAllRatings}
+                  className="px-3 py-1 bg-red-900/30 hover:bg-red-800/50 border border-red-700/50 rounded text-xs text-red-200 hover:text-red-100 transition-colors"
+                  title="Reset all meeting ratings for testing"
+                >
+                  Reset Ratings
+                </button>
               </div>
             )}
 
@@ -623,10 +1125,97 @@ export default function PersistDashboard() {
                         </span>
                       </div>
                     </div>
-                    <div className={`text-right p-4 rounded-lg border-2 ${getPerformanceColor(selectedMeeting.prediction.outcome)} border-opacity-50`}>
-                      <div className="text-sm text-gray-300">Predicted Performance</div>
-                      <div className="text-2xl font-bold capitalize">{selectedMeeting.prediction.outcome}</div>
-                      <div className="text-sm">{selectedMeeting.prediction.confidence}% confidence</div>
+                    {/* Performance Comparison Section */}
+                    <div className="space-y-4">
+                      {(() => {
+                        const actualRating = getMeetingRating(selectedMeeting.id);
+                        const isRated = ratedMeetings.has(selectedMeeting.id);
+                        
+                        return (
+                          <>
+                            {/* Horizontal Performance Boxes */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Predicted Performance */}
+                              <div className={`p-4 rounded-lg border-2 ${getPerformanceColor(selectedMeeting.prediction.outcome)} border-opacity-50`}>
+                                <div className="text-sm text-gray-300">Predicted Performance</div>
+                                <div className="text-2xl font-bold capitalize">{selectedMeeting.prediction.outcome}</div>
+                                <div className="text-sm">{selectedMeeting.prediction.confidence}% confidence</div>
+                              </div>
+
+                              {/* Actual Performance or Rating Interface */}
+                              {isRated && actualRating ? (
+                                <div className="p-4 rounded-lg border-2 border-green-500 border-opacity-50 bg-green-900/10">
+                                  <div className="text-sm text-gray-300">Actual Performance</div>
+                                  <div className="text-2xl font-bold">{getRatingLabel(actualRating)}</div>
+                                  <div className="text-sm text-green-400">User Rating</div>
+                                </div>
+                              ) : selectedMeeting.hasEnded ? (
+                                <div className="p-4 rounded-lg border-2 border-blue-500 border-opacity-50 bg-blue-900/10">
+                                  <div className="text-sm text-gray-300 mb-3">Rate This Meeting</div>
+                                  
+                                  {/* Inline Star Rating */}
+                                  <div className="flex justify-center space-x-1 mb-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <button
+                                        key={star}
+                                        onClick={() => {
+                                          // Rate meeting directly in detail view
+                                          const rating = star;
+                                          storeMeetingRating(selectedMeeting.id, rating);
+                                          setRatedMeetings(prev => new Set([...prev, selectedMeeting.id]));
+                                          
+                                          // Log the rating
+                                          console.log('Meeting rated in detail view:', {
+                                            meetingId: selectedMeeting.id,
+                                            rating: rating,
+                                            meetingTitle: selectedMeeting.title
+                                          });
+                                        }}
+                                        className="text-xl text-gray-600 hover:text-yellow-400 transition-colors"
+                                      >
+                                        ★
+                                      </button>
+                                    ))}
+                                  </div>
+                                  
+                                  <div className="text-xs text-center text-gray-400">
+                                    Click to rate
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="p-4 rounded-lg border-2 border-gray-600 border-opacity-50 bg-gray-800/30">
+                                  <div className="text-sm text-gray-300 mb-3">Future Meeting</div>
+                                  <div className="text-center">
+                                    <div className="text-2xl text-gray-500 mb-2">⏳</div>
+                                    <div className="text-xs text-gray-400">
+                                      Rating available after meeting ends
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Comparison Summary (shown below both boxes when rated) */}
+                            {isRated && actualRating && (() => {
+                              const accuracy = getPredictionAccuracy(selectedMeeting.prediction.outcome, actualRating);
+                              return (
+                                <div className="p-4 bg-gray-800 rounded-lg text-center">
+                                  <div className="text-sm text-gray-400 mb-1">Prediction vs Reality</div>
+                                  <div className="text-lg font-medium mb-2">
+                                    {selectedMeeting.prediction.outcome.charAt(0).toUpperCase() + selectedMeeting.prediction.outcome.slice(1)} → {getRatingLabel(actualRating)}
+                                  </div>
+                                  <div className={`text-sm font-medium ${
+                                    accuracy.status === 'accurate' ? 'text-green-400' : 
+                                    accuracy.status === 'optimistic' ? 'text-yellow-400' : 'text-blue-400'
+                                  }`}>
+                                    {accuracy.message}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -670,8 +1259,8 @@ export default function PersistDashboard() {
                             </div>
                           )}
                           <div className="p-4 rounded-lg border-l-4 border-green-500 bg-green-900/20">
-                            <div className="font-semibold text-white mb-1">Peak state detected - perfect for high-impact activities</div>
-                            <div className="text-gray-300 text-sm">Consider proposing additional agenda items</div>
+                            <div className="font-semibold text-white mb-1">Excellent readiness - ideal conditions for important meetings</div>
+                            <div className="text-gray-300 text-sm">Your biometrics show optimal performance capacity - perfect timing for critical decisions and strategic discussions</div>
                           </div>
                         </div>
                       </section>
@@ -702,23 +1291,38 @@ export default function PersistDashboard() {
                       <div 
                         key={meeting.id}
                         onClick={() => setSelectedMeeting(meeting)}
-                        className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all flex justify-between items-center"
+                        className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 min-h-[44px] touch-manipulation"
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div className="text-gray-400 text-sm font-mono w-24">
+                        <div className="flex-1 w-full sm:w-auto">
+                          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                            <div className="text-gray-400 text-sm font-mono">
                               {meeting.time.split(' - ')[0]}
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-white font-medium">{meeting.title}</h3>
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${getMeetingTypeColor(meeting.type)}`}>
+                              <h3 className="text-white font-medium text-base leading-tight">{meeting.title}</h3>
+                              <span className={`inline-block mt-1 px-2 py-1 rounded text-xs font-medium ${getMeetingTypeColor(meeting.type)}`}>
                                 {meeting.type.replace('_', ' ')}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-bold ${getPerformanceColor(meeting.prediction.outcome)}`}>
-                          {meeting.prediction.outcome.toUpperCase()}
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                          {!ratedMeetings.has(meeting.id) && meeting.hasEnded && (
+                            <button
+                              onClick={(e) => handleRateMeeting(meeting, e)}
+                              className="px-4 py-2 bg-blue-900/50 hover:bg-blue-800/50 active:bg-blue-800/70 border border-blue-700 rounded text-sm text-blue-200 hover:text-blue-100 transition-colors min-h-[44px] touch-manipulation w-full sm:w-auto"
+                            >
+                              Rate Meeting
+                            </button>
+                          )}
+                          {meeting.hasEnded === false && (
+                            <div className="px-4 py-2 bg-gray-700/50 border border-gray-600 rounded text-sm text-gray-400 text-center">
+                              Scheduled
+                            </div>
+                          )}
+                          <div className={`px-3 py-2 rounded-full text-xs font-bold ${getPerformanceColor(meeting.prediction.outcome)} ${!meeting.hasEnded ? 'opacity-60' : ''} text-center`}>
+                            {meeting.prediction.outcome.toUpperCase()}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -732,11 +1336,11 @@ export default function PersistDashboard() {
                   <section>
                     <h2 className="text-2xl font-light text-white mb-6">Today's Schedule</h2>
                     <div className="space-y-2">
-                      {todaysMeetings.map((meeting) => (
+                      {engine.getMeetingsForDate(0).map((meeting) => (
                         <div 
                           key={meeting.id}
                           onClick={() => setSelectedMeeting(meeting)}
-                          className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all flex justify-between items-center"
+                          className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 min-h-[44px] touch-manipulation"
                         >
                           <div className="flex-1">
                             <div className="flex items-center space-x-4">
@@ -751,8 +1355,23 @@ export default function PersistDashboard() {
                               </div>
                             </div>
                           </div>
-                          <div className={`px-3 py-1 rounded-full text-xs font-bold ${getPerformanceColor(meeting.prediction.outcome)}`}>
-                            {meeting.prediction.outcome.toUpperCase()}
+                          <div className="flex items-center space-x-3">
+                            {!ratedMeetings.has(meeting.id) && meeting.hasEnded && (
+                              <button
+                                onClick={(e) => handleRateMeeting(meeting, e)}
+                                className="px-2 py-1 bg-blue-900/50 hover:bg-blue-800/50 border border-blue-700 rounded text-xs text-blue-200 hover:text-blue-100 transition-colors"
+                              >
+                                Rate Meeting
+                              </button>
+                            )}
+                            {meeting.hasEnded === false && (
+                              <div className="px-2 py-1 bg-gray-700/50 border border-gray-600 rounded text-xs text-gray-400">
+                                Scheduled
+                              </div>
+                            )}
+                            <div className={`px-3 py-1 rounded-full text-xs font-bold ${getPerformanceColor(meeting.prediction.outcome)} ${!meeting.hasEnded ? 'opacity-60' : ''}`}>
+                              {meeting.prediction.outcome.toUpperCase()}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -764,9 +1383,15 @@ export default function PersistDashboard() {
                   <section>
                     <h2 className="text-2xl font-light text-white mb-6">This Week</h2>
                     <div className="grid grid-cols-1 gap-6">
-                      {engine.getWeekMeetings().map(({ day, meetings }) => (
-                        <div key={day} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                          <h3 className="text-white font-medium mb-3">{day}</h3>
+                      {engine.getWeekMeetings().map(({ day, meetings, isToday }) => (
+                        <div key={day} className={`rounded-lg p-4 border ${
+                          isToday 
+                            ? 'bg-blue-900/30 border-blue-700/50' 
+                            : 'bg-gray-900 border-gray-700'
+                        }`}>
+                          <h3 className={`font-medium mb-3 ${
+                            isToday ? 'text-blue-200' : 'text-white'
+                          }`}>{day}</h3>
                           <div className="space-y-2">
                             {meetings.map((meeting) => (
                               <div 
@@ -808,36 +1433,52 @@ export default function PersistDashboard() {
                       {/* Calendar Grid */}
                       <div className="grid grid-cols-7">
                         {Array.from({length: 42}, (_, i) => {
-                          // Adjust calendar to show December 2024 properly
-                          const dayNum = i - 6; // December 1st starts on Sunday (adjust offset)
-                          const isCurrentMonth = dayNum > 0 && dayNum <= 31;
-                          const isToday = dayNum === 22; // Today is 22nd
-                          const hasMeetings = [22, 23, 24, 25, 26].includes(dayNum);
-                          const meetingCount = dayNum === 22 ? 7 : dayNum === 23 ? 3 : dayNum === 24 ? 2 : dayNum === 25 ? 2 : dayNum === 26 ? 2 : 0;
+                          const dateInfo = engine.getCurrentDateInfo();
+                          const today = dateInfo.today;
+                          const currentMonth = today.getMonth();
+                          const currentYear = today.getFullYear();
+                          
+                          // Calculate first day of month and its day of week
+                          const firstDay = new Date(currentYear, currentMonth, 1);
+                          const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday
+                          
+                          // Calculate the date for this cell
+                          const cellDate = new Date(firstDay);
+                          cellDate.setDate(cellDate.getDate() + (i - firstDayOfWeek));
+                          
+                          const dayNum = cellDate.getDate();
+                          const isCurrentMonth = cellDate.getMonth() === currentMonth;
+                          const isToday = cellDate.getTime() === today.getTime();
+                          
+                          // Calculate date offset for meeting lookup
+                          const dateOffset = Math.floor((cellDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                          const meetingsForDay = engine.getMeetingsForDate(dateOffset);
+                          const hasMeetings = meetingsForDay.length > 0;
+                          const meetingCount = meetingsForDay.length;
                           
                           return (
                             <div 
                               key={i} 
                               className={`
-                                min-h-24 p-2 border-r border-b border-gray-700 last:border-r-0 transition-all
+                                min-h-16 sm:min-h-20 md:min-h-24 p-2 sm:p-3 border-r border-b border-gray-700 last:border-r-0 transition-all touch-manipulation
                                 ${isCurrentMonth ? 'bg-gray-900' : 'bg-gray-950'}
                                 ${isToday ? 'bg-white text-black' : 'text-gray-300'}
                                 ${hasMeetings ? 'cursor-pointer hover:bg-gray-800 hover:scale-[1.02]' : ''}
                                 ${!isCurrentMonth ? 'opacity-30' : ''}
                               `}
                               onClick={hasMeetings && isCurrentMonth ? () => {
-                                setSelectedDate(dayNum);
-                                console.log(`Navigating to ${engine.getDayName(dayNum)} with ${meetingCount} meetings`);
+                                setSelectedDate(dateOffset);
+                                console.log(`Navigating to ${engine.getDayName(dateOffset)} with ${meetingCount} meetings`);
                               } : undefined}
                             >
                               {isCurrentMonth && (
-                                <div className="space-y-1">
-                                  <div className={`text-sm font-medium ${isToday ? 'text-black' : 'text-white'}`}>
+                                <div className="space-y-1 h-full flex flex-col">
+                                  <div className={`text-sm sm:text-base font-medium ${isToday ? 'text-black' : 'text-white'}`}>
                                     {dayNum}
                                   </div>
                                   {hasMeetings && (
-                                    <div className="space-y-0.5">
-                                      <div className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'}`}>
+                                    <div className="flex-1 space-y-1">
+                                      <div className={`text-xs sm:text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'}`}>
                                         {meetingCount} meeting{meetingCount !== 1 ? 's' : ''}
                                       </div>
                                       <div className="flex space-x-1 flex-wrap">
@@ -846,7 +1487,7 @@ export default function PersistDashboard() {
                                           <>
                                             <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-green-600' : 'bg-green-400'}`} title="Excellent meetings"></div>
                                             <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-blue-600' : 'bg-blue-400'}`} title="Good meetings"></div>
-                                            <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-yellow-600' : 'bg-yellow-400'}`} title="Adequate meetings"></div>
+                                            <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-gray-500' : 'bg-gray-400'}`} title="Adequate meetings"></div>
                                             {meetingCount > 3 && (
                                               <div className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'} ml-1`}>
                                                 +{meetingCount - 3}
@@ -863,7 +1504,7 @@ export default function PersistDashboard() {
                                         )}
                                         {dayNum === 24 && ( // Wednesday - mixed with optimization opportunity
                                           <>
-                                            <div className="w-2 h-2 rounded-full bg-yellow-400" title="Needs optimization"></div>
+                                            <div className="w-2 h-2 rounded-full bg-gray-400" title="Needs optimization"></div>
                                             <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
                                           </>
                                         )}
@@ -906,7 +1547,7 @@ export default function PersistDashboard() {
                         <span className="text-gray-400">Good Performance</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div className="w-3 h-3 rounded-full bg-gray-400"></div>
                         <span className="text-gray-400">Needs Optimization</span>
                       </div>
                     </div>
@@ -919,6 +1560,93 @@ export default function PersistDashboard() {
         )}
 
       </div>
+
+      {/* Feedback Modal */}
+      {feedbackModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 w-full max-w-md mx-4">
+            {feedbackSubmitted ? (
+              // Success State
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg">✓</span>
+                  </div>
+                </div>
+                <h3 className="text-white text-lg font-semibold mb-2">Feedback Received!</h3>
+                <p className="text-gray-400 text-sm">
+                  Learning from your feedback to improve future meeting predictions...
+                </p>
+              </div>
+            ) : (
+              // Rating Form
+              <>
+                <h3 className="text-white text-lg font-semibold mb-4">Rate Your Meeting</h3>
+                
+                <div className="mb-4">
+                  <h4 className="text-gray-300 font-medium mb-1">{feedbackModal.title}</h4>
+                  <p className="text-gray-400 text-sm mb-2">{feedbackModal.time}</p>
+                  <div className="flex items-center space-x-2 text-xs">
+                    <span className="text-gray-500">Predicted:</span>
+                    <span className={`px-2 py-1 rounded font-medium ${getPerformanceColor(feedbackModal.prediction.outcome)}`}>
+                      {feedbackModal.prediction.outcome.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <p className="text-gray-300 text-sm mb-3">How did this meeting actually go?</p>
+                  
+                  {/* Star Rating */}
+                  <div className="flex items-center justify-center space-x-1 mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setFeedbackRating(star)}
+                        className={`text-2xl transition-colors ${
+                          star <= feedbackRating 
+                            ? 'text-yellow-400 hover:text-yellow-300' 
+                            : 'text-gray-600 hover:text-gray-500'
+                        }`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Rating Label */}
+                  {feedbackRating > 0 && (
+                    <p className="text-center text-sm text-gray-400">
+                      {getRatingLabel(feedbackRating)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setFeedbackModal(null)}
+                    className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmitFeedback}
+                    disabled={feedbackRating === 0}
+                    className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                      feedbackRating > 0
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
