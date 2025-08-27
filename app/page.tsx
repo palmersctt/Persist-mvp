@@ -252,15 +252,15 @@ class BiometricEngine {
     return [
       {
         id: 1,
-        message: "Exceptional recovery (94%) positions you perfectly for high-stakes activities. Your board presentation at 2 PM aligns with your historical cognitive peak."
+        message: "Your 87% readiness indicates optimal conditions for peak professional performance. Morning meetings (8-10:30 AM) align with your cognitive peak window."
       },
       {
         id: 2, 
-        message: "Schedule your most important negotiations in the next 4 hours while stress resilience is optimal."
+        message: "High meeting density today (7 meetings). Consider delegating or rescheduling your 11 AM and 2 PM sessions where performance dips to 64-66%."
       },
       {
         id: 3,
-        message: "Use 4-7-8 breathing technique 30 minutes before your presentation to maximize performance window."
+        message: "Strong recovery end anticipated. Your 5 PM Vendor Discussion shows 93% predicted performance - ideal for critical negotiations."
       }
     ];
   }
@@ -368,58 +368,58 @@ class BiometricEngine {
       {
         id: 'today-1',
         title: "Daily Standup",
-        time: "9:00 AM - 9:15 AM",
+        time: "8:00 AM - 8:15 AM",
         type: "team_meeting",
-        prediction: { outcome: 'good', confidence: 85 },
-        historical: { totalMeetings: 3, averagePerformance: 78 }
+        prediction: { outcome: 'excellent', confidence: 94 },
+        historical: { totalMeetings: 3, averagePerformance: 94 }
       },
       {
         id: 'today-2',
         title: "Product Strategy Review",
         time: "9:30 AM - 10:30 AM",
         type: "strategic",
-        prediction: { outcome: 'excellent', confidence: 92 },
-        historical: { totalMeetings: 5, averagePerformance: 85 }
+        prediction: { outcome: 'good', confidence: 88 },
+        historical: { totalMeetings: 5, averagePerformance: 88 }
       },
       {
         id: 'today-3',
         title: "Client Check-in",
         time: "11:00 AM - 11:30 AM",
         type: "one_on_one",
-        prediction: { outcome: 'good', confidence: 88 },
-        historical: { totalMeetings: 8, averagePerformance: 82 }
+        prediction: { outcome: 'adequate', confidence: 66 },
+        historical: { totalMeetings: 8, averagePerformance: 66 }
       },
       {
         id: 'today-4',
         title: "Budget Planning",
         time: "12:00 PM - 1:00 PM",
         type: "strategic",
-        prediction: { outcome: 'good', confidence: 79 },
-        historical: { totalMeetings: 2, averagePerformance: 75 }
+        prediction: { outcome: 'good', confidence: 78 },
+        historical: { totalMeetings: 2, averagePerformance: 78 }
       },
       {
         id: 'today-5',
         title: "Team Performance Review",
         time: "2:00 PM - 3:30 PM",
         type: "one_on_one",
-        prediction: { outcome: 'good', confidence: 84 },
-        historical: { totalMeetings: 6, averagePerformance: 80 }
+        prediction: { outcome: 'adequate', confidence: 64 },
+        historical: { totalMeetings: 6, averagePerformance: 64 }
       },
       {
         id: 'today-6',
         title: "Marketing Campaign Review",
         time: "4:00 PM - 4:45 PM",
         type: "team_meeting",
-        prediction: { outcome: 'adequate', confidence: 72 },
-        historical: { totalMeetings: 4, averagePerformance: 68 }
+        prediction: { outcome: 'good', confidence: 87 },
+        historical: { totalMeetings: 4, averagePerformance: 87 }
       },
       {
         id: 'today-7',
         title: "Vendor Discussion",
         time: "5:00 PM - 6:00 PM",
         type: "client_meeting",
-        prediction: { outcome: 'adequate', confidence: 65 },
-        historical: { totalMeetings: 3, averagePerformance: 72 }
+        prediction: { outcome: 'excellent', confidence: 93 },
+        historical: { totalMeetings: 3, averagePerformance: 93 }
       }
     ];
   }
@@ -635,8 +635,7 @@ class BiometricEngine {
 }
 
 export default function PersistDashboard() {
-  const [mainView, setMainView] = useState('dashboard');
-  const [demoTab, setDemoTab] = useState('biometrics'); 
+  const [viewMode, setViewMode] = useState('dashboard');
   const [calendarView, setCalendarView] = useState('today');
   const [selectedBiometric, setSelectedBiometric] = useState(null);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -756,8 +755,7 @@ export default function PersistDashboard() {
   if (!currentBiometrics) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
 
   const handleLogoClick = () => {
-    setMainView('dashboard');
-    setDemoTab('biometrics');
+    setViewMode('dashboard');
     setCalendarView('today');
     setSelectedBiometric(null);
     setSelectedMeeting(null);
@@ -954,215 +952,60 @@ export default function PersistDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="bg-black border-b border-gray-900 px-6 py-4">
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Mobile-First Header */}
+      <header className="bg-black border-b border-gray-900 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <h1 
-            className="text-xl font-bold text-white tracking-wide cursor-pointer hover:text-gray-300 transition-colors"
+            className="text-lg sm:text-xl font-bold text-white tracking-wide cursor-pointer hover:text-gray-300 transition-colors"
             onClick={handleLogoClick}
           >
             PERSIST
           </h1>
-          <div className="text-right">
+          <div className="text-right hidden sm:block">
             <div>
               <div className="text-xs text-gray-500 uppercase tracking-wide">Biometric Driven</div>
               <div className="text-white font-medium">Professional Intelligence</div>
             </div>
           </div>
+          {/* Mobile-only biometric indicator */}
+          <div className="sm:hidden text-right">
+            <div className="text-2xl font-bold text-green-400">{currentBiometrics.readiness}%</div>
+            <div className="text-xs text-gray-500 uppercase">Ready</div>
+          </div>
         </div>
       </header>
 
-
-      {/* Main Navigation */}
-      <div className="px-6 pt-6">
+      {/* Desktop Navigation - Hidden on Mobile */}
+      <div className="hidden md:block px-6 pt-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center mb-8">
             <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg">
               <button 
-                onClick={() => setMainView('dashboard')}
+                onClick={() => setViewMode('dashboard')}
                 className={`flex-1 px-6 py-3 rounded-md text-base font-medium transition-all touch-manipulation min-h-[44px] ${
-                  mainView === 'dashboard' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                  viewMode === 'dashboard' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
                 Dashboard
               </button>
               <button 
-                onClick={() => setMainView('demo')}
+                onClick={() => setViewMode('calendar')}
                 className={`flex-1 px-6 py-3 rounded-md text-base font-medium transition-all touch-manipulation min-h-[44px] ${
-                  mainView === 'demo' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                  viewMode === 'calendar' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
                 }`}
               >
-                Demo
+                Calendar
               </button>
             </div>
           </div>
-          
-          {/* Demo Sub-navigation */}
-          {mainView === 'demo' && (
-            <div className="flex justify-center mb-8">
-              <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg">
-                <button 
-                  onClick={() => setDemoTab('biometrics')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[40px] ${
-                    demoTab === 'biometrics' ? 'bg-gray-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  Biometrics
-                </button>
-                <button 
-                  onClick={() => setDemoTab('calendar')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[40px] ${
-                    demoTab === 'calendar' ? 'bg-gray-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  Calendar
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 pb-8">
+      {/* Main Content Area with Mobile Padding */}
+      <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 pb-20 md:pb-8">
 
-        {mainView === 'dashboard' ? (
-          /* New Learning-Focused Dashboard */
-          <div className="space-y-12">
-            
-            {/* Single Readiness Score */}
-            <section>
-              <div className="text-center">
-                <div className="relative w-40 h-40 mx-auto mb-6">
-                  <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="4"/>
-                    <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor('readiness')} strokeWidth="4"
-                            strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(currentBiometrics.readiness)} strokeLinecap="round"/>
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-white">{currentBiometrics.readiness}%</div>
-                      <div className="text-sm text-gray-400">READY</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-lg text-gray-400 mb-2">Professional Readiness</div>
-                <div className="text-sm text-gray-500">Based on recovery, sleep, and stress resilience</div>
-              </div>
-            </section>
-
-            {/* Today's Focus Areas */}
-            <section>
-              <h2 className="text-xl font-semibold text-white mb-6">Today's Work Impact Focus</h2>
-              
-              <div className="space-y-4">
-                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-green-400"></div>
-                    <div className="flex-1">
-                      <p className="text-gray-300 leading-relaxed">
-                        <span className="text-white font-medium">High-impact window:</span> Next 4 hours optimal for strategic decisions and critical negotiations based on your biometric peak patterns.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-blue-400"></div>
-                    <div className="flex-1">
-                      <p className="text-gray-300 leading-relaxed">
-                        <span className="text-white font-medium">Meeting density alert:</span> 7 meetings scheduled today. Historical data shows 5+ meetings correlate with 15% recovery drop tomorrow.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Simple Today's Meetings */}
-            <section>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-white">Today's Meetings</h2>
-                <div className="text-sm text-gray-400">
-                  <span className="text-orange-400 font-medium">High</span> workload (7 meetings)
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                {engine.getTodaysMeetings().map((meeting) => (
-                  <div key={meeting.id} className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-gray-400 text-sm font-mono w-20">
-                          {meeting.time.split(' - ')[0]}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-white font-medium">{meeting.title}</h3>
-                          <div className="text-sm text-gray-400">
-                            {meeting.type === 'client_meeting' ? 'Client meeting' : meeting.type.replace('_', ' ')}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          meeting.prediction.outcome === 'excellent' ? 'bg-green-400' :
-                          meeting.prediction.outcome === 'good' ? 'bg-blue-400' :
-                          meeting.prediction.outcome === 'adequate' ? 'bg-gray-400' : 'bg-red-400'
-                        }`} title={`Predicted: ${meeting.prediction.outcome}`}></div>
-                        <span className="text-xs text-gray-500">{meeting.prediction.confidence}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Correlation Tracking Preview */}
-            <section>
-              <h2 className="text-xl font-semibold text-white mb-6">Learning Correlations</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
-                  <h3 className="text-white font-medium mb-3">Meeting Density → Recovery Impact</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">≤4 meetings/day:</span>
-                      <span className="text-green-400">+3% recovery avg</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">5-6 meetings/day:</span>
-                      <span className="text-yellow-400">-5% recovery avg</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">7+ meetings/day:</span>
-                      <span className="text-red-400">-15% recovery avg</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-950 rounded-lg p-6 border border-gray-800">
-                  <h3 className="text-white font-medium mb-3">Meeting Type → Performance</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Strategic meetings:</span>
-                      <span className="text-green-400">85% avg performance</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Client meetings:</span>
-                      <span className="text-yellow-400">72% avg performance</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Back-to-back blocks:</span>
-                      <span className="text-red-400">-20% effectiveness</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            
-          </div>
-        ) : mainView === 'demo' && demoTab === 'biometrics' ? (
+        {viewMode === 'dashboard' ? (
           selectedBiometric ? (
             /* Biometric Detail View */
             <div className="space-y-6">
@@ -1263,93 +1106,48 @@ export default function PersistDashboard() {
               </div>
             </div>
           ) : (
-            /* Main Dashboard View */
-            <div className="space-y-12">
+            /* Main Dashboard View - Mobile First */
+            <div className="space-y-6 sm:space-y-8 md:space-y-12 pt-4 md:pt-0">
               
-              {/* 1. CLICKABLE BIOMETRIC RINGS */}
-              <section>
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-8 md:gap-12">
-                  
+              {/* 1. MOBILE-OPTIMIZED PROFESSIONAL READINESS RING */}
+              <section className="px-2 sm:px-0">
+                <div className="flex justify-center">
                   <div 
-                    className="text-center cursor-pointer group"
+                    className="text-center cursor-pointer group w-full max-w-xs sm:max-w-none"
                     onClick={() => setSelectedBiometric('readiness')}
                   >
-                    <div className="relative w-32 h-32 mx-auto mb-4 group-hover:scale-105 transition-transform">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
-                        <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor('readiness')} strokeWidth="6"
-                                strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(currentBiometrics.readiness)} strokeLinecap="round"/>
+                    {/* Mobile Ring - 80% viewport width on mobile */}
+                    <div className="relative w-[80vw] h-[80vw] max-w-[280px] max-h-[280px] sm:w-48 sm:h-48 mx-auto mb-4 group-hover:scale-105 transition-transform">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
+                        <circle cx="90" cy="90" r="80" fill="none" stroke="#1a1a1a" strokeWidth="8"/>
+                        <circle cx="90" cy="90" r="80" fill="none" stroke={getCircleColor('readiness')} strokeWidth="8"
+                                strokeDasharray="502.65" strokeDashoffset={(502.65 - (currentBiometrics.readiness / 100) * 502.65)} strokeLinecap="round"/>
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{currentBiometrics.readiness}%</div>
-                          <div className="text-xs text-gray-500">{currentBiometrics.status}</div>
+                          <div className="text-5xl sm:text-4xl font-bold text-white mb-1">{currentBiometrics.readiness}%</div>
+                          <div className="text-base sm:text-sm text-gray-400 uppercase">Professional</div>
+                          <div className="text-base sm:text-sm text-gray-400 uppercase">Readiness</div>
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-400 uppercase tracking-wide group-hover:text-white transition-colors">
-                      Professional Readiness
-                    </div>
+                    {/* Mobile tap hint */}
+                    <p className="text-xs text-gray-500 sm:hidden">Tap for details</p>
                   </div>
-
-                  <div 
-                    className="text-center cursor-pointer group"
-                    onClick={() => setSelectedBiometric('recovery')}
-                  >
-                    <div className="relative w-32 h-32 mx-auto mb-4 group-hover:scale-105 transition-transform">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
-                        <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor('recovery')} strokeWidth="6"
-                                strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(currentBiometrics.recovery)} strokeLinecap="round"/>
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{currentBiometrics.recovery}%</div>
-                          <div className="text-xs text-gray-500">REC</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-400 uppercase tracking-wide group-hover:text-white transition-colors">
-                      Recovery
-                    </div>
-                  </div>
-
-                  <div 
-                    className="text-center cursor-pointer group"
-                    onClick={() => setSelectedBiometric('strain')}
-                  >
-                    <div className="relative w-32 h-32 mx-auto mb-4 group-hover:scale-105 transition-transform">
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
-                        <circle cx="60" cy="60" r="54" fill="none" stroke="#007aff" strokeWidth="6"
-                                strokeDasharray="339.29" strokeDashoffset={getStrokeDashoffset(Math.min(currentBiometrics.strain * 5, 100))} strokeLinecap="round"/>
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{currentBiometrics.strain}</div>
-                          <div className="text-xs text-gray-500">STR</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-400 uppercase tracking-wide group-hover:text-white transition-colors">
-                      Daily Strain
-                    </div>
-                  </div>
-
                 </div>
               </section>
 
-              {/* 2. TODAY'S FOCUS - 3 RECOMMENDATIONS */}
-              <section>
-                <h2 className="text-xl font-semibold text-white mb-6">Today's Focus</h2>
+              {/* 2. MOBILE-OPTIMIZED WORK IMPACT FOCUS */}
+              <section className="px-2 sm:px-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Today's Work Impact Focus</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {todaysRecommendations.map((rec) => (
-                    <div key={rec.id} className="bg-gray-950 rounded-lg p-6 border border-gray-800">
-                      <div className="flex items-start space-x-4">
+                    <div key={rec.id} className="bg-gray-950 rounded-lg p-4 sm:p-6 border border-gray-800">
+                      <div className="flex items-start space-x-3 sm:space-x-4">
                         <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-green-400"></div>
                         <div className="flex-1">
-                          <p className="text-gray-300 leading-relaxed">
+                          <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                             {rec.message}
                           </p>
                         </div>
@@ -1359,36 +1157,130 @@ export default function PersistDashboard() {
                 </div>
               </section>
 
+              {/* 3. MOBILE-OPTIMIZED TODAY'S MEETINGS */}
+              <section className="px-2 sm:px-0">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">Today's Meetings</h2>
+                  <span className="text-xs sm:text-sm text-yellow-400 bg-yellow-900/20 px-3 py-1 rounded-full inline-block w-fit">
+                    High workload (7 meetings)
+                  </span>
+                </div>
+                
+                {/* Mobile-optimized meeting cards */}
+                <div className="space-y-3">
+                  {todaysMeetings.map((meeting) => {
+                    const performanceScore = meeting.historical.averagePerformance;
+                    const getScoreColor = (score) => {
+                      if (score >= 90) return 'text-green-400 bg-green-900/20';
+                      if (score >= 80) return 'text-blue-400 bg-blue-900/20';
+                      if (score >= 70) return 'text-yellow-400 bg-yellow-900/20';
+                      return 'text-orange-400 bg-orange-900/20';
+                    };
+                    
+                    return (
+                      <div 
+                        key={meeting.id}
+                        onClick={() => setSelectedMeeting(meeting)}
+                        className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 active:bg-gray-800 cursor-pointer transition-all min-h-[60px] touch-manipulation"
+                      >
+                        {/* Mobile Layout */}
+                        <div className="flex justify-between items-start sm:items-center gap-3">
+                          <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                              <div className="text-gray-400 text-sm font-mono mb-1 sm:mb-0 sm:w-20">
+                                {meeting.time.split(' - ')[0]}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-white font-medium text-sm sm:text-base leading-tight">{meeting.title}</h3>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Mobile-friendly score badge */}
+                          <div className={`px-3 py-1 rounded-full text-lg sm:text-2xl font-bold ${getScoreColor(performanceScore).split(' ')[0]} ${getScoreColor(performanceScore).split(' ')[1]} min-w-[60px] text-center`}>
+                            {performanceScore}%
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* 4. MOBILE-OPTIMIZED LEARNING CORRELATIONS */}
+              <section className="px-2 sm:px-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Learning Correlations</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Meeting Density Impact */}
+                  <div className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-gray-700">
+                    <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Meeting Density → Recovery</h3>
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm sm:text-base text-gray-400">5+ meetings/day</span>
+                        <span className="text-sm sm:text-base text-red-400 font-medium">-18% recovery</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm sm:text-base text-gray-400">3-4 meetings/day</span>
+                        <span className="text-sm sm:text-base text-yellow-400 font-medium">-7% recovery</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm sm:text-base text-gray-400">1-2 meetings/day</span>
+                        <span className="text-sm sm:text-base text-green-400 font-medium">+3% recovery</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Meeting Type Performance */}
+                  <div className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-gray-700">
+                    <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Meeting Type → Performance</h3>
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm sm:text-base text-gray-400">Strategic</span>
+                        <span className="text-sm sm:text-base text-green-400 font-medium">87% effective</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm sm:text-base text-gray-400">One-on-Ones</span>
+                        <span className="text-sm sm:text-base text-blue-400 font-medium">82% effective</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm sm:text-base text-gray-400">Team Meetings</span>
+                        <span className="text-sm sm:text-base text-yellow-400 font-medium">74% effective</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
             </div>
           )
-        ) : mainView === 'demo' && demoTab === 'calendar' ? (
+        ) : (
           /* Calendar View */
           <div className="space-y-8">
             
-            {/* Calendar Navigation */}
+            {/* Mobile-Optimized Calendar Navigation */}
             {!selectedMeeting && !selectedDate && (
-              <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4 px-2 sm:px-0">
+                <div className="flex w-full sm:w-auto space-x-1 bg-gray-900 p-1 rounded-lg">
                   <button 
                     onClick={() => setCalendarView('today')}
-                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
-                      calendarView === 'today' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                    className={`flex-1 px-3 sm:px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[48px] ${
+                      calendarView === 'today' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200 active:bg-gray-800'
                     }`}
                   >
                     Today
                   </button>
                   <button 
                     onClick={() => setCalendarView('week')}
-                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
-                      calendarView === 'week' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                    className={`flex-1 px-3 sm:px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[48px] ${
+                      calendarView === 'week' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200 active:bg-gray-800'
                     }`}
                   >
                     Week
                   </button>
                   <button 
                     onClick={() => setCalendarView('month')}
-                    className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
-                      calendarView === 'month' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200'
+                    className={`flex-1 px-3 sm:px-4 py-3 rounded-md text-sm font-medium transition-all touch-manipulation min-h-[48px] ${
+                      calendarView === 'month' ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-200 active:bg-gray-800'
                     }`}
                   >
                     Month
@@ -1406,54 +1298,57 @@ export default function PersistDashboard() {
             )}
 
             {selectedMeeting ? (
-              /* Meeting Detail View */
-              <div className="space-y-6">
+              /* Mobile-Optimized Meeting Detail View */
+              <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
                 <button
                   onClick={() => setSelectedMeeting(null)}
-                  className="text-gray-400 hover:text-white transition-colors mb-4"
+                  className="text-gray-400 hover:text-white active:text-gray-300 transition-colors mb-4 p-2 -ml-2 min-h-[44px] flex items-center touch-manipulation"
                 >
-                  ← Back to {selectedDate ? `${engine.getDayName(selectedDate)}` : calendarView === 'today' ? 'Today' : calendarView === 'week' ? 'Work Week' : 'Calendar'}
+                  ← Back to {selectedDate ? `${engine.getDayName(selectedDate)}` : calendarView === 'today' ? 'Today' : calendarView === 'week' ? 'Week' : 'Calendar'}
                 </button>
                 
-                <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-white mb-2">{selectedMeeting.title}</h2>
-                      <div className="flex items-center space-x-4 text-gray-400">
-                        <span>{selectedMeeting.time}</span>
-                        <MeetingTypeBadge meeting={selectedMeeting} className="px-3 py-1 rounded-full text-xs font-medium" />
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-gray-700">
+                  {/* Mobile-first header */}
+                  <div className="mb-6">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                      <div className="flex-1">
+                        <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 leading-tight">{selectedMeeting.title}</h2>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-400">
+                          <span className="text-sm sm:text-base">{selectedMeeting.time}</span>
+                          <MeetingTypeBadge meeting={selectedMeeting} className="px-3 py-1 rounded-full text-xs font-medium w-fit" />
+                        </div>
                       </div>
                     </div>
-                    {/* Performance Comparison Section */}
-                    <div className="space-y-4">
+                    {/* Mobile Performance Comparison Section */}
+                    <div className="mt-6 space-y-4">
                       {(() => {
                         const actualRating = getMeetingRating(selectedMeeting.id);
                         const isRated = ratedMeetings.has(selectedMeeting.id);
                         
                         return (
                           <>
-                            {/* Horizontal Performance Boxes */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Mobile-Optimized Performance Boxes */}
+                            <div className="grid grid-cols-1 gap-3 sm:gap-4">
                               {/* Predicted Performance */}
-                              <div className={`p-4 rounded-lg border-2 ${getPerformanceColor(selectedMeeting.prediction.outcome)} border-opacity-50`}>
-                                <div className="text-sm text-gray-300">Predicted Performance</div>
-                                <div className="text-2xl font-bold capitalize">{selectedMeeting.prediction.outcome}</div>
-                                <div className="text-sm">{selectedMeeting.prediction.confidence}% confidence</div>
+                              <div className={`p-3 sm:p-4 rounded-lg border-2 ${getPerformanceColor(selectedMeeting.prediction.outcome)} border-opacity-50`}>
+                                <div className="text-xs sm:text-sm text-gray-300">Predicted Performance</div>
+                                <div className="text-xl sm:text-2xl font-bold capitalize">{selectedMeeting.prediction.outcome}</div>
+                                <div className="text-xs sm:text-sm">{selectedMeeting.prediction.confidence}% confidence</div>
                               </div>
 
                               {/* Actual Performance or Rating Interface */}
                               {isRated && actualRating ? (
-                                <div className="p-4 rounded-lg border-2 border-green-500 border-opacity-50 bg-green-900/10">
-                                  <div className="text-sm text-gray-300">Actual Performance</div>
-                                  <div className="text-2xl font-bold">{getRatingLabel(actualRating)}</div>
-                                  <div className="text-sm text-green-400">User Rating</div>
+                                <div className="p-3 sm:p-4 rounded-lg border-2 border-green-500 border-opacity-50 bg-green-900/10">
+                                  <div className="text-xs sm:text-sm text-gray-300">Actual Performance</div>
+                                  <div className="text-xl sm:text-2xl font-bold">{getRatingLabel(actualRating)}</div>
+                                  <div className="text-xs sm:text-sm text-green-400">User Rating</div>
                                 </div>
                               ) : selectedMeeting.hasEnded ? (
-                                <div className="p-4 rounded-lg border-2 border-blue-500 border-opacity-50 bg-blue-900/10">
-                                  <div className="text-sm text-gray-300 mb-3">Rate This Meeting</div>
+                                <div className="p-3 sm:p-4 rounded-lg border-2 border-blue-500 border-opacity-50 bg-blue-900/10">
+                                  <div className="text-xs sm:text-sm text-gray-300 mb-3">Rate This Meeting</div>
                                   
-                                  {/* Inline Star Rating */}
-                                  <div className="flex justify-center space-x-1 mb-2">
+                                  {/* Mobile-Optimized Star Rating */}
+                                  <div className="flex justify-center space-x-2 sm:space-x-1 mb-3">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                       <button
                                         key={star}
@@ -1470,7 +1365,7 @@ export default function PersistDashboard() {
                                             meetingTitle: selectedMeeting.title
                                           });
                                         }}
-                                        className="text-xl text-gray-600 hover:text-yellow-400 transition-colors"
+                                        className="text-2xl sm:text-xl text-gray-600 hover:text-yellow-400 active:text-yellow-300 transition-colors p-1 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
                                       >
                                         ★
                                       </button>
@@ -1478,12 +1373,12 @@ export default function PersistDashboard() {
                                   </div>
                                   
                                   <div className="text-xs text-center text-gray-400">
-                                    Click to rate
+                                    Tap to rate
                                   </div>
                                 </div>
                               ) : (
-                                <div className="p-4 rounded-lg border-2 border-gray-600 border-opacity-50 bg-gray-800/30">
-                                  <div className="text-sm text-gray-300 mb-3">Future Meeting</div>
+                                <div className="p-3 sm:p-4 rounded-lg border-2 border-gray-600 border-opacity-50 bg-gray-800/30">
+                                  <div className="text-xs sm:text-sm text-gray-300 mb-3">Future Meeting</div>
                                   <div className="text-center">
                                     <div className="text-2xl text-gray-500 mb-2">⏳</div>
                                     <div className="text-xs text-gray-400">
@@ -1518,48 +1413,49 @@ export default function PersistDashboard() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      <section className="bg-gray-800 rounded-lg p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Performance Analysis</h3>
-                        <div className="space-y-4">
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">Historical Average:</span>
-                            <span className="text-white font-medium">{selectedMeeting.historical.averagePerformance}%</span>
+                  {/* Mobile-Optimized Analysis & Recommendations */}
+                  <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
+                    <div className="space-y-4 sm:space-y-6">
+                      <section className="bg-gray-800 rounded-lg p-4 sm:p-6">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Performance Analysis</h3>
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm sm:text-base text-gray-300">Historical Average:</span>
+                            <span className="text-sm sm:text-base text-white font-medium">{selectedMeeting.historical.averagePerformance}%</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">Previous Meetings:</span>
-                            <span className="text-white font-medium">{selectedMeeting.historical.totalMeetings}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm sm:text-base text-gray-300">Previous Meetings:</span>
+                            <span className="text-sm sm:text-base text-white font-medium">{selectedMeeting.historical.totalMeetings}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-300">Predicted Performance:</span>
-                            <span className="text-white font-medium">{selectedMeeting.prediction.outcome}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm sm:text-base text-gray-300">Predicted Performance:</span>
+                            <span className="text-sm sm:text-base text-white font-medium capitalize">{selectedMeeting.prediction.outcome}</span>
                           </div>
                         </div>
                       </section>
                     </div>
 
-                    <div className="space-y-6">
-                      <section className="bg-gray-800 rounded-lg p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Recommendations</h3>
-                        <div className="space-y-4">
+                    <div className="space-y-4 sm:space-y-6">
+                      <section className="bg-gray-800 rounded-lg p-4 sm:p-6">
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Recommendations</h3>
+                        <div className="space-y-3 sm:space-y-4">
                           {selectedMeeting.prediction.outcome === 'adequate' && (
-                            <div className="p-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-900/20">
-                              <div className="font-semibold text-white mb-1">Consider Optimization</div>
-                              <div className="text-gray-300 text-sm">Your biometric data suggests this may not be optimal timing for peak performance.</div>
+                            <div className="p-3 sm:p-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-900/20">
+                              <div className="font-semibold text-white mb-1 text-sm sm:text-base">Consider Optimization</div>
+                              <div className="text-gray-300 text-xs sm:text-sm leading-relaxed">Your biometric data suggests this may not be optimal timing for peak performance.</div>
                             </div>
                           )}
                           {selectedMeeting.rescheduleSuggestion && (
-                            <div className="p-4 rounded-lg border-l-4 border-blue-500 bg-blue-900/20">
-                              <div className="font-semibold text-white mb-1">Reschedule Suggestion</div>
-                              <div className="text-gray-300 text-sm">
+                            <div className="p-3 sm:p-4 rounded-lg border-l-4 border-blue-500 bg-blue-900/20">
+                              <div className="font-semibold text-white mb-1 text-sm sm:text-base">Reschedule Suggestion</div>
+                              <div className="text-gray-300 text-xs sm:text-sm leading-relaxed">
                                 Move to {selectedMeeting.rescheduleSuggestion.day} at {selectedMeeting.rescheduleSuggestion.time} for {selectedMeeting.rescheduleSuggestion.improvement} improvement
                               </div>
                             </div>
                           )}
-                          <div className="p-4 rounded-lg border-l-4 border-green-500 bg-green-900/20">
-                            <div className="font-semibold text-white mb-1">Excellent readiness - ideal conditions for important meetings</div>
-                            <div className="text-gray-300 text-sm">Your biometrics show optimal performance capacity - perfect timing for critical decisions and strategic discussions</div>
+                          <div className="p-3 sm:p-4 rounded-lg border-l-4 border-green-500 bg-green-900/20">
+                            <div className="font-semibold text-white mb-1 text-sm sm:text-base">Excellent readiness - ideal conditions</div>
+                            <div className="text-gray-300 text-xs sm:text-sm leading-relaxed">Your biometrics show optimal performance capacity - perfect timing for critical decisions and strategic discussions</div>
                           </div>
                         </div>
                       </section>
@@ -1632,79 +1528,116 @@ export default function PersistDashboard() {
               /* Calendar Views */
               <div>
                 {calendarView === 'today' && (
-                  <section>
-                    <h2 className="text-2xl font-light text-white mb-6">Today's Schedule</h2>
-                    <div className="space-y-2">
-                      {engine.getMeetingsForDate(0).map((meeting) => (
-                        <div 
-                          key={meeting.id}
-                          onClick={() => setSelectedMeeting(meeting)}
-                          className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 cursor-pointer transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 min-h-[44px] touch-manipulation"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-4">
-                              <div className="text-gray-400 text-sm font-mono w-24">
-                                {meeting.time.split(' - ')[0]}
-                              </div>
+                  <section className="px-2 sm:px-0">
+                    <h2 className="text-lg sm:text-2xl font-light text-white mb-4 sm:mb-6">Today's Schedule</h2>
+                    <div className="space-y-3">
+                      {engine.getMeetingsForDate(0).map((meeting) => {
+                        const performanceScore = meeting.historical.averagePerformance;
+                        const getScoreColor = (score) => {
+                          if (score >= 90) return 'text-green-400 bg-green-900/20';
+                          if (score >= 80) return 'text-blue-400 bg-blue-900/20';
+                          if (score >= 70) return 'text-yellow-400 bg-yellow-900/20';
+                          return 'text-orange-400 bg-orange-900/20';
+                        };
+                        
+                        return (
+                          <div 
+                            key={meeting.id}
+                            onClick={() => setSelectedMeeting(meeting)}
+                            className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 active:bg-gray-800 cursor-pointer transition-all min-h-[60px] touch-manipulation"
+                          >
+                            <div className="flex justify-between items-start gap-3">
                               <div className="flex-1">
-                                <h3 className="text-white font-medium">{meeting.title}</h3>
-                                <MeetingTypeBadge meeting={meeting} className="px-2 py-1 rounded text-xs font-medium" />
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                                  <div className="text-gray-400 text-sm font-mono mb-1 sm:mb-0 sm:w-20">
+                                    {meeting.time.split(' - ')[0]}
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="text-white font-medium text-sm sm:text-base leading-tight mb-1">{meeting.title}</h3>
+                                    <MeetingTypeBadge meeting={meeting} className="px-2 py-1 rounded text-xs font-medium" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                <div className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(performanceScore).split(' ')[0]} ${getScoreColor(performanceScore).split(' ')[1]} min-w-[50px] text-center`}>
+                                  {performanceScore}%
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {!ratedMeetings.has(meeting.id) && meeting.hasEnded && (
+                                    <button
+                                      onClick={(e) => handleRateMeeting(meeting, e)}
+                                      className="px-2 py-1 bg-blue-900/50 hover:bg-blue-800/50 active:bg-blue-800/70 border border-blue-700 rounded text-xs text-blue-200 hover:text-blue-100 transition-colors min-h-[28px] touch-manipulation"
+                                    >
+                                      Rate
+                                    </button>
+                                  )}
+                                  {meeting.hasEnded === false && (
+                                    <div className="px-2 py-1 bg-gray-700/50 border border-gray-600 rounded text-xs text-gray-400">
+                                      Scheduled
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3">
-                            {!ratedMeetings.has(meeting.id) && meeting.hasEnded && (
-                              <button
-                                onClick={(e) => handleRateMeeting(meeting, e)}
-                                className="px-2 py-1 bg-blue-900/50 hover:bg-blue-800/50 border border-blue-700 rounded text-xs text-blue-200 hover:text-blue-100 transition-colors"
-                              >
-                                Rate Meeting
-                              </button>
-                            )}
-                            {meeting.hasEnded === false && (
-                              <div className="px-2 py-1 bg-gray-700/50 border border-gray-600 rounded text-xs text-gray-400">
-                                Scheduled
-                              </div>
-                            )}
-                            <div className={`px-3 py-1 rounded-full text-xs font-bold ${getPerformanceColor(meeting.prediction.outcome)} ${!meeting.hasEnded ? 'opacity-60' : ''}`}>
-                              {meeting.prediction.outcome.toUpperCase()}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </section>
                 )}
 
                 {calendarView === 'week' && (
-                  <section>
-                    <h2 className="text-2xl font-light text-white mb-6">Work Week</h2>
-                    <div className="grid grid-cols-1 gap-6">
+                  <section className="px-2 sm:px-0">
+                    <h2 className="text-lg sm:text-2xl font-light text-white mb-4 sm:mb-6">Work Week</h2>
+                    <div className="grid grid-cols-1 gap-4 sm:gap-6">
                       {engine.getWeekMeetings().map(({ day, meetings, isToday }) => (
-                        <div key={day} className={`rounded-lg p-4 border ${
+                        <div key={day} className={`rounded-lg p-4 border transition-all ${
                           isToday 
                             ? 'bg-blue-900/30 border-blue-700/50' 
                             : 'bg-gray-900 border-gray-700'
                         }`}>
-                          <h3 className={`font-medium mb-3 ${
-                            isToday ? 'text-blue-200' : 'text-white'
-                          }`}>{day}</h3>
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className={`font-medium text-sm sm:text-base ${
+                              isToday ? 'text-blue-200' : 'text-white'
+                            }`}>{day}</h3>
+                            <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                              {meetings.length} meeting{meetings.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
                           <div className="space-y-2">
-                            {meetings.map((meeting) => (
-                              <div 
-                                key={meeting.id}
-                                onClick={() => setSelectedMeeting(meeting)}
-                                className="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-800 p-2 rounded"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-gray-400 font-mono text-xs">{meeting.time.split(' - ')[0]}</span>
-                                  <span className="text-gray-300">{meeting.title}</span>
+                            {meetings.map((meeting) => {
+                              const performanceScore = meeting.historical.averagePerformance;
+                              const getScoreColor = (score) => {
+                                if (score >= 90) return 'text-green-400 bg-green-900/20';
+                                if (score >= 80) return 'text-blue-400 bg-blue-900/20';
+                                if (score >= 70) return 'text-yellow-400 bg-yellow-900/20';
+                                return 'text-orange-400 bg-orange-900/20';
+                              };
+                              
+                              return (
+                                <div 
+                                  key={meeting.id}
+                                  onClick={() => setSelectedMeeting(meeting)}
+                                  className="cursor-pointer hover:bg-gray-800 active:bg-gray-700 p-3 rounded transition-all touch-manipulation min-h-[48px]"
+                                >
+                                  <div className="flex justify-between items-start gap-3">
+                                    <div className="flex-1">
+                                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+                                        <div className="text-gray-400 font-mono text-xs mb-1 sm:mb-0">
+                                          {meeting.time.split(' - ')[0]}
+                                        </div>
+                                        <div className="flex-1">
+                                          <span className="text-gray-300 text-sm font-medium leading-tight">{meeting.title}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded-full text-xs font-bold ${getScoreColor(performanceScore).split(' ')[0]} ${getScoreColor(performanceScore).split(' ')[1]} min-w-[45px] text-center`}>
+                                      {performanceScore}%
+                                    </div>
+                                  </div>
                                 </div>
-                                <span className={`px-2 py-1 rounded text-xs font-bold ${getPerformanceColor(meeting.prediction.outcome)}`}>
-                                  {meeting.prediction.outcome.toUpperCase()}
-                                </span>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -1713,16 +1646,17 @@ export default function PersistDashboard() {
                 )}
 
                 {calendarView === 'month' && (
-                  <section>
-                    <h2 className="text-2xl font-light text-white mb-6">August 2025</h2>
-                    <p className="text-gray-400 text-sm mb-4">Click on any day with meetings to see detailed schedule</p>
+                  <section className="px-2 sm:px-0">
+                    <h2 className="text-lg sm:text-2xl font-light text-white mb-4 sm:mb-6">August 2025</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mb-4">Tap on any day with meetings to see detailed schedule</p>
                     
-                    <div className="bg-gray-900 rounded-lg border border-gray-700">
-                      {/* Calendar Header */}
+                    <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
+                      {/* Mobile Calendar Header */}
                       <div className="grid grid-cols-7 border-b border-gray-700">
                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                          <div key={day} className="p-3 text-center text-gray-400 text-sm font-medium border-r border-gray-700 last:border-r-0">
-                            {day}
+                          <div key={day} className="p-2 sm:p-3 text-center text-gray-400 text-xs sm:text-sm font-medium border-r border-gray-700 last:border-r-0">
+                            <span className="hidden sm:inline">{day}</span>
+                            <span className="sm:hidden">{day.substring(0, 1)}</span>
                           </div>
                         ))}
                       </div>
@@ -1763,11 +1697,12 @@ export default function PersistDashboard() {
                             <div 
                               key={i} 
                               className={`
-                                min-h-16 sm:min-h-20 md:min-h-24 p-2 sm:p-3 border-r border-b border-gray-700 last:border-r-0 transition-all touch-manipulation
+                                min-h-14 sm:min-h-20 md:min-h-24 p-2 sm:p-3 border-r border-b border-gray-700 last:border-r-0 transition-all touch-manipulation
                                 ${isCurrentMonth ? 'bg-gray-900' : 'bg-gray-950'}
                                 ${isToday ? 'bg-white text-black' : 'text-gray-300'}
-                                ${hasAugustMeetings ? 'cursor-pointer hover:bg-gray-800 hover:scale-[1.02]' : ''}
+                                ${hasAugustMeetings ? 'cursor-pointer hover:bg-gray-800 active:bg-gray-700' : ''}
                                 ${!isCurrentMonth ? 'opacity-30' : ''}
+                                relative
                               `}
                               onClick={hasAugustMeetings && isCurrentMonth ? () => {
                                 setSelectedDate(dateOffset);
@@ -1780,58 +1715,55 @@ export default function PersistDashboard() {
                                     {dayNum}
                                   </div>
                                   {hasAugustMeetings && (
-                                    <div className="flex-1 space-y-1">
-                                      <div className={`text-xs sm:text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'}`}>
+                                    <div className="flex-1 flex flex-col justify-between">
+                                      <div className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'} leading-tight`}>
                                         {dayNum === 25 ? '7 meetings' :
                                          dayNum === 26 ? '3 meetings' :
                                          dayNum === 27 ? '2 meetings' :
                                          dayNum === 28 ? '3 meetings' :
                                          dayNum === 29 ? '2 meetings' : ''}
                                       </div>
-                                      <div className="flex space-x-1 flex-wrap">
-                                        {/* Performance indicator dots based on meeting predictions */}
+                                      {/* Mobile-optimized performance indicators */}
+                                      <div className="flex items-center justify-center mt-1">
                                         {dayNum === 25 && ( // Monday - Today - mix of excellent/good/adequate
-                                          <>
-                                            <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-green-600' : 'bg-green-400'}`} title="Excellent meetings"></div>
-                                            <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-blue-600' : 'bg-blue-400'}`} title="Good meetings"></div>
-                                            <div className={`w-2 h-2 rounded-full ${isToday ? 'bg-gray-500' : 'bg-gray-400'}`} title="Adequate meetings"></div>
-                                            <div className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'} ml-1`}>
-                                              +4
-                                            </div>
-                                          </>
+                                          <div className="flex items-center space-x-0.5">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-green-600' : 'bg-green-400'}`}></div>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-blue-600' : 'bg-blue-400'}`}></div>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-yellow-600' : 'bg-yellow-400'}`}></div>
+                                            <span className={`text-xs ${isToday ? 'text-gray-600' : 'text-gray-400'} ml-1`}>+4</span>
+                                          </div>
                                         )}
                                         {dayNum === 26 && ( // Tuesday - mostly excellent
-                                          <>
-                                            <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
-                                            <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
-                                            <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
-                                          </>
+                                          <div className="flex items-center space-x-0.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                          </div>
                                         )}
                                         {dayNum === 27 && ( // Wednesday - mixed with optimization opportunity
-                                          <>
-                                            <div className="w-2 h-2 rounded-full bg-gray-400" title="Needs optimization"></div>
-                                            <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
-                                          </>
+                                          <div className="flex items-center space-x-0.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                          </div>
                                         )}
                                         {dayNum === 28 && ( // Thursday - good performance
-                                          <>
-                                            <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
-                                            <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
-                                            <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
-                                          </>
+                                          <div className="flex items-center space-x-0.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                          </div>
                                         )}
                                         {dayNum === 29 && ( // Friday - excellent performance
-                                          <>
-                                            <div className="w-2 h-2 rounded-full bg-blue-400" title="Good performance"></div>
-                                            <div className="w-2 h-2 rounded-full bg-green-400" title="Excellent performance"></div>
-                                          </>
+                                          <div className="flex items-center space-x-0.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                                          </div>
                                         )}
                                       </div>
-                                    </div>
-                                  )}
-                                  {hasMeetings && (
-                                    <div className={`text-xs ${isToday ? 'text-gray-700' : 'text-gray-500'} opacity-75`}>
-                                      Click for details
+                                      {/* Mobile tap indicator */}
+                                      <div className={`text-xs ${isToday ? 'text-gray-700' : 'text-gray-500'} opacity-75 text-center hidden sm:block`}>
+                                        Tap for details
+                                      </div>
                                     </div>
                                   )}
                                 </div>
@@ -1863,7 +1795,7 @@ export default function PersistDashboard() {
             )}
 
           </div>
-        ) : null}
+        )}
 
       </div>
 
@@ -1972,6 +1904,34 @@ export default function PersistDashboard() {
           </div>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-50">
+        <div className="grid grid-cols-2 h-16">
+          <button
+            onClick={() => setViewMode('dashboard')}
+            className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
+              viewMode === 'dashboard' ? 'text-white bg-gray-900' : 'text-gray-500'
+            }`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span className="text-xs">Dashboard</span>
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
+              viewMode === 'calendar' ? 'text-white bg-gray-900' : 'text-gray-500'
+            }`}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs">Calendar</span>
+          </button>
+        </div>
+      </nav>
 
     </div>
   )
