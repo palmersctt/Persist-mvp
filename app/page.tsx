@@ -53,7 +53,7 @@ interface DataDrivenInsight {
 }
 
 interface WorkCapacityStatus {
-  level: 'optimal' | 'good' | 'moderate' | 'recovery';
+  level: 'optimal' | 'good' | 'moderate' | 'recovery' | 'estimated' | 'peak';
   message: string;
   color: string;
   description: string;
@@ -95,17 +95,16 @@ class BiometricEngine {
   private cognitiveLoad: CognitiveLoadState;
   private workActivities: WorkActivity[];
   private currentTime: Date;
+  private currentScenario: number = 0;
 
   constructor() {
-    // Generate a coherent performance scenario
-    const scenario = this.generateCoherentScenario();
+    // Initialize with first scenario
+    this.currentScenario = 0;
+    const scenario = this.getScenarioData(this.currentScenario);
     
     this.currentData = scenario.biometrics;
     this.previousReadiness = null;
-    this.isConnected = {
-      calendar: false,
-      wearable: false
-    };
+    this.isConnected = scenario.connections;
     
     // Today's schedule analysis aligned with scenario
     this.todaySchedule = scenario.schedule;
@@ -119,131 +118,162 @@ class BiometricEngine {
     this.cognitiveLoad = this.calculateCognitiveLoad();
   }
 
-  // Generate coherent performance scenarios
-  private generateCoherentScenario() {
+  // Get specific scenario data by index
+  private getScenarioData(scenarioIndex: number) {
     const scenarios = [
-      // HIGH PERFORMANCE DAY
+      // SCENARIO 1 - HIGH PERFORMANCE (85-95%)
       {
-        type: 'high_performance',
+        type: 'peak_performance',
         biometrics: {
-          readiness: 87,
-          recovery: 92,
-          strain: 10.2,
-          hrv: 72,
-          sleep: '8.6h',
-          status: 'READY'
+          readiness: 92,
+          recovery: 94,
+          strain: 8.5,
+          hrv: 78,
+          sleep: '8.7h',
+          status: 'EXCELLENT'
         },
         schedule: {
-          meetingCount: 4,
-          backToBackCount: 1,
-          bufferTime: 75, // good buffer time
-          durationHours: 6.5,
-          fragmentationScore: 85
+          meetingCount: 3,
+          backToBackCount: 0,
+          bufferTime: 90, // excellent buffer time
+          durationHours: 5.5,
+          fragmentationScore: 92
         },
         breakdown: {
-          source: 'simulated' as const,
-          contributors: ['Sleep Quality: 8.6h (Excellent)', 'HRV: 72ms (Above Average)', 'Low Strain: 10.2'],
-          primaryFactors: ['Excellent recovery supports high cognitive capacity', 'Minimal accumulated fatigue']
+          source: 'whoop' as const,
+          contributors: ['Sleep Quality: 8.7h (Excellent)', 'HRV: 78ms (Excellent)', 'Low Strain: 8.5'],
+          primaryFactors: ['Peak physiological readiness', 'Minimal cognitive demand from light schedule']
+        },
+        connections: {
+          calendar: true,
+          wearable: true
         }
       },
-      // MODERATE PERFORMANCE DAY
+      // SCENARIO 2 - MODERATE PERFORMANCE (65-79%)
       {
-        type: 'moderate_performance',
+        type: 'good_performance',
         biometrics: {
           readiness: 72,
-          recovery: 78,
-          strain: 14.8,
-          hrv: 58,
-          sleep: '7.2h',
-          status: 'ADEQUATE'
+          recovery: 79,
+          strain: 13.2,
+          hrv: 61,
+          sleep: '7.4h',
+          status: 'GOOD'
         },
         schedule: {
-          meetingCount: 6,
-          backToBackCount: 2,
-          bufferTime: 45, // moderate buffer
-          durationHours: 7.5,
-          fragmentationScore: 68
+          meetingCount: 5,
+          backToBackCount: 1,
+          bufferTime: 45, // adequate buffer
+          durationHours: 7.0,
+          fragmentationScore: 74
         },
         breakdown: {
-          source: 'simulated' as const,
-          contributors: ['Sleep Quality: 7.2h (Good)', 'HRV: 58ms (Average)', 'Moderate Strain: 14.8'],
-          primaryFactors: ['Moderate recovery supports steady work', 'Some accumulated cognitive load present']
+          source: 'oura' as const,
+          contributors: ['Sleep Quality: 7.4h (Good)', 'HRV: 61ms (Good)', 'Moderate Strain: 13.2'],
+          primaryFactors: ['Solid biometric foundation', 'Moderate schedule load building cognitive demand']
+        },
+        connections: {
+          calendar: true,
+          wearable: true
         }
       },
-      // RECOVERY NEEDED DAY
+      // SCENARIO 3 - LOW PERFORMANCE (40-64%)
       {
         type: 'recovery_needed',
         biometrics: {
           readiness: 58,
-          recovery: 65,
-          strain: 18.4,
-          hrv: 45,
-          sleep: '6.1h',
-          status: 'CAUTION'
+          recovery: 62,
+          strain: 19.8,
+          hrv: 42,
+          sleep: '5.9h',
+          status: 'POOR'
         },
         schedule: {
           meetingCount: 8,
           backToBackCount: 4,
-          bufferTime: 20, // minimal buffer
+          bufferTime: 15, // minimal buffer
           durationHours: 8.5,
-          fragmentationScore: 45
+          fragmentationScore: 38
+        },
+        breakdown: {
+          source: 'whoop' as const,
+          contributors: ['Sleep Quality: 5.9h (Poor)', 'HRV: 42ms (Below Average)', 'High Strain: 19.8'],
+          primaryFactors: ['Poor physiological recovery', 'Heavy schedule creating cognitive overload']
+        },
+        connections: {
+          calendar: true,
+          wearable: true
+        }
+      },
+      // SCENARIO 4 - NO WEARABLE DATA (50-70% estimated)
+      {
+        type: 'no_wearable_data',
+        biometrics: {
+          readiness: 65, // estimated based on schedule only
+          recovery: 0, // no data
+          strain: 0, // no data
+          hrv: 0, // no data
+          sleep: 'Unknown',
+          status: 'ESTIMATED'
+        },
+        schedule: {
+          meetingCount: 6,
+          backToBackCount: 2,
+          bufferTime: 30, // calendar-only analysis
+          durationHours: 7.5,
+          fragmentationScore: 65
         },
         breakdown: {
           source: 'simulated' as const,
-          contributors: ['Sleep Quality: 6.1h (Poor)', 'HRV: 45ms (Below Average)', 'High Strain: 18.4'],
-          primaryFactors: ['Poor recovery indicates high baseline cognitive load', 'Heavy schedule compounds mental fatigue']
+          contributors: ['Schedule Analysis: 6 meetings', 'Calendar Load: 7.5h workday', 'No biometric data available'],
+          primaryFactors: ['Performance estimated from schedule patterns only', 'Connect wearable for personalized insights']
+        },
+        connections: {
+          calendar: true,
+          wearable: false
         }
       }
     ];
     
-    // For demo, cycle through scenarios or pick randomly
-    const currentHour = new Date().getHours();
-    if (currentHour >= 9 && currentHour < 12) {
-      return scenarios[0]; // High performance morning
-    } else if (currentHour >= 12 && currentHour < 16) {
-      return scenarios[1]; // Moderate performance afternoon
-    } else {
-      return scenarios[2]; // Recovery needed late day
-    }
+    return scenarios[scenarioIndex % scenarios.length];
   }
 
   getCurrentBiometrics() {
     return this.currentData;
   }
 
-  // Whoop-style performance index status aligned with cognitive load
+  // Whoop-style performance index status aligned with scenarios
   getWorkCapacityStatus(): WorkCapacityStatus {
     const readiness = this.currentData.readiness;
-    const cognitiveLoad = this.getCognitiveLoad();
+    const isNoWearableData = this.currentData.status === 'ESTIMATED';
     
-    // Align performance levels with readiness scores
-    if (readiness >= 80) {
+    if (isNoWearableData) {
       return {
-        level: 'optimal',
-        message: 'OPTIMAL PERFORMANCE',
+        level: 'estimated',
+        message: 'ESTIMATED PERFORMANCE',
+        color: '#6b7280', // Gray
+        description: 'Limited analysis without biometric data - connect your wearable for full insights and personalized recommendations.'
+      };
+    } else if (readiness >= 85) {
+      return {
+        level: 'peak',
+        message: 'PEAK PERFORMANCE',
         color: '#25d366', // Green
-        description: 'You\'re primed for peak performance today. Excellent time for high-stakes work and important decisions.'
+        description: 'Excellent conditions for strategic work and important decisions. Optimal day for tackling complex projects and high-stakes meetings.'
       };
     } else if (readiness >= 60) {
       return {
-        level: 'moderate',
-        message: 'MODERATE PERFORMANCE',
+        level: 'good',
+        message: 'GOOD PERFORMANCE',
         color: '#ffb347', // Yellow/Orange
-        description: 'Adequate performance capacity. Focus on important tasks and maintain steady output.'
-      };
-    } else if (readiness >= 40) {
-      return {
-        level: 'low',
-        message: 'LOW PERFORMANCE',
-        color: '#ff7744', // Orange-Red
-        description: 'Limited performance capacity. Focus on essential tasks only and consider lighter workload.'
+        description: 'Solid foundation for productive work, maintain steady output. Good capacity for routine work, avoid overly complex decisions.'
       };
     } else {
       return {
         level: 'recovery',
         message: 'RECOVERY NEEDED',
-        color: '#ff4444', // Red
-        description: 'Prioritize recovery today. Keep workload minimal and reschedule non-essential commitments.'
+        color: '#ff7744', // Orange-Red
+        description: 'Focus on essential tasks only, consider lighter workload. High cognitive load detected - delegate complex tasks, prioritize recovery.'
       };
     }
   }
@@ -252,6 +282,13 @@ class BiometricEngine {
   private calculateMorningBaseline(): number {
     const recovery = this.currentData.recovery;
     const hrv = this.currentData.hrv;
+    
+    // Handle no-wearable data scenario
+    if (this.currentData.status === 'ESTIMATED') {
+      // For no wearable data, use schedule-only baseline (moderate starting load)
+      return 45; // Moderate baseline when no biometric data available
+    }
+    
     const sleepQuality = parseFloat(this.currentData.sleep.replace('h', ''));
     
     // Good recovery/sleep = LOWER starting load (more cognitive availability)
@@ -433,24 +470,30 @@ class BiometricEngine {
     let message: string;
     const readiness = this.currentData.readiness;
     
-    // Align cognitive load capacity with readiness (inverse relationship)
-    // High readiness = Low cognitive load = High cognitive availability
-    if (readiness >= 80) {
-      // OPTIMAL PERFORMANCE: Low cognitive load (25-35%) = High availability
-      capacity = 'high';
-      message = `Cognitive Load: ${current}% - excellent cognitive availability for strategic work`;
-    } else if (readiness >= 60) {
-      // MODERATE PERFORMANCE: Moderate cognitive load (45-60%) = Medium availability  
+    // Handle no-wearable data scenario
+    if (this.currentData.status === 'ESTIMATED') {
       capacity = 'medium';
-      message = `Cognitive Load: ${current}% - adequate cognitive availability for important tasks`;
-    } else if (readiness >= 40) {
-      // LOW PERFORMANCE: High cognitive load (70-85%) = Low availability
-      capacity = 'low';
-      message = `Cognitive Load: ${current}% - limited cognitive availability, focus on essential tasks only`;
+      message = `Cognitive Load: Unknown - Connect Device for personalized cognitive load tracking and insights`;
     } else {
-      // RECOVERY NEEDED: Very high cognitive load (85%+) = Depleted availability
-      capacity = 'depleted';
-      message = `Cognitive Load: ${current}% - cognitive resources depleted, prioritize recovery`;
+      // Align cognitive load capacity with readiness (inverse relationship)
+      // High readiness = Low cognitive load = High cognitive availability
+      if (readiness >= 80) {
+        // OPTIMAL PERFORMANCE: Low cognitive load (25-35%) = High availability
+        capacity = 'high';
+        message = `Cognitive Load: ${current}% - excellent cognitive availability for strategic work`;
+      } else if (readiness >= 60) {
+        // MODERATE PERFORMANCE: Moderate cognitive load (45-60%) = Medium availability  
+        capacity = 'medium';
+        message = `Cognitive Load: ${current}% - adequate cognitive availability for important tasks`;
+      } else if (readiness >= 40) {
+        // LOW PERFORMANCE: High cognitive load (70-85%) = Low availability
+        capacity = 'low';
+        message = `Cognitive Load: ${current}% - limited cognitive availability, focus on essential tasks only`;
+      } else {
+        // RECOVERY NEEDED: Very high cognitive load (85%+) = Depleted availability
+        capacity = 'depleted';
+        message = `Cognitive Load: ${current}% - cognitive resources depleted, prioritize recovery`;
+      }
     }
     
     return {
@@ -481,8 +524,8 @@ class BiometricEngine {
     return [
       {
         label: 'Cognitive Load',
-        value: cognitiveLoad.current,
-        unit: '%',
+        value: this.currentData.status === 'ESTIMATED' ? 'Unknown' : cognitiveLoad.current,
+        unit: this.currentData.status === 'ESTIMATED' ? '' : '%',
         status: cognitiveLoad.capacity === 'high' ? 'good' : 
                 cognitiveLoad.capacity === 'medium' ? 'average' : 'needs_attention',
         icon: '🧠'
@@ -532,41 +575,31 @@ class BiometricEngine {
   refreshData(previousData: BiometricData | null = null) {
     this.previousReadiness = this.currentData.readiness;
     
-    // Generate realistic variations in biometric data
-    const readinessVariation = (Math.random() - 0.5) * 30;
-    const recoveryVariation = (Math.random() - 0.5) * 20;
-    const strainVariation = (Math.random() - 0.5) * 8;
-    const hrvVariation = (Math.random() - 0.5) * 20;
+    // Cycle to next scenario
+    this.currentScenario = (this.currentScenario + 1) % 4;
+    const scenario = this.getScenarioData(this.currentScenario);
     
-    this.currentData = {
-      readiness: Math.max(65, Math.min(95, Math.round(87 + readinessVariation))),
-      recovery: Math.max(70, Math.min(98, Math.round(94 + recoveryVariation))),
-      strain: Math.max(8, Math.min(18, parseFloat((12.1 + strainVariation).toFixed(1)))),
-      hrv: Math.max(50, Math.min(80, Math.round(67 + hrvVariation))),
-      sleep: '8.4h',
-      status: 'READY'
-    };
-
-    // Update cognitive load based on new biometrics and simulated time progression
-    this.currentTime = new Date(this.currentTime.getTime() + (Math.random() * 2 * 60 * 60 * 1000)); // Simulate 0-2 hours passing
+    // Update all data to match new scenario
+    this.currentData = scenario.biometrics;
+    this.isConnected = scenario.connections;
+    this.todaySchedule = scenario.schedule;
+    this.biometricBreakdown = scenario.breakdown;
+    
+    // Update cognitive load based on new scenario
+    this.currentTime = new Date();
     this.workActivities = this.generateTodaysActivities();
     this.cognitiveLoad = this.calculateCognitiveLoad();
 
-    const cognitiveLoad = this.getCognitiveLoad();
-    let changeInsight = cognitiveLoad.message;
-
-    // Add biometric change insight if significant
-    if (previousData) {
-      const readinessChange = this.currentData.readiness - previousData.readiness;
-      const absChange = Math.abs(readinessChange);
-      
-      if (absChange >= 8) {
-        if (readinessChange > 0) {
-          changeInsight += ` | Biometric improvement (+${readinessChange}%) detected`;
-        } else {
-          changeInsight += ` | Biometric decline (${readinessChange}%) - monitor workload`;
-        }
-      }
+    // Generate scenario-specific change insight
+    let changeInsight: string;
+    const scenarioNames = ['Peak Performance', 'Good Performance', 'Recovery Needed', 'Estimated Performance'];
+    const currentScenarioName = scenarioNames[this.currentScenario];
+    
+    if (this.currentScenario === 3) {
+      // No wearable data scenario
+      changeInsight = `Switched to ${currentScenarioName} mode - connect your wearable device for personalized biometric insights`;
+    } else {
+      changeInsight = `Scenario updated to ${currentScenarioName} - showing ${this.currentData.readiness}% Performance Index with ${this.cognitiveLoad.current}% cognitive load`;
     }
 
     return {
@@ -751,6 +784,19 @@ class BiometricEngine {
     const currentHour = this.currentTime.getHours();
     
     const readiness = this.currentData.readiness;
+    
+    // Handle no-wearable data scenario
+    if (this.currentData.status === 'ESTIMATED') {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Limited Performance Analysis',
+        message: `Performance estimate (${readiness}%) based on schedule analysis only. Connect your wearable device for personalized biometric insights, cognitive load tracking, and more accurate performance predictions.`,
+        dataSource: 'Calendar analysis only',
+        urgency: 'medium',
+        category: 'combination'
+      });
+      return insights;
+    }
     
     // Coherent insights based on performance levels (inverse relationship)
     if (readiness >= 80) {
@@ -1065,6 +1111,24 @@ export default function PersistDashboard() {
               </p>
             </div>
           )}
+
+          {/* Scenario indicators */}
+          <div className="flex justify-center space-x-2 mb-4">
+            {Array.from({ length: 4 }, (_, i) => {
+              const isActive = i === (refreshCount % 4);
+              const scenarioColors = ['#25d366', '#ffb347', '#ff7744', '#6b7280']; // green, yellow, orange-red, gray
+              return (
+                <div 
+                  key={i}
+                  className="w-2 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    backgroundColor: isActive ? scenarioColors[i] : 'rgba(255,255,255,0.2)',
+                    transform: isActive ? 'scale(1.2)' : 'scale(1)'
+                  }}
+                />
+              );
+            })}
+          </div>
         </section>
 
         {/* Clean Secondary Metrics with Subtle Visual Indicators */}
@@ -1091,8 +1155,9 @@ export default function PersistDashboard() {
                         <div 
                           className="whoop-progress-fill"
                           style={{ 
-                            width: `${metric.value}%`,
-                            backgroundColor: cognitiveLoad.capacity === 'depleted' ? 'var(--whoop-red)' : 
+                            width: metric.value === 'Unknown' ? '100%' : `${metric.value}%`,
+                            backgroundColor: metric.value === 'Unknown' ? 'rgba(107, 114, 128, 0.3)' : 
+                                             cognitiveLoad.capacity === 'depleted' ? 'var(--whoop-red)' : 
                                              cognitiveLoad.capacity === 'low' ? 'var(--whoop-yellow)' : 
                                              'var(--whoop-green)'
                           }}
