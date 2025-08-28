@@ -600,21 +600,8 @@ class BiometricEngine {
     this.workActivities = this.generateTodaysActivities();
     this.cognitiveLoad = this.calculateCognitiveLoad();
 
-    // Generate scenario-specific change insight
-    let changeInsight: string;
-    const scenarioNames = ['Peak Performance', 'Good Performance', 'Recovery Needed', 'Estimated Performance'];
-    const currentScenarioName = scenarioNames[this.currentScenario];
-    
-    if (this.currentScenario === 3) {
-      // No wearable data scenario
-      changeInsight = `Switched to ${currentScenarioName} mode - connect your wearable device for personalized biometric insights`;
-    } else {
-      changeInsight = `Scenario updated to ${currentScenarioName} - showing ${this.currentData.readiness}% Performance Index with ${this.cognitiveLoad.current}% cognitive load`;
-    }
-
     return {
       data: this.currentData,
-      changeInsight: changeInsight,
       refreshTime: new Date()
     };
   }
@@ -920,7 +907,6 @@ export default function PersistDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [refreshCount, setRefreshCount] = useState(0);
-  const [changeInsight, setChangeInsight] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<Record<string, DeviceStatus> | null>(null);
 
@@ -950,7 +936,6 @@ export default function PersistDashboard() {
     
     // Update all state
     setCurrentBiometrics(refreshResult.data);
-    setChangeInsight(refreshResult.changeInsight);
     setLastRefresh(refreshResult.refreshTime);
     setRefreshCount(prev => prev + 1);
     setIsRefreshing(false);
@@ -1125,14 +1110,6 @@ export default function PersistDashboard() {
             {workCapacity.description}
           </p>
 
-          
-          {changeInsight && (
-            <div className="max-w-sm mx-auto p-4 rounded-lg mb-8" style={{ backgroundColor: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.1)' }}>
-              <p className="text-xs font-medium" style={{ color: 'var(--whoop-green)' }}>
-                {changeInsight}
-              </p>
-            </div>
-          )}
 
           {/* Scenario indicators */}
           <div className="flex justify-center space-x-2 mb-4">
