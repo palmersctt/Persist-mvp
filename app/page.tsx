@@ -517,31 +517,41 @@ class BiometricEngine {
     return this.cognitiveLoad;
   }
 
-  // Secondary metrics in Whoop style
+  // Secondary metrics with nuanced individual thresholds for visual indicators only
   getSecondaryMetrics(): SecondaryMetric[] {
     const cognitiveLoad = this.getCognitiveLoad();
+    const focusTime = Math.round((8 - this.todaySchedule.durationHours) * 60);
     
     return [
       {
         label: 'Cognitive Load',
         value: this.currentData.status === 'ESTIMATED' ? 'Unknown' : cognitiveLoad.current,
         unit: this.currentData.status === 'ESTIMATED' ? '' : '%',
-        status: cognitiveLoad.capacity === 'high' ? 'good' : 
-                cognitiveLoad.capacity === 'medium' ? 'average' : 'needs_attention',
+        // Cognitive Load: 0-50% green, 51-75% yellow, 76%+ red
+        status: this.currentData.status === 'ESTIMATED' ? 'average' :
+                cognitiveLoad.current >= 76 ? 'needs_attention' : // 76%+ = Red (very high, problematic)
+                cognitiveLoad.current >= 51 ? 'average' : // 51-75% = Yellow (elevated)
+                'good', // 0-50% = Green (optimal)
         icon: '🧠'
       },
       {
         label: 'Schedule Load',
         value: this.todaySchedule.meetingCount,
         unit: ' meetings',
-        status: this.todaySchedule.meetingCount <= 4 ? 'good' : this.todaySchedule.meetingCount <= 6 ? 'average' : 'needs_attention',
+        // Schedule Load: 1-4 green, 5-6 yellow, 7+ red
+        status: this.todaySchedule.meetingCount >= 7 ? 'needs_attention' : // 7+ = Red (excessive)
+                this.todaySchedule.meetingCount >= 5 ? 'average' : // 5-6 = Yellow (building up)
+                'good', // 1-4 = Green (manageable)
         icon: '📅'
       },
       {
         label: 'Focus Time',
-        value: Math.round((8 - this.todaySchedule.durationHours) * 60),
+        value: focusTime,
         unit: ' min',
-        status: (8 - this.todaySchedule.durationHours) * 60 >= 120 ? 'good' : (8 - this.todaySchedule.durationHours) * 60 >= 60 ? 'average' : 'needs_attention',
+        // Focus Time: 60+ min green, 30-59 yellow, <30 or negative red
+        status: focusTime < 30 ? 'needs_attention' : // <30 min or negative = Red (insufficient/negative)
+                focusTime < 60 ? 'average' : // 30-59 min = Yellow (limited)
+                'good', // 60+ min = Green (adequate)
         icon: '🎯'
       }
     ];
@@ -823,8 +833,8 @@ class BiometricEngine {
       // LOW PERFORMANCE: Low work capacity + High cognitive load = Low availability
       insights.push({
         type: 'current_analysis',
-        title: 'Limited Cognitive Availability',
-        message: `High cognitive load (${cognitiveLoad.current}%) with suboptimal biometric recovery (${this.currentData.recovery}%). Mental resources are limited. Focus on essential tasks only, delegate complex decisions, and consider lighter workload.`,
+        title: 'High Cognitive Load Limiting Performance',
+        message: `⚠️ Cognitive load at ${cognitiveLoad.current}% is the primary factor dragging down your ${readiness}% Performance Index. Despite adequate biometric recovery (${this.currentData.recovery}%), your mental resources are overextended. Focus on essential tasks only, delegate complex decisions, and consider lighter workload.`,
         dataSource: 'Biometric baseline + activity tracking',
         urgency: 'high',
         category: 'combination'
@@ -833,14 +843,26 @@ class BiometricEngine {
       // RECOVERY NEEDED: Very low capacity + Very high cognitive load = Depleted
       insights.push({
         type: 'current_analysis',
-        title: 'Cognitive Resources Depleted',
-        message: `Very high cognitive load (${cognitiveLoad.current}%) with poor biometric recovery (${this.currentData.recovery}%). Mental resources are severely depleted. Prioritize recovery, keep workload minimal, and reschedule non-essential commitments.`,
+        title: 'Critical: Cognitive Overload Detected',
+        message: `🚨 Extremely high cognitive load (${cognitiveLoad.current}%) combined with poor biometric recovery (${this.currentData.recovery}%) is creating a performance crisis. Mental resources are severely depleted. Immediate action required: prioritize recovery, keep workload minimal, and reschedule non-essential commitments.`,
         dataSource: 'Biometric baseline + activity tracking',
         urgency: 'high',
         category: 'combination'
       });
     }
     
+    // Special insight for when cognitive load is the main limiting factor
+    if (cognitiveLoad.current >= 70 && this.currentData.recovery >= 70) {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Cognitive Load is Your Primary Bottleneck',
+        message: `🎯 Your biometric recovery is solid (${this.currentData.recovery}%), but cognitive load (${cognitiveLoad.current}%) is what's preventing peak performance. This suggests schedule optimization rather than physical recovery should be your focus today.`,
+        dataSource: 'Cognitive load vs biometric analysis',
+        urgency: 'high',
+        category: 'combination'
+      });
+    }
+
     // Schedule-specific insights aligned with performance level
     if (readiness < 60 && this.todaySchedule.meetingCount >= 7) {
       insights.push({
@@ -1081,7 +1103,7 @@ export default function PersistDashboard() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isRefreshing ? 'opacity-50' : ''}`} style={{ 
-                  color: 'var(--text-primary)',
+                  color: workCapacity.color, // Use the ring color for the number too
                   fontFeatureSettings: '"tnum"',
                   letterSpacing: '-0.04em'
                 }}>
@@ -1135,12 +1157,20 @@ export default function PersistDashboard() {
         <section>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
             {secondaryMetrics.map((metric, index) => {
-              const isGood = metric.status === 'good';
+              // Visual indicator colors only - text stays white
+              const getIndicatorColor = (status: string) => {
+                switch (status) {
+                  case 'good': return 'var(--whoop-green)';
+                  case 'average': return 'var(--whoop-yellow)';
+                  case 'needs_attention': return 'var(--whoop-red)';
+                  default: return 'rgba(255,255,255,0.3)';
+                }
+              };
               
               return (
                 <div key={index} className="text-center">
                   <div className="whoop-secondary-metric mb-2" style={{ 
-                    color: isGood ? 'var(--whoop-green)' : 'var(--text-primary)'
+                    color: 'var(--text-primary)' // Always white text
                   }}>
                     {metric.value}{metric.unit}
                   </div>
@@ -1157,9 +1187,7 @@ export default function PersistDashboard() {
                           style={{ 
                             width: metric.value === 'Unknown' ? '100%' : `${metric.value}%`,
                             backgroundColor: metric.value === 'Unknown' ? 'rgba(107, 114, 128, 0.3)' : 
-                                             cognitiveLoad.capacity === 'depleted' ? 'var(--whoop-red)' : 
-                                             cognitiveLoad.capacity === 'low' ? 'var(--whoop-yellow)' : 
-                                             'var(--whoop-green)'
+                                             getIndicatorColor(metric.status)
                           }}
                         />
                       </div>
@@ -1168,10 +1196,15 @@ export default function PersistDashboard() {
                   
                   {metric.label === 'Schedule Load' && (
                     <div className="flex justify-center space-x-1 mb-2">
-                      {Array.from({ length: 6 }, (_, i) => (
+                      {Array.from({ length: 8 }, (_, i) => (
                         <div 
                           key={i}
-                          className={`whoop-dot-indicator ${i < Number(metric.value) ? 'whoop-dot-active' : ''}`}
+                          className="whoop-dot-indicator"
+                          style={{
+                            backgroundColor: i < Number(metric.value) ? 
+                              getIndicatorColor(metric.status) : 
+                              'rgba(255,255,255,0.2)'
+                          }}
                         />
                       ))}
                     </div>
@@ -1180,11 +1213,17 @@ export default function PersistDashboard() {
                   {metric.label === 'Focus Time' && (
                     <div className="flex justify-center space-x-0.5 mb-2">
                       {Array.from({ length: 8 }, (_, i) => {
-                        const usedBlocks = Math.floor((480 - Number(metric.value)) / 60); // 8 hours = 480 min
+                        const availableBlocks = Math.max(0, Math.floor(Number(metric.value) / 60)); // Available time blocks
+                        const isAvailable = i < availableBlocks;
                         return (
                           <div 
                             key={i}
-                            className={`whoop-time-block ${i < usedBlocks ? 'whoop-time-block-used' : ''}`}
+                            className="whoop-time-block"
+                            style={{
+                              backgroundColor: isAvailable ? 
+                                getIndicatorColor(metric.status) : 
+                                'rgba(255,255,255,0.15)'
+                            }}
                           />
                         );
                       })}
