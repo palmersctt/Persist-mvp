@@ -2,191 +2,6 @@
 
 import { useState, useEffect } from 'react'
 
-// Meeting Monitor for tracking meeting completion and triggering feedback
-class MeetingMonitor {
-  constructor() {
-    this.activeMeetings = new Map(); // Track active meetings
-    this.completedMeetings = new Set(); // Track completed meetings
-    this.feedbackQueue = []; // Queue for feedback collection
-    this.checkInterval = null;
-    this.onMeetingEnd = null; // Callback for when meeting ends
-  }
-
-  // Parse time string to Date object for today
-  parseTimeToDate(timeStr) {
-    const [time, period] = timeStr.split(' ');
-    const [hours, minutes] = time.split(':').map(n => parseInt(n));
-    let hour = hours;
-    
-    if (period === 'PM' && hours !== 12) hour += 12;
-    if (period === 'AM' && hours === 12) hour = 0;
-    
-    const date = new Date();
-    date.setHours(hour, minutes, 0, 0);
-    return date;
-  }
-
-  // Extract start and end times from meeting time string
-  parseMeetingTime(timeString) {
-    const [startStr, endStr] = timeString.split(' - ');
-    return {
-      start: this.parseTimeToDate(startStr),
-      end: this.parseTimeToDate(endStr)
-    };
-  }
-
-  // Check if a meeting should have ended
-  isMeetingEnded(meeting, currentTime = new Date()) {
-    const { end } = this.parseMeetingTime(meeting.time);
-    return currentTime >= end;
-  }
-
-  // Check if a meeting is currently active
-  isMeetingActive(meeting, currentTime = new Date()) {
-    const { start, end } = this.parseMeetingTime(meeting.time);
-    return currentTime >= start && currentTime < end;
-  }
-
-  // Get meeting status
-  getMeetingStatus(meeting, currentTime = new Date()) {
-    const { start, end } = this.parseMeetingTime(meeting.time);
-    
-    if (currentTime < start) return 'upcoming';
-    if (currentTime >= start && currentTime < end) return 'active';
-    if (currentTime >= end) return 'completed';
-    
-    return 'unknown';
-  }
-
-  // Start monitoring meetings
-  startMonitoring(meetings, onMeetingEndCallback) {
-    this.onMeetingEnd = onMeetingEndCallback;
-    
-    // Clear any existing interval
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-    }
-
-    // Initial check
-    this.checkMeetings(meetings);
-
-    // Check every 30 seconds
-    this.checkInterval = setInterval(() => {
-      this.checkMeetings(meetings);
-    }, 30000);
-  }
-
-  // Check all meetings for status changes
-  checkMeetings(meetings) {
-    const currentTime = new Date();
-    
-    meetings.forEach(meeting => {
-      const status = this.getMeetingStatus(meeting, currentTime);
-      const wasActive = this.activeMeetings.has(meeting.id);
-      const wasCompleted = this.completedMeetings.has(meeting.id);
-      
-      // Meeting just started
-      if (status === 'active' && !wasActive) {
-        this.activeMeetings.set(meeting.id, {
-          ...meeting,
-          actualStartTime: currentTime,
-          status: 'active'
-        });
-        console.log(`Meeting started: ${meeting.title}`);
-      }
-      
-      // Meeting just ended
-      if (status === 'completed' && !wasCompleted) {
-        const activeMeeting = this.activeMeetings.get(meeting.id);
-        
-        // Mark as completed
-        this.completedMeetings.add(meeting.id);
-        this.activeMeetings.delete(meeting.id);
-        
-        // Calculate actual duration if it was tracked
-        const actualDuration = activeMeeting 
-          ? Math.round((currentTime - activeMeeting.actualStartTime) / 60000)
-          : null;
-        
-        // Add to feedback queue
-        const feedbackItem = {
-          meetingId: meeting.id,
-          meetingTitle: meeting.title,
-          scheduledTime: meeting.time,
-          completedAt: currentTime,
-          actualDuration,
-          status: 'pending_feedback',
-          type: meeting.type
-        };
-        
-        this.feedbackQueue.push(feedbackItem);
-        
-        // Trigger callback
-        if (this.onMeetingEnd) {
-          this.onMeetingEnd(feedbackItem);
-        }
-        
-        console.log(`Meeting ended: ${meeting.title} - Feedback requested`);
-      }
-    });
-  }
-
-  // Handle edge cases
-  handleMeetingOverrun(meetingId, additionalMinutes) {
-    const meeting = this.activeMeetings.get(meetingId);
-    if (meeting) {
-      meeting.overrunMinutes = additionalMinutes;
-      console.log(`Meeting overrun: ${meeting.title} by ${additionalMinutes} minutes`);
-    }
-  }
-
-  handleMeetingCancellation(meetingId) {
-    // Remove from active meetings
-    this.activeMeetings.delete(meetingId);
-    
-    // Add to completed with cancelled status
-    this.completedMeetings.add(meetingId);
-    
-    console.log(`Meeting cancelled: ${meetingId}`);
-  }
-
-  // Get pending feedback items
-  getPendingFeedback() {
-    return this.feedbackQueue.filter(item => item.status === 'pending_feedback');
-  }
-
-  // Mark feedback as complete
-  markFeedbackComplete(meetingId) {
-    const item = this.feedbackQueue.find(f => f.meetingId === meetingId);
-    if (item) {
-      item.status = 'feedback_complete';
-      item.feedbackCompletedAt = new Date();
-    }
-  }
-
-  // Stop monitoring
-  stopMonitoring() {
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
-    }
-  }
-
-  // Get summary of meeting statuses
-  getMeetingSummary(meetings) {
-    const currentTime = new Date();
-    return meetings.map(meeting => ({
-      ...meeting,
-      status: this.getMeetingStatus(meeting, currentTime),
-      isActive: this.activeMeetings.has(meeting.id),
-      isCompleted: this.completedMeetings.has(meeting.id),
-      hasPendingFeedback: this.feedbackQueue.some(
-        f => f.meetingId === meeting.id && f.status === 'pending_feedback'
-      )
-    }));
-  }
-}
-
 // Enhanced Engine for biometric and meeting analysis
 class BiometricEngine {
   constructor() {
@@ -198,72 +13,190 @@ class BiometricEngine {
       sleep: '8.4h',
       status: 'READY'
     };
-  }
-
-  // Intelligent meeting type classification
-  classifyMeetingType(title, duration = null, participantCount = null) {
-    const titleLower = title.toLowerCase();
-    
-    // Check for specific keywords
-    if (titleLower.includes('standup') || titleLower.includes('stand-up') || titleLower.includes('daily')) {
-      return 'team_meeting';
-    }
-    
-    if (titleLower.includes('1:1') || titleLower.includes('1-1') || titleLower.includes('one-on-one') || 
-        titleLower.includes('check-in') || titleLower.includes('checkin')) {
-      return 'one_on_one';
-    }
-    
-    if (titleLower.includes('planning') || titleLower.includes('budget') || titleLower.includes('strategy') ||
-        titleLower.includes('roadmap') || titleLower.includes('quarterly') || titleLower.includes('board')) {
-      return 'strategic';
-    }
-    
-    if (titleLower.includes('presentation') || titleLower.includes('demo') || titleLower.includes('showcase') ||
-        titleLower.includes('review') || titleLower.includes('pitch')) {
-      return 'presentation';
-    }
-    
-    if (titleLower.includes('client') || titleLower.includes('customer') || titleLower.includes('vendor') ||
-        titleLower.includes('sales') || titleLower.includes('partner') || titleLower.includes('contract')) {
-      return 'client_meeting';
-    }
-    
-    if (titleLower.includes('team') || titleLower.includes('sync') || titleLower.includes('meeting') ||
-        titleLower.includes('retrospective') || titleLower.includes('retro')) {
-      return 'team_meeting';
-    }
-    
-    // Use participant count if available
-    if (participantCount !== null) {
-      if (participantCount === 2) return 'one_on_one';
-      if (participantCount >= 5) return 'team_meeting';
-    }
-    
-    // Default to general if uncertain
-    return 'general';
+    this.previousReadiness = null; // Track previous score for delta calculation
   }
 
   getCurrentBiometrics() {
     return this.currentData;
   }
 
-  getTodaysRecommendations() {
-    return [
-      {
-        id: 1,
-        message: "Your 87% readiness indicates optimal conditions for peak professional performance. Morning meetings (8-10:30 AM) align with your cognitive peak window."
-      },
-      {
-        id: 2, 
-        message: "High meeting density today (7 meetings). Consider delegating or rescheduling your 11 AM and 2 PM sessions where performance dips to 64-66%."
-      },
-      {
-        id: 3,
-        message: "Strong recovery end anticipated. Your 5 PM Vendor Discussion shows 93% predicted performance - ideal for critical negotiations."
-      }
-    ];
+  getWorkInsights() {
+    return {
+      workImpactAnalysis: [
+        "Your 7 meetings today exceed optimal density (3-4) for sustained performance",
+        "Back-to-back sessions detected - historically reduces effectiveness by 18%",
+        "Current workload predicts -12% readiness tomorrow without recovery time"
+      ],
+      patternRecognition: [
+        "You perform 31% better in morning strategic sessions vs afternoon",
+        "High-readiness days (85%+) correlate with 89% meeting success rate",
+        "Energy dips typically occur 2-4 PM based on your patterns"
+      ],
+      actionableRecommendations: [
+        "Schedule important decisions before 11 AM during peak cognitive window",
+        "Add 15-minute buffers between meetings to maintain performance",
+        "Consider rescheduling 2 PM session to morning for optimal outcomes"
+      ]
+    };
   }
+
+  getAggregateBiometricScore() {
+    // Aggregate recovery, sleep quality, and HRV into single biometric score
+    const recovery = this.currentData.recovery; // 94%
+    const sleepScore = 89; // Derived from sleep: '8.4h' (good quality)
+    const hrvScore = this.currentData.hrv; // 67 (normalized to %)
+    
+    // Weighted average: Recovery 50%, Sleep 30%, HRV 20%
+    const biometricScore = Math.round(
+      (recovery * 0.5) + (sleepScore * 0.3) + (hrvScore * 0.2)
+    );
+    
+    return biometricScore; // Should be around 91%
+  }
+
+  refreshData(previousData = null) {
+    // Store previous readiness for delta calculation
+    this.previousReadiness = this.currentData.readiness;
+    
+    // Generate realistic variations in biometric data
+    const readinessVariation = (Math.random() - 0.5) * 30; // ±15% variation
+    const recoveryVariation = (Math.random() - 0.5) * 20; // ±10% variation
+    const strainVariation = (Math.random() - 0.5) * 8; // ±4 variation
+    const hrvVariation = (Math.random() - 0.5) * 20; // ±10 variation
+    
+    this.currentData = {
+      readiness: Math.max(65, Math.min(95, Math.round(87 + readinessVariation))),
+      recovery: Math.max(70, Math.min(98, Math.round(94 + recoveryVariation))),
+      strain: Math.max(8, Math.min(18, parseFloat((12.1 + strainVariation).toFixed(1)))),
+      hrv: Math.max(50, Math.min(80, Math.round(67 + hrvVariation))),
+      sleep: '8.4h',
+      status: 'READY'
+    };
+
+    // Calculate changes if previous data exists
+    let changeInsight = null;
+    if (previousData) {
+      const readinessChange = this.currentData.readiness - previousData.readiness;
+      const absChange = Math.abs(readinessChange);
+      
+      if (absChange >= 8) {
+        if (readinessChange > 0) {
+          changeInsight = `Recovery detected (+${readinessChange}%) - good time for important decisions`;
+        } else {
+          changeInsight = `Readiness decreased (${readinessChange}%) - consider postponing non-critical meetings`;
+        }
+      } else if (absChange >= 3) {
+        if (readinessChange > 0) {
+          changeInsight = `Slight improvement (+${readinessChange}%) - energy trending upward`;
+        } else {
+          changeInsight = `Minor decline (${readinessChange}%) - maintain current activity level`;
+        }
+      } else {
+        changeInsight = "Maintaining steady performance - proceed with scheduled activities";
+      }
+    }
+
+    return {
+      data: this.currentData,
+      changeInsight: changeInsight,
+      refreshTime: new Date()
+    };
+  }
+
+  getReadinessDelta() {
+    if (this.previousReadiness === null) {
+      return { delta: 0, formatted: "First reading", color: "text-gray-400" };
+    }
+    
+    const delta = this.currentData.readiness - this.previousReadiness;
+    const absDelta = Math.abs(delta);
+    
+    if (delta > 0) {
+      return {
+        delta,
+        formatted: `↑${absDelta}%`,
+        color: "text-green-400",
+        direction: "increase"
+      };
+    } else if (delta < 0) {
+      return {
+        delta,
+        formatted: `↓${absDelta}%`,
+        color: "text-red-400", 
+        direction: "decrease"
+      };
+    } else {
+      return {
+        delta: 0,
+        formatted: "→0%",
+        color: "text-gray-400",
+        direction: "stable"
+      };
+    }
+  }
+
+  getContextualExplanation(deltaInfo, readinessScore, biometricScore) {
+    const biometricLevel = biometricScore >= 90 ? 'excellent' : biometricScore >= 85 ? 'strong' : 'adequate';
+    
+    if (deltaInfo.formatted === "First reading") {
+      return `Your work impact score combines biological readiness with professional work patterns. Current ${readinessScore}% shows ${biometricLevel} biometric foundation for optimal work performance.`;
+    }
+    
+    const absDelta = Math.abs(deltaInfo.delta);
+    const magnitude = absDelta >= 10 ? 'significantly' : absDelta >= 5 ? 'moderately' : 'slightly';
+    
+    if (deltaInfo.direction === "increase") {
+      const advice = readinessScore >= 85 ? "Excellent timing for high-priority tasks" : "Good opportunity to tackle important work";
+      return `Your readiness has ${magnitude} improved (${deltaInfo.formatted}). ${advice} - your ${biometricLevel} biometric foundation supports peak performance.`;
+    } else if (deltaInfo.direction === "decrease") {
+      const advice = readinessScore < 75 ? "Consider postponing non-critical meetings and focus on essential tasks only" : 
+                    readinessScore < 85 ? "Prioritize important work and consider shorter meeting blocks" : 
+                    "Still good for most work demands with minor adjustments";
+      return `Your readiness has ${magnitude} decreased (${deltaInfo.formatted}). ${advice}. Monitor recovery patterns for tomorrow.`;
+    } else {
+      return `Your readiness remains stable (${deltaInfo.formatted}). Current ${readinessScore}% with ${biometricLevel} biometrics - maintain consistent work patterns.`;
+    }
+  }
+
+  getWorkImpactBreakdown() {
+    const biometricScore = this.getAggregateBiometricScore();
+    const deltaInfo = this.getReadinessDelta();
+    
+    // Use the main readiness score as the single source of truth
+    const readinessScore = this.currentData.readiness;
+    
+    // Add some variation to work metrics based on current readiness
+    const readinessLevel = readinessScore;
+    const meetingDensityBase = readinessLevel > 85 ? 78 : readinessLevel > 75 ? 72 : 68;
+    const energyAlignmentBase = readinessLevel > 85 ? 94 : readinessLevel > 75 ? 87 : 82;
+    
+    return {
+      title: "Work Impact Breakdown", 
+      score: readinessScore, // Use the same score as the ring
+      delta: deltaInfo, // Include delta information
+      components: [
+        { name: "Biometrics", value: biometricScore, weight: 30, contribution: Math.round(biometricScore * 0.30) },
+        { name: "Meeting Density", value: meetingDensityBase, weight: 20, contribution: Math.round(meetingDensityBase * 0.20) },
+        { name: "Schedule Fragmentation", value: 81, weight: 15, contribution: Math.round(81 * 0.15) },
+        { name: "Energy Alignment", value: energyAlignmentBase, weight: 15, contribution: Math.round(energyAlignmentBase * 0.15) },
+        { name: "Recovery Buffer", value: 89, weight: 12, contribution: Math.round(89 * 0.12) },
+        { name: "Workload Sustainability", value: 85, weight: 8, contribution: Math.round(85 * 0.08) }
+      ],
+      explanation: this.getContextualExplanation(deltaInfo, readinessScore, biometricScore),
+      factors: {
+        positive: [
+          biometricScore >= 90 ? "Excellent biometric foundation supporting performance" : "Good biometric foundation for work demands",
+          energyAlignmentBase >= 90 ? "Optimal energy-schedule alignment" : "Adequate energy-schedule alignment",
+          "Sustainable recovery buffers between intense work"
+        ],
+        negative: [
+          meetingDensityBase < 75 ? "Meeting density exceeds optimal threshold" : null,
+          "Some schedule fragmentation reducing deep work time"
+        ].filter(Boolean)
+      }
+    };
+  }
+
 
   getBiometricBreakdown(type) {
     const breakdowns = {
@@ -315,396 +248,44 @@ class BiometricEngine {
     
     return breakdowns[type];
   }
-
-  // Get current date info
-  getCurrentDateInfo() {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return {
-      now,
-      today,
-      yesterday: new Date(today.getTime() - 24 * 60 * 60 * 1000),
-      tomorrow: new Date(today.getTime() + 24 * 60 * 60 * 1000),
-      dayOfMonth: today.getDate(),
-      month: today.getMonth(),
-      year: today.getFullYear()
-    };
-  }
-
-  // Check if meeting has ended (for rating purposes)
-  hasMeetingEnded(dateOffset, timeString) {
-    const dateInfo = this.getCurrentDateInfo();
-    const meetingDate = new Date(dateInfo.today);
-    meetingDate.setDate(meetingDate.getDate() + dateOffset);
-    
-    // If meeting is in the past, it's ended
-    if (dateOffset < 0) return true;
-    
-    // If meeting is in the future, it hasn't ended
-    if (dateOffset > 0) return false;
-    
-    // If meeting is today, check the end time
-    if (dateOffset === 0) {
-      const endTime = timeString.split(' - ')[1];
-      const [time, period] = endTime.split(' ');
-      const [hours, minutes] = time.split(':').map(n => parseInt(n));
-      let hour = hours;
-      
-      if (period === 'PM' && hours !== 12) hour += 12;
-      if (period === 'AM' && hours === 12) hour = 0;
-      
-      const endDateTime = new Date();
-      endDateTime.setHours(hour, minutes, 0, 0);
-      
-      return dateInfo.now >= endDateTime;
-    }
-    
-    return false;
-  }
-
-  // Get today's meetings with realistic busy schedule (7 meetings)
-  getTodaysMeetings() {
-    return [
-      {
-        id: 'today-1',
-        title: "Daily Standup",
-        time: "8:00 AM - 8:15 AM",
-        type: "team_meeting",
-        prediction: { outcome: 'excellent', confidence: 94 },
-        historical: { totalMeetings: 3, averagePerformance: 94 }
-      },
-      {
-        id: 'today-2',
-        title: "Product Strategy Review",
-        time: "9:30 AM - 10:30 AM",
-        type: "strategic",
-        prediction: { outcome: 'good', confidence: 88 },
-        historical: { totalMeetings: 5, averagePerformance: 88 }
-      },
-      {
-        id: 'today-3',
-        title: "Client Check-in",
-        time: "11:00 AM - 11:30 AM",
-        type: "one_on_one",
-        prediction: { outcome: 'adequate', confidence: 66 },
-        historical: { totalMeetings: 8, averagePerformance: 66 }
-      },
-      {
-        id: 'today-4',
-        title: "Budget Planning",
-        time: "12:00 PM - 1:00 PM",
-        type: "strategic",
-        prediction: { outcome: 'good', confidence: 78 },
-        historical: { totalMeetings: 2, averagePerformance: 78 }
-      },
-      {
-        id: 'today-5',
-        title: "Team Performance Review",
-        time: "2:00 PM - 3:30 PM",
-        type: "one_on_one",
-        prediction: { outcome: 'adequate', confidence: 64 },
-        historical: { totalMeetings: 6, averagePerformance: 64 }
-      },
-      {
-        id: 'today-6',
-        title: "Marketing Campaign Review",
-        time: "4:00 PM - 4:45 PM",
-        type: "team_meeting",
-        prediction: { outcome: 'good', confidence: 87 },
-        historical: { totalMeetings: 4, averagePerformance: 87 }
-      },
-      {
-        id: 'today-7',
-        title: "Vendor Discussion",
-        time: "5:00 PM - 6:00 PM",
-        type: "client_meeting",
-        prediction: { outcome: 'excellent', confidence: 93 },
-        historical: { totalMeetings: 3, averagePerformance: 93 }
-      }
-    ];
-  }
-
-  // Get meetings for specific dates with realistic date offsets
-  getMeetingsForDate(dateOffset) {
-    const dateInfo = this.getCurrentDateInfo();
-    const targetDate = new Date(dateInfo.today);
-    targetDate.setDate(targetDate.getDate() + dateOffset);
-    
-    // Add dateOffset and hasEnded properties to each meeting
-    const addMeetingMetadata = (meetings, offset) => {
-      return meetings.map(meeting => ({
-        ...meeting,
-        dateOffset: offset,
-        hasEnded: this.hasMeetingEnded(offset, meeting.time),
-        date: new Date(dateInfo.today.getTime() + offset * 24 * 60 * 60 * 1000)
-      }));
-    };
-
-    const meetingsByOffset = {
-      '-2': addMeetingMetadata([ // 2 days ago
-        {
-          id: 'past-2-1',
-          title: "Board Meeting",
-          time: "10:00 AM - 11:30 AM",
-          type: "strategic",
-          prediction: { outcome: 'excellent', confidence: 95 },
-          historical: { totalMeetings: 8, averagePerformance: 92 }
-        },
-        {
-          id: 'past-2-2',
-          title: "Product Review",
-          time: "2:00 PM - 3:30 PM",
-          type: "team_meeting",
-          prediction: { outcome: 'good', confidence: 88 },
-          historical: { totalMeetings: 12, averagePerformance: 85 }
-        }
-      ], -2),
-      '-1': addMeetingMetadata([ // Yesterday
-        {
-          id: 'past-1-1',
-          title: "Client Presentation",
-          time: "11:00 AM - 12:00 PM",
-          type: "presentation",
-          prediction: { outcome: 'good', confidence: 82 },
-          historical: { totalMeetings: 6, averagePerformance: 78 }
-        },
-        {
-          id: 'past-1-2',
-          title: "Team Retrospective",
-          time: "3:00 PM - 4:00 PM",
-          type: "team_meeting",
-          prediction: { outcome: 'excellent', confidence: 90 },
-          historical: { totalMeetings: 15, averagePerformance: 88 }
-        },
-        {
-          id: 'past-1-3',
-          title: "Budget Review",
-          time: "4:30 PM - 5:30 PM",
-          type: "strategic",
-          prediction: { outcome: 'adequate', confidence: 75 },
-          historical: { totalMeetings: 4, averagePerformance: 72 }
-        }
-      ], -1),
-      '0': addMeetingMetadata(this.getTodaysMeetings(), 0), // Today
-      '1': addMeetingMetadata([ // Tomorrow
-        {
-          id: 'future-1-1',
-          title: "Leadership Team Meeting",
-          time: "8:00 AM - 9:00 AM",
-          type: "strategic",
-          prediction: { outcome: 'excellent', confidence: 90 },
-          historical: { totalMeetings: 12, averagePerformance: 88 }
-        },
-        {
-          id: 'future-1-2',
-          title: "Client Check-in",
-          time: "10:00 AM - 11:00 AM",
-          type: "one_on_one",
-          prediction: { outcome: 'good', confidence: 85 },
-          historical: { totalMeetings: 7, averagePerformance: 82 }
-        },
-        {
-          id: 'future-1-3',
-          title: "Sprint Planning",
-          time: "2:00 PM - 4:00 PM",
-          type: "team_meeting",
-          prediction: { outcome: 'good', confidence: 78 },
-          historical: { totalMeetings: 20, averagePerformance: 75 }
-        }
-      ], 1),
-      '2': addMeetingMetadata([ // Day after tomorrow
-        {
-          id: 'tue-1',
-          title: "Leadership Team Meeting",
-          time: "8:00 AM - 9:00 AM",
-          type: "strategic",
-          prediction: { outcome: 'excellent', confidence: 90 },
-          historical: { totalMeetings: 12, averagePerformance: 88 }
-        },
-        {
-          id: 'tue-2',
-          title: "Client Presentation",
-          time: "10:00 AM - 11:30 AM",
-          type: "presentation",
-          prediction: { outcome: 'good', confidence: 82 },
-          historical: { totalMeetings: 7, averagePerformance: 79 }
-        },
-        {
-          id: 'tue-3',
-          title: "Budget Review",
-          time: "2:00 PM - 3:00 PM",
-          type: "strategic",
-          prediction: { outcome: 'good', confidence: 78 },
-          historical: { totalMeetings: 4, averagePerformance: 73 }
-        }
-      ], 2),
-      '3': addMeetingMetadata([ // 3 days from now
-        {
-          id: 'wed-1',
-          title: "Board Presentation",
-          time: "9:00 AM - 10:00 AM",
-          type: "presentation",
-          prediction: { outcome: 'adequate', confidence: 68 },
-          historical: { totalMeetings: 2, averagePerformance: 65 },
-          rescheduleSuggestion: {
-            day: 'Friday',
-            time: '9:00 AM',
-            improvement: '+21% vs current time'
-          }
-        },
-        {
-          id: 'wed-2',
-          title: "1:1 with Manager",
-          time: "11:00 AM - 11:30 AM",
-          type: "one_on_one",
-          prediction: { outcome: 'excellent', confidence: 91 },
-          historical: { totalMeetings: 15, averagePerformance: 87 }
-        }
-      ], 3)
-    };
-    
-    return meetingsByOffset[dateOffset.toString()] || [];
-  }
-
-
-  getDayName(dateOffset) {
-    const dateInfo = this.getCurrentDateInfo();
-    const targetDate = new Date(dateInfo.today);
-    targetDate.setDate(targetDate.getDate() + dateOffset);
-    
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const relativeDayNames = {
-      '-2': '2 days ago',
-      '-1': 'Yesterday',
-      '0': 'Today',
-      '1': 'Tomorrow',
-      '2': dayNames[targetDate.getDay()],
-      '3': dayNames[targetDate.getDay()]
-    };
-    
-    return relativeDayNames[dateOffset.toString()] || dayNames[targetDate.getDay()];
-  }
-
-  // Get week view data with actual dates
-  getWeekMeetings() {
-    const dateInfo = this.getCurrentDateInfo();
-    const today = dateInfo.today;
-    const todayDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc
-    
-    // Calculate offset to start from Monday of current week
-    // If today is Sunday (0), we want to go back 6 days to get Monday
-    // If today is Monday (1), offset is 0
-    // If today is Tuesday (2), offset is -1, etc.
-    const mondayOffset = todayDayOfWeek === 0 ? -6 : 1 - todayDayOfWeek;
-    
-    // Generate 5-day work week (Monday to Friday)
-    const weekDays = [];
-    for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
-      const offset = mondayOffset + dayIndex;
-      const targetDate = new Date(today);
-      targetDate.setDate(targetDate.getDate() + offset);
-      
-      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
-      const dayName = dayNames[targetDate.getDay()];
-      const monthName = monthNames[targetDate.getMonth()];
-      const dayNumber = targetDate.getDate();
-      
-      // Check if this is today
-      const isToday = targetDate.toDateString() === today.toDateString();
-      
-      // Format: "Mon 8/25" or "Mon 8/25 (Today)" for current day
-      let displayName = `${dayName.substring(0, 3)} ${targetDate.getMonth() + 1}/${dayNumber}`;
-      
-      if (isToday) {
-        displayName += ' (Today)';
-      }
-      
-      weekDays.push({
-        day: displayName,
-        meetings: this.getMeetingsForDate(offset),
-        isToday: isToday,
-        date: targetDate,
-        dateOffset: offset
-      });
-    }
-    
-    return weekDays;
-  }
 }
 
 export default function PersistDashboard() {
   const [selectedBiometric, setSelectedBiometric] = useState(null);
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [engine] = useState(() => new BiometricEngine());
-  const [meetingMonitor] = useState(() => new MeetingMonitor());
   const [currentBiometrics, setCurrentBiometrics] = useState(null);
-  const [todaysRecommendations, setTodaysRecommendations] = useState([]);
-  const [todaysMeetings, setTodaysMeetings] = useState([]);
-  const [feedbackModal, setFeedbackModal] = useState(null); // null or meeting object
-  const [feedbackRating, setFeedbackRating] = useState(0);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-  const [ratedMeetings, setRatedMeetings] = useState(new Set()); // Track which meetings have been rated
-  const [correctedMeetingType, setCorrectedMeetingType] = useState(null); // Track user-corrected meeting type
-  const [editingMeetingType, setEditingMeetingType] = useState(null); // Track which meeting's type is being edited
-  const [meetingTypes, setMeetingTypes] = useState({}); // Store corrected meeting types
-  const [typeUpdateConfirm, setTypeUpdateConfirm] = useState(null); // Show confirmation for type updates
+  const [workInsights, setWorkInsights] = useState(null);
+  const [workImpactBreakdown, setWorkImpactBreakdown] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [changeInsight, setChangeInsight] = useState(null);
 
   useEffect(() => {
     setCurrentBiometrics(engine.getCurrentBiometrics());
-    setTodaysRecommendations(engine.getTodaysRecommendations());
-    setTodaysMeetings(engine.getTodaysMeetings());
+    setWorkInsights(engine.getWorkInsights());
+    setWorkImpactBreakdown(engine.getWorkImpactBreakdown());
+    setLastRefresh(new Date());
   }, [engine]);
 
-  // Load rated meetings from localStorage on mount
-  useEffect(() => {
-    // For fresh testing, we'll start with empty ratings
-    // Comment out the lines below if you want to persist ratings between sessions
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    const previousData = currentBiometrics;
     
-    const savedRatedMeetings = localStorage.getItem('ratedMeetings');
-    if (savedRatedMeetings) {
-      try {
-        const parsed = JSON.parse(savedRatedMeetings);
-        setRatedMeetings(new Set(parsed));
-      } catch (error) {
-        console.warn('Error loading rated meetings from localStorage:', error);
-      }
-    }
-  }, []);
-
-  // Save rated meetings to localStorage whenever it changes
-  useEffect(() => {
-    if (ratedMeetings.size > 0) {
-      localStorage.setItem('ratedMeetings', JSON.stringify([...ratedMeetings]));
-    }
-  }, [ratedMeetings]);
-
-  // Initialize meeting monitoring (simplified - no banner needed)
-  useEffect(() => {
-    if (todaysMeetings.length > 0) {
-      // Define callback for when a meeting ends
-      const handleMeetingEnd = (feedbackItem) => {
-        console.log('Meeting ended:', feedbackItem.meetingTitle);
-        
-        // Optional: Show browser notification (requires permission)
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('Meeting Feedback', {
-            body: `How was your ${feedbackItem.meetingTitle}?`,
-            icon: '/icon.png'
-          });
-        }
-      };
-
-      // Start monitoring meetings
-      meetingMonitor.startMonitoring(todaysMeetings, handleMeetingEnd);
-
-      // Cleanup on unmount
-      return () => {
-        meetingMonitor.stopMonitoring();
-      };
-    }
-  }, [todaysMeetings, meetingMonitor]);
+    // Simulate loading time
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Refresh data with variations
+    const refreshResult = engine.refreshData(previousData);
+    
+    // Update all state
+    setCurrentBiometrics(refreshResult.data);
+    setWorkImpactBreakdown(engine.getWorkImpactBreakdown());
+    setChangeInsight(refreshResult.changeInsight);
+    setLastRefresh(refreshResult.refreshTime);
+    setRefreshCount(prev => prev + 1);
+    setIsRefreshing(false);
+  };
 
   const getCircleColor = (type) => {
     if (!currentBiometrics) return '#ff9500';
@@ -727,222 +308,10 @@ export default function PersistDashboard() {
     return circumference - (percentage / 100) * circumference
   }
 
-  const getMeetingTypeColor = (type) => {
-    const colors = {
-      presentation: 'bg-purple-100 text-purple-800',
-      client_meeting: 'bg-amber-100 text-amber-800',
-      strategic: 'bg-blue-100 text-blue-800',
-      team_meeting: 'bg-gray-100 text-gray-800',
-      one_on_one: 'bg-green-100 text-green-800',
-      general: 'bg-slate-100 text-slate-800'
-    };
-    return colors[type] || colors.general;
-  };
-
-  const getPerformanceColor = (outcome) => {
-    const colors = {
-      excellent: 'bg-green-900 text-green-300',
-      good: 'bg-blue-900 text-blue-300',
-      adequate: 'bg-gray-700 text-gray-300',
-      poor: 'bg-red-900 text-red-300'
-    };
-    return colors[outcome] || colors.adequate;
-  };
-
   if (!currentBiometrics) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
 
   const handleLogoClick = () => {
     setSelectedBiometric(null);
-    setSelectedMeeting(null);
-  };
-
-  const handleRateMeeting = (meeting, e) => {
-    e.stopPropagation(); // Prevent triggering meeting selection
-    setFeedbackModal(meeting);
-    setFeedbackRating(0);
-    setFeedbackSubmitted(false);
-    setCorrectedMeetingType(meeting.type); // Initialize with current type
-  };
-
-  const handleSubmitFeedback = () => {
-    if (feedbackRating > 0) {
-      // Store feedback data (in real app, this would go to backend)
-      const feedbackData = {
-        meetingId: feedbackModal.id,
-        meetingTitle: feedbackModal.title,
-        originalMeetingType: feedbackModal.type,
-        correctedMeetingType: correctedMeetingType,
-        typeWasCorrected: correctedMeetingType !== feedbackModal.type,
-        scheduledTime: feedbackModal.time,
-        predictedOutcome: feedbackModal.prediction.outcome,
-        actualRating: feedbackRating,
-        submittedAt: new Date(),
-      };
-      
-      console.log('Feedback submitted:', feedbackData);
-      
-      // If type was corrected, log for learning
-      if (feedbackData.typeWasCorrected) {
-        console.log(`Meeting type corrected: ${feedbackModal.title} was ${feedbackModal.type}, should be ${correctedMeetingType}`);
-      }
-      
-      // Store rating data
-      storeMeetingRating(feedbackModal.id, feedbackRating);
-      
-      // Mark meeting as rated
-      setRatedMeetings(prev => new Set([...prev, feedbackModal.id]));
-      
-      // Show success state
-      setFeedbackSubmitted(true);
-      
-      // Close modal after brief delay
-      setTimeout(() => {
-        setFeedbackModal(null);
-        setFeedbackRating(0);
-        setFeedbackSubmitted(false);
-      }, 2000);
-    }
-  };
-
-  const getRatingLabel = (rating) => {
-    switch(rating) {
-      case 1: return 'Poor';
-      case 2: return 'Below Average';
-      case 3: return 'Average';
-      case 4: return 'Good';
-      case 5: return 'Excellent';
-      default: return '';
-    }
-  };
-
-  // Reset all meeting ratings (for testing/development)
-  const resetAllRatings = () => {
-    // Clear localStorage data
-    localStorage.removeItem('ratedMeetings');
-    localStorage.removeItem('meetingRatings');
-    
-    // Reset state variables
-    setRatedMeetings(new Set());
-    
-    console.log('✅ All meeting ratings have been reset');
-    console.log('📝 All eligible meetings should now show "Rate Meeting" buttons');
-    console.log('🔄 Meeting detail views will only show predicted performance');
-  };
-
-  // Get stored rating data for a meeting
-  const getMeetingRating = (meetingId) => {
-    // In a real app, this would come from your backend/database
-    // For now, we'll use localStorage to simulate stored ratings
-    try {
-      const storedRatings = localStorage.getItem('meetingRatings');
-      if (storedRatings) {
-        const ratings = JSON.parse(storedRatings);
-        return ratings[meetingId] || null;
-      }
-    } catch (error) {
-      console.warn('Error loading meeting ratings:', error);
-    }
-    return null;
-  };
-
-  // Store a meeting rating
-  const storeMeetingRating = (meetingId, rating) => {
-    try {
-      const storedRatings = localStorage.getItem('meetingRatings');
-      const ratings = storedRatings ? JSON.parse(storedRatings) : {};
-      ratings[meetingId] = rating;
-      localStorage.setItem('meetingRatings', JSON.stringify(ratings));
-    } catch (error) {
-      console.warn('Error storing meeting rating:', error);
-    }
-  };
-
-  // Get prediction accuracy comparison
-  const getPredictionAccuracy = (predicted, actualRating) => {
-    // Convert prediction to numeric scale
-    const predictionMap = { poor: 1, adequate: 2, good: 4, excellent: 5 };
-    const predictedNumeric = predictionMap[predicted.toLowerCase()] || 3;
-    
-    const difference = actualRating - predictedNumeric;
-    
-    if (Math.abs(difference) <= 1) {
-      return { status: 'accurate', message: 'Prediction was accurate' };
-    } else if (difference > 1) {
-      return { status: 'pessimistic', message: 'Prediction was pessimistic' };
-    } else {
-      return { status: 'optimistic', message: 'Prediction was optimistic' };
-    }
-  };
-
-  // Handle meeting type badge click
-  const handleMeetingTypeBadgeClick = (meeting, e) => {
-    e.stopPropagation();
-    setEditingMeetingType(meeting.id);
-  };
-
-  // Handle meeting type change
-  const handleMeetingTypeChange = (meetingId, newType, originalType) => {
-    setMeetingTypes(prev => ({
-      ...prev,
-      [meetingId]: newType
-    }));
-    setEditingMeetingType(null);
-    
-    // Show confirmation
-    setTypeUpdateConfirm(meetingId);
-    setTimeout(() => setTypeUpdateConfirm(null), 2000);
-    
-    // Log for learning
-    console.log(`Meeting type updated: ${meetingId} changed from ${originalType} to ${newType}`);
-  };
-
-  // Get display type for a meeting (corrected or original)
-  const getMeetingDisplayType = (meeting) => {
-    return meetingTypes[meeting.id] || meeting.type;
-  };
-
-  // Meeting Type Badge Component
-  const MeetingTypeBadge = ({ meeting, className = "" }) => {
-    const currentType = getMeetingDisplayType(meeting);
-    const isEditing = editingMeetingType === meeting.id;
-    const showConfirm = typeUpdateConfirm === meeting.id;
-    
-    return (
-      <div className="relative inline-block">
-        {isEditing ? (
-          <select
-            autoFocus
-            value={currentType}
-            onChange={(e) => handleMeetingTypeChange(meeting.id, e.target.value, meeting.type)}
-            onBlur={() => setEditingMeetingType(null)}
-            className="px-3 py-1 bg-gray-800 border border-gray-600 rounded text-xs text-white focus:outline-none focus:border-blue-500"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <option value="team_meeting">Team Meeting</option>
-            <option value="one_on_one">One-on-One</option>
-            <option value="strategic">Strategic</option>
-            <option value="presentation">Presentation</option>
-            <option value="client_meeting">Client Meeting</option>
-            <option value="general">General</option>
-          </select>
-        ) : (
-          <>
-            <span
-              className={`${className} ${getMeetingTypeColor(currentType)} cursor-pointer hover:opacity-80 transition-opacity select-none`}
-              onClick={(e) => handleMeetingTypeBadgeClick(meeting, e)}
-              title="Click to change meeting type"
-            >
-              {currentType === 'client_meeting' ? 'client meeting' : currentType.replace('_', ' ')}
-            </span>
-            {showConfirm && (
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-800 text-green-200 text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                ✓ Type updated
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -972,257 +341,268 @@ export default function PersistDashboard() {
 
       {/* Main Content Area with Mobile Padding */}
       <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 pb-20 md:pb-8 pt-6">
-
-        {(
-          selectedBiometric ? (
-            /* Biometric Detail View */
-            <div className="space-y-6">
-              <button
-                onClick={() => setSelectedBiometric(null)}
-                className="text-gray-400 hover:text-white transition-colors mb-4"
-              >
-                ← Back to Dashboard
-              </button>
-              
-              <div className="bg-gray-900 rounded-lg p-8 border border-gray-700">
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                      {engine.getBiometricBreakdown(selectedBiometric).title}
-                    </h2>
-                    <div className="text-4xl font-bold text-green-400">
-                      {selectedBiometric === 'strain' ? 
-                        engine.getBiometricBreakdown(selectedBiometric).score :
-                        engine.getBiometricBreakdown(selectedBiometric).score + '%'
-                      }
-                    </div>
-                  </div>
-                  
-                  <div className="relative w-24 h-24">
-                    <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
-                      <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor(selectedBiometric)} strokeWidth="6"
-                              strokeDasharray="339.29" strokeDashoffset={selectedBiometric === 'strain' ? 
-                                getStrokeDashoffset(Math.min(currentBiometrics.strain * 5, 100)) :
-                                getStrokeDashoffset(engine.getBiometricBreakdown(selectedBiometric).score)} strokeLinecap="round"/>
-                    </svg>
+        {selectedBiometric ? (
+          /* Biometric Detail View */
+          <div className="space-y-6">
+            <button
+              onClick={() => setSelectedBiometric(null)}
+              className="text-gray-400 hover:text-white transition-colors mb-4"
+            >
+              ← Back to Dashboard
+            </button>
+            
+            <div className="bg-gray-900 rounded-lg p-8 border border-gray-700">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    {engine.getBiometricBreakdown(selectedBiometric).title}
+                  </h2>
+                  <div className="text-4xl font-bold text-green-400">
+                    {selectedBiometric === 'strain' ? 
+                      engine.getBiometricBreakdown(selectedBiometric).score :
+                      engine.getBiometricBreakdown(selectedBiometric).score + '%'
+                    }
                   </div>
                 </div>
+                
+                <div className="relative w-24 h-24">
+                  <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a1a" strokeWidth="6"/>
+                    <circle cx="60" cy="60" r="54" fill="none" stroke={getCircleColor(selectedBiometric)} strokeWidth="6"
+                            strokeDasharray="339.29" strokeDashoffset={selectedBiometric === 'strain' ? 
+                              getStrokeDashoffset(Math.min(currentBiometrics.strain * 5, 100)) :
+                              getStrokeDashoffset(engine.getBiometricBreakdown(selectedBiometric).score)} strokeLinecap="round"/>
+                  </svg>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Score Breakdown */}
-                  <div className="space-y-6">
-                    <section className="bg-gray-800 rounded-lg p-6">
-                      <h3 className="text-lg font-bold text-white mb-4">Score Breakdown</h3>
-                      <div className="space-y-4">
-                        {engine.getBiometricBreakdown(selectedBiometric).components.map((component, index) => (
-                          <div key={index} className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-300">{component.name}</span>
-                              <div className="flex items-center space-x-3">
-                                <span className="text-white font-medium">{component.value}{selectedBiometric === 'strain' ? '' : '%'}</span>
-                                <span className="text-gray-500 text-sm">{component.weight}%</span>
-                              </div>
-                            </div>
-                            <div className="w-full bg-gray-700 rounded-full h-2">
-                              <div 
-                                className="bg-blue-500 h-2 rounded-full" 
-                                style={{width: `${(component.contribution / engine.getBiometricBreakdown(selectedBiometric).score) * 100}%`}}
-                              ></div>
-                            </div>
-                            <div className="text-right text-xs text-gray-500">
-                              Contributes {component.contribution}{selectedBiometric === 'strain' ? '' : '%'} to total score
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Score Breakdown */}
+                <div className="space-y-6">
+                  <section className="bg-gray-800 rounded-lg p-6">
+                    <h3 className="text-lg font-bold text-white mb-4">Score Breakdown</h3>
+                    <div className="space-y-4">
+                      {engine.getBiometricBreakdown(selectedBiometric).components.map((component, index) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300">{component.name}</span>
+                            <div className="flex items-center space-x-3">
+                              <span className="text-white font-medium">{component.value}{selectedBiometric === 'strain' ? '' : '%'}</span>
+                              <span className="text-gray-500 text-sm">{component.weight}%</span>
                             </div>
                           </div>
-                        ))}
+                          <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full" 
+                              style={{width: `${(component.contribution / engine.getBiometricBreakdown(selectedBiometric).score) * 100}%`}}
+                            ></div>
+                          </div>
+                          <div className="text-right text-xs text-gray-500">
+                            Contributes {component.contribution}{selectedBiometric === 'strain' ? '' : '%'} to total score
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Analysis & Factors */}
+                <div className="space-y-6">
+                  <section className="bg-gray-800 rounded-lg p-6">
+                    <h3 className="text-lg font-bold text-white mb-4">Analysis</h3>
+                    <p className="text-gray-300 leading-relaxed mb-6">
+                      {engine.getBiometricBreakdown(selectedBiometric).explanation}
+                    </p>
+                    
+                    {engine.getBiometricBreakdown(selectedBiometric).factors.positive.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-green-400 font-semibold mb-2">Positive Factors</h4>
+                        <ul className="space-y-1">
+                          {engine.getBiometricBreakdown(selectedBiometric).factors.positive.map((factor, index) => (
+                            <li key={index} className="text-green-300 text-sm">{factor}</li>
+                          ))}
+                        </ul>
                       </div>
-                    </section>
-                  </div>
+                    )}
 
-                  {/* Analysis & Factors */}
-                  <div className="space-y-6">
-                    <section className="bg-gray-800 rounded-lg p-6">
-                      <h3 className="text-lg font-bold text-white mb-4">Analysis</h3>
-                      <p className="text-gray-300 leading-relaxed mb-6">
-                        {engine.getBiometricBreakdown(selectedBiometric).explanation}
-                      </p>
-                      
-                      {engine.getBiometricBreakdown(selectedBiometric).factors.positive.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="text-green-400 font-semibold mb-2">Positive Factors</h4>
-                          <ul className="space-y-1">
-                            {engine.getBiometricBreakdown(selectedBiometric).factors.positive.map((factor, index) => (
-                              <li key={index} className="text-green-300 text-sm">{factor}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {engine.getBiometricBreakdown(selectedBiometric).factors.negative.length > 0 && (
-                        <div>
-                          <h4 className="text-yellow-400 font-semibold mb-2">Areas for Improvement</h4>
-                          <ul className="space-y-1">
-                            {engine.getBiometricBreakdown(selectedBiometric).factors.negative.map((factor, index) => (
-                              <li key={index} className="text-yellow-300 text-sm">{factor}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </section>
-                  </div>
+                    {engine.getBiometricBreakdown(selectedBiometric).factors.negative.length > 0 && (
+                      <div>
+                        <h4 className="text-yellow-400 font-semibold mb-2">Areas for Improvement</h4>
+                        <ul className="space-y-1">
+                          {engine.getBiometricBreakdown(selectedBiometric).factors.negative.map((factor, index) => (
+                            <li key={index} className="text-yellow-300 text-sm">{factor}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </section>
                 </div>
               </div>
             </div>
-          ) : (
-            /* Main Dashboard View - Mobile First */
-            <div className="space-y-6 sm:space-y-8 md:space-y-12 pt-4 md:pt-0">
-              
-              {/* 1. MOBILE-OPTIMIZED PROFESSIONAL READINESS RING */}
-              <section className="px-2 sm:px-0">
-                <div className="flex justify-center">
-                  <div 
-                    className="text-center cursor-pointer group w-full max-w-xs sm:max-w-none"
-                    onClick={() => setSelectedBiometric('readiness')}
-                  >
-                    {/* Mobile Ring - 80% viewport width on mobile */}
-                    <div className="relative w-[80vw] h-[80vw] max-w-[280px] max-h-[280px] sm:w-48 sm:h-48 mx-auto mb-4 group-hover:scale-105 transition-transform">
-                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
-                        <circle cx="90" cy="90" r="80" fill="none" stroke="#1a1a1a" strokeWidth="8"/>
-                        <circle cx="90" cy="90" r="80" fill="none" stroke={getCircleColor('readiness')} strokeWidth="8"
-                                strokeDasharray="502.65" strokeDashoffset={(502.65 - (currentBiometrics.readiness / 100) * 502.65)} strokeLinecap="round"/>
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-5xl sm:text-4xl font-bold text-white mb-1">{currentBiometrics.readiness}%</div>
-                          <div className="text-base sm:text-sm text-gray-400 uppercase">Professional</div>
-                          <div className="text-base sm:text-sm text-gray-400 uppercase">Readiness</div>
+          </div>
+        ) : (
+          /* Main Dashboard View - Mobile First */
+          <div className="space-y-6 sm:space-y-8 md:space-y-12 pt-4 md:pt-0">
+            
+            {/* 1. MOBILE-OPTIMIZED PROFESSIONAL READINESS RING */}
+            <section className="px-2 sm:px-0">
+              <div className="flex justify-center">
+                <div className="text-center w-full max-w-xs sm:max-w-none">
+                  {/* Mobile Ring - 80% viewport width on mobile */}
+                  <div className="relative w-[80vw] h-[80vw] max-w-[280px] max-h-[280px] sm:w-48 sm:h-48 mx-auto mb-4">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
+                      <circle cx="90" cy="90" r="80" fill="none" stroke="#1a1a1a" strokeWidth="8"/>
+                      <circle cx="90" cy="90" r="80" fill="none" stroke={getCircleColor('readiness')} strokeWidth="8"
+                              strokeDasharray="502.65" strokeDashoffset={(502.65 - (currentBiometrics.readiness / 100) * 502.65)} strokeLinecap="round"/>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className={`text-5xl sm:text-4xl font-bold text-white mb-1 transition-all duration-500 ${isRefreshing ? 'scale-95 opacity-50' : ''}`}>
+                          {isRefreshing ? '...' : `${currentBiometrics.readiness}%`}
+                        </div>
+                        <div className="text-base sm:text-sm text-gray-400 uppercase">Professional</div>
+                        <div className="text-base sm:text-sm text-gray-400 uppercase">
+                          {isRefreshing ? 'Updating...' : 'Readiness'}
                         </div>
                       </div>
                     </div>
-                    {/* Mobile tap hint */}
-                    <p className="text-xs text-gray-500 sm:hidden">Tap for details</p>
                   </div>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              {/* 2. MOBILE-OPTIMIZED WORK IMPACT FOCUS */}
-              <section className="px-2 sm:px-0">
-                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Today's Work Impact Focus</h2>
-                
-                <div className="space-y-3 sm:space-y-4">
-                  {todaysRecommendations.map((rec) => (
-                    <div key={rec.id} className="bg-gray-950 rounded-lg p-4 sm:p-6 border border-gray-800">
-                      <div className="flex items-start space-x-3 sm:space-x-4">
-                        <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-green-400"></div>
-                        <div className="flex-1">
-                          <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
-                            {rec.message}
-                          </p>
+            {/* 2. WORK IMPACT BREAKDOWN */}
+            {workImpactBreakdown && (
+              <div className="px-2 sm:px-0">
+                <div className="bg-gray-900 rounded-lg p-6 sm:p-8 border border-gray-700">
+                  
+                  {/* Section Header */}
+                  <div className="mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-0">
+                        {workImpactBreakdown.title}
+                      </h2>
+                      
+                      {/* Refresh Button */}
+                      <button
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed self-start sm:self-auto"
+                      >
+                        {isRefreshing ? (
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Refreshing...</span>
+                          </div>
+                        ) : (
+                          'Refresh Data'
+                        )}
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <div className="mb-2 sm:mb-0">
+                        <div className={`text-3xl sm:text-4xl font-bold ${workImpactBreakdown.delta.color}`}>
+                          {workImpactBreakdown.delta.formatted}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {workImpactBreakdown.delta.delta === 0 && workImpactBreakdown.delta.formatted === "First reading" 
+                            ? "Initial measurement" 
+                            : "from previous reading"}
                         </div>
                       </div>
+                      
+                      {/* Last Updated Info */}
+                      <div className="text-xs text-gray-500 text-right">
+                        <p>Last updated: {lastRefresh.toLocaleTimeString()}</p>
+                        {refreshCount > 0 && (
+                          <p>{refreshCount} refresh{refreshCount > 1 ? 'es' : ''} today</p>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </section>
+                  </div>
 
-              {/* 3. MOBILE-OPTIMIZED TODAY'S MEETINGS */}
-              <section className="px-2 sm:px-0">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
-                  <h2 className="text-lg sm:text-xl font-semibold text-white">Today's Meetings</h2>
-                  <span className="text-xs sm:text-sm text-yellow-400 bg-yellow-900/20 px-3 py-1 rounded-full inline-block w-fit">
-                    High workload (7 meetings)
-                  </span>
-                </div>
-                
-                {/* Mobile-optimized meeting cards */}
-                <div className="space-y-3">
-                  {todaysMeetings.map((meeting) => {
-                    const performanceScore = meeting.historical.averagePerformance;
-                    const getScoreColor = (score) => {
-                      if (score >= 90) return 'text-green-400 bg-green-900/20';
-                      if (score >= 80) return 'text-blue-400 bg-blue-900/20';
-                      if (score >= 70) return 'text-yellow-400 bg-yellow-900/20';
-                      return 'text-orange-400 bg-orange-900/20';
-                    };
+                  {/* Change Insight */}
+                  {changeInsight && (
+                    <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4 mb-6">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                        <p className="text-blue-200 text-sm font-medium">{changeInsight}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     
-                    return (
-                      <div 
-                        key={meeting.id}
-                        onClick={() => setSelectedMeeting(meeting)}
-                        className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 active:bg-gray-800 cursor-pointer transition-all min-h-[60px] touch-manipulation"
-                      >
-                        {/* Mobile Layout */}
-                        <div className="flex justify-between items-start sm:items-center gap-3">
-                          <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-                              <div className="text-gray-400 text-sm font-mono mb-1 sm:mb-0 sm:w-20">
-                                {meeting.time.split(' - ')[0]}
+                    {/* Score Breakdown */}
+                    <div className="space-y-6">
+                      <section className="bg-gray-800 rounded-lg p-6">
+                        <h3 className="text-lg font-bold text-white mb-4">Score Breakdown</h3>
+                        <div className="space-y-4">
+                          {workImpactBreakdown.components.map((component, index) => (
+                            <div key={index} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-300">{component.name}</span>
+                                <div className="flex items-center space-x-3">
+                                  <span className="text-white font-medium">{component.value}%</span>
+                                  <span className="text-gray-500 text-sm">{component.weight}%</span>
+                                </div>
                               </div>
-                              <div className="flex-1">
-                                <h3 className="text-white font-medium text-sm sm:text-base leading-tight">{meeting.title}</h3>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div 
+                                  className="bg-blue-500 h-2 rounded-full" 
+                                  style={{width: `${component.value}%`}}
+                                ></div>
+                              </div>
+                              <div className="text-right text-xs text-gray-500">
+                                Contributes {component.contribution}% to total score
                               </div>
                             </div>
-                          </div>
-                          {/* Mobile-friendly score badge */}
-                          <div className={`px-3 py-1 rounded-full text-lg sm:text-2xl font-bold ${getScoreColor(performanceScore).split(' ')[0]} ${getScoreColor(performanceScore).split(' ')[1]} min-w-[60px] text-center`}>
-                            {performanceScore}%
-                          </div>
+                          ))}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* 4. MOBILE-OPTIMIZED LEARNING CORRELATIONS */}
-              <section className="px-2 sm:px-0">
-                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Learning Correlations</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  {/* Meeting Density Impact */}
-                  <div className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-gray-700">
-                    <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Meeting Density → Recovery</h3>
-                    <div className="space-y-2 sm:space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm sm:text-base text-gray-400">5+ meetings/day</span>
-                        <span className="text-sm sm:text-base text-red-400 font-medium">-18% recovery</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm sm:text-base text-gray-400">3-4 meetings/day</span>
-                        <span className="text-sm sm:text-base text-yellow-400 font-medium">-7% recovery</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm sm:text-base text-gray-400">1-2 meetings/day</span>
-                        <span className="text-sm sm:text-base text-green-400 font-medium">+3% recovery</span>
-                      </div>
+                      </section>
                     </div>
-                  </div>
 
-                  {/* Meeting Type Performance */}
-                  <div className="bg-gray-900 rounded-lg p-4 sm:p-6 border border-gray-700">
-                    <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Meeting Type → Performance</h3>
-                    <div className="space-y-2 sm:space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm sm:text-base text-gray-400">Strategic</span>
-                        <span className="text-sm sm:text-base text-green-400 font-medium">87% effective</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm sm:text-base text-gray-400">One-on-Ones</span>
-                        <span className="text-sm sm:text-base text-blue-400 font-medium">82% effective</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm sm:text-base text-gray-400">Team Meetings</span>
-                        <span className="text-sm sm:text-base text-yellow-400 font-medium">74% effective</span>
-                      </div>
+                    {/* Work Analysis */}
+                    <div className="space-y-6">
+                      <section className="bg-gray-800 rounded-lg p-6">
+                        <h3 className="text-lg font-bold text-white mb-4">Work Analysis</h3>
+                        <p className="text-gray-300 leading-relaxed mb-6">
+                          {workImpactBreakdown.explanation}
+                        </p>
+                        
+                        {workImpactBreakdown.factors.positive.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="text-green-400 font-semibold mb-2">Positive Factors</h4>
+                            <ul className="space-y-1">
+                              {workImpactBreakdown.factors.positive.map((factor, index) => (
+                                <li key={index} className="text-green-300 text-sm">{factor}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {workImpactBreakdown.factors.negative.length > 0 && (
+                          <div>
+                            <h4 className="text-yellow-400 font-semibold mb-2">Areas for Optimization</h4>
+                            <ul className="space-y-1">
+                              {workImpactBreakdown.factors.negative.map((factor, index) => (
+                                <li key={index} className="text-yellow-300 text-sm">{factor}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </section>
                     </div>
+
                   </div>
                 </div>
-              </section>
+              </div>
+            )}
 
-            </div>
-          )
-        )
-      }
+
+          </div>
+        )}
       </div>
     </div>
   )
