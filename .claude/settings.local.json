@@ -3,7 +3,16 @@
     "allow": [
       "Bash(npm run dev:*)",
       "Bash(git checkout:*)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(node test-algorithms.js)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next:*)",
+      "Bash(PORT=3015 npm run dev)",
+      "Bash(PORT=3025 npm run dev)",
+      "Bash(PORT=3030 npm run dev)",
+      "Bash(curl:*)",
+      "Bash(PORT=3035 npm run dev)"
     ],
     "deny": [],
     "ask": []
