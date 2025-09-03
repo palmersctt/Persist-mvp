@@ -78,49 +78,57 @@ class GoogleCalendarService {
   }
 
   private calculateCognitiveLoad(events: CalendarEvent[]): number {
-    if (events.length === 0) return 15; // Minimal baseline load
+    if (events.length === 0) return 10; // Very low baseline load for no meetings
 
-    let cognitiveLoad = 20; // Base morning load
+    let cognitiveLoad = 15; // Lower base load
 
-    // Meeting density impact (40% of load)
+    // Meeting density impact - much more reasonable scaling
     if (events.length >= 8) {
-      cognitiveLoad += 45; // Heavy meeting day
+      cognitiveLoad += 35; // Heavy meeting day
     } else if (events.length >= 6) {
-      cognitiveLoad += 30; // Moderate-heavy meetings
+      cognitiveLoad += 25; // Moderate-heavy meetings
     } else if (events.length >= 4) {
-      cognitiveLoad += 20; // Moderate meetings
+      cognitiveLoad += 15; // Moderate meetings
+    } else if (events.length >= 2) {
+      cognitiveLoad += 8; // Light-moderate meetings
     } else {
-      cognitiveLoad += 10; // Light meetings
+      cognitiveLoad += 3; // Very light meetings
     }
 
-    // Back-to-back meeting penalty (30% of load)
+    // Back-to-back meeting penalty - more reasonable
     const backToBackCount = this.countBackToBackMeetings(events);
     if (backToBackCount >= 4) {
-      cognitiveLoad += 25;
+      cognitiveLoad += 20;
     } else if (backToBackCount >= 2) {
-      cognitiveLoad += 15;
+      cognitiveLoad += 12;
     } else if (backToBackCount >= 1) {
-      cognitiveLoad += 8;
+      cognitiveLoad += 5;
     }
 
-    // Meeting duration impact (20% of load)
+    // Meeting duration impact - more balanced
     const totalDuration = events.reduce((sum, event) => {
       return sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
     }, 0);
 
     if (totalDuration >= 7) {
-      cognitiveLoad += 20;
+      cognitiveLoad += 15;
     } else if (totalDuration >= 5) {
-      cognitiveLoad += 12;
+      cognitiveLoad += 10;
     } else if (totalDuration >= 3) {
-      cognitiveLoad += 6;
+      cognitiveLoad += 5;
     }
 
-    // Large meeting penalty (10% of load)
+    // Large meeting penalty - reduced impact
     const largeMeetings = events.filter(event => event.attendees && event.attendees >= 8);
-    cognitiveLoad += largeMeetings.length * 5;
+    cognitiveLoad += largeMeetings.length * 3;
 
-    return Math.min(95, Math.max(15, Math.round(cognitiveLoad)));
+    // Time of day factor - afternoon meetings more taxing
+    const afternoonMeetings = events.filter(event => event.start.getHours() >= 13);
+    if (afternoonMeetings.length >= 3) {
+      cognitiveLoad += 5;
+    }
+
+    return Math.min(85, Math.max(10, Math.round(cognitiveLoad)));
   }
 
   private countBackToBackMeetings(events: CalendarEvent[]): number {
@@ -143,13 +151,19 @@ class GoogleCalendarService {
     const workStart = 9; // 9 AM
     const workEnd = 17; // 5 PM
     let totalFocusTime = 0;
+    let qualityFocusTime = 0;
 
     // Check time before first meeting
     const firstMeeting = events[0];
     if (firstMeeting.start.getHours() > workStart) {
-      const morningGap = firstMeeting.start.getHours() - workStart;
-      if (morningGap >= 1.5) { // 90+ minute blocks count as focus time
-        totalFocusTime += morningGap * 60;
+      const morningGapHours = firstMeeting.start.getHours() + (firstMeeting.start.getMinutes() / 60) - workStart;
+      const morningGapMinutes = morningGapHours * 60;
+      
+      if (morningGapMinutes >= 30) { // 30+ minute blocks count as some focus time
+        totalFocusTime += morningGapMinutes;
+        if (morningGapMinutes >= 90) { // 90+ minute blocks are quality focus time
+          qualityFocusTime += morningGapMinutes;
+        }
       }
     }
 
@@ -159,21 +173,31 @@ class GoogleCalendarService {
       const nextStart = events[i + 1].start;
       const gapMinutes = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60);
       
-      if (gapMinutes >= 90) { // Only 90+ minute gaps count as meaningful focus time
+      if (gapMinutes >= 30) { // 30+ minute gaps count as focus time
         totalFocusTime += gapMinutes;
+        if (gapMinutes >= 90) { // 90+ minute gaps are quality focus time
+          qualityFocusTime += gapMinutes;
+        }
       }
     }
 
     // Check time after last meeting
     const lastMeeting = events[events.length - 1];
-    if (lastMeeting.end.getHours() < workEnd) {
-      const eveningGap = workEnd - lastMeeting.end.getHours();
-      if (eveningGap >= 1.5) {
-        totalFocusTime += eveningGap * 60;
+    const lastMeetingEndHours = lastMeeting.end.getHours() + (lastMeeting.end.getMinutes() / 60);
+    if (lastMeetingEndHours < workEnd) {
+      const eveningGapMinutes = (workEnd - lastMeetingEndHours) * 60;
+      if (eveningGapMinutes >= 30) {
+        totalFocusTime += eveningGapMinutes;
+        if (eveningGapMinutes >= 90) {
+          qualityFocusTime += eveningGapMinutes;
+        }
       }
     }
 
-    return Math.round(totalFocusTime);
+    // Weight quality focus time more heavily
+    const effectiveFocusTime = totalFocusTime * 0.7 + qualityFocusTime * 0.3;
+
+    return Math.round(effectiveFocusTime);
   }
 
   private calculateFragmentationScore(events: CalendarEvent[]): number {
@@ -208,21 +232,49 @@ class GoogleCalendarService {
     return Math.min(100, Math.max(0, Math.round(score)));
   }
 
-  private calculatePerformanceIndex(cognitiveLoad: number, fragmentationScore: number, meetingCount: number): number {
-    // Performance index is inverse of cognitive load + quality factors
-    const cognitiveScore = 100 - cognitiveLoad; // Higher cognitive load = lower score
-    const fragmentationBonus = fragmentationScore * 0.3;
+  private calculatePerformanceIndex(cognitiveLoad: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
+    // New tiered performance assessment
+    let baseScore = 50;
     
-    // Meeting density factor
-    let densityScore = 50;
-    if (meetingCount <= 3) densityScore = 80;
-    else if (meetingCount <= 5) densityScore = 65;
-    else if (meetingCount <= 7) densityScore = 45;
-    else densityScore = 25;
-
-    const performanceIndex = (cognitiveScore * 0.5) + (fragmentationBonus) + (densityScore * 0.2);
+    // Meeting density scoring - much more generous for low counts
+    let meetingScore = 0;
+    if (meetingCount === 0) meetingScore = 100;
+    else if (meetingCount <= 1) meetingScore = 95;
+    else if (meetingCount <= 2) meetingScore = 90;
+    else if (meetingCount <= 3) meetingScore = 85;
+    else if (meetingCount <= 4) meetingScore = 75;
+    else if (meetingCount <= 5) meetingScore = 65;
+    else if (meetingCount <= 6) meetingScore = 55;
+    else meetingScore = 40;
     
-    return Math.min(100, Math.max(10, Math.round(performanceIndex)));
+    // Focus time scoring - recognizes excellent focus availability
+    let focusScore = 0;
+    const focusHours = focusTime / 60;
+    if (focusHours >= 5) focusScore = 100;
+    else if (focusHours >= 4) focusScore = 90;
+    else if (focusHours >= 3) focusScore = 80;
+    else if (focusHours >= 2) focusScore = 70;
+    else if (focusHours >= 1) focusScore = 55;
+    else focusScore = 30;
+    
+    // Cognitive load scoring - inverse relationship
+    const cognitiveScore = Math.max(0, 100 - cognitiveLoad);
+    
+    // Back-to-back penalty
+    let backToBackPenalty = 0;
+    if (backToBackCount >= 3) backToBackPenalty = 15;
+    else if (backToBackCount >= 2) backToBackPenalty = 10;
+    else if (backToBackCount >= 1) backToBackPenalty = 5;
+    
+    // Weighted performance calculation
+    const performanceIndex = (
+      meetingScore * 0.35 +           // Meeting density is key factor
+      focusScore * 0.35 +            // Focus time equally important
+      cognitiveScore * 0.25 +        // Cognitive load support factor
+      baseScore * 0.05               // Small base score
+    ) - backToBackPenalty;
+    
+    return Math.min(100, Math.max(15, Math.round(performanceIndex)));
   }
 
   async analyzeWorkHealth(): Promise<WorkHealthMetrics> {
@@ -240,39 +292,50 @@ class GoogleCalendarService {
 
     const bufferTime = Math.max(0, (8 * 60) - (totalDuration * 60) - (meetingCount * 15)); // Account for transitions
     
-    const readiness = this.calculatePerformanceIndex(cognitiveLoad, fragmentationScore, meetingCount);
+    const readiness = this.calculatePerformanceIndex(cognitiveLoad, focusTime, meetingCount, backToBackCount);
 
-    // Determine status based on readiness score
+    // Determine status based on improved readiness score thresholds
     let status: string;
-    if (readiness >= 85) status = 'EXCELLENT';
+    if (readiness >= 90) status = 'OPTIMAL';
+    else if (readiness >= 80) status = 'EXCELLENT';
     else if (readiness >= 70) status = 'GOOD';
-    else if (readiness >= 55) status = 'MODERATE';
+    else if (readiness >= 60) status = 'MODERATE';
     else status = 'NEEDS_ATTENTION';
 
-    // Generate insights
+    // Generate insights with improved categorization
     const contributors = [
-      `Meeting Load: ${meetingCount} meetings${meetingCount <= 3 ? ' (Light)' : meetingCount <= 5 ? ' (Moderate)' : ' (Heavy)'}`,
-      `Focus Time: ${Math.round(focusTime)} minutes${focusTime >= 120 ? ' (Good)' : focusTime >= 60 ? ' (Limited)' : ' (Minimal)'}`,
-      `Cognitive Load: ${cognitiveLoad}%${cognitiveLoad <= 40 ? ' (Low)' : cognitiveLoad <= 60 ? ' (Moderate)' : ' (High)'}`
+      `Meeting Load: ${meetingCount} meetings${meetingCount === 0 ? ' (None)' : meetingCount <= 2 ? ' (Minimal)' : meetingCount <= 4 ? ' (Light)' : meetingCount <= 6 ? ' (Moderate)' : ' (Heavy)'}`,
+      `Focus Time: ${(focusTime / 60).toFixed(1)} hours${focusTime >= 300 ? ' (Excellent)' : focusTime >= 180 ? ' (Good)' : focusTime >= 120 ? ' (Adequate)' : focusTime >= 60 ? ' (Limited)' : ' (Minimal)'}`,
+      `Cognitive Load: ${cognitiveLoad}%${cognitiveLoad <= 30 ? ' (Very Low)' : cognitiveLoad <= 45 ? ' (Low)' : cognitiveLoad <= 60 ? ' (Moderate)' : ' (High)'}`
     ];
 
     const primaryFactors = [];
-    if (meetingCount <= 3 && fragmentationScore >= 80) {
-      primaryFactors.push('Optimal work conditions with preserved cognitive resources');
-    } else if (cognitiveLoad >= 70) {
-      primaryFactors.push('High cognitive demand from meeting density and schedule patterns');
+    
+    // Contextual primary factors based on actual conditions
+    if (meetingCount <= 2 && focusTime >= 240) {
+      primaryFactors.push('Excellent work health conditions with minimal meeting load and abundant focus time');
+    } else if (meetingCount <= 3 && focusTime >= 180) {
+      primaryFactors.push('Good work health balance with light meeting schedule and adequate focus periods');
+    } else if (readiness >= 85) {
+      primaryFactors.push('Optimal cognitive resources and work capacity available');
+    } else if (cognitiveLoad >= 65) {
+      primaryFactors.push('Elevated cognitive demand from meeting density and schedule patterns');
+    } else if (focusTime < 90) {
+      primaryFactors.push('Limited deep work opportunities due to schedule fragmentation');
     } else {
-      primaryFactors.push('Moderate workload with balanced schedule demands');
+      primaryFactors.push('Balanced workload with manageable cognitive demands');
     }
 
-    if (backToBackCount >= 2) {
-      primaryFactors.push(`${backToBackCount} back-to-back meetings increasing mental switching costs`);
+    if (backToBackCount >= 3) {
+      primaryFactors.push(`${backToBackCount} back-to-back meetings creating significant mental switching costs`);
+    } else if (backToBackCount >= 1) {
+      primaryFactors.push(`${backToBackCount} back-to-back session${backToBackCount > 1 ? 's' : ''} requiring transition management`);
     }
 
     return {
       readiness,
       cognitiveLoad,
-      focusTime: Math.round(focusTime),
+      focusTime: Math.round(focusTime), // Keep as minutes internally for calculations
       meetingDensity: meetingCount,
       status,
       schedule: {

@@ -41,7 +41,7 @@ export const useWorkHealth = () => {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   const fetchWorkHealth = async () => {
-    if (!session?.accessToken) {
+    if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
       return;
     }
@@ -50,7 +50,12 @@ export const useWorkHealth = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/work-health');
+      const response = await fetch('/api/work-health', {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -90,10 +95,10 @@ export const useWorkHealth = () => {
 
   // Fetch data when session is available
   useEffect(() => {
-    if (status === 'authenticated' && session?.accessToken) {
+    if (status === 'authenticated' && session) {
       fetchWorkHealth();
     }
-  }, [session?.accessToken, status]);
+  }, [session, status]);
 
   const refresh = () => {
     fetchWorkHealth();

@@ -64,26 +64,33 @@ export default function WorkHealthDashboard() {
         color: '#ff7744',
         description: 'High cognitive load detected from schedule density. Focus on essential tasks and consider protecting focus time for recovery.'
       };
-    } else if (readiness >= 85) {
+    } else if (workHealth.status === 'OPTIMAL' || readiness >= 90) {
+      return {
+        level: 'optimal',
+        message: 'OPTIMAL WORK HEALTH',
+        color: '#00ff88',
+        description: 'Outstanding conditions for high-impact work. Perfect for strategic initiatives, complex problem-solving, and important decisions.'
+      };
+    } else if (workHealth.status === 'EXCELLENT' || readiness >= 80) {
       return {
         level: 'peak',
-        message: 'PEAK WORK HEALTH',
+        message: 'EXCELLENT WORK HEALTH',
         color: '#25d366',
-        description: 'Excellent conditions for strategic work and important decisions. Ideal timing for tackling complex projects and high-stakes meetings.'
+        description: 'Exceptional conditions for meaningful work. Ideal for challenging projects, creative tasks, and high-stakes activities.'
       };
-    } else if (readiness >= 70) {
+    } else if (workHealth.status === 'GOOD' || readiness >= 70) {
       return {
         level: 'good',
         message: 'GOOD WORK HEALTH',
         color: '#ffb347',
-        description: 'Solid foundation for productive work, maintain steady output. Good capacity for routine work, moderate complexity tasks.'
+        description: 'Solid foundation for productive work. Good capacity for routine tasks, meetings, and moderate complexity projects.'
       };
     } else {
       return {
         level: 'moderate',
         message: 'MODERATE WORK HEALTH',
         color: '#ff9500',
-        description: 'Some cognitive strain from schedule patterns. Consider optimizing meeting density and protecting focus blocks.'
+        description: 'Some cognitive strain from schedule patterns. Consider optimizing meeting distribution and protecting focus time.'
       };
     }
   };
@@ -116,10 +123,10 @@ export default function WorkHealthDashboard() {
       },
       {
         label: 'Focus Time',
-        value: workHealth.focusTime,
-        unit: ' min',
-        status: workHealth.focusTime < 30 ? 'needs_attention' : 
-                workHealth.focusTime < 90 ? 'average' : 'good',
+        value: (workHealth.focusTime / 60).toFixed(1),
+        unit: ' hrs',
+        status: workHealth.focusTime < 60 ? 'needs_attention' : 
+                workHealth.focusTime < 180 ? 'average' : 'good',
         icon: '🎯'
       }
     ];
@@ -133,22 +140,49 @@ export default function WorkHealthDashboard() {
     const cognitiveLoad = workHealth.cognitiveLoad;
     const readiness = workHealth.readiness;
 
-    // Work Health Pattern Analysis
-    if (readiness >= 85 && schedule.meetingCount <= 3) {
+    // Work Health Pattern Analysis - Updated for new algorithm
+    if (readiness >= 90) {
       insights.push({
         type: 'current_analysis',
         title: 'Optimal Work Health Conditions',
-        message: `Performance index at ${readiness}% with light meeting load (${schedule.meetingCount} meetings). Your cognitive resources are well-preserved for deep work and strategic thinking today.`,
-        dataSource: 'Calendar pattern analysis',
+        message: `Outstanding performance index at ${readiness}% with exceptional work health conditions. ${schedule.meetingCount} meetings and ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time create ideal cognitive conditions for high-impact work.`,
+        dataSource: 'Advanced calendar pattern analysis',
+        urgency: 'low',
+        category: 'schedule'
+      });
+    } else if (readiness >= 80) {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Excellent Work Health Status',
+        message: `High performance index at ${readiness}% indicates excellent work capacity. Your schedule provides strong cognitive resources with ${schedule.meetingCount} meetings balanced by ${(workHealth.focusTime / 60).toFixed(1)} hours of quality focus time.`,
+        dataSource: 'Calendar optimization analysis',
+        urgency: 'low',
+        category: 'schedule'
+      });
+    } else if (readiness >= 70) {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Good Work Health Balance',
+        message: `Solid performance index at ${readiness}% shows good work health conditions. ${schedule.meetingCount} meetings with ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time provide adequate cognitive resources for productive work.`,
+        dataSource: 'Work pattern analysis',
+        urgency: 'low',
+        category: 'schedule'
+      });
+    } else if (readiness >= 60) {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Moderate Work Health Status',
+        message: `Performance index at ${readiness}% indicates moderate work capacity. With ${schedule.meetingCount} meetings and ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time, consider optimizing meeting distribution for improved cognitive flow.`,
+        dataSource: 'Calendar and workload analysis',
         urgency: 'medium',
         category: 'schedule'
       });
-    } else if (readiness <= 60) {
+    } else {
       insights.push({
         type: 'current_analysis',
         title: 'Work Health Needs Attention',
-        message: `Performance index at ${readiness}% indicates cognitive strain from your work patterns. Consider redistributing your workload and protecting focus time for recovery.`,
-        dataSource: 'Work pattern analysis',
+        message: `Performance index at ${readiness}% indicates cognitive strain from current work patterns. With ${schedule.meetingCount} meetings and ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time, prioritize schedule optimization and cognitive recovery.`,
+        dataSource: 'Work health analysis',
         urgency: 'high',
         category: 'schedule'
       });
@@ -159,9 +193,27 @@ export default function WorkHealthDashboard() {
       insights.push({
         type: 'current_analysis',
         title: 'Limited Focus Time Available',
-        message: `Only ${workHealth.focusTime} minutes of uninterrupted time available today. This fragmentation pattern can impact deep work quality and cognitive recovery.`,
+        message: `Only ${(workHealth.focusTime / 60).toFixed(1)} hours of uninterrupted time available today. This fragmentation pattern can impact deep work quality and cognitive recovery.`,
         dataSource: 'Calendar fragmentation analysis',
         urgency: 'high',
+        category: 'schedule'
+      });
+    } else if (workHealth.focusTime >= 300) { // 5+ hours
+      insights.push({
+        type: 'current_analysis',
+        title: 'Exceptional Focus Time Available',
+        message: `${(workHealth.focusTime / 60).toFixed(1)} hours of premium focus time provides excellent opportunity for deep work, strategic planning, and high-cognitive tasks.`,
+        dataSource: 'Advanced calendar flow analysis',
+        urgency: 'low',
+        category: 'schedule'
+      });
+    } else if (workHealth.focusTime >= 180) { // 3+ hours
+      insights.push({
+        type: 'current_analysis',
+        title: 'Good Focus Time Available',
+        message: `${(workHealth.focusTime / 60).toFixed(1)} hours of quality focus time available. Sufficient for meaningful deep work sessions and cognitive tasks.`,
+        dataSource: 'Calendar flow analysis',
+        urgency: 'low',
         category: 'schedule'
       });
     }
