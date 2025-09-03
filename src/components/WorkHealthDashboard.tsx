@@ -55,42 +55,50 @@ export default function WorkHealthDashboard() {
       };
     }
 
-    const readiness = workHealth.readiness;
+    const adaptiveIndex = workHealth.adaptivePerformanceIndex;
     
-    if (workHealth.status === 'NEEDS_ATTENTION') {
-      return {
-        level: 'recovery',
-        message: 'WORK HEALTH NEEDS ATTENTION',
-        color: '#ff7744',
-        description: 'Low cognitive availability detected from schedule density. Focus on essential tasks and consider protecting focus time for recovery.'
-      };
-    } else if (workHealth.status === 'OPTIMAL' || readiness >= 90) {
+    // Color logic matches performance index ring exactly
+    if (adaptiveIndex >= 85) {
       return {
         level: 'optimal',
         message: 'OPTIMAL WORK HEALTH',
-        color: '#00ff88',
-        description: 'Outstanding conditions for high-impact work. Perfect for strategic initiatives, complex problem-solving, and important decisions.'
+        color: '#00ff88', // Green
+        description: 'Outstanding cognitive conditions with excellent schedule balance. Perfect for strategic initiatives, complex problem-solving, and important decisions.'
       };
-    } else if (workHealth.status === 'EXCELLENT' || readiness >= 80) {
+    } else if (adaptiveIndex >= 75) {
       return {
         level: 'peak',
-        message: 'EXCELLENT WORK HEALTH',
-        color: '#25d366',
-        description: 'Exceptional conditions for meaningful work. Ideal for challenging projects, creative tasks, and high-stakes activities.'
+        message: 'EXCELLENT WORK HEALTH', 
+        color: '#25d366', // Green
+        description: 'Strong cognitive resilience with sustainable work rhythm. Ideal for challenging projects, creative tasks, and high-stakes activities.'
       };
-    } else if (workHealth.status === 'GOOD' || readiness >= 70) {
+    } else if (adaptiveIndex >= 65) {
       return {
         level: 'good',
         message: 'GOOD WORK HEALTH',
-        color: '#ffb347',
-        description: 'Solid foundation for productive work. Good capacity for routine tasks, meetings, and moderate complexity projects.'
+        color: '#ffb347', // Yellow/Amber
+        description: 'Solid cognitive foundation with balanced schedule patterns. Good capacity for routine tasks, meetings, and moderate complexity projects.'
       };
-    } else {
+    } else if (adaptiveIndex >= 55) {
       return {
         level: 'moderate',
         message: 'MODERATE WORK HEALTH',
-        color: '#ff9500',
-        description: 'Some cognitive strain from schedule patterns. Consider optimizing meeting distribution and protecting focus time.'
+        color: '#ff9500', // Orange
+        description: 'Some cognitive strain from schedule density. Consider optimizing meeting distribution and recovery periods.'
+      };
+    } else if (adaptiveIndex >= 40) {
+      return {
+        level: 'attention',
+        message: 'WORK HEALTH NEEDS ATTENTION',
+        color: '#ff7744', // Red-Orange
+        description: 'Performance compromised by schedule density and cognitive demands. Focus on essential tasks and schedule optimization.'
+      };
+    } else {
+      return {
+        level: 'critical',
+        message: 'CRITICAL WORK HEALTH',
+        color: '#ff4444', // Red
+        description: 'Severe cognitive strain requiring immediate schedule intervention. Prioritize recovery and workload reduction.'
       };
     }
   };
@@ -98,36 +106,27 @@ export default function WorkHealthDashboard() {
   const getSecondaryMetrics = (): SecondaryMetric[] => {
     if (!workHealth) {
       return [
-        { label: 'Cognitive Availability', value: '—', status: 'average', icon: '🧠' },
-        { label: 'Schedule Load', value: '—', status: 'average', icon: '📅' },
-        { label: 'Focus Time', value: '—', status: 'average', icon: '🎯' }
+        { label: 'Cognitive Resilience', value: '—', status: 'average', icon: '🧠' },
+        { label: 'Sustainability Index', value: '—', status: 'average', icon: '♻️' }
       ];
     }
 
     return [
       {
-        label: 'Cognitive Availability',
-        value: workHealth.cognitiveAvailability,
+        label: 'Cognitive Resilience',
+        value: workHealth.cognitiveResilience,
         unit: '%',
-        status: workHealth.cognitiveAvailability <= 24 ? 'needs_attention' : 
-                workHealth.cognitiveAvailability <= 49 ? 'average' : 'good',
+        status: workHealth.cognitiveResilience <= 40 ? 'needs_attention' : 
+                workHealth.cognitiveResilience <= 65 ? 'average' : 'good',
         icon: '🧠'
       },
       {
-        label: 'Schedule Load',
-        value: workHealth.schedule.meetingCount,
-        unit: ' meetings',
-        status: workHealth.schedule.meetingCount >= 7 ? 'needs_attention' : 
-                workHealth.schedule.meetingCount >= 5 ? 'average' : 'good',
-        icon: '📅'
-      },
-      {
-        label: 'Focus Time',
-        value: (workHealth.focusTime / 60).toFixed(1),
-        unit: ' hrs',
-        status: workHealth.focusTime < 60 ? 'needs_attention' : 
-                workHealth.focusTime < 180 ? 'average' : 'good',
-        icon: '🎯'
+        label: 'Sustainability Index',
+        value: workHealth.workRhythmRecovery,
+        unit: '%',
+        status: workHealth.workRhythmRecovery <= 45 ? 'needs_attention' : 
+                workHealth.workRhythmRecovery <= 70 ? 'average' : 'good',
+        icon: '♻️'
       }
     ];
   };
@@ -137,100 +136,119 @@ export default function WorkHealthDashboard() {
 
     const insights: DataDrivenInsight[] = [];
     const schedule = workHealth.schedule;
-    const cognitiveLoad = workHealth.cognitiveLoad;
-    const readiness = workHealth.readiness;
+    const adaptiveIndex = workHealth.adaptivePerformanceIndex;
+    const resilience = workHealth.cognitiveResilience;
+    const rhythm = workHealth.workRhythmRecovery;
 
-    // Work Health Pattern Analysis - Updated for new algorithm
-    if (readiness >= 90) {
+    // Adaptive Performance Analysis - Severity aligned with score
+    if (adaptiveIndex >= 85) {
       insights.push({
         type: 'current_analysis',
-        title: 'Optimal Work Health Conditions',
-        message: `Outstanding performance index at ${readiness}% with exceptional work health conditions. ${schedule.meetingCount} meetings and ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time create ideal cognitive conditions for high-impact work.`,
-        dataSource: 'Advanced calendar pattern analysis',
+        title: 'Excellent Work Health Conditions',
+        message: `Outstanding adaptive performance at ${adaptiveIndex}% maintains optimal cognitive conditions. Your current work pattern supports sustainable peak performance with excellent schedule balance and cognitive resource management.`,
+        dataSource: 'Adaptive Performance Intelligence',
         urgency: 'low',
         category: 'schedule'
       });
-    } else if (readiness >= 80) {
+    } else if (adaptiveIndex >= 70) {
       insights.push({
         type: 'current_analysis',
-        title: 'Excellent Work Health Status',
-        message: `High performance index at ${readiness}% indicates excellent work capacity. Your schedule provides strong cognitive resources with ${schedule.meetingCount} meetings balanced by ${(workHealth.focusTime / 60).toFixed(1)} hours of quality focus time.`,
-        dataSource: 'Calendar optimization analysis',
+        title: 'Good Work Health with Optimization Potential',
+        message: `Solid adaptive performance at ${adaptiveIndex}% shows healthy work patterns with minor optimization opportunities. Schedule provides sustainable performance with ${schedule.meetingCount} meetings creating manageable cognitive demands.`,
+        dataSource: 'Performance Pattern Analysis',
         urgency: 'low',
         category: 'schedule'
       });
-    } else if (readiness >= 70) {
+    } else if (adaptiveIndex >= 55) {
       insights.push({
-        type: 'current_analysis',
-        title: 'Good Work Health Balance',
-        message: `Solid performance index at ${readiness}% shows good work health conditions. ${schedule.meetingCount} meetings with ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time provide adequate cognitive resources for productive work.`,
-        dataSource: 'Work pattern analysis',
-        urgency: 'low',
+        type: 'schedule_impact',
+        title: 'Significant Work Health Concerns Detected',
+        message: `Adaptive performance at ${adaptiveIndex}% indicates serious work health issues requiring immediate attention. Current schedule intensity with ${schedule.meetingCount} meetings is creating substantial cognitive load that threatens sustainable performance. Immediate schedule restructuring recommended to prevent further degradation.`,
+        dataSource: 'Work Health Risk Analysis',
+        urgency: 'high',
         category: 'schedule'
       });
-    } else if (readiness >= 60) {
+    } else if (adaptiveIndex >= 40) {
       insights.push({
-        type: 'current_analysis',
-        title: 'Moderate Work Health Status',
-        message: `Performance index at ${readiness}% indicates moderate work capacity. With ${schedule.meetingCount} meetings and ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time, consider optimizing meeting distribution for improved cognitive flow.`,
-        dataSource: 'Calendar and workload analysis',
-        urgency: 'medium',
+        type: 'schedule_impact',
+        title: 'Critical Work Health Issues Demand Urgent Action',
+        message: `Adaptive performance at ${adaptiveIndex}% reveals critical work health problems requiring emergency intervention. Unsustainable schedule patterns are creating severe cognitive strain that poses serious risk to performance and wellbeing. Comprehensive schedule restructuring essential.`,
+        dataSource: 'Critical Performance Analysis',
+        urgency: 'high',
         category: 'schedule'
       });
     } else {
       insights.push({
-        type: 'current_analysis',
-        title: 'Work Health Needs Attention',
-        message: `Performance index at ${readiness}% indicates cognitive strain from current work patterns. With ${schedule.meetingCount} meetings and ${(workHealth.focusTime / 60).toFixed(1)} hours of focus time, prioritize schedule optimization and cognitive recovery.`,
-        dataSource: 'Work health analysis',
+        type: 'schedule_impact',
+        title: 'Severe Work Health Crisis Requires Immediate Intervention',
+        message: `Adaptive performance at ${adaptiveIndex}% indicates a severe work health crisis demanding immediate comprehensive intervention. Current patterns pose serious risk to cognitive wellbeing and sustainable performance. Emergency schedule overhaul and recovery protocols essential.`,
+        dataSource: 'Emergency Performance Analysis',
         urgency: 'high',
         category: 'schedule'
       });
     }
 
-    // Focus Time Analysis
-    if (workHealth.focusTime < 60) {
+    // Cognitive Resilience Analysis - Severity aligned
+    if (resilience <= 40) {
       insights.push({
         type: 'current_analysis',
-        title: 'Limited Focus Time Available',
-        message: `Only ${(workHealth.focusTime / 60).toFixed(1)} hours of uninterrupted time available today. This fragmentation pattern can impact deep work quality and cognitive recovery.`,
-        dataSource: 'Calendar fragmentation analysis',
+        title: 'Critical Cognitive Resilience Deficit',
+        message: `Cognitive resilience at ${resilience}% reveals serious mental capacity limitations requiring immediate intervention. Excessive context switching and decision fatigue are significantly impacting cognitive performance and decision quality. Urgent schedule simplification needed.`,
+        dataSource: 'Cognitive Risk Analysis',
         urgency: 'high',
         category: 'schedule'
       });
-    } else if (workHealth.focusTime >= 300) { // 5+ hours
+    } else if (resilience >= 80) {
       insights.push({
         type: 'current_analysis',
-        title: 'Exceptional Focus Time Available',
-        message: `${(workHealth.focusTime / 60).toFixed(1)} hours of premium focus time provides excellent opportunity for deep work, strategic planning, and high-cognitive tasks.`,
-        dataSource: 'Advanced calendar flow analysis',
+        title: 'Excellent Cognitive Resilience Maintained',
+        message: `Outstanding cognitive resilience at ${resilience}% demonstrates strong mental capacity for complex decisions and high-cognitive tasks. Current schedule patterns support sustained cognitive excellence with effective recovery and minimal switching costs.`,
+        dataSource: 'Cognitive Excellence Analysis',
         urgency: 'low',
         category: 'schedule'
       });
-    } else if (workHealth.focusTime >= 180) { // 3+ hours
+    } else if (resilience >= 60) {
       insights.push({
         type: 'current_analysis',
-        title: 'Good Focus Time Available',
-        message: `${(workHealth.focusTime / 60).toFixed(1)} hours of quality focus time available. Sufficient for meaningful deep work sessions and cognitive tasks.`,
-        dataSource: 'Calendar flow analysis',
+        title: 'Adequate Cognitive Resilience with Optimization Needed',
+        message: `Cognitive resilience at ${resilience}% shows reasonable mental capacity with noticeable context switching load. Some cognitive strain evident but manageable. Minor schedule adjustments could improve mental resource allocation.`,
+        dataSource: 'Cognitive Optimization Analysis',
         urgency: 'low',
         category: 'schedule'
       });
     }
 
-    // Meeting Density Analysis
-    if (schedule.meetingCount >= 7) {
+    // Sustainability Analysis - Severity aligned
+    if (rhythm <= 45) {
       insights.push({
         type: 'schedule_impact',
-        title: 'High Meeting Density Detected',
-        message: `${schedule.meetingCount} meetings today exceeds research-optimal density (4-5 meetings). With ${schedule.backToBackCount} back-to-back sessions, cognitive load will be elevated.`,
-        dataSource: 'Calendar analysis + meeting density research',
-        urgency: 'medium',
+        title: 'Unsustainable Work Patterns Threaten Long-term Performance',
+        message: `Sustainability index at ${rhythm}% reveals seriously unsustainable work patterns that threaten long-term performance capacity. Current schedule intensity far exceeds healthy recovery ratios, creating substantial risk of burnout and cognitive decline. Immediate pattern restructuring essential.`,
+        dataSource: 'Sustainability Risk Analysis',
+        urgency: 'high',
+        category: 'schedule'
+      });
+    } else if (rhythm >= 80) {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Exceptional Work Sustainability Achieved',
+        message: `Outstanding sustainability index at ${rhythm}% demonstrates exceptionally maintainable schedule patterns with optimal intensity-recovery balance. Current work rhythm strongly supports long-term cognitive health and sustainable peak performance.`,
+        dataSource: 'Sustainability Excellence Analysis',
+        urgency: 'low',
+        category: 'schedule'
+      });
+    } else if (rhythm >= 60) {
+      insights.push({
+        type: 'current_analysis',
+        title: 'Sustainable Work Pattern with Enhancement Opportunities',
+        message: `Sustainability index at ${rhythm}% shows maintainable work patterns with adequate recovery periods. Current schedule supports consistent performance sustainability with opportunities for rhythm optimization to improve long-term outcomes.`,
+        dataSource: 'Sustainability Optimization Analysis',
+        urgency: 'low',
         category: 'schedule'
       });
     }
 
-    return insights.slice(0, 2);
+    return insights.slice(0, 3);
   };
 
   if (status === 'loading') {
@@ -375,7 +393,7 @@ export default function WorkHealthDashboard() {
                 stroke={workCapacity.color}
                 strokeWidth="2"
                 strokeDasharray="339.29" 
-                strokeDashoffset={(339.29 - (workHealth?.readiness || 0) / 100 * 339.29)} 
+                strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)} 
                 strokeLinecap="round"
                 className="transition-all duration-1000 ease-out"
               />
@@ -387,7 +405,7 @@ export default function WorkHealthDashboard() {
                   fontFeatureSettings: '"tnum"',
                   letterSpacing: '-0.04em'
                 }}>
-                  {isLoading ? '—' : `${workHealth?.readiness || 0}`}
+                  {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
                 </div>
                 <div className="text-center">
                   <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
@@ -408,7 +426,7 @@ export default function WorkHealthDashboard() {
 
         {/* Clean Secondary Metrics with Subtle Visual Indicators */}
         <section>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 max-w-2xl mx-auto">
             {secondaryMetrics.map((metric, index) => {
               const getIndicatorColor = (status: string) => {
                 switch (status) {
@@ -431,7 +449,7 @@ export default function WorkHealthDashboard() {
                   </div>
                   
                   {/* Subtle Visual Indicators */}
-                  {metric.label === 'Cognitive Availability' && (
+                  {metric.label === 'Cognitive Resilience' && (
                     <div className="mx-auto w-16 mb-2">
                       <div className="whoop-thin-progress">
                         <div 
@@ -445,39 +463,17 @@ export default function WorkHealthDashboard() {
                     </div>
                   )}
                   
-                  {metric.label === 'Schedule Load' && (
-                    <div className="flex justify-center space-x-1 mb-2">
-                      {Array.from({ length: 8 }, (_, i) => (
+                  {metric.label === 'Sustainability Index' && (
+                    <div className="mx-auto w-16 mb-2">
+                      <div className="whoop-thin-progress">
                         <div 
-                          key={i}
-                          className="whoop-dot-indicator"
-                          style={{
-                            backgroundColor: i < Number(metric.value) ? 
-                              getIndicatorColor(metric.status) : 
-                              'rgba(255,255,255,0.2)'
+                          className="whoop-progress-fill"
+                          style={{ 
+                            width: `${metric.value}%`,
+                            backgroundColor: getIndicatorColor(metric.status)
                           }}
                         />
-                      ))}
-                    </div>
-                  )}
-                  
-                  {metric.label === 'Focus Time' && (
-                    <div className="flex justify-center space-x-0.5 mb-2">
-                      {Array.from({ length: 8 }, (_, i) => {
-                        const availableBlocks = Math.max(0, Math.floor(Number(metric.value) / 60));
-                        const isAvailable = i < availableBlocks;
-                        return (
-                          <div 
-                            key={i}
-                            className="whoop-time-block"
-                            style={{
-                              backgroundColor: isAvailable ? 
-                                getIndicatorColor(metric.status) : 
-                                'rgba(255,255,255,0.15)'
-                            }}
-                          />
-                        );
-                      })}
+                      </div>
                     </div>
                   )}
                 </div>

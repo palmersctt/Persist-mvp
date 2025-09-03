@@ -2,11 +2,18 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface WorkHealthData {
+  // New intelligent metrics
+  adaptivePerformanceIndex: number;
+  cognitiveResilience: number;
+  workRhythmRecovery: number;
+  
+  status: string;
+  
+  // Legacy fields for backward compatibility
   readiness: number;
   cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
-  status: string;
 }
 
 interface ScheduleAnalysis {
@@ -24,13 +31,20 @@ interface WorkHealthBreakdown {
 }
 
 interface WorkHealthMetrics {
+  // New intelligent metrics
+  adaptivePerformanceIndex: number;
+  cognitiveResilience: number;
+  workRhythmRecovery: number;
+  
+  status: string;
+  schedule: ScheduleAnalysis;
+  breakdown: WorkHealthBreakdown;
+  
+  // Legacy fields for backward compatibility
   readiness: number;
   cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
-  status: string;
-  schedule: ScheduleAnalysis;
-  breakdown: WorkHealthBreakdown;
 }
 
 export const useWorkHealth = () => {
@@ -70,10 +84,11 @@ export const useWorkHealth = () => {
       
       // Fall back to mock data if API fails
       setWorkHealth({
-        readiness: 65,
-        cognitiveAvailability: 45,
-        focusTime: 45,
-        meetingDensity: 6,
+        // New intelligent metrics
+        adaptivePerformanceIndex: 55,
+        cognitiveResilience: 40,
+        workRhythmRecovery: 60,
+        
         status: 'ESTIMATED',
         schedule: {
           meetingCount: 6,
@@ -84,9 +99,15 @@ export const useWorkHealth = () => {
         },
         breakdown: {
           source: 'estimated',
-          contributors: ['Schedule Analysis: 6 meetings', 'Calendar Load: 7.5h workday', 'Limited data available'],
+          contributors: ['Adaptive Performance: 55% (Moderate)', 'Cognitive Resilience: 40% (Limited)', 'Sustainability Index: 60% (Good)'],
           primaryFactors: ['Performance estimated from limited data', 'Connect Google Calendar for personalized insights']
-        }
+        },
+        
+        // Legacy fields
+        readiness: 65,
+        cognitiveAvailability: 45,
+        focusTime: 45,
+        meetingDensity: 6
       });
     } finally {
       setIsLoading(false);

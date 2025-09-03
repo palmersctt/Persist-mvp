@@ -12,10 +12,11 @@ export interface CalendarEvent {
 }
 
 export interface WorkHealthMetrics {
-  readiness: number;
-  cognitiveAvailability: number;
-  focusTime: number;
-  meetingDensity: number;
+  // New intelligent metrics
+  adaptivePerformanceIndex: number; // Main metric: 0-100
+  cognitiveResilience: number; // Secondary metric: 0-100
+  workRhythmRecovery: number; // Tertiary metric: 0-100
+  
   status: string;
   schedule: {
     meetingCount: number;
@@ -29,6 +30,12 @@ export interface WorkHealthMetrics {
     contributors: string[];
     primaryFactors: string[];
   };
+  
+  // Legacy fields for backward compatibility
+  readiness: number;
+  cognitiveAvailability: number;
+  focusTime: number;
+  meetingDensity: number;
 }
 
 class GoogleCalendarService {
@@ -234,6 +241,186 @@ class GoogleCalendarService {
     return Math.min(100, Math.max(0, Math.round(score)));
   }
 
+  private calculateAdaptivePerformanceIndex(events: CalendarEvent[]): number {
+    if (events.length === 0) return 95; // Near-optimal with no meetings
+    
+    const meetingCount = events.length;
+    const backToBackCount = this.countBackToBackMeetings(events);
+    const focusTime = this.calculateFocusTime(events);
+    const focusHours = focusTime / 60;
+    
+    // Calculate meeting density impact with more nuanced scoring
+    let densityScore = 100;
+    if (meetingCount >= 8) densityScore = 25;
+    else if (meetingCount >= 7) densityScore = 35;
+    else if (meetingCount >= 6) densityScore = 45;
+    else if (meetingCount >= 5) densityScore = 60;
+    else if (meetingCount >= 4) densityScore = 70;
+    else if (meetingCount >= 3) densityScore = 80;
+    else if (meetingCount >= 2) densityScore = 88;
+    else if (meetingCount === 1) densityScore = 95;
+    
+    // Fragmentation penalty - heavily weighted for low focus time
+    let fragmentationScore = 100;
+    if (focusHours < 1) fragmentationScore = 20; // Severe fragmentation
+    else if (focusHours < 2) fragmentationScore = 40;
+    else if (focusHours < 3) fragmentationScore = 65;
+    else if (focusHours < 4) fragmentationScore = 80;
+    else if (focusHours >= 4) fragmentationScore = 90;
+    else if (focusHours >= 5) fragmentationScore = 100;
+    
+    // Back-to-back meeting cognitive overhead
+    let transitionScore = 100;
+    if (backToBackCount >= 4) transitionScore = 40;
+    else if (backToBackCount === 3) transitionScore = 60;
+    else if (backToBackCount === 2) transitionScore = 75;
+    else if (backToBackCount === 1) transitionScore = 88;
+    
+    // Time-of-day alignment (afternoon meetings more taxing)
+    const afternoonMeetings = events.filter(e => e.start.getHours() >= 14).length;
+    const morningMeetings = events.filter(e => e.start.getHours() < 12).length;
+    let timingScore = 100;
+    if (afternoonMeetings > morningMeetings * 1.5) timingScore = 70;
+    else if (afternoonMeetings > morningMeetings) timingScore = 85;
+    
+    // Recovery buffer analysis
+    let recoveryScore = 100;
+    const totalMeetingHours = events.reduce((sum, event) => 
+      sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60), 0);
+    const workHours = 8;
+    const meetingRatio = totalMeetingHours / workHours;
+    if (meetingRatio > 0.75) recoveryScore = 30;
+    else if (meetingRatio > 0.6) recoveryScore = 50;
+    else if (meetingRatio > 0.5) recoveryScore = 70;
+    else if (meetingRatio > 0.4) recoveryScore = 85;
+    
+    // Weighted calculation emphasizing cognitive health
+    const adaptiveIndex = (
+      densityScore * 0.25 +
+      fragmentationScore * 0.30 + // Heavy weight on fragmentation
+      transitionScore * 0.20 +
+      timingScore * 0.10 +
+      recoveryScore * 0.15
+    );
+    
+    return Math.round(Math.min(100, Math.max(0, adaptiveIndex)));
+  }
+  
+  private calculateCognitiveResilience(events: CalendarEvent[]): number {
+    if (events.length === 0) return 90; // High resilience with no meetings
+    
+    // Context switching load
+    const uniqueContexts = new Set(events.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
+    const contextSwitchingLoad = Math.min(100, uniqueContexts * 15);
+    
+    // Decision fatigue accumulation
+    let decisionFatigue = 0;
+    events.forEach((event, index) => {
+      const hourOfDay = event.start.getHours();
+      const timeFactor = hourOfDay >= 14 ? 1.5 : 1; // Afternoon decisions more taxing
+      const attendeeFactor = (event.attendees && event.attendees > 5) ? 1.3 : 1;
+      decisionFatigue += (10 * timeFactor * attendeeFactor);
+    });
+    decisionFatigue = Math.min(80, decisionFatigue);
+    
+    // Cognitive reserve calculation
+    const focusTime = this.calculateFocusTime(events);
+    const focusHours = focusTime / 60;
+    let cognitiveReserve = 0;
+    if (focusHours >= 4) cognitiveReserve = 80;
+    else if (focusHours >= 3) cognitiveReserve = 60;
+    else if (focusHours >= 2) cognitiveReserve = 40;
+    else if (focusHours >= 1) cognitiveReserve = 20;
+    else cognitiveReserve = 10;
+    
+    // Mental energy patterns
+    const consecutiveMeetings = this.findLongestConsecutiveStretch(events);
+    let energyDepletion = consecutiveMeetings * 20;
+    energyDepletion = Math.min(60, energyDepletion);
+    
+    // Calculate resilience score
+    const resilienceScore = Math.max(0, 
+      100 - contextSwitchingLoad * 0.25 
+      - decisionFatigue * 0.35 
+      + cognitiveReserve * 0.25 
+      - energyDepletion * 0.15
+    );
+    
+    return Math.round(Math.min(100, Math.max(0, resilienceScore)));
+  }
+  
+  private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
+    if (events.length === 0) return 95; // Excellent rhythm with no meetings
+    
+    // Work rhythm analysis
+    const morningBlock = events.filter(e => e.start.getHours() >= 9 && e.start.getHours() < 12).length;
+    const afternoonBlock = events.filter(e => e.start.getHours() >= 12 && e.start.getHours() < 17).length;
+    const rhythmBalance = Math.abs(morningBlock - afternoonBlock);
+    let rhythmScore = 100 - (rhythmBalance * 15);
+    rhythmScore = Math.max(40, rhythmScore);
+    
+    // Recovery adequacy
+    const gaps = this.calculateGapsBetweenMeetings(events);
+    const adequateBreaks = gaps.filter(g => g >= 30).length; // 30+ minute breaks
+    const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
+    let recoveryScore = (adequateBreaks * 20) + (shortBreaks * 10);
+    recoveryScore = Math.min(100, recoveryScore);
+    
+    // Intensity sustainability
+    const totalMeetingHours = events.reduce((sum, event) => 
+      sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60), 0);
+    let sustainabilityScore = 100;
+    if (totalMeetingHours > 7) sustainabilityScore = 20;
+    else if (totalMeetingHours > 6) sustainabilityScore = 40;
+    else if (totalMeetingHours > 5) sustainabilityScore = 60;
+    else if (totalMeetingHours > 4) sustainabilityScore = 80;
+    else sustainabilityScore = 95;
+    
+    // Natural energy alignment
+    const earlyMorningMeetings = events.filter(e => e.start.getHours() < 9).length;
+    const lateMeetings = events.filter(e => e.start.getHours() >= 16).length;
+    let alignmentScore = 100 - (earlyMorningMeetings * 20) - (lateMeetings * 15);
+    alignmentScore = Math.max(30, alignmentScore);
+    
+    // Combined work rhythm & recovery score
+    const combinedScore = (
+      rhythmScore * 0.25 +
+      recoveryScore * 0.35 +
+      sustainabilityScore * 0.25 +
+      alignmentScore * 0.15
+    );
+    
+    return Math.round(Math.min(100, Math.max(0, combinedScore)));
+  }
+  
+  private findLongestConsecutiveStretch(events: CalendarEvent[]): number {
+    if (events.length === 0) return 0;
+    
+    let maxStretch = 1;
+    let currentStretch = 1;
+    
+    for (let i = 1; i < events.length; i++) {
+      const gap = (events[i].start.getTime() - events[i-1].end.getTime()) / (1000 * 60);
+      if (gap <= 30) { // Less than 30 minutes between meetings
+        currentStretch++;
+        maxStretch = Math.max(maxStretch, currentStretch);
+      } else {
+        currentStretch = 1;
+      }
+    }
+    
+    return maxStretch;
+  }
+  
+  private calculateGapsBetweenMeetings(events: CalendarEvent[]): number[] {
+    const gaps: number[] = [];
+    for (let i = 1; i < events.length; i++) {
+      const gap = (events[i].start.getTime() - events[i-1].end.getTime()) / (1000 * 60);
+      if (gap > 0) gaps.push(gap);
+    }
+    return gaps;
+  }
+
   private calculatePerformanceIndex(cognitiveAvailability: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
     // New tiered performance assessment
     let baseScore = 50;
@@ -294,21 +481,27 @@ class GoogleCalendarService {
 
     const bufferTime = Math.max(0, (8 * 60) - (totalDuration * 60) - (meetingCount * 15)); // Account for transitions
     
+    // Calculate new intelligent metrics
+    const adaptivePerformanceIndex = this.calculateAdaptivePerformanceIndex(events);
+    const cognitiveResilience = this.calculateCognitiveResilience(events);
+    const workRhythmRecovery = this.calculateWorkRhythmRecovery(events);
+    
+    // Legacy calculation for backward compatibility
     const readiness = this.calculatePerformanceIndex(cognitiveAvailability, focusTime, meetingCount, backToBackCount);
 
-    // Determine status based on improved readiness score thresholds
+    // Determine status based on adaptive performance index
     let status: string;
-    if (readiness >= 90) status = 'OPTIMAL';
-    else if (readiness >= 80) status = 'EXCELLENT';
-    else if (readiness >= 70) status = 'GOOD';
-    else if (readiness >= 60) status = 'MODERATE';
+    if (adaptivePerformanceIndex >= 85) status = 'OPTIMAL';
+    else if (adaptivePerformanceIndex >= 75) status = 'EXCELLENT';
+    else if (adaptivePerformanceIndex >= 65) status = 'GOOD';
+    else if (adaptivePerformanceIndex >= 50) status = 'MODERATE';
     else status = 'NEEDS_ATTENTION';
 
-    // Generate insights with improved categorization
+    // Generate insights based on new metrics
     const contributors = [
-      `Meeting Load: ${meetingCount} meetings${meetingCount === 0 ? ' (None)' : meetingCount <= 2 ? ' (Minimal)' : meetingCount <= 4 ? ' (Light)' : meetingCount <= 6 ? ' (Moderate)' : ' (Heavy)'}`,
-      `Focus Time: ${(focusTime / 60).toFixed(1)} hours${focusTime >= 300 ? ' (Excellent)' : focusTime >= 180 ? ' (Good)' : focusTime >= 120 ? ' (Adequate)' : focusTime >= 60 ? ' (Limited)' : ' (Minimal)'}`,
-      `Cognitive Availability: ${cognitiveAvailability}%${cognitiveAvailability >= 70 ? ' (Excellent)' : cognitiveAvailability >= 55 ? ' (Good)' : cognitiveAvailability >= 40 ? ' (Moderate)' : ' (Low)'}`
+      `Adaptive Performance: ${adaptivePerformanceIndex}%${adaptivePerformanceIndex >= 85 ? ' (Optimal)' : adaptivePerformanceIndex >= 75 ? ' (Excellent)' : adaptivePerformanceIndex >= 65 ? ' (Good)' : adaptivePerformanceIndex >= 50 ? ' (Moderate)' : ' (Needs Attention)'}`,
+      `Cognitive Resilience: ${cognitiveResilience}%${cognitiveResilience >= 80 ? ' (Strong)' : cognitiveResilience >= 60 ? ' (Good)' : cognitiveResilience >= 40 ? ' (Moderate)' : ' (Limited)'}`,
+      `Sustainability Index: ${workRhythmRecovery}%${workRhythmRecovery >= 80 ? ' (Excellent)' : workRhythmRecovery >= 60 ? ' (Good)' : workRhythmRecovery >= 40 ? ' (Moderate)' : ' (Needs Attention)'}`
     ];
 
     const primaryFactors = [];
@@ -318,10 +511,10 @@ class GoogleCalendarService {
       primaryFactors.push('Excellent work health conditions with minimal meeting load and abundant focus time');
     } else if (meetingCount <= 3 && focusTime >= 180) {
       primaryFactors.push('Good work health balance with light meeting schedule and adequate focus periods');
-    } else if (readiness >= 85) {
+    } else if (adaptivePerformanceIndex >= 85) {
       primaryFactors.push('Optimal cognitive resources and work capacity available');
-    } else if (cognitiveAvailability <= 35) {
-      primaryFactors.push('Limited cognitive resources due to meeting density and schedule patterns');
+    } else if (cognitiveResilience <= 40) {
+      primaryFactors.push('Limited cognitive resilience due to high context switching and decision fatigue');
     } else if (focusTime < 90) {
       primaryFactors.push('Limited deep work opportunities due to schedule fragmentation');
     } else {
@@ -335,10 +528,11 @@ class GoogleCalendarService {
     }
 
     return {
-      readiness,
-      cognitiveAvailability,
-      focusTime: Math.round(focusTime), // Keep as minutes internally for calculations
-      meetingDensity: meetingCount,
+      // New intelligent metrics
+      adaptivePerformanceIndex,
+      cognitiveResilience,
+      workRhythmRecovery,
+      
       status,
       schedule: {
         meetingCount,
@@ -351,7 +545,13 @@ class GoogleCalendarService {
         source: 'calendar',
         contributors,
         primaryFactors
-      }
+      },
+      
+      // Legacy fields for backward compatibility
+      readiness,
+      cognitiveAvailability,
+      focusTime: Math.round(focusTime), // Keep as minutes internally for calculations
+      meetingDensity: meetingCount
     };
   }
 }
