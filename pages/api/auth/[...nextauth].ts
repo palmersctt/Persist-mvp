@@ -9,6 +9,9 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly',
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code',
         },
       },
     }),
@@ -27,10 +30,14 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
+  pages: {
+    error: '/auth/error', // Custom error page
+  },
   session: {
     strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 }
 
 export default NextAuth(authOptions)
