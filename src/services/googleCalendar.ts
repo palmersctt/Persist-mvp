@@ -13,7 +13,7 @@ export interface CalendarEvent {
 
 export interface WorkHealthMetrics {
   readiness: number;
-  cognitiveLoad: number;
+  cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
   status: string;
@@ -77,58 +77,60 @@ class GoogleCalendarService {
     }
   }
 
-  private calculateCognitiveLoad(events: CalendarEvent[]): number {
-    if (events.length === 0) return 10; // Very low baseline load for no meetings
+  private calculateCognitiveAvailability(events: CalendarEvent[]): number {
+    if (events.length === 0) return 90; // Maximum cognitive availability with no meetings
 
-    let cognitiveLoad = 15; // Lower base load
+    let cognitiveDepletion = 15; // Lower base depletion
 
-    // Meeting density impact - much more reasonable scaling
+    // Meeting density impact - reduces cognitive availability
     if (events.length >= 8) {
-      cognitiveLoad += 35; // Heavy meeting day
+      cognitiveDepletion += 35; // Heavy meeting day
     } else if (events.length >= 6) {
-      cognitiveLoad += 25; // Moderate-heavy meetings
+      cognitiveDepletion += 25; // Moderate-heavy meetings
     } else if (events.length >= 4) {
-      cognitiveLoad += 15; // Moderate meetings
+      cognitiveDepletion += 15; // Moderate meetings
     } else if (events.length >= 2) {
-      cognitiveLoad += 8; // Light-moderate meetings
+      cognitiveDepletion += 8; // Light-moderate meetings
     } else {
-      cognitiveLoad += 3; // Very light meetings
+      cognitiveDepletion += 3; // Very light meetings
     }
 
-    // Back-to-back meeting penalty - more reasonable
+    // Back-to-back meetings reduce cognitive availability
     const backToBackCount = this.countBackToBackMeetings(events);
     if (backToBackCount >= 4) {
-      cognitiveLoad += 20;
+      cognitiveDepletion += 20;
     } else if (backToBackCount >= 2) {
-      cognitiveLoad += 12;
+      cognitiveDepletion += 12;
     } else if (backToBackCount >= 1) {
-      cognitiveLoad += 5;
+      cognitiveDepletion += 5;
     }
 
-    // Meeting duration impact - more balanced
+    // Meeting duration impact - longer meetings reduce availability
     const totalDuration = events.reduce((sum, event) => {
       return sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
     }, 0);
 
     if (totalDuration >= 7) {
-      cognitiveLoad += 15;
+      cognitiveDepletion += 15;
     } else if (totalDuration >= 5) {
-      cognitiveLoad += 10;
+      cognitiveDepletion += 10;
     } else if (totalDuration >= 3) {
-      cognitiveLoad += 5;
+      cognitiveDepletion += 5;
     }
 
-    // Large meeting penalty - reduced impact
+    // Large meetings reduce cognitive availability
     const largeMeetings = events.filter(event => event.attendees && event.attendees >= 8);
-    cognitiveLoad += largeMeetings.length * 3;
+    cognitiveDepletion += largeMeetings.length * 3;
 
     // Time of day factor - afternoon meetings more taxing
     const afternoonMeetings = events.filter(event => event.start.getHours() >= 13);
     if (afternoonMeetings.length >= 3) {
-      cognitiveLoad += 5;
+      cognitiveDepletion += 5;
     }
 
-    return Math.min(85, Math.max(10, Math.round(cognitiveLoad)));
+    // Convert depletion to availability (100 - depletion)
+    const cognitiveAvailability = 100 - Math.min(85, Math.max(10, Math.round(cognitiveDepletion)));
+    return Math.max(15, Math.min(90, cognitiveAvailability)); // Ensure availability is between 15-90
   }
 
   private countBackToBackMeetings(events: CalendarEvent[]): number {
@@ -232,7 +234,7 @@ class GoogleCalendarService {
     return Math.min(100, Math.max(0, Math.round(score)));
   }
 
-  private calculatePerformanceIndex(cognitiveLoad: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
+  private calculatePerformanceIndex(cognitiveAvailability: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
     // New tiered performance assessment
     let baseScore = 50;
     
@@ -257,8 +259,8 @@ class GoogleCalendarService {
     else if (focusHours >= 1) focusScore = 55;
     else focusScore = 30;
     
-    // Cognitive load scoring - inverse relationship
-    const cognitiveScore = Math.max(0, 100 - cognitiveLoad);
+    // Cognitive availability scoring - direct relationship
+    const cognitiveScore = cognitiveAvailability;
     
     // Back-to-back penalty
     let backToBackPenalty = 0;
@@ -282,7 +284,7 @@ class GoogleCalendarService {
     
     const meetingCount = events.length;
     const backToBackCount = this.countBackToBackMeetings(events);
-    const cognitiveLoad = this.calculateCognitiveLoad(events);
+    const cognitiveAvailability = this.calculateCognitiveAvailability(events);
     const focusTime = this.calculateFocusTime(events);
     const fragmentationScore = this.calculateFragmentationScore(events);
     
@@ -292,7 +294,7 @@ class GoogleCalendarService {
 
     const bufferTime = Math.max(0, (8 * 60) - (totalDuration * 60) - (meetingCount * 15)); // Account for transitions
     
-    const readiness = this.calculatePerformanceIndex(cognitiveLoad, focusTime, meetingCount, backToBackCount);
+    const readiness = this.calculatePerformanceIndex(cognitiveAvailability, focusTime, meetingCount, backToBackCount);
 
     // Determine status based on improved readiness score thresholds
     let status: string;
@@ -306,7 +308,7 @@ class GoogleCalendarService {
     const contributors = [
       `Meeting Load: ${meetingCount} meetings${meetingCount === 0 ? ' (None)' : meetingCount <= 2 ? ' (Minimal)' : meetingCount <= 4 ? ' (Light)' : meetingCount <= 6 ? ' (Moderate)' : ' (Heavy)'}`,
       `Focus Time: ${(focusTime / 60).toFixed(1)} hours${focusTime >= 300 ? ' (Excellent)' : focusTime >= 180 ? ' (Good)' : focusTime >= 120 ? ' (Adequate)' : focusTime >= 60 ? ' (Limited)' : ' (Minimal)'}`,
-      `Cognitive Load: ${cognitiveLoad}%${cognitiveLoad <= 30 ? ' (Very Low)' : cognitiveLoad <= 45 ? ' (Low)' : cognitiveLoad <= 60 ? ' (Moderate)' : ' (High)'}`
+      `Cognitive Availability: ${cognitiveAvailability}%${cognitiveAvailability >= 70 ? ' (Excellent)' : cognitiveAvailability >= 55 ? ' (Good)' : cognitiveAvailability >= 40 ? ' (Moderate)' : ' (Low)'}`
     ];
 
     const primaryFactors = [];
@@ -318,8 +320,8 @@ class GoogleCalendarService {
       primaryFactors.push('Good work health balance with light meeting schedule and adequate focus periods');
     } else if (readiness >= 85) {
       primaryFactors.push('Optimal cognitive resources and work capacity available');
-    } else if (cognitiveLoad >= 65) {
-      primaryFactors.push('Elevated cognitive demand from meeting density and schedule patterns');
+    } else if (cognitiveAvailability <= 35) {
+      primaryFactors.push('Limited cognitive resources due to meeting density and schedule patterns');
     } else if (focusTime < 90) {
       primaryFactors.push('Limited deep work opportunities due to schedule fragmentation');
     } else {
@@ -334,7 +336,7 @@ class GoogleCalendarService {
 
     return {
       readiness,
-      cognitiveLoad,
+      cognitiveAvailability,
       focusTime: Math.round(focusTime), // Keep as minutes internally for calculations
       meetingDensity: meetingCount,
       status,

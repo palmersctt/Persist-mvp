@@ -18,26 +18,47 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token
-        token.refreshToken = account.refresh_token
+      try {
+        if (account) {
+          token.accessToken = account.access_token
+          token.refreshToken = account.refresh_token
+        }
+        return token
+      } catch (error) {
+        console.error('JWT callback error:', error)
+        return token
       }
-      return token
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string
-      session.refreshToken = token.refreshToken as string
-      return session
+      try {
+        session.accessToken = token.accessToken as string
+        session.refreshToken = token.refreshToken as string
+        return session
+      } catch (error) {
+        console.error('Session callback error:', error)
+        return session
+      }
     },
   },
   pages: {
-    error: '/auth/error', // Custom error page
+    error: '/auth/error',
   },
   session: {
     strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug in production temporarily
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', code, metadata)
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code)
+    },
+    debug(code, metadata) {
+      console.debug('NextAuth Debug:', code, metadata)
+    }
+  },
 }
 
 export default NextAuth(authOptions)

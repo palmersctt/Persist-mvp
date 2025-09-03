@@ -62,7 +62,7 @@ export default function WorkHealthDashboard() {
         level: 'recovery',
         message: 'WORK HEALTH NEEDS ATTENTION',
         color: '#ff7744',
-        description: 'High cognitive load detected from schedule density. Focus on essential tasks and consider protecting focus time for recovery.'
+        description: 'Low cognitive availability detected from schedule density. Focus on essential tasks and consider protecting focus time for recovery.'
       };
     } else if (workHealth.status === 'OPTIMAL' || readiness >= 90) {
       return {
@@ -98,7 +98,7 @@ export default function WorkHealthDashboard() {
   const getSecondaryMetrics = (): SecondaryMetric[] => {
     if (!workHealth) {
       return [
-        { label: 'Cognitive Load', value: '—', status: 'average', icon: '🧠' },
+        { label: 'Cognitive Availability', value: '—', status: 'average', icon: '🧠' },
         { label: 'Schedule Load', value: '—', status: 'average', icon: '📅' },
         { label: 'Focus Time', value: '—', status: 'average', icon: '🎯' }
       ];
@@ -106,11 +106,11 @@ export default function WorkHealthDashboard() {
 
     return [
       {
-        label: 'Cognitive Load',
-        value: workHealth.cognitiveLoad,
+        label: 'Cognitive Availability',
+        value: workHealth.cognitiveAvailability,
         unit: '%',
-        status: workHealth.cognitiveLoad >= 76 ? 'needs_attention' : 
-                workHealth.cognitiveLoad >= 51 ? 'average' : 'good',
+        status: workHealth.cognitiveAvailability <= 24 ? 'needs_attention' : 
+                workHealth.cognitiveAvailability <= 49 ? 'average' : 'good',
         icon: '🧠'
       },
       {
@@ -431,7 +431,7 @@ export default function WorkHealthDashboard() {
                   </div>
                   
                   {/* Subtle Visual Indicators */}
-                  {metric.label === 'Cognitive Load' && (
+                  {metric.label === 'Cognitive Availability' && (
                     <div className="mx-auto w-16 mb-2">
                       <div className="whoop-thin-progress">
                         <div 

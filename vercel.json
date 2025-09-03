@@ -1,10 +1,16 @@
 {
   "functions": {
-    "pages/api/**/*.ts": {
+    "pages/api/auth/[...nextauth].ts": {
       "maxDuration": 30
+    },
+    "pages/api/**/*.ts": {
+      "maxDuration": 15
     }
   },
-  "env": {
-    "NEXTAUTH_URL": "@nextauth_url"
-  }
+  "rewrites": [
+    {
+      "source": "/api/auth/(.*)",
+      "destination": "/api/auth/$1"
+    }
+  ]
 }

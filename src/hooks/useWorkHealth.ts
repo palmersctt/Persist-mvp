@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 
 interface WorkHealthData {
   readiness: number;
-  cognitiveLoad: number;
+  cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
   status: string;
@@ -25,7 +25,7 @@ interface WorkHealthBreakdown {
 
 interface WorkHealthMetrics {
   readiness: number;
-  cognitiveLoad: number;
+  cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
   status: string;
@@ -71,7 +71,7 @@ export const useWorkHealth = () => {
       // Fall back to mock data if API fails
       setWorkHealth({
         readiness: 65,
-        cognitiveLoad: 55,
+        cognitiveAvailability: 45,
         focusTime: 45,
         meetingDensity: 6,
         status: 'ESTIMATED',
