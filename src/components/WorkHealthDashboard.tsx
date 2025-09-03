@@ -373,7 +373,14 @@ export default function WorkHealthDashboard() {
         {/* Primary Work Capacity Metric */}
         <section className="text-center">
           <div className="mb-8">
-            <div className="whoop-status-pill inline-flex items-center px-3 py-1.5 mb-12">
+            <div 
+              className="inline-flex items-center px-3 py-1.5 mb-12 rounded-full text-xs font-medium tracking-wide"
+              style={{
+                backgroundColor: workCapacity.color,
+                color: '#000000',
+                opacity: 0.9
+              }}
+            >
               {workCapacity.message}
             </div>
           </div>
@@ -489,25 +496,34 @@ export default function WorkHealthDashboard() {
           </h2>
           
           <div className="space-y-8">
-            {insights.length > 0 ? insights.map((insight, index) => (
-              <div key={index}>
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="whoop-insight-title flex-1">
-                    {insight.title}
-                  </h4>
-                  {insight.urgency === 'high' && (
-                    <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: 'var(--whoop-green)' }} />
-                  )}
+            {insights.length > 0 ? insights.map((insight, index) => {
+              const getDotColor = (urgency: string) => {
+                switch (urgency) {
+                  case 'low': return 'var(--whoop-green)';
+                  case 'medium': return 'var(--whoop-yellow)';
+                  case 'high': return 'var(--whoop-red)';
+                  default: return 'rgba(255,255,255,0.3)';
+                }
+              };
+              
+              return (
+                <div key={index}>
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="whoop-insight-title flex-1">
+                      {insight.title}
+                    </h4>
+                    <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColor(insight.urgency) }} />
+                  </div>
+                  <p className="whoop-insight-text mb-4">
+                    {insight.message}
+                  </p>
+                  <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                    {insight.dataSource}
+                  </div>
+                  {index < insights.length - 1 && <hr className="whoop-clean-divider mt-8" />}
                 </div>
-                <p className="whoop-insight-text mb-4">
-                  {insight.message}
-                </p>
-                <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                  {insight.dataSource}
-                </div>
-                {index < insights.length - 1 && <hr className="whoop-clean-divider mt-8" />}
-              </div>
-            )) : (
+              );
+            }) : (
               <div className="text-center py-8">
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}
