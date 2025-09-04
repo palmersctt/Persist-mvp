@@ -1,14 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
 
 export default function LandingPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (session) {
+      router.push('/dashboard')
+    }
+  }, [session, router])
 
   const handleExperienceDemo = () => {
-    window.open('https://persist-mvp-smoky.vercel.app/', '_blank')
+    // Trigger Google sign-in
+    signIn('google')
   }
 
   const scrollToSection = (sectionId: string) => {

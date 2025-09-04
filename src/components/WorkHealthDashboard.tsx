@@ -37,6 +37,7 @@ export default function WorkHealthDashboard() {
     }
     return false;
   });
+  const [isPremium, setIsPremium] = useState(false);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -443,9 +444,15 @@ export default function WorkHealthDashboard() {
           </p>
         </section>
 
+        {/* Premium Content Wrapper */}
+        <div className="relative">
+        
         {/* Clean Secondary Metrics with Subtle Visual Indicators */}
-        <section>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 max-w-2xl mx-auto">
+        <section style={{ transition: 'filter 0.3s ease-in-out' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 max-w-2xl mx-auto" style={{
+            filter: !isPremium ? 'blur(4px)' : 'none',
+            transition: 'filter 0.3s ease-in-out'
+          }}>
             {secondaryMetrics.map((metric, index) => {
               const getIndicatorColor = (status: string) => {
                 switch (status) {
@@ -507,7 +514,10 @@ export default function WorkHealthDashboard() {
             Insights
           </h2>
           
-          <div className="space-y-8">
+          <div className="space-y-8" style={{
+            filter: !isPremium ? 'blur(4px)' : 'none',
+            transition: 'filter 0.3s ease-in-out'
+          }}>
             {insights.length > 0 ? insights.map((insight, index) => {
               const getDotColor = (urgency: string) => {
                 switch (urgency) {
@@ -544,6 +554,32 @@ export default function WorkHealthDashboard() {
             )}
           </div>
         </section>
+        
+        {/* Single Premium Overlay for both sections */}
+        {!isPremium && (
+          <div className="absolute inset-0 flex items-center justify-center" style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(2px)',
+            borderRadius: '12px'
+          }}>
+            <div className="text-center">
+              <p className="text-white text-lg mb-4 font-medium">Unlock Full Intelligence</p>
+              <button
+                onClick={() => setIsPremium(true)}
+                className="px-8 py-3 font-medium text-white rounded-lg transition-all duration-300 transform hover:scale-105"
+                style={{
+                  backgroundColor: 'black',
+                  border: '2px solid',
+                  borderColor: workCapacity.color || '#00ff88',
+                  boxShadow: `0 4px 20px ${workCapacity.color ? workCapacity.color + '40' : 'rgba(0, 255, 136, 0.25)'}`
+                }}
+              >
+                Unlock Advanced Metrics & Insights
+              </button>
+            </div>
+          </div>
+        )}
+        </div>
 
         {/* Clean Connections Section */}
         <section>

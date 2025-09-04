@@ -12,6 +12,7 @@
   --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --text-muted: #666666;
+  --premium-green: #00ff41;
 }
 
 @theme inline {
