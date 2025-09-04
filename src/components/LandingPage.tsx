@@ -63,6 +63,12 @@ export default function LandingPage() {
                 Pricing
               </button>
             </div>
+            <button
+              onClick={handleExperienceDemo}
+              className="ml-8 px-4 py-2 border border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
+            >
+              Login
+            </button>
           </div>
         </div>
       </nav>
