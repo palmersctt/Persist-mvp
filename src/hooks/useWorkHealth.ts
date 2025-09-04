@@ -54,6 +54,31 @@ export const useWorkHealth = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
+  // Helper function to get cache key for current user
+  const getCacheKey = () => {
+    if (!session?.user?.email) return null;
+    return `persist-work-health-${session.user.email}`;
+  };
+
+  // Load cached data for this user on mount
+  useEffect(() => {
+    if (session?.user?.email && !workHealth) {
+      const cacheKey = getCacheKey();
+      if (cacheKey) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const data = JSON.parse(cached);
+            setWorkHealth(data.metrics);
+            setLastRefresh(new Date(data.lastRefresh));
+          } catch (e) {
+            console.error('Error loading cached data:', e);
+          }
+        }
+      }
+    }
+  }, [session?.user?.email]);
+
   const fetchWorkHealth = async () => {
     if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
@@ -78,37 +103,68 @@ export const useWorkHealth = () => {
       const data = await response.json();
       setWorkHealth(data);
       setLastRefresh(new Date());
+      
+      // Save successful data to localStorage for this user
+      const cacheKey = getCacheKey();
+      if (cacheKey) {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          metrics: data,
+          lastRefresh: new Date().toISOString()
+        }));
+      }
     } catch (err) {
       console.error('Error fetching work health:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch work health data');
       
-      // Fall back to mock data if API fails
-      setWorkHealth({
-        // New intelligent metrics
-        adaptivePerformanceIndex: 55,
-        cognitiveResilience: 40,
-        workRhythmRecovery: 60,
-        
-        status: 'ESTIMATED',
-        schedule: {
-          meetingCount: 6,
-          backToBackCount: 2,
-          bufferTime: 30,
-          durationHours: 7.5,
-          fragmentationScore: 65
-        },
-        breakdown: {
-          source: 'estimated',
-          contributors: ['Adaptive Performance: 55% (Moderate)', 'Cognitive Resilience: 40% (Limited)', 'Sustainability Index: 60% (Good)'],
-          primaryFactors: ['Performance estimated from limited data', 'Connect Google Calendar for personalized insights']
-        },
-        
-        // Legacy fields
-        readiness: 65,
-        cognitiveAvailability: 45,
-        focusTime: 45,
-        meetingDensity: 6
-      });
+      // Try to use cached data for this user first
+      const cacheKey = getCacheKey();
+      let usedCache = false;
+      
+      if (cacheKey) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const data = JSON.parse(cached);
+            setWorkHealth({
+              ...data.metrics,
+              status: 'CACHED' // Indicate this is cached data
+            });
+            usedCache = true;
+          } catch (e) {
+            console.error('Error loading cached data:', e);
+          }
+        }
+      }
+      
+      // Only use generic mock data if no cached data exists
+      if (!usedCache) {
+        setWorkHealth({
+          // New intelligent metrics
+          adaptivePerformanceIndex: 55,
+          cognitiveResilience: 40,
+          workRhythmRecovery: 60,
+          
+          status: 'ESTIMATED',
+          schedule: {
+            meetingCount: 6,
+            backToBackCount: 2,
+            bufferTime: 30,
+            durationHours: 7.5,
+            fragmentationScore: 65
+          },
+          breakdown: {
+            source: 'estimated',
+            contributors: ['Adaptive Performance: 55% (Moderate)', 'Cognitive Resilience: 40% (Limited)', 'Sustainability Index: 60% (Good)'],
+            primaryFactors: ['Performance estimated from limited data', 'Connect Google Calendar for personalized insights']
+          },
+          
+          // Legacy fields
+          readiness: 65,
+          cognitiveAvailability: 45,
+          focusTime: 45,
+          meetingDensity: 6
+        });
+      }
     } finally {
       setIsLoading(false);
     }
