@@ -60,24 +60,7 @@ export const useWorkHealth = () => {
     return `persist-work-health-${session.user.email}`;
   };
 
-  // Load cached data for this user on mount
-  useEffect(() => {
-    if (session?.user?.email && !workHealth) {
-      const cacheKey = getCacheKey();
-      if (cacheKey) {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          try {
-            const data = JSON.parse(cached);
-            setWorkHealth(data.metrics);
-            setLastRefresh(new Date(data.lastRefresh));
-          } catch (e) {
-            console.error('Error loading cached data:', e);
-          }
-        }
-      }
-    }
-  }, [session?.user?.email]);
+  // Remove automatic cache loading - only load cache on API failure
 
   const fetchWorkHealth = async () => {
     if (status !== 'authenticated' || !session) {
@@ -129,7 +112,9 @@ export const useWorkHealth = () => {
               ...data.metrics,
               status: 'CACHED' // Indicate this is cached data
             });
+            setLastRefresh(new Date(data.lastRefresh));
             usedCache = true;
+            console.log('Using cached data due to API failure');
           } catch (e) {
             console.error('Error loading cached data:', e);
           }
@@ -138,6 +123,7 @@ export const useWorkHealth = () => {
       
       // Only use generic mock data if no cached data exists
       if (!usedCache) {
+        console.log('No cached data available, showing generic mock data');
         setWorkHealth({
           // New intelligent metrics
           adaptivePerformanceIndex: 55,
@@ -178,6 +164,9 @@ export const useWorkHealth = () => {
   }, [session, status]);
 
   const refresh = () => {
+    // Clear current data and error state to force fresh load
+    setWorkHealth(null);
+    setError(null);
     fetchWorkHealth();
   };
 

@@ -56,47 +56,48 @@ export default function WorkHealthDashboard() {
     }
 
     const adaptiveIndex = workHealth.adaptivePerformanceIndex;
+    const isCached = workHealth.status === 'CACHED';
     
     // Color logic matches performance index ring exactly
     if (adaptiveIndex >= 85) {
       return {
         level: 'optimal',
-        message: 'OPTIMAL WORK HEALTH',
+        message: isCached ? 'OPTIMAL WORK HEALTH (CACHED)' : 'OPTIMAL WORK HEALTH',
         color: '#00ff88', // Green
         description: 'Outstanding cognitive conditions with excellent schedule balance. Perfect for strategic initiatives, complex problem-solving, and important decisions.'
       };
     } else if (adaptiveIndex >= 75) {
       return {
         level: 'peak',
-        message: 'EXCELLENT WORK HEALTH', 
+        message: isCached ? 'EXCELLENT WORK HEALTH (CACHED)' : 'EXCELLENT WORK HEALTH', 
         color: '#25d366', // Green
         description: 'Strong cognitive resilience with sustainable work rhythm. Ideal for challenging projects, creative tasks, and high-stakes activities.'
       };
     } else if (adaptiveIndex >= 65) {
       return {
         level: 'good',
-        message: 'GOOD WORK HEALTH',
+        message: isCached ? 'GOOD WORK HEALTH (CACHED)' : 'GOOD WORK HEALTH',
         color: '#ffb347', // Yellow/Amber
         description: 'Solid cognitive foundation with balanced schedule patterns. Good capacity for routine tasks, meetings, and moderate complexity projects.'
       };
     } else if (adaptiveIndex >= 55) {
       return {
         level: 'moderate',
-        message: 'MODERATE WORK HEALTH',
+        message: isCached ? 'MODERATE WORK HEALTH (CACHED)' : 'MODERATE WORK HEALTH',
         color: '#ff9500', // Orange
         description: 'Some cognitive strain from schedule density. Consider optimizing meeting distribution and recovery periods.'
       };
     } else if (adaptiveIndex >= 40) {
       return {
         level: 'attention',
-        message: 'WORK HEALTH NEEDS ATTENTION',
+        message: isCached ? 'WORK HEALTH NEEDS ATTENTION (CACHED)' : 'WORK HEALTH NEEDS ATTENTION',
         color: '#ff7744', // Red-Orange
         description: 'Performance compromised by schedule density and cognitive demands. Focus on essential tasks and schedule optimization.'
       };
     } else {
       return {
         level: 'critical',
-        message: 'CRITICAL WORK HEALTH',
+        message: isCached ? 'CRITICAL WORK HEALTH (CACHED)' : 'CRITICAL WORK HEALTH',
         color: '#ff4444', // Red
         description: 'Severe cognitive strain requiring immediate schedule intervention. Prioritize recovery and workload reduction.'
       };
