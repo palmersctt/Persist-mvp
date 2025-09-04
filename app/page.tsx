@@ -1,7 +1,7 @@
 'use client'
 
-import WorkHealthDashboard from '../src/components/WorkHealthDashboard'
+import LandingPage from '../src/components/LandingPage'
 
 export default function Home() {
-  return <WorkHealthDashboard />
+  return <LandingPage />
 }

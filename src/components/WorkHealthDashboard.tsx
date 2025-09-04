@@ -267,26 +267,37 @@ export default function WorkHealthDashboard() {
             </div>
             
             <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700 glass-effect">
-              <h2 className="text-2xl font-bold mb-6 text-center">Welcome to Persist</h2>
+              <h2 className="text-2xl font-bold mb-4 text-center">Work Health Intelligence</h2>
+              <p className="text-gray-300 text-sm mb-6 text-center">Analyze your work patterns to optimize cognitive performance and prevent burnout</p>
               
               <div className="space-y-6 mb-8">
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-sm font-bold">1</span>
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm font-bold">📊</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Connect Your Calendar</h3>
-                    <p className="text-gray-400 text-sm">Gain intelligent insights into your meeting patterns, cognitive load, and work rhythm dynamics</p>
+                    <h3 className="font-semibold mb-1">Adaptive Performance Index</h3>
+                    <p className="text-gray-400 text-sm">Real-time cognitive capacity assessment based on calendar density, context switching, and decision fatigue patterns</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm font-bold">🧠</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">Cognitive Resilience</h3>
+                    <p className="text-gray-400 text-sm">Mental capacity analysis for handling complex decisions and context switching without performance degradation</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-sm font-bold">2</span>
+                    <span className="text-white text-sm font-bold">♻️</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Get Intelligent Insights</h3>
-                    <p className="text-gray-400 text-sm">Receive data-driven awareness about your work health patterns and professional performance trends</p>
+                    <h3 className="font-semibold mb-1">Sustainability Index</h3>
+                    <p className="text-gray-400 text-sm">Long-term work pattern sustainability measurement to maintain peak performance without burnout risk</p>
                   </div>
                 </div>
               </div>
@@ -312,15 +323,15 @@ export default function WorkHealthDashboard() {
           </div>
           
           <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700 glass-effect">
-            <h2 className="text-xl font-bold mb-4">Connect Your Calendar</h2>
-            <p className="text-gray-400 text-sm mb-6">Sign in with Google to analyze your work patterns and get personalized work health insights.</p>
+            <h2 className="text-xl font-bold mb-4">Start Your Work Health Analysis</h2>
+            <p className="text-gray-400 text-sm mb-6">Connect your calendar to receive intelligent insights about your cognitive performance capacity, resilience, and work sustainability patterns.</p>
             
             <button
               onClick={() => signIn('google')}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2"
             >
-              <span>📊</span>
-              <span>Connect Google Calendar</span>
+              <span>🧠</span>
+              <span>Analyze Work Patterns</span>
             </button>
           </div>
         </div>
