@@ -80,6 +80,13 @@ export const useWorkHealth = () => {
       });
       
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Check if this is a token refresh error
+        if (errorData.needsReauth) {
+          throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       

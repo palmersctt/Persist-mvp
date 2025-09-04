@@ -15,6 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized - Please sign in' });
     }
 
+    // Check if token refresh failed and we need re-authentication
+    if (session.error === "RefreshAccessTokenError") {
+      return res.status(401).json({ 
+        error: 'Token expired - Please sign out and sign in again', 
+        needsReauth: true 
+      });
+    }
+
     const calendarService = new GoogleCalendarService();
     await calendarService.initialize(session.accessToken);
     
