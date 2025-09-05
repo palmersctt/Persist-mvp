@@ -188,8 +188,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center">
             <div className="font-bold text-xl text-gray-900 mb-4">PERSIST</div>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 text-sm mb-6">
               Work Health Intelligence Platform
+            </p>
+            <div className="flex justify-center space-x-6 text-sm">
+              <Link href="/privacy" className="text-gray-500 hover:text-gray-900 transition-colors">
+                Privacy Policy
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link href="/terms" className="text-gray-500 hover:text-gray-900 transition-colors">
+                Terms of Service
+              </Link>
+            </div>
+            <p className="text-xs text-gray-400 mt-6">
+              © 2025 PERSIST. All rights reserved.
             </p>
           </div>
         </div>
