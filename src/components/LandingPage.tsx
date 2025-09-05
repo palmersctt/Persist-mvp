@@ -8,6 +8,7 @@ import Link from 'next/link'
 export default function LandingPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function LandingPage() {
     }
   }, [session, router])
 
-  const handleExperienceDemo = () => {
+  const handleGetStarted = () => {
     // Trigger Google sign-in
     signIn('google')
   }
@@ -26,6 +27,8 @@ export default function LandingPage() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
+    // Close mobile menu after navigation
+    setMobileMenuOpen(false)
   }
 
   return (
@@ -37,6 +40,7 @@ export default function LandingPage() {
             <div className="font-bold text-2xl text-gray-900 tracking-tight">
               PERSIST
             </div>
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <button 
                 onClick={() => scrollToSection('intelligence')}
@@ -51,10 +55,10 @@ export default function LandingPage() {
                 Features
               </button>
               <button 
-                onClick={handleExperienceDemo}
+                onClick={() => scrollToSection('intelligence')}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
-                Demo
+                How It Works
               </button>
               <button 
                 onClick={() => scrollToSection('pricing')}
@@ -63,15 +67,74 @@ export default function LandingPage() {
                 Pricing
               </button>
             </div>
+            
+            {/* Desktop Login Button */}
             <button
-              onClick={handleExperienceDemo}
-              className="ml-8 px-4 py-2 border border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
+              onClick={handleGetStarted}
+              className="hidden md:block ml-8 px-4 py-2 border border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
             >
               Login
+            </button>
+            
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
       </nav>
+      
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-white">
+          <div className="px-6 py-6 space-y-4">
+            <button
+              onClick={() => scrollToSection('intelligence')}
+              className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              Intelligence
+            </button>
+            <button
+              onClick={() => scrollToSection('features')}
+              className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              Features
+            </button>
+            <button
+              onClick={() => scrollToSection('intelligence')}
+              className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => scrollToSection('pricing')}
+              className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              Pricing
+            </button>
+            <div className="pt-4 border-t border-gray-200">
+              <button
+                onClick={handleGetStarted}
+                className="block w-full px-4 py-3 border border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-center"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section id="hero" className="py-20 lg:py-32">
@@ -83,10 +146,10 @@ export default function LandingPage() {
             Transform your work patterns into actionable insights for sustainable peak performance
           </p>
           <button
-            onClick={handleExperienceDemo}
+            onClick={handleGetStarted}
             className="inline-flex items-center px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
           >
-            Experience Demo
+            Get Started
           </button>
         </div>
       </section>
@@ -149,15 +212,9 @@ export default function LandingPage() {
           <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-8">
             Intelligent Work Analysis
           </h2>
-          <p className="text-xl text-gray-600 font-light mb-12 leading-relaxed">
+          <p className="text-xl text-gray-600 font-light leading-relaxed">
             Our platform analyzes your calendar patterns, meeting density, and cognitive load to provide personalized insights that help you maintain peak performance while preventing burnout.
           </p>
-          <button
-            onClick={handleExperienceDemo}
-            className="inline-flex items-center px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
-          >
-            Start Analysis
-          </button>
         </div>
       </section>
 
@@ -174,7 +231,7 @@ export default function LandingPage() {
             <h3 className="text-2xl font-light text-gray-900 mb-4">Free Analysis</h3>
             <p className="text-gray-600 mb-8">Get started with basic work health insights</p>
             <button
-              onClick={handleExperienceDemo}
+              onClick={handleGetStarted}
               className="w-full px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
             >
               Get Started
