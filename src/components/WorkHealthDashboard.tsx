@@ -39,6 +39,8 @@ export default function WorkHealthDashboard() {
   });
   const [isPremium, setIsPremium] = useState(false);
   const [showScoreExplanation, setShowScoreExplanation] = useState(false);
+  const [showResilienceExplanation, setShowResilienceExplanation] = useState(false);
+  const [showSustainabilityExplanation, setShowSustainabilityExplanation] = useState(false);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -345,6 +347,78 @@ export default function WorkHealthDashboard() {
   const secondaryMetrics = getSecondaryMetrics();
   const insights = getTopInsights();
 
+  // Show error state if there's an error and no data
+  if (error && !workHealth) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+        <header className="px-6 py-6 sticky top-0 z-40 bg-black/60 backdrop-blur-sm">
+          <div className="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 className="text-lg font-medium tracking-wide" style={{ color: 'var(--text-primary)' }}>
+              PERSIST
+            </h1>
+            <button
+              onClick={() => signOut()}
+              className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-200"
+              style={{ 
+                color: 'var(--text-secondary)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: 'transparent'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
+        </header>
+        
+        <div className="max-w-md mx-auto px-6 py-24 text-center">
+          <div className="mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" 
+                 style={{ backgroundColor: 'rgba(255,68,68,0.1)', border: '2px solid #ff4444' }}>
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              Connection Issue
+            </h2>
+            <p className="text-sm mb-8" style={{ color: 'var(--text-secondary)' }}>
+              {error}
+            </p>
+            
+            <div className="space-y-3">
+              <button
+                onClick={refresh}
+                disabled={isLoading}
+                className="w-full px-6 py-3 font-medium rounded-lg transition-colors"
+                style={{ 
+                  backgroundColor: 'var(--whoop-green)',
+                  color: '#000',
+                  opacity: isLoading ? 0.5 : 1
+                }}
+              >
+                {isLoading ? 'Retrying...' : 'Try Again'}
+              </button>
+              
+              <button
+                onClick={() => signOut()}
+                className="w-full px-6 py-3 font-medium rounded-lg transition-colors"
+                style={{ 
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid rgba(255,255,255,0.2)'
+                }}
+              >
+                Sign Out & Sign Back In
+              </button>
+            </div>
+            
+            <p className="text-xs mt-8" style={{ color: 'var(--text-muted)' }}>
+              This usually happens when Google Calendar permissions need to be refreshed.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       {/* Clean Header */}
@@ -454,7 +528,7 @@ export default function WorkHealthDashboard() {
               border: '1px solid rgba(255,255,255,0.08)'
             }}>
               <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                How Your Score is Calculated
+                How Your Performance Index is Calculated
               </h3>
               <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <div>
@@ -525,7 +599,17 @@ export default function WorkHealthDashboard() {
               };
               
               return (
-                <div key={index} className="text-center">
+                <button 
+                  key={index} 
+                  className="text-center hover:opacity-80 transition-opacity cursor-pointer block w-full"
+                  onClick={() => {
+                    if (metric.label === 'Cognitive Resilience') {
+                      setShowResilienceExplanation(!showResilienceExplanation);
+                    } else if (metric.label === 'Sustainability Index') {
+                      setShowSustainabilityExplanation(!showSustainabilityExplanation);
+                    }
+                  }}
+                >
                   <div className="whoop-secondary-metric mb-2" style={{ 
                     color: 'var(--text-primary)'
                   }}>
@@ -563,10 +647,112 @@ export default function WorkHealthDashboard() {
                       </div>
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
+          
+          {/* Cognitive Resilience Explanation */}
+          {showResilienceExplanation && (
+            <div className="max-w-2xl mx-auto mt-8 p-6 rounded-lg" style={{ 
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                How Your Cognitive Resilience is Calculated
+              </h3>
+              <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <div>
+                  <span className="font-medium">Context Switching:</span> Measures how often you jump between different types of work and meetings.
+                </div>
+                <div>
+                  <span className="font-medium">Decision Fatigue:</span> Tracks the cumulative mental load from making decisions throughout the day.
+                </div>
+                <div>
+                  <span className="font-medium">Cognitive Reserve:</span> Calculates your available mental energy based on focus time and breaks.
+                </div>
+                <div>
+                  <span className="font-medium">Mental Recovery:</span> Evaluates gaps between intense cognitive tasks.
+                </div>
+              </div>
+              
+              <h3 className="text-sm font-semibold mt-6 mb-4" style={{ color: 'var(--text-primary)' }}>
+                What To Do With Your Score
+              </h3>
+              <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {workHealth?.cognitiveResilience >= 65 ? (
+                  <>
+                    <div>✅ Your mental capacity is strong. Maintain current meeting patterns.</div>
+                    <div>💡 You can handle complex decisions effectively.</div>
+                  </>
+                ) : workHealth?.cognitiveResilience >= 40 ? (
+                  <>
+                    <div>⚠️ Reduce context switching by batching similar meetings.</div>
+                    <div>💡 Schedule decision-heavy tasks for your peak energy hours.</div>
+                    <div>📅 Add 5-10 minute buffers between different types of work.</div>
+                  </>
+                ) : (
+                  <>
+                    <div>🚨 Critical: Your cognitive load is unsustainable.</div>
+                    <div>💡 Immediately reduce meeting count or delegate decisions.</div>
+                    <div>📅 Block 2+ hour focus sessions with no interruptions.</div>
+                    <div>🔄 Take regular breaks to reset mental energy.</div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Sustainability Index Explanation */}
+          {showSustainabilityExplanation && (
+            <div className="max-w-2xl mx-auto mt-8 p-6 rounded-lg" style={{ 
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                How Your Sustainability Index is Calculated
+              </h3>
+              <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <div>
+                  <span className="font-medium">Work Rhythm:</span> Analyzes the balance between morning and afternoon meeting loads.
+                </div>
+                <div>
+                  <span className="font-medium">Recovery Adequacy:</span> Measures breaks and recovery time between intense work periods.
+                </div>
+                <div>
+                  <span className="font-medium">Intensity Sustainability:</span> Evaluates if your daily meeting hours are maintainable long-term.
+                </div>
+                <div>
+                  <span className="font-medium">Energy Alignment:</span> Checks if meetings align with natural energy patterns.
+                </div>
+              </div>
+              
+              <h3 className="text-sm font-semibold mt-6 mb-4" style={{ color: 'var(--text-primary)' }}>
+                What To Do With Your Score
+              </h3>
+              <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {workHealth?.workRhythmRecovery >= 70 ? (
+                  <>
+                    <div>✅ Your work patterns are highly sustainable. Keep this rhythm.</div>
+                    <div>💡 You have good balance between intensity and recovery.</div>
+                  </>
+                ) : workHealth?.workRhythmRecovery >= 45 ? (
+                  <>
+                    <div>⚠️ Some sustainability concerns. Adjust meeting distribution.</div>
+                    <div>💡 Balance morning and afternoon meeting loads better.</div>
+                    <div>📅 Ensure at least 30-minute breaks between meeting blocks.</div>
+                  </>
+                ) : (
+                  <>
+                    <div>🚨 Unsustainable pattern detected - high burnout risk.</div>
+                    <div>💡 Reduce total meeting hours immediately.</div>
+                    <div>📅 Implement "meeting-free" blocks daily.</div>
+                    <div>🔄 Add recovery time between intense sessions.</div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Clean Insights Section */}
@@ -580,8 +766,37 @@ export default function WorkHealthDashboard() {
             transition: 'filter 0.3s ease-in-out'
           }}>
             {insights.length > 0 ? insights.map((insight, index) => {
-              const getDotColor = (urgency: string) => {
-                switch (urgency) {
+              // Determine dot color based on which metric this insight is about
+              const getDotColorForInsight = (insight: DataDrivenInsight) => {
+                const title = insight.title.toLowerCase();
+                
+                // Check if insight is about Adaptive Performance Index (main metric)
+                if (title.includes('work health') || title.includes('adaptive performance') || title.includes('performance')) {
+                  const score = workHealth?.adaptivePerformanceIndex || 0;
+                  if (score >= 75) return 'var(--whoop-green)';
+                  if (score >= 65) return 'var(--whoop-yellow)';
+                  if (score >= 55) return '#ff9500'; // Orange
+                  return 'var(--whoop-red)';
+                }
+                
+                // Check if insight is about Cognitive Resilience
+                if (title.includes('cognitive resilience') || title.includes('cognitive')) {
+                  const resilience = workHealth?.cognitiveResilience || 0;
+                  if (resilience > 65) return 'var(--whoop-green)';
+                  if (resilience > 40) return 'var(--whoop-yellow)';
+                  return 'var(--whoop-red)';
+                }
+                
+                // Check if insight is about Sustainability
+                if (title.includes('sustainability') || title.includes('sustainable') || title.includes('unsustainable')) {
+                  const sustainability = workHealth?.workRhythmRecovery || 0;
+                  if (sustainability > 70) return 'var(--whoop-green)';
+                  if (sustainability > 45) return 'var(--whoop-yellow)';
+                  return 'var(--whoop-red)';
+                }
+                
+                // Fallback to urgency-based color
+                switch (insight.urgency) {
                   case 'low': return 'var(--whoop-green)';
                   case 'medium': return 'var(--whoop-yellow)';
                   case 'high': return 'var(--whoop-red)';
@@ -595,7 +810,7 @@ export default function WorkHealthDashboard() {
                     <h4 className="whoop-insight-title flex-1">
                       {insight.title}
                     </h4>
-                    <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColor(insight.urgency) }} />
+                    <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight(insight) }} />
                   </div>
                   <p className="whoop-insight-text mb-4">
                     {insight.message}
@@ -624,7 +839,6 @@ export default function WorkHealthDashboard() {
             borderRadius: '12px'
           }}>
             <div className="text-center">
-              <p className="text-white text-lg mb-4 font-medium">Unlock Full Intelligence</p>
               <button
                 onClick={() => setIsPremium(true)}
                 className="px-8 py-3 font-medium text-white rounded-lg transition-all duration-300 transform hover:scale-105"

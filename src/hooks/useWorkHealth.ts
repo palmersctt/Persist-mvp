@@ -62,7 +62,7 @@ export const useWorkHealth = () => {
 
   // Remove automatic cache loading - only load cache on API failure
 
-  const fetchWorkHealth = async () => {
+  const fetchWorkHealth = async (retryCount = 0) => {
     if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
       return;
@@ -128,35 +128,27 @@ export const useWorkHealth = () => {
         }
       }
       
-      // Only use generic mock data if no cached data exists
+      // Don't show fake data - show clear error state
       if (!usedCache) {
-        console.log('No cached data available, showing generic mock data');
-        setWorkHealth({
-          // New intelligent metrics
-          adaptivePerformanceIndex: 55,
-          cognitiveResilience: 40,
-          workRhythmRecovery: 60,
-          
-          status: 'ESTIMATED',
-          schedule: {
-            meetingCount: 6,
-            backToBackCount: 2,
-            bufferTime: 30,
-            durationHours: 7.5,
-            fragmentationScore: 65
-          },
-          breakdown: {
-            source: 'estimated',
-            contributors: ['Adaptive Performance: 55% (Moderate)', 'Cognitive Resilience: 40% (Limited)', 'Sustainability Index: 60% (Good)'],
-            primaryFactors: ['Performance estimated from limited data', 'Connect Google Calendar for personalized insights']
-          },
-          
-          // Legacy fields
-          readiness: 65,
-          cognitiveAvailability: 45,
-          focusTime: 45,
-          meetingDensity: 6
-        });
+        // For new users, retry once automatically
+        if (retryCount === 0 && err instanceof Error && err.message.includes('HTTP error')) {
+          console.log('First attempt failed, retrying for new user...');
+          setTimeout(() => {
+            fetchWorkHealth(1); // Retry once
+          }, 2000);
+          return;
+        }
+        
+        // After retry or for other errors, show clear error message
+        console.log('Unable to fetch calendar data');
+        setWorkHealth(null);
+        
+        // Provide clear, actionable error message
+        if (err instanceof Error && err.message.includes('sign out and sign back in')) {
+          setError('Calendar connection expired. Please sign out and sign back in.');
+        } else {
+          setError('Unable to connect to Google Calendar. Please try refreshing the page or sign out and back in.');
+        }
       }
     } finally {
       setIsLoading(false);
