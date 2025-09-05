@@ -38,6 +38,7 @@ export default function WorkHealthDashboard() {
     return false;
   });
   const [isPremium, setIsPremium] = useState(false);
+  const [showScoreExplanation, setShowScoreExplanation] = useState(false);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -399,7 +400,10 @@ export default function WorkHealthDashboard() {
           </div>
           
           {/* Clean minimal progress indicator */}
-          <div className="relative w-32 h-32 mx-auto mb-8">
+          <button 
+            onClick={() => setShowScoreExplanation(!showScoreExplanation)}
+            className="relative w-32 h-32 mx-auto mb-8 block hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
               <circle 
                 cx="60" cy="60" r="54" 
@@ -418,7 +422,7 @@ export default function WorkHealthDashboard() {
                 className="transition-all duration-1000 ease-out"
               />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
                 <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
                   color: workCapacity.color,
@@ -437,11 +441,68 @@ export default function WorkHealthDashboard() {
                 </div>
               </div>
             </div>
-          </div>
+          </button>
           
           <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
             {workCapacity.description}
           </p>
+          
+          {/* Score Explanation */}
+          {showScoreExplanation && (
+            <div className="max-w-2xl mx-auto mb-8 p-6 rounded-lg" style={{ 
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                How Your Score is Calculated
+              </h3>
+              <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <div>
+                  <span className="font-medium">Meeting Density:</span> We analyze how many meetings you have and how they're distributed throughout your day.
+                </div>
+                <div>
+                  <span className="font-medium">Context Switching:</span> Frequent transitions between different types of work reduce your score.
+                </div>
+                <div>
+                  <span className="font-medium">Focus Time:</span> Uninterrupted blocks of 2+ hours improve your score.
+                </div>
+                <div>
+                  <span className="font-medium">Recovery Periods:</span> Breaks between intense sessions are essential for sustainability.
+                </div>
+              </div>
+              
+              <h3 className="text-sm font-semibold mt-6 mb-4" style={{ color: 'var(--text-primary)' }}>
+                What To Do With Your Score
+              </h3>
+              <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {workHealth?.adaptivePerformanceIndex >= 75 ? (
+                  <>
+                    <div>✅ Your work patterns are sustainable. Maintain your current schedule structure.</div>
+                    <div>💡 Protect your focus time blocks - they're working well for you.</div>
+                  </>
+                ) : workHealth?.adaptivePerformanceIndex >= 50 ? (
+                  <>
+                    <div>⚠️ Consider consolidating meetings to create longer focus blocks.</div>
+                    <div>💡 Try batching similar tasks together to reduce context switching.</div>
+                    <div>📅 Block out 2-3 hour focus sessions in your calendar.</div>
+                  </>
+                ) : (
+                  <>
+                    <div>🚨 Your schedule needs immediate attention to prevent burnout.</div>
+                    <div>💡 Decline or delegate non-essential meetings.</div>
+                    <div>📅 Create daily protected time blocks for deep work.</div>
+                    <div>🔄 Add 15-minute buffers between meetings for mental reset.</div>
+                  </>
+                )}
+              </div>
+              
+              <div className="mt-6 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <strong>Remember:</strong> This score reflects your current week's pattern. Small changes in meeting structure can significantly improve your cognitive performance.
+                </p>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Premium Content Wrapper */}
