@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import { supabase } from '../../../lib/supabase'
 
 /**
  * Takes a token, and returns a new token with updated
@@ -60,6 +61,55 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      try {
+        if (account?.provider === 'google' && user?.email) {
+          // Check if user exists in Supabase
+          const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', user.email)
+            .single()
+
+          if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "not found"
+            console.error('Error checking existing user:', fetchError)
+            return true // Allow sign in even if Supabase fails
+          }
+
+          if (existingUser) {
+            // Update last login time for existing user
+            await supabase
+              .from('users')
+              .update({ 
+                last_login_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('email', user.email)
+          } else {
+            // Create new user record
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert({
+                email: user.email,
+                name: user.name || '',
+                image: user.image || '',
+                tier: 'free',
+                first_login_at: new Date().toISOString(),
+                last_login_at: new Date().toISOString()
+              })
+
+            if (insertError) {
+              console.error('Error creating user:', insertError)
+              // Don't block sign in if Supabase fails
+            }
+          }
+        }
+        return true
+      } catch (error) {
+        console.error('SignIn callback error:', error)
+        return true // Allow sign in even if tracking fails
+      }
+    },
     async jwt({ token, account }) {
       try {
         // If this is the first time (account exists), store the tokens
