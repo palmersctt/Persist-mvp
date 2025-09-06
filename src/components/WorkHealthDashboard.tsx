@@ -37,7 +37,6 @@ export default function WorkHealthDashboard() {
     }
     return false;
   });
-  const [isPremium, setIsPremium] = useState(false);
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
 
@@ -526,7 +525,7 @@ export default function WorkHealthDashboard() {
           {/* Clean minimal progress indicator */}
           <button 
             onClick={() => setActiveExplanation(activeExplanation === 'performance' ? null : 'performance')}
-            className="relative w-32 h-32 mx-auto mb-8 block hover:scale-105 hover:opacity-90 transition-all duration-200 cursor-pointer rounded-full border border-transparent hover:border-gray-400 hover:border-opacity-20 p-2"
+            className="relative w-32 h-32 mx-auto mb-8 block rounded-full border border-transparent p-2"
             style={{
               boxShadow: activeExplanation === 'performance' ? '0 0 20px rgba(79, 156, 249, 0.3)' : 'none'
             }}
@@ -779,15 +778,11 @@ export default function WorkHealthDashboard() {
           )}
         </section>
 
-        {/* Premium Content Wrapper */}
         <div className="relative">
         
         {/* Clean Secondary Metrics with Subtle Visual Indicators */}
-        <section style={{ transition: 'filter 0.3s ease-in-out' }}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 max-w-2xl mx-auto" style={{
-            filter: !isPremium ? 'blur(4px)' : 'none',
-            transition: 'filter 0.3s ease-in-out'
-          }}>
+        <section>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 max-w-2xl mx-auto">
             {secondaryMetrics.map((metric, index) => {
               const getIndicatorColor = (status: string) => {
                 switch (status) {
@@ -801,7 +796,7 @@ export default function WorkHealthDashboard() {
               return (
                 <div key={index} className="w-full">
                   <button 
-                    className="text-center hover:scale-105 transition-all duration-200 cursor-pointer block w-full p-4 rounded-lg border border-transparent hover:border-gray-400 hover:border-opacity-30 relative"
+                    className="text-center block w-full p-4 rounded-lg border border-transparent relative"
                     style={{
                       boxShadow: (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
                                 (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index') 
@@ -1318,10 +1313,7 @@ export default function WorkHealthDashboard() {
             Insights
           </h2>
           
-          <div className="space-y-8" style={{
-            filter: !isPremium ? 'blur(4px)' : 'none',
-            transition: 'filter 0.3s ease-in-out'
-          }}>
+          <div className="space-y-8">
             {insights.length > 0 ? insights.map((insight, index) => {
               // Determine dot color based on which metric this insight is about
               const getDotColorForInsight = (insight: DataDrivenInsight) => {
@@ -1387,30 +1379,6 @@ export default function WorkHealthDashboard() {
             )}
           </div>
         </section>
-        
-        {/* Single Premium Overlay for both sections */}
-        {!isPremium && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(2px)',
-            borderRadius: '12px'
-          }}>
-            <div className="text-center">
-              <button
-                onClick={() => setIsPremium(true)}
-                className="px-8 py-3 font-medium text-white rounded-lg transition-all duration-300 transform hover:scale-105"
-                style={{
-                  backgroundColor: 'black',
-                  border: '2px solid',
-                  borderColor: workCapacity.color || '#00ff88',
-                  boxShadow: `0 4px 20px ${workCapacity.color ? workCapacity.color + '40' : 'rgba(0, 255, 136, 0.25)'}`
-                }}
-              >
-                Unlock Advanced Metrics & Insights
-              </button>
-            </div>
-          </div>
-        )}
         </div>
 
         {/* Clean Connections Section */}
