@@ -122,7 +122,7 @@ export default function WorkHealthDashboard() {
         value: workHealth.cognitiveResilience,
         unit: '%',
         status: workHealth.cognitiveResilience <= 40 ? 'needs_attention' : 
-                workHealth.cognitiveResilience <= 65 ? 'average' : 'good',
+                workHealth.cognitiveResilience <= 75 ? 'average' : 'good',
         icon: '🧠'
       },
       {
@@ -568,16 +568,16 @@ export default function WorkHealthDashboard() {
               </h3>
               <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <div>
-                  <span className="font-medium">Meeting Density:</span> We analyze how many meetings you have and how they're distributed throughout your day.
+                  <span className="font-medium">Meeting Density:</span> {workHealth?.schedule?.meetingCount || 0} actual meetings (excludes personal time, workouts, focus blocks)
                 </div>
                 <div>
-                  <span className="font-medium">Context Switching:</span> Frequent transitions between different types of work reduce your score.
+                  <span className="font-medium">Context Switching:</span> {workHealth?.schedule?.backToBackCount || 0} back-to-back transitions between different work types
                 </div>
                 <div>
-                  <span className="font-medium">Focus Time:</span> Uninterrupted blocks of 2+ hours improve your score.
+                  <span className="font-medium">Focus Time:</span> {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m of uninterrupted work time available
                 </div>
                 <div>
-                  <span className="font-medium">Recovery Periods:</span> Breaks between intense sessions are essential for sustainability.
+                  <span className="font-medium">Recovery Periods:</span> {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m buffer time for mental reset
                 </div>
               </div>
               
@@ -589,12 +589,14 @@ export default function WorkHealthDashboard() {
                   <>
                     <div>✅ Your work patterns are sustainable. Maintain your current schedule structure.</div>
                     <div>💡 Protect your focus time blocks - they're working well for you.</div>
+                    <div>🎯 Smart categorization is working: beneficial activities aren't penalizing your score.</div>
                   </>
                 ) : workHealth?.adaptivePerformanceIndex >= 50 ? (
                   <>
                     <div>⚠️ Consider consolidating meetings to create longer focus blocks.</div>
                     <div>💡 Try batching similar tasks together to reduce context switching.</div>
                     <div>📅 Block out 2-3 hour focus sessions in your calendar.</div>
+                    <div>🎯 Pro tip: Title calendar blocks "Focus Time", "Deep Work", or "Workout" - they'll boost your score!</div>
                   </>
                 ) : (
                   <>
@@ -602,6 +604,7 @@ export default function WorkHealthDashboard() {
                     <div>💡 Decline or delegate non-essential meetings.</div>
                     <div>📅 Create daily protected time blocks for deep work.</div>
                     <div>🔄 Add 15-minute buffers between meetings for mental reset.</div>
+                    <div>🎯 Game the system: "Personal Time", "Lunch", "Break" blocks improve your health scores!</div>
                   </>
                 )}
               </div>
@@ -705,16 +708,16 @@ export default function WorkHealthDashboard() {
               </h3>
               <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <div>
-                  <span className="font-medium">Context Switching:</span> Measures how often you jump between different types of work and meetings.
+                  <span className="font-medium">Context Switching:</span> Jumping between {workHealth?.schedule?.meetingCount || 0} different meetings and tasks
                 </div>
                 <div>
-                  <span className="font-medium">Decision Fatigue:</span> Tracks the cumulative mental load from making decisions throughout the day.
+                  <span className="font-medium">Decision Fatigue:</span> Cumulative mental load from decisions in meetings and complex tasks
                 </div>
                 <div>
-                  <span className="font-medium">Cognitive Reserve:</span> Calculates your available mental energy based on focus time and breaks.
+                  <span className="font-medium">Cognitive Reserve:</span> Available mental energy from {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m focus time
                 </div>
                 <div>
-                  <span className="font-medium">Mental Recovery:</span> Evaluates gaps between intense cognitive tasks.
+                  <span className="font-medium">Mental Recovery:</span> {workHealth?.schedule?.backToBackCount || 0} back-to-back transitions requiring reset
                 </div>
               </div>
               
@@ -722,16 +725,22 @@ export default function WorkHealthDashboard() {
                 What To Do With Your Score
               </h3>
               <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                {workHealth?.cognitiveResilience >= 65 ? (
+                {workHealth?.cognitiveResilience >= 80 ? (
                   <>
                     <div>✅ Your mental capacity is strong. Maintain current meeting patterns.</div>
                     <div>💡 You can handle complex decisions effectively.</div>
                   </>
-                ) : workHealth?.cognitiveResilience >= 40 ? (
+                ) : workHealth?.cognitiveResilience >= 60 ? (
                   <>
-                    <div>⚠️ Reduce context switching by batching similar meetings.</div>
+                    <div>⚠️ Moderate resilience. Reduce context switching by batching similar meetings.</div>
                     <div>💡 Schedule decision-heavy tasks for your peak energy hours.</div>
                     <div>📅 Add 5-10 minute buffers between different types of work.</div>
+                  </>
+                ) : workHealth?.cognitiveResilience >= 40 ? (
+                  <>
+                    <div>🟠 Limited resilience. Focus on reducing cognitive load.</div>
+                    <div>💡 Batch similar meetings together to minimize context switching.</div>
+                    <div>📅 Create longer focus blocks with fewer interruptions.</div>
                   </>
                 ) : (
                   <>
@@ -762,20 +771,42 @@ export default function WorkHealthDashboard() {
               </h3>
               <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <div>
-                  <span className="font-medium">Work Rhythm:</span> Analyzes the balance between morning and afternoon meeting loads.
+                  <span className="font-medium">Work Rhythm:</span> {workHealth?.schedule?.meetingCount || 0} actual meetings distributed across your day
                 </div>
                 <div>
-                  <span className="font-medium">Recovery Adequacy:</span> Measures breaks and recovery time between intense work periods.
+                  <span className="font-medium">Recovery Adequacy:</span> Breaks and gaps between meetings for mental reset
                 </div>
                 <div>
-                  <span className="font-medium">Intensity Sustainability:</span> Evaluates if your daily meeting hours are maintainable long-term.
+                  <span className="font-medium">Intensity Sustainability:</span> {workHealth?.schedule?.durationHours || 0}h of meeting time (excludes personal/focus blocks)
                 </div>
                 <div>
-                  <span className="font-medium">Energy Alignment:</span> Checks if meetings align with natural energy patterns.
+                  <span className="font-medium">Energy Alignment:</span> Timing of meetings relative to natural energy patterns
                 </div>
               </div>
               
               <h3 className="text-sm font-semibold mt-6 mb-4" style={{ color: 'var(--text-primary)' }}>
+                Your Current Pattern Breakdown
+              </h3>
+              <div className="space-y-2 text-xs mb-4" style={{ color: 'var(--text-secondary)' }}>
+                <div className="flex justify-between">
+                  <span>Actual meetings counted:</span>
+                  <span>{workHealth?.schedule?.meetingCount || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Meeting hours:</span>
+                  <span>{workHealth?.schedule?.durationHours || 0}h</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Back-to-back sessions:</span>
+                  <span>{workHealth?.schedule?.backToBackCount || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Buffer time:</span>
+                  <span>{Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m</span>
+                </div>
+              </div>
+              
+              <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 What To Do With Your Score
               </h3>
               <div className="space-y-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -783,12 +814,14 @@ export default function WorkHealthDashboard() {
                   <>
                     <div>✅ Your work patterns are highly sustainable. Keep this rhythm.</div>
                     <div>💡 You have good balance between intensity and recovery.</div>
+                    <div>🎯 Beneficial activities (workouts, focus time) are properly excluded from meeting calculations.</div>
                   </>
                 ) : workHealth?.workRhythmRecovery >= 45 ? (
                   <>
                     <div>⚠️ Some sustainability concerns. Adjust meeting distribution.</div>
                     <div>💡 Balance morning and afternoon meeting loads better.</div>
                     <div>📅 Ensure at least 30-minute breaks between meeting blocks.</div>
+                    <div>🎯 Add "Focus Time" or "Personal Time" blocks - they won't count against you.</div>
                   </>
                 ) : (
                   <>
@@ -796,6 +829,7 @@ export default function WorkHealthDashboard() {
                     <div>💡 Reduce total meeting hours immediately.</div>
                     <div>📅 Implement "meeting-free" blocks daily.</div>
                     <div>🔄 Add recovery time between intense sessions.</div>
+                    <div>🎯 Pro tip: Calendar blocks titled "Workout", "Focus Time", or "Break" boost your score!</div>
                   </>
                 )}
               </div>
