@@ -358,11 +358,22 @@ export default function WorkHealthDashboard() {
             </h1>
             <button
               onClick={() => signOut()}
-              className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-200"
+              className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
               style={{ 
                 color: 'var(--text-secondary)',
                 border: '1px solid rgba(255,255,255,0.1)',
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
+                cursor: 'pointer'
               }}
             >
               Sign Out
@@ -431,22 +442,44 @@ export default function WorkHealthDashboard() {
             <button
               onClick={refresh}
               disabled={isLoading}
-              className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-200"
+              className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = isLoading ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)';
+              }}
               style={{ 
                 color: isLoading ? 'var(--text-muted)' : 'var(--text-secondary)',
                 border: `1px solid ${isLoading ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)'}`,
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
+                cursor: isLoading ? 'not-allowed' : 'pointer'
               }}
             >
               {isLoading ? 'Updating...' : 'Refresh'}
             </button>
             <button
               onClick={() => signOut()}
-              className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-200"
+              className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
               style={{ 
                 color: 'var(--text-secondary)',
                 border: '1px solid rgba(255,255,255,0.1)',
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
+                cursor: 'pointer'
               }}
             >
               Sign Out
@@ -523,10 +556,13 @@ export default function WorkHealthDashboard() {
           
           {/* Score Explanation */}
           {showScoreExplanation && (
-            <div className="max-w-2xl mx-auto mb-8 p-6 rounded-lg" style={{ 
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)'
-            }}>
+            <div 
+              className="max-w-2xl mx-auto mb-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-opacity"
+              onClick={() => setShowScoreExplanation(false)}
+              style={{ 
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}>
               <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 How Your Performance Index is Calculated
               </h3>
@@ -573,6 +609,9 @@ export default function WorkHealthDashboard() {
               <div className="mt-6 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   <strong>Remember:</strong> This score reflects your current week's pattern. Small changes in meeting structure can significantly improve your cognitive performance.
+                </p>
+                <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                  Click anywhere to close
                 </p>
               </div>
             </div>
@@ -654,10 +693,13 @@ export default function WorkHealthDashboard() {
           
           {/* Cognitive Resilience Explanation */}
           {showResilienceExplanation && (
-            <div className="max-w-2xl mx-auto mt-8 p-6 rounded-lg" style={{ 
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)'
-            }}>
+            <div 
+              className="max-w-2xl mx-auto mt-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-opacity"
+              onClick={() => setShowResilienceExplanation(false)}
+              style={{ 
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}>
               <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 How Your Cognitive Resilience is Calculated
               </h3>
@@ -700,15 +742,21 @@ export default function WorkHealthDashboard() {
                   </>
                 )}
               </div>
+              <p className="text-xs mt-6 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                Click anywhere to close
+              </p>
             </div>
           )}
           
           {/* Sustainability Index Explanation */}
           {showSustainabilityExplanation && (
-            <div className="max-w-2xl mx-auto mt-8 p-6 rounded-lg" style={{ 
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)'
-            }}>
+            <div 
+              className="max-w-2xl mx-auto mt-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-opacity"
+              onClick={() => setShowSustainabilityExplanation(false)}
+              style={{ 
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}>
               <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 How Your Sustainability Index is Calculated
               </h3>
@@ -751,6 +799,9 @@ export default function WorkHealthDashboard() {
                   </>
                 )}
               </div>
+              <p className="text-xs mt-6 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                Click anywhere to close
+              </p>
             </div>
           )}
         </section>
