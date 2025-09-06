@@ -39,6 +39,7 @@ export default function WorkHealthDashboard() {
   });
   const [isPremium, setIsPremium] = useState(false);
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -486,23 +487,41 @@ export default function WorkHealthDashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-6 py-12 space-y-16">
-        
-        {/* Primary Work Capacity Metric */}
-        <section className="text-center">
-          <div className="mb-8">
-            <div 
-              className="inline-flex items-center px-3 py-1.5 mb-12 rounded-full text-xs font-medium tracking-wide"
-              style={{
-                backgroundColor: workCapacity.color,
-                color: '#000000',
-                opacity: 0.9
-              }}
-            >
-              {workCapacity.message}
-            </div>
+      {/* Tab Navigation */}
+      <div className="max-w-5xl mx-auto px-6 pt-8 pb-4">
+        <div className="flex justify-center">
+          <div className="flex space-x-1">
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'performance', label: 'Performance Index' },
+              { id: 'resilience', label: 'Cognitive Resilience' },
+              { id: 'sustainability', label: 'Sustainability Index' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200"
+                style={{
+                  color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  border: activeTab === tab.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-6 pb-12 space-y-16">
+        
+        {/* Overview Tab - All current content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Primary Work Capacity Metric */}
+        <section className="text-center">
           
           {/* Clean minimal progress indicator */}
           <button 
@@ -782,7 +801,7 @@ export default function WorkHealthDashboard() {
               return (
                 <div key={index} className="w-full">
                   <button 
-                    className="text-center hover:scale-105 transition-all duration-200 cursor-pointer block w-full p-4 rounded-lg border border-transparent hover:border-gray-400 hover:border-opacity-30"
+                    className="text-center hover:scale-105 transition-all duration-200 cursor-pointer block w-full p-4 rounded-lg border border-transparent hover:border-gray-400 hover:border-opacity-30 relative"
                     style={{
                       boxShadow: (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
                                 (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index') 
@@ -796,60 +815,68 @@ export default function WorkHealthDashboard() {
                       }
                     }}
                   >
-                    <div className="whoop-secondary-metric mb-2" style={{ 
-                      color: 'var(--text-primary)'
-                    }}>
-                      {metric.value}{metric.unit}
-                    </div>
-                    <div className="whoop-metric-label mb-3">
-                      {metric.label.toUpperCase()}
-                    </div>
-                    
-                    {/* Subtle Visual Indicators */}
-                    {metric.label === 'Cognitive Resilience' && (
-                      <div className="mx-auto w-16 mb-2">
-                        <div className="whoop-thin-progress">
-                          <div 
-                            className="whoop-progress-fill"
-                            style={{ 
-                              width: `${metric.value}%`,
-                              backgroundColor: getIndicatorColor(metric.status)
-                            }}
+                    {/* Ring Indicators matching PI metric exactly */}
+                    {(metric.label === 'Cognitive Resilience' || metric.label === 'Sustainability Index') && (
+                      <div className="relative w-32 h-32 mx-auto mb-8">
+                        <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
+                          <circle 
+                            cx="60" cy="60" r="54" 
+                            fill="none" 
+                            stroke="rgba(255,255,255,0.06)" 
+                            strokeWidth="2"
                           />
+                          <circle 
+                            cx="60" cy="60" r="54" 
+                            fill="none" 
+                            stroke={getIndicatorColor(metric.status)}
+                            strokeWidth="2"
+                            strokeDasharray="339.29" 
+                            strokeDashoffset={(339.29 - (metric.value as number) / 100 * 339.29)} 
+                            strokeLinecap="round"
+                            className="transition-all duration-1000 ease-out"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="text-center">
+                            <div className="text-3xl font-light mb-1" style={{ 
+                              color: getIndicatorColor(metric.status),
+                              fontFeatureSettings: '"tnum"',
+                              letterSpacing: '-0.04em'
+                            }}>
+                              {metric.value}{metric.unit}
+                            </div>
+                            <div className="text-center">
+                              <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
+                                {metric.label === 'Cognitive Resilience' ? 'COGNITIVE' : 'SUSTAINABILITY'}
+                              </div>
+                              <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
+                                {metric.label === 'Cognitive Resilience' ? 'RESILIENCE' : 'INDEX'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Expand indicator */}
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 pointer-events-none">
+                          <div className="text-xs opacity-60">
+                            <svg 
+                              width="14" 
+                              height="14" 
+                              viewBox="0 0 12 12" 
+                              fill="currentColor"
+                              className={`transition-transform duration-200 ${
+                                (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
+                                (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index')
+                                ? 'rotate-180' : ''
+                              }`}
+                              style={{ color: 'rgba(255,255,255,0.4)' }}
+                            >
+                              <path d="M6 8l-3-3h6l-3 3z"/>
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     )}
-                    
-                    {metric.label === 'Sustainability Index' && (
-                      <div className="mx-auto w-16 mb-2">
-                        <div className="whoop-thin-progress">
-                          <div 
-                            className="whoop-progress-fill"
-                            style={{ 
-                              width: `${metric.value}%`,
-                              backgroundColor: getIndicatorColor(metric.status)
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Expand indicator */}
-                    <div className="mt-2 text-xs opacity-50 transition-opacity hover:opacity-80">
-                      <svg 
-                        width="12" 
-                        height="12" 
-                        viewBox="0 0 12 12" 
-                        fill="currentColor"
-                        className={`mx-auto transition-transform duration-200 ${
-                          (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
-                          (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index')
-                          ? 'rotate-180' : ''
-                        }`}
-                      >
-                        <path d="M6 8l-3-3h6l-3 3z"/>
-                      </svg>
-                    </div>
                   </button>
                   
                   {/* Inline explanation directly below the metric */}
@@ -1414,11 +1441,761 @@ export default function WorkHealthDashboard() {
           </div>
         </section>
         
-        {lastRefresh && (
-          <div className="text-center pt-8">
-            <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-              Last updated {lastRefresh.toLocaleTimeString()}
-            </p>
+            {lastRefresh && (
+              <div className="text-center pt-8">
+                <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                  Last updated {lastRefresh.toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Performance Index Tab */}
+        {activeTab === 'performance' && (
+          <div className="space-y-16">
+            {/* Large Performance Index Ring */}
+            <section className="text-center">
+              <div className="relative w-32 h-32 mx-auto mb-8">
+                <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
+                  <circle 
+                    cx="60" cy="60" r="54" 
+                    fill="none" 
+                    stroke="rgba(255,255,255,0.06)" 
+                    strokeWidth="2"
+                  />
+                  <circle 
+                    cx="60" cy="60" r="54" 
+                    fill="none" 
+                    stroke={workCapacity.color}
+                    strokeWidth="2"
+                    strokeDasharray="339.29" 
+                    strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)} 
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
+                      color: workCapacity.color,
+                      fontFeatureSettings: '"tnum"',
+                      letterSpacing: '-0.04em'
+                    }}>
+                      {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
+                    </div>
+                    <div className="text-center">
+                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
+                        PERFORMANCE
+                      </div>
+                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
+                        INDEX
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Performance Description */}
+              <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
+                {workCapacity.description}
+              </p>
+              
+              {/* Performance Breakdown - Always visible */}
+              <div 
+                className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
+                style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)'
+                }}
+              >
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  Your {workHealth?.adaptivePerformanceIndex || 0} Performance Index
+                </h3>
+                <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Based on your meeting patterns, focus availability, and schedule structure.
+                </p>
+                
+                {/* Performance Components */}
+                <div className="space-y-5 mb-6">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Meeting Load
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
+                         (workHealth?.schedule?.meetingCount || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 15)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {workHealth?.schedule?.meetingCount || 0} meetings scheduled
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Focus Availability
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {((workHealth?.focusTime || 0) / 60) >= 4 ? 'Good' : 
+                         ((workHealth?.focusTime || 0) / 60) >= 2 ? 'Moderate' : 'Limited'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.min(100, ((workHealth?.focusTime || 0) / 60) * 22)}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.focusTime || 0) / 60) / 4))
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m uninterrupted time
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Schedule Flow
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.fragmentationScore || 0) >= 80 ? 'Good' : 
+                         (workHealth?.schedule?.fragmentationScore || 0) >= 60 ? 'Moderate' : 'Fragmented'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${workHealth?.schedule?.fragmentationScore || 20}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (workHealth?.schedule?.fragmentationScore || 20) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {(workHealth?.schedule?.backToBackCount || 0) > 0 ? 
+                          `${workHealth?.schedule?.backToBackCount} back-to-back transitions` : 
+                          'Well-spaced meetings'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Recovery Time
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {((workHealth?.schedule?.bufferTime || 0) / 60) >= 3 ? 'Good' : 
+                         ((workHealth?.schedule?.bufferTime || 0) / 60) >= 1 ? 'Moderate' : 'Limited'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.min(100, ((workHealth?.schedule?.bufferTime || 0) / 60) * 25)}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.schedule?.bufferTime || 0) / 60) / 4))
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m between activities
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Key Insight
+                  </h4>
+                  <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      {workHealth?.adaptivePerformanceIndex >= 75 ? 
+                        'Your current schedule structure supports sustainable performance. Consider maintaining this balance of meetings and focused work time.' :
+                        workHealth?.adaptivePerformanceIndex >= 50 ?
+                        'Your schedule shows moderate density. Try consolidating meetings into blocks to create longer periods for focused work.' :
+                        'Your schedule has high meeting density. Consider which meetings could be shortened, combined, or rescheduled to create more continuous work time.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Performance-specific Insights */}
+            <section>
+              <h2 className="whoop-section-title mb-8">
+                Performance Insights
+              </h2>
+              
+              <div className="space-y-8">
+                {insights.filter(insight => {
+                  const title = insight.title.toLowerCase();
+                  return title.includes('work health') || title.includes('adaptive performance') || title.includes('performance');
+                }).map((insight, index) => {
+                  const getDotColorForInsight = () => {
+                    const score = workHealth?.adaptivePerformanceIndex || 0;
+                    if (score >= 75) return 'var(--whoop-green)';
+                    if (score >= 65) return 'var(--whoop-yellow)';
+                    if (score >= 55) return '#ff9500';
+                    return 'var(--whoop-red)';
+                  };
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="whoop-insight-title flex-1">
+                          {insight.title}
+                        </h4>
+                        <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight() }} />
+                      </div>
+                      <p className="whoop-insight-text mb-4">
+                        {insight.message}
+                      </p>
+                      <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                        {insight.dataSource}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* Cognitive Resilience Tab */}
+        {activeTab === 'resilience' && (
+          <div className="space-y-16">
+            {/* Large Cognitive Resilience Ring */}
+            <section className="text-center">
+              <div className="relative w-32 h-32 mx-auto mb-8">
+                <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
+                  <circle 
+                    cx="60" cy="60" r="54" 
+                    fill="none" 
+                    stroke="rgba(255,255,255,0.06)" 
+                    strokeWidth="2"
+                  />
+                  <circle 
+                    cx="60" cy="60" r="54" 
+                    fill="none" 
+                    stroke={workHealth?.cognitiveResilience <= 40 ? 'var(--whoop-red)' : 
+                            workHealth?.cognitiveResilience <= 75 ? 'var(--whoop-yellow)' : 'var(--whoop-green)'}
+                    strokeWidth="2"
+                    strokeDasharray="339.29" 
+                    strokeDashoffset={(339.29 - (workHealth?.cognitiveResilience || 0) / 100 * 339.29)} 
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
+                      color: workHealth?.cognitiveResilience <= 40 ? 'var(--whoop-red)' : 
+                             workHealth?.cognitiveResilience <= 75 ? 'var(--whoop-yellow)' : 'var(--whoop-green)',
+                      fontFeatureSettings: '"tnum"',
+                      letterSpacing: '-0.04em'
+                    }}>
+                      {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
+                    </div>
+                    <div className="text-center">
+                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
+                        COGNITIVE
+                      </div>
+                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
+                        RESILIENCE
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Cognitive Resilience Description */}
+              <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
+                Your mental capacity for handling decisions and context changes throughout the day.
+              </p>
+              
+              {/* Cognitive Resilience Breakdown - Always visible */}
+              <div 
+                className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
+                style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)'
+                }}
+              >
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  Your {workHealth?.cognitiveResilience || 0}% Cognitive Resilience
+                </h3>
+                <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Your mental capacity for handling decisions and context changes throughout the day.
+                </p>
+                
+                {/* Cognitive Resilience Components */}
+                <div className="space-y-5 mb-6">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Mental Energy
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {((workHealth?.focusTime || 0) / 60) >= 4 ? 'Good' : 
+                         ((workHealth?.focusTime || 0) / 60) >= 2 ? 'Moderate' : 'Limited'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.min(100, ((workHealth?.focusTime || 0) / 60) * 22)}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.focusTime || 0) / 60) / 4))
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m for deep thinking
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Task Switching
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.meetingCount || 0) <= 2 ? 'Light' : 
+                         (workHealth?.schedule?.meetingCount || 0) <= 4 ? 'Moderate' : 'Heavy'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 18))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 18)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {workHealth?.schedule?.meetingCount || 0} different meetings to navigate
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Decision Load
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
+                         (workHealth?.schedule?.meetingCount || 0) <= 6 ? 'Moderate' : 'Heavy'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(20, 100 - ((workHealth?.schedule?.meetingCount || 0) * 12))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 12)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Choices and decisions across meetings
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Reset Opportunities
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 'Good' : 
+                         (workHealth?.schedule?.backToBackCount || 0) <= 2 ? 'Moderate' : 'Limited'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(30, 100 - ((workHealth?.schedule?.backToBackCount || 0) * 25))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.backToBackCount || 0) * 25)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 
+                          'Well-spaced meetings' : 
+                          `${workHealth?.schedule?.backToBackCount} back-to-back sessions`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Key Insight
+                  </h4>
+                  <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      {workHealth?.cognitiveResilience >= 80 ? 
+                        'Your mental capacity appears strong for handling multiple decisions and context switches. Your current approach is working well.' :
+                        workHealth?.cognitiveResilience >= 60 ?
+                        'Your cognitive resilience is moderate. Consider grouping similar meetings together to reduce the mental effort needed for context switching.' :
+                        'Your schedule may be creating cognitive fatigue. Try creating buffer time between meetings to allow for mental transitions and recovery.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Cognitive Resilience-specific Insights */}
+            <section>
+              <h2 className="whoop-section-title mb-8">
+                Cognitive Insights
+              </h2>
+              
+              <div className="space-y-8">
+                {insights.filter(insight => {
+                  const title = insight.title.toLowerCase();
+                  return title.includes('cognitive resilience') || title.includes('cognitive');
+                }).map((insight, index) => {
+                  const getDotColorForInsight = () => {
+                    const resilience = workHealth?.cognitiveResilience || 0;
+                    if (resilience > 65) return 'var(--whoop-green)';
+                    if (resilience > 40) return 'var(--whoop-yellow)';
+                    return 'var(--whoop-red)';
+                  };
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="whoop-insight-title flex-1">
+                          {insight.title}
+                        </h4>
+                        <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight() }} />
+                      </div>
+                      <p className="whoop-insight-text mb-4">
+                        {insight.message}
+                      </p>
+                      <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                        {insight.dataSource}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* Sustainability Index Tab */}
+        {activeTab === 'sustainability' && (
+          <div className="space-y-16">
+            {/* Large Sustainability Index Ring */}
+            <section className="text-center">
+              <div className="relative w-32 h-32 mx-auto mb-8">
+                <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
+                  <circle 
+                    cx="60" cy="60" r="54" 
+                    fill="none" 
+                    stroke="rgba(255,255,255,0.06)" 
+                    strokeWidth="2"
+                  />
+                  <circle 
+                    cx="60" cy="60" r="54" 
+                    fill="none" 
+                    stroke={workHealth?.workRhythmRecovery <= 45 ? 'var(--whoop-red)' : 
+                            workHealth?.workRhythmRecovery <= 70 ? 'var(--whoop-yellow)' : 'var(--whoop-green)'}
+                    strokeWidth="2"
+                    strokeDasharray="339.29" 
+                    strokeDashoffset={(339.29 - (workHealth?.workRhythmRecovery || 0) / 100 * 339.29)} 
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
+                      color: workHealth?.workRhythmRecovery <= 45 ? 'var(--whoop-red)' : 
+                             workHealth?.workRhythmRecovery <= 70 ? 'var(--whoop-yellow)' : 'var(--whoop-green)',
+                      fontFeatureSettings: '"tnum"',
+                      letterSpacing: '-0.04em'
+                    }}>
+                      {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
+                    </div>
+                    <div className="text-center">
+                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
+                        SUSTAINABILITY
+                      </div>
+                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
+                        INDEX
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Sustainability Description */}
+              <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
+                How sustainable your current work patterns are for long-term performance.
+              </p>
+              
+              {/* Sustainability Breakdown - Always visible */}
+              <div 
+                className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
+                style={{ 
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)'
+                }}
+              >
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  Your {workHealth?.workRhythmRecovery || 0}% Sustainability Index
+                </h3>
+                <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  How sustainable your current work patterns are for long-term performance.
+                </p>
+                
+                {/* Sustainability Components */}
+                <div className="space-y-5 mb-6">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Work Load Balance
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
+                         (workHealth?.schedule?.meetingCount || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 12))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 12)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {workHealth?.schedule?.meetingCount || 0} meetings across your day
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Time Commitment
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.durationHours || 0) <= 3 ? 'Light' : 
+                         (workHealth?.schedule?.durationHours || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(20, 100 - ((workHealth?.schedule?.durationHours || 0) * 18))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.durationHours || 0) * 18)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {workHealth?.schedule?.durationHours || 0}h in structured meetings
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Recovery Balance
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {((workHealth?.schedule?.bufferTime || 0) / 60) >= 3 ? 'Good' : 
+                         ((workHealth?.schedule?.bufferTime || 0) / 60) >= 1 ? 'Moderate' : 'Limited'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.min(100, ((workHealth?.schedule?.bufferTime || 0) / 60) * 25)}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.schedule?.bufferTime || 0) / 60) / 4))
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m for transitions
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Schedule Pattern
+                      </span>
+                      <span className="text-xs" style={{ 
+                        color: 'var(--text-muted)',
+                        fontWeight: '500'
+                      }}>
+                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 'Structured' : 'Condensed'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded h-1.5">
+                      <div 
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{ 
+                          width: `${Math.max(30, 100 - ((workHealth?.schedule?.backToBackCount || 0) * 20))}%`,
+                          backgroundColor: '#4F9CF9',
+                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.backToBackCount || 0) * 20)) / 100)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-1">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 
+                          'Distributed throughout day' : 
+                          `${workHealth?.schedule?.backToBackCount} compressed blocks`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Key Insight
+                  </h4>
+                  <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      {workHealth?.workRhythmRecovery >= 70 ? 
+                        'Your schedule demonstrates sustainable work patterns with balanced meeting distribution and adequate recovery time. This rhythm supports long-term productivity while maintaining energy reserves throughout the day.' :
+                        workHealth?.workRhythmRecovery >= 45 ?
+                        'Your work pattern shows moderate sustainability with some areas for optimization. The distribution of meetings and recovery periods could be adjusted to better support sustained performance throughout the day.' :
+                        'Your current schedule pattern indicates limited sustainability for long-term performance. The meeting intensity and distribution suggest adjustments to recovery time and workload distribution would support better sustained productivity.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Sustainability-specific Insights */}
+            <section>
+              <h2 className="whoop-section-title mb-8">
+                Sustainability Insights
+              </h2>
+              
+              <div className="space-y-8">
+                {insights.filter(insight => {
+                  const title = insight.title.toLowerCase();
+                  return title.includes('sustainability') || title.includes('sustainable') || title.includes('unsustainable');
+                }).map((insight, index) => {
+                  const getDotColorForInsight = () => {
+                    const sustainability = workHealth?.workRhythmRecovery || 0;
+                    if (sustainability > 70) return 'var(--whoop-green)';
+                    if (sustainability > 45) return 'var(--whoop-yellow)';
+                    return 'var(--whoop-red)';
+                  };
+                  
+                  return (
+                    <div key={index}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="whoop-insight-title flex-1">
+                          {insight.title}
+                        </h4>
+                        <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight() }} />
+                      </div>
+                      <p className="whoop-insight-text mb-4">
+                        {insight.message}
+                      </p>
+                      <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                        {insight.dataSource}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           </div>
         )}
 

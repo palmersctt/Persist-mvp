@@ -19,7 +19,8 @@
       "Bash(cmd /c:*)",
       "Bash(tasklist:*)",
       "Bash(npx supabase:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []
