@@ -489,24 +489,25 @@ export default function WorkHealthDashboard() {
       {/* Tab Navigation */}
       <div className="max-w-5xl mx-auto px-6 pt-8 pb-4">
         <div className="flex justify-center">
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 md:space-x-2">
             {[
-              { id: 'overview', label: 'Overview' },
-              { id: 'performance', label: 'Performance Index' },
-              { id: 'resilience', label: 'Cognitive Resilience' },
-              { id: 'sustainability', label: 'Sustainability Index' }
+              { id: 'overview', label: 'Overview', mobileLabel: 'Overview' },
+              { id: 'performance', label: 'Performance Index', mobileLabel: 'Performance' },
+              { id: 'resilience', label: 'Cognitive Resilience', mobileLabel: 'Cognitive' },
+              { id: 'sustainability', label: 'Sustainability Index', mobileLabel: 'Sustainability' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200"
+                className="px-2 md:px-4 py-2 text-xs md:text-sm font-medium rounded-md transition-all duration-200"
                 style={{
                   color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-secondary)',
                   backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.1)' : 'transparent',
                   border: activeTab === tab.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
                 }}
               >
-                {tab.label}
+                <span className="hidden md:inline">{tab.label}</span>
+                <span className="md:hidden">{tab.mobileLabel}</span>
               </button>
             ))}
           </div>
