@@ -831,7 +831,7 @@ export default function WorkHealthDashboard() {
                             stroke={getIndicatorColor(metric.status)}
                             strokeWidth="2"
                             strokeDasharray="339.29" 
-                            strokeDashoffset={(339.29 - (metric.value as number) / 100 * 339.29)} 
+                            strokeDashoffset={(339.29 - (typeof metric.value === 'number' && !isNaN(metric.value) ? metric.value : 0) / 100 * 339.29)} 
                             strokeLinecap="round"
                             className="transition-all duration-1000 ease-out"
                           />
@@ -843,7 +843,7 @@ export default function WorkHealthDashboard() {
                               fontFeatureSettings: '"tnum"',
                               letterSpacing: '-0.04em'
                             }}>
-                              {metric.value}{metric.unit}
+                              {typeof metric.value === 'number' && !isNaN(metric.value) ? metric.value : 0}{metric.unit}
                             </div>
                             <div className="text-center">
                               <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
