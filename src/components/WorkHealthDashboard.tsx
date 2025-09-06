@@ -569,18 +569,25 @@ export default function WorkHealthDashboard() {
             </div>
           </button>
           
-          <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
-            {workCapacity.description}
-          </p>
-          
-          {/* Score Explanation */}
+          {/* Score Explanation - positioned directly below the metric */}
           {activeExplanation === 'performance' && (
             <div 
-              className="max-w-2xl mx-auto mb-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-opacity"
+              className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform"
               onClick={() => setActiveExplanation(null)}
               style={{ 
                 backgroundColor: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.08)'
+              }}
+              ref={(el) => {
+                if (el) {
+                  setTimeout(() => {
+                    el.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'nearest',
+                      inline: 'center'
+                    });
+                  }, 100);
+                }
               }}>
               <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                 Your {workHealth?.adaptivePerformanceIndex || 0} Performance Index
@@ -744,6 +751,13 @@ export default function WorkHealthDashboard() {
               </div>
             </div>
           )}
+          
+          {/* Description shows only when explanation is not active */}
+          {activeExplanation !== 'performance' && (
+            <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
+              {workCapacity.description}
+            </p>
+          )}
         </section>
 
         {/* Premium Content Wrapper */}
@@ -766,77 +780,153 @@ export default function WorkHealthDashboard() {
               };
               
               return (
-                <button 
-                  key={index} 
-                  className="text-center hover:scale-105 transition-all duration-200 cursor-pointer block w-full p-4 rounded-lg border border-transparent hover:border-gray-400 hover:border-opacity-30"
-                  style={{
-                    boxShadow: (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
-                              (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index') 
-                              ? '0 0 15px rgba(79, 156, 249, 0.2)' : 'none'
-                  }}
-                  onClick={() => {
-                    if (metric.label === 'Cognitive Resilience') {
-                      setActiveExplanation(activeExplanation === 'resilience' ? null : 'resilience');
-                    } else if (metric.label === 'Sustainability Index') {
-                      setActiveExplanation(activeExplanation === 'sustainability' ? null : 'sustainability');
-                    }
-                  }}
-                >
-                  <div className="whoop-secondary-metric mb-2" style={{ 
-                    color: 'var(--text-primary)'
-                  }}>
-                    {metric.value}{metric.unit}
-                  </div>
-                  <div className="whoop-metric-label mb-3">
-                    {metric.label.toUpperCase()}
-                  </div>
-                  
-                  {/* Subtle Visual Indicators */}
-                  {metric.label === 'Cognitive Resilience' && (
-                    <div className="mx-auto w-16 mb-2">
-                      <div className="whoop-thin-progress">
-                        <div 
-                          className="whoop-progress-fill"
-                          style={{ 
-                            width: `${metric.value}%`,
-                            backgroundColor: getIndicatorColor(metric.status)
-                          }}
-                        />
-                      </div>
+                <div key={index} className="w-full">
+                  <button 
+                    className="text-center hover:scale-105 transition-all duration-200 cursor-pointer block w-full p-4 rounded-lg border border-transparent hover:border-gray-400 hover:border-opacity-30"
+                    style={{
+                      boxShadow: (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
+                                (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index') 
+                                ? '0 0 15px rgba(79, 156, 249, 0.2)' : 'none'
+                    }}
+                    onClick={() => {
+                      if (metric.label === 'Cognitive Resilience') {
+                        setActiveExplanation(activeExplanation === 'resilience' ? null : 'resilience');
+                      } else if (metric.label === 'Sustainability Index') {
+                        setActiveExplanation(activeExplanation === 'sustainability' ? null : 'sustainability');
+                      }
+                    }}
+                  >
+                    <div className="whoop-secondary-metric mb-2" style={{ 
+                      color: 'var(--text-primary)'
+                    }}>
+                      {metric.value}{metric.unit}
                     </div>
-                  )}
-                  
-                  {metric.label === 'Sustainability Index' && (
-                    <div className="mx-auto w-16 mb-2">
-                      <div className="whoop-thin-progress">
-                        <div 
-                          className="whoop-progress-fill"
-                          style={{ 
-                            width: `${metric.value}%`,
-                            backgroundColor: getIndicatorColor(metric.status)
-                          }}
-                        />
-                      </div>
+                    <div className="whoop-metric-label mb-3">
+                      {metric.label.toUpperCase()}
                     </div>
-                  )}
+                    
+                    {/* Subtle Visual Indicators */}
+                    {metric.label === 'Cognitive Resilience' && (
+                      <div className="mx-auto w-16 mb-2">
+                        <div className="whoop-thin-progress">
+                          <div 
+                            className="whoop-progress-fill"
+                            style={{ 
+                              width: `${metric.value}%`,
+                              backgroundColor: getIndicatorColor(metric.status)
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {metric.label === 'Sustainability Index' && (
+                      <div className="mx-auto w-16 mb-2">
+                        <div className="whoop-thin-progress">
+                          <div 
+                            className="whoop-progress-fill"
+                            style={{ 
+                              width: `${metric.value}%`,
+                              backgroundColor: getIndicatorColor(metric.status)
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Expand indicator */}
+                    <div className="mt-2 text-xs opacity-50 transition-opacity hover:opacity-80">
+                      <svg 
+                        width="12" 
+                        height="12" 
+                        viewBox="0 0 12 12" 
+                        fill="currentColor"
+                        className={`mx-auto transition-transform duration-200 ${
+                          (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
+                          (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index')
+                          ? 'rotate-180' : ''
+                        }`}
+                      >
+                        <path d="M6 8l-3-3h6l-3 3z"/>
+                      </svg>
+                    </div>
+                  </button>
                   
-                  {/* Expand indicator */}
-                  <div className="mt-2 text-xs opacity-50 transition-opacity hover:opacity-80">
-                    <svg 
-                      width="12" 
-                      height="12" 
-                      viewBox="0 0 12 12" 
-                      fill="currentColor"
-                      className={`mx-auto transition-transform duration-200 ${
-                        (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
-                        (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index')
-                        ? 'rotate-180' : ''
-                      }`}
+                  {/* Inline explanation directly below the metric */}
+                  {metric.label === 'Cognitive Resilience' && activeExplanation === 'resilience' && (
+                    <div 
+                      className="mt-2 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform md:hidden"
+                      onClick={() => setActiveExplanation(null)}
+                      style={{ 
+                        backgroundColor: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)'
+                      }}
+                      ref={(el) => {
+                        if (el) {
+                          setTimeout(() => {
+                            el.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'nearest',
+                              inline: 'center'
+                            });
+                          }, 100);
+                        }
+                      }}
                     >
-                      <path d="M6 8l-3-3h6l-3 3z"/>
-                    </svg>
-                  </div>
-                </button>
+                      <h4 className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Cognitive Resilience: {workHealth?.cognitiveResilience || 0}%
+                      </h4>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                        {workHealth?.cognitiveResilience >= 80 ? 
+                          'Your mental capacity appears strong for handling multiple decisions and context switches.' :
+                          workHealth?.cognitiveResilience >= 60 ?
+                          'Your cognitive resilience is moderate. Consider grouping similar meetings together.' :
+                          'Your schedule may be creating cognitive fatigue. Try creating buffer time between meetings.'
+                        }
+                      </p>
+                      <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                        Tap to close
+                      </p>
+                    </div>
+                  )}
+                  
+                  {metric.label === 'Sustainability Index' && activeExplanation === 'sustainability' && (
+                    <div 
+                      className="mt-2 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform md:hidden"
+                      onClick={() => setActiveExplanation(null)}
+                      style={{ 
+                        backgroundColor: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)'
+                      }}
+                      ref={(el) => {
+                        if (el) {
+                          setTimeout(() => {
+                            el.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'nearest',
+                              inline: 'center'
+                            });
+                          }, 100);
+                        }
+                      }}
+                    >
+                      <h4 className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Sustainability Index: {workHealth?.workRhythmRecovery || 0}%
+                      </h4>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                        {workHealth?.workRhythmRecovery >= 70 ? 
+                          'Your schedule demonstrates sustainable work patterns with balanced meeting distribution and adequate recovery time.' :
+                          workHealth?.workRhythmRecovery >= 45 ?
+                          'Your work pattern shows moderate sustainability. The distribution of meetings and recovery periods could be adjusted.' :
+                          'Your current schedule pattern indicates limited sustainability. Adjustments to recovery time would support better productivity.'
+                        }
+                      </p>
+                      <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                        Tap to close
+                      </p>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -844,11 +934,22 @@ export default function WorkHealthDashboard() {
           {/* Cognitive Resilience Explanation */}
           {activeExplanation === 'resilience' && (
             <div 
-              className="max-w-2xl mx-auto mt-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-opacity"
+              className="max-w-2xl mx-auto mt-4 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform"
               onClick={() => setActiveExplanation(null)}
               style={{ 
                 backgroundColor: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.08)'
+              }}
+              ref={(el) => {
+                if (el) {
+                  setTimeout(() => {
+                    el.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'nearest',
+                      inline: 'center'
+                    });
+                  }, 100);
+                }
               }}>
               <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                 Your {workHealth?.cognitiveResilience || 0}% Cognitive Resilience
@@ -1010,11 +1111,22 @@ export default function WorkHealthDashboard() {
           {/* Sustainability Index Explanation */}
           {activeExplanation === 'sustainability' && (
             <div 
-              className="max-w-2xl mx-auto mt-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-opacity"
+              className="max-w-2xl mx-auto mt-4 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform"
               onClick={() => setActiveExplanation(null)}
               style={{ 
                 backgroundColor: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.08)'
+              }}
+              ref={(el) => {
+                if (el) {
+                  setTimeout(() => {
+                    el.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'nearest',
+                      inline: 'center'
+                    });
+                  }, 100);
+                }
               }}>
               <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                 Your {workHealth?.workRhythmRecovery || 0}% Sustainability Index
