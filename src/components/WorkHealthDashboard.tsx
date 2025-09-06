@@ -524,12 +524,8 @@ export default function WorkHealthDashboard() {
         <section className="text-center">
           
           {/* Clean minimal progress indicator */}
-          <button 
-            onClick={() => setActiveExplanation(activeExplanation === 'performance' ? null : 'performance')}
+          <div 
             className="relative w-32 h-32 mx-auto mb-8 block rounded-full border border-transparent p-2"
-            style={{
-              boxShadow: activeExplanation === 'performance' ? '0 0 20px rgba(79, 156, 249, 0.3)' : 'none'
-            }}
           >
             <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
               <circle 
@@ -568,25 +564,7 @@ export default function WorkHealthDashboard() {
                 </div>
               </div>
             </div>
-            
-            {/* Expand indicator for Performance Index */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 pointer-events-none">
-              <div className="text-xs opacity-60">
-                <svg 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 12 12" 
-                  fill="currentColor"
-                  className={`transition-transform duration-200 ${
-                    activeExplanation === 'performance' ? 'rotate-180' : ''
-                  }`}
-                  style={{ color: 'rgba(255,255,255,0.4)' }}
-                >
-                  <path d="M6 8l-3-3h6l-3 3z"/>
-                </svg>
-              </div>
-            </div>
-          </button>
+          </div>
           
           {/* Score Explanation - positioned directly below the metric */}
           {activeExplanation === 'performance' && (
@@ -796,20 +774,8 @@ export default function WorkHealthDashboard() {
               
               return (
                 <div key={index} className="w-full">
-                  <button 
+                  <div 
                     className="text-center block w-full p-4 rounded-lg border border-transparent relative"
-                    style={{
-                      boxShadow: (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
-                                (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index') 
-                                ? '0 0 15px rgba(79, 156, 249, 0.2)' : 'none'
-                    }}
-                    onClick={() => {
-                      if (metric.label === 'Cognitive Resilience') {
-                        setActiveExplanation(activeExplanation === 'resilience' ? null : 'resilience');
-                      } else if (metric.label === 'Sustainability Index') {
-                        setActiveExplanation(activeExplanation === 'sustainability' ? null : 'sustainability');
-                      }
-                    }}
                   >
                     {/* Ring Indicators matching PI metric exactly */}
                     {(metric.label === 'Cognitive Resilience' || metric.label === 'Sustainability Index') && (
@@ -851,29 +817,9 @@ export default function WorkHealthDashboard() {
                             </div>
                           </div>
                         </div>
-                        
-                        {/* Expand indicator */}
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 pointer-events-none">
-                          <div className="text-xs opacity-60">
-                            <svg 
-                              width="14" 
-                              height="14" 
-                              viewBox="0 0 12 12" 
-                              fill="currentColor"
-                              className={`transition-transform duration-200 ${
-                                (activeExplanation === 'resilience' && metric.label === 'Cognitive Resilience') || 
-                                (activeExplanation === 'sustainability' && metric.label === 'Sustainability Index')
-                                ? 'rotate-180' : ''
-                              }`}
-                              style={{ color: 'rgba(255,255,255,0.4)' }}
-                            >
-                              <path d="M6 8l-3-3h6l-3 3z"/>
-                            </svg>
-                          </div>
-                        </div>
                       </div>
                     )}
-                  </button>
+                  </div>
                   
                   {/* Inline explanation directly below the metric */}
                   {metric.label === 'Cognitive Resilience' && activeExplanation === 'resilience' && (
