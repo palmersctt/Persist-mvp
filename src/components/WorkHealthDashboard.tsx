@@ -524,15 +524,18 @@ export default function WorkHealthDashboard() {
         <section className="text-center">
           
           {/* Dual Concentric Ring Visualization */}
-          <div className="relative mx-auto mb-8" style={{ width: '400px', height: '300px' }}>
+          <div className="relative mx-auto mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{ 
+            width: '100%', 
+            maxWidth: '400px',
+            height: '280px',
+            minHeight: '240px'
+          }}>
             {/* SVG Ring System */}
             <div className="absolute inset-0 flex items-center justify-center">
               <svg 
-                width="180" 
-                height="180" 
+                className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 transition-all duration-1000 ease-out"
                 viewBox="0 0 180 180"
                 style={{ transform: 'rotate(-90deg)' }}
-                className="transition-all duration-1000 ease-out"
               >
                 {/* Outer Ring Background */}
                 <circle
@@ -600,67 +603,54 @@ export default function WorkHealthDashboard() {
             
             {/* External Labels */}
             {/* Performance Index Label (Left) */}
-            <div className="absolute" style={{ left: '20px', top: '50px' }}>
-              <div style={{ 
-                fontSize: '36px', 
+            <div className="absolute" style={{ 
+              left: 'clamp(8px, 4vw, 20px)', 
+              top: 'clamp(35px, 15%, 50px)' 
+            }}>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#10b981', 
-                fontWeight: '600',
                 lineHeight: '1'
               }}>
                 {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
               </div>
-              <div style={{ 
-                fontSize: '13px', 
-                color: '#10b981', 
-                textTransform: 'uppercase',
-                lineHeight: '1.3',
-                marginTop: '4px'
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
+                color: '#10b981'
               }}>
                 PERFORMANCE<br />INDEX
               </div>
             </div>
             
             {/* Cognitive Resilience Label (Top Right) */}
-            <div className="absolute" style={{ right: '20px', top: '50px' }}>
-              <div style={{ 
-                fontSize: '36px', 
+            <div className="absolute text-right" style={{ 
+              right: 'clamp(8px, 4vw, 20px)', 
+              top: 'clamp(35px, 15%, 50px)' 
+            }}>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#3b82f6', 
-                fontWeight: '600',
-                lineHeight: '1',
-                textAlign: 'right'
+                lineHeight: '1'
               }}>
                 {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
               </div>
-              <div style={{ 
-                fontSize: '13px', 
-                color: '#3b82f6', 
-                textTransform: 'uppercase',
-                lineHeight: '1.3',
-                marginTop: '4px',
-                textAlign: 'right'
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
+                color: '#3b82f6'
               }}>
                 COGNITIVE<br />RESILIENCE
               </div>
             </div>
             
             {/* Sustainability Index Label (Bottom Right) */}
-            <div className="absolute" style={{ right: '20px', bottom: '50px' }}>
-              <div style={{ 
-                fontSize: '36px', 
+            <div className="absolute text-right" style={{ 
+              right: 'clamp(8px, 4vw, 20px)', 
+              bottom: 'clamp(35px, 15%, 50px)' 
+            }}>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#6b7280', 
-                fontWeight: '600',
-                lineHeight: '1',
-                textAlign: 'right'
+                lineHeight: '1'
               }}>
                 {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
               </div>
-              <div style={{ 
-                fontSize: '13px', 
-                color: '#6b7280', 
-                textTransform: 'uppercase',
-                lineHeight: '1.3',
-                marginTop: '4px',
-                textAlign: 'right'
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
+                color: '#6b7280'
               }}>
                 SUSTAINABILITY<br />INDEX
               </div>
