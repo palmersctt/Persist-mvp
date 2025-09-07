@@ -523,45 +523,146 @@ export default function WorkHealthDashboard() {
             {/* Primary Work Capacity Metric */}
         <section className="text-center">
           
-          {/* Clean minimal progress indicator */}
-          <div 
-            className="relative w-32 h-32 mx-auto mb-8 block rounded-full border border-transparent p-2"
-          >
-            <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
-              <circle 
-                cx="60" cy="60" r="54" 
-                fill="none" 
-                stroke="rgba(255,255,255,0.06)" 
-                strokeWidth="2"
-              />
-              <circle 
-                cx="60" cy="60" r="54" 
-                fill="none" 
-                stroke={workCapacity.color}
-                strokeWidth="2"
-                strokeDasharray="339.29" 
-                strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)} 
-                strokeLinecap="round"
+          {/* Dual Concentric Ring Visualization */}
+          <div className="relative mx-auto mb-8" style={{ width: '400px', height: '300px' }}>
+            {/* SVG Ring System */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg 
+                width="180" 
+                height="180" 
+                viewBox="0 0 180 180"
+                style={{ transform: 'rotate(-90deg)' }}
                 className="transition-all duration-1000 ease-out"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
-                  color: workCapacity.color,
-                  fontFeatureSettings: '"tnum"',
-                  letterSpacing: '-0.04em'
-                }}>
-                  {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
-                </div>
-                <div className="text-center">
-                  <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
-                    PERFORMANCE
-                  </div>
-                  <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
-                    INDEX
-                  </div>
-                </div>
+              >
+                {/* Outer Ring Background */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="75"
+                  fill="none"
+                  stroke="rgba(16,185,129,0.2)"
+                  strokeWidth="12"
+                />
+                
+                {/* Outer Ring Progress (Performance Index) */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="75"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray="471.2"
+                  strokeDashoffset={471.2 * (1 - (workHealth?.adaptivePerformanceIndex || 0) / 100)}
+                  className="transition-all duration-1000 ease-out"
+                />
+                
+                {/* Inner Ring Background */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="55"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeWidth="10"
+                />
+                
+                {/* Inner Ring Left Half (Cognitive Resilience) */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="55"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray="172.8 172.8"
+                  strokeDashoffset={172.8 * (1 - (workHealth?.cognitiveResilience || 0) / 100)}
+                  className="transition-all duration-1000 ease-out"
+                />
+                
+                {/* Inner Ring Right Half (Sustainability Index) */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="55"
+                  fill="none"
+                  stroke="#6b7280"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={`${172.8 * (workHealth?.workRhythmRecovery || 0) / 100} 345.6`}
+                  strokeDashoffset="-172.8"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+            </div>
+            
+            {/* External Labels */}
+            {/* Performance Index Label (Left) */}
+            <div className="absolute" style={{ left: '20px', top: '50px' }}>
+              <div style={{ 
+                fontSize: '36px', 
+                color: '#10b981', 
+                fontWeight: '600',
+                lineHeight: '1'
+              }}>
+                {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
+              </div>
+              <div style={{ 
+                fontSize: '13px', 
+                color: '#10b981', 
+                textTransform: 'uppercase',
+                lineHeight: '1.3',
+                marginTop: '4px'
+              }}>
+                PERFORMANCE<br />INDEX
+              </div>
+            </div>
+            
+            {/* Cognitive Resilience Label (Top Right) */}
+            <div className="absolute" style={{ right: '20px', top: '50px' }}>
+              <div style={{ 
+                fontSize: '36px', 
+                color: '#3b82f6', 
+                fontWeight: '600',
+                lineHeight: '1',
+                textAlign: 'right'
+              }}>
+                {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
+              </div>
+              <div style={{ 
+                fontSize: '13px', 
+                color: '#3b82f6', 
+                textTransform: 'uppercase',
+                lineHeight: '1.3',
+                marginTop: '4px',
+                textAlign: 'right'
+              }}>
+                COGNITIVE<br />RESILIENCE
+              </div>
+            </div>
+            
+            {/* Sustainability Index Label (Bottom Right) */}
+            <div className="absolute" style={{ right: '20px', bottom: '50px' }}>
+              <div style={{ 
+                fontSize: '36px', 
+                color: '#6b7280', 
+                fontWeight: '600',
+                lineHeight: '1',
+                textAlign: 'right'
+              }}>
+                {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
+              </div>
+              <div style={{ 
+                fontSize: '13px', 
+                color: '#6b7280', 
+                textTransform: 'uppercase',
+                lineHeight: '1.3',
+                marginTop: '4px',
+                textAlign: 'right'
+              }}>
+                SUSTAINABILITY<br />INDEX
               </div>
             </div>
           </div>
