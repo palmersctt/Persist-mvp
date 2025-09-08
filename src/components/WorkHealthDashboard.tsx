@@ -524,7 +524,7 @@ export default function WorkHealthDashboard() {
         <section className="text-center">
           
           {/* Dual Concentric Ring Visualization */}
-          <div className="relative mx-auto mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{ 
+          <div className="relative mx-auto mt-12 mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{ 
             width: '100%', 
             maxWidth: '400px',
             height: '280px',
@@ -601,11 +601,12 @@ export default function WorkHealthDashboard() {
               </svg>
             </div>
             
-            {/* External Labels */}
-            {/* Performance Index Label (Left) */}
-            <div className="absolute" style={{ 
-              left: 'clamp(8px, 4vw, 20px)', 
-              top: 'clamp(35px, 15%, 50px)' 
+            {/* External Labels - Symmetric Three-Point Layout */}
+            {/* Performance Index Label - 12 o'clock (Top) */}
+            <div className="absolute text-center" style={{ 
+              left: '50%', 
+              top: '-30px',
+              transform: 'translateX(-50%)'
             }}>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#10b981', 
@@ -620,10 +621,11 @@ export default function WorkHealthDashboard() {
               </div>
             </div>
             
-            {/* Cognitive Resilience Label (Top Right) */}
-            <div className="absolute text-right" style={{ 
-              right: 'clamp(8px, 4vw, 20px)', 
-              top: 'clamp(35px, 15%, 50px)' 
+            {/* Cognitive Resilience Label - 8 o'clock (Bottom Left) */}
+            <div className="absolute text-center" style={{ 
+              left: '15%',
+              bottom: '10px',
+              transform: 'translateX(-50%)'
             }}>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#3b82f6', 
@@ -638,10 +640,11 @@ export default function WorkHealthDashboard() {
               </div>
             </div>
             
-            {/* Sustainability Index Label (Bottom Right) */}
-            <div className="absolute text-right" style={{ 
-              right: 'clamp(8px, 4vw, 20px)', 
-              bottom: 'clamp(35px, 15%, 50px)' 
+            {/* Sustainability Index Label - 4 o'clock (Bottom Right) */}
+            <div className="absolute text-center" style={{ 
+              right: '15%',
+              bottom: '10px',
+              transform: 'translateX(50%)'
             }}>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#6b7280', 
