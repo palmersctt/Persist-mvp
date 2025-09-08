@@ -967,13 +967,13 @@ export default function WorkHealthDashboard() {
                     cx="60" cy="60" r="54" 
                     fill="none" 
                     stroke="rgba(16,185,129,0.2)" 
-                    strokeWidth="12"
+                    strokeWidth="8"
                   />
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
                     stroke="#10b981"
-                    strokeWidth="12"
+                    strokeWidth="8"
                     strokeDasharray="339.29" 
                     strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)} 
                     strokeLinecap="round"
@@ -1173,13 +1173,13 @@ export default function WorkHealthDashboard() {
                     cx="60" cy="60" r="54" 
                     fill="none" 
                     stroke="rgba(59,130,246,0.2)" 
-                    strokeWidth="12"
+                    strokeWidth="8"
                   />
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
                     stroke="#3b82f6"
-                    strokeWidth="12"
+                    strokeWidth="8"
                     strokeDasharray="339.29" 
                     strokeDashoffset={(339.29 - (workHealth?.cognitiveResilience || 0) / 100 * 339.29)} 
                     strokeLinecap="round"
@@ -1379,13 +1379,13 @@ export default function WorkHealthDashboard() {
                     cx="60" cy="60" r="54" 
                     fill="none" 
                     stroke="rgba(107,114,128,0.2)" 
-                    strokeWidth="12"
+                    strokeWidth="8"
                   />
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
                     stroke="#6b7280"
-                    strokeWidth="12"
+                    strokeWidth="8"
                     strokeDasharray="339.29" 
                     strokeDashoffset={(339.29 - (workHealth?.workRhythmRecovery || 0) / 100 * 339.29)} 
                     strokeLinecap="round"
