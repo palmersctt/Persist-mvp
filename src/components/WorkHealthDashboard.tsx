@@ -966,14 +966,14 @@ export default function WorkHealthDashboard() {
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
-                    stroke="rgba(255,255,255,0.06)" 
-                    strokeWidth="2"
+                    stroke="rgba(16,185,129,0.2)" 
+                    strokeWidth="12"
                   />
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
-                    stroke={workCapacity.color}
-                    strokeWidth="2"
+                    stroke="#10b981"
+                    strokeWidth="12"
                     strokeDasharray="339.29" 
                     strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)} 
                     strokeLinecap="round"
@@ -983,7 +983,7 @@ export default function WorkHealthDashboard() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
-                      color: workCapacity.color,
+                      color: '#10b981',
                       fontFeatureSettings: '"tnum"',
                       letterSpacing: '-0.04em'
                     }}>
@@ -1001,10 +1001,6 @@ export default function WorkHealthDashboard() {
                 </div>
               </div>
               
-              {/* Performance Description */}
-              <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
-                Your overall cognitive capacity and readiness to perform at your best based on schedule density and work patterns.
-              </p>
               
               {/* Performance Breakdown - Always visible */}
               <div 
@@ -1176,15 +1172,14 @@ export default function WorkHealthDashboard() {
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
-                    stroke="rgba(255,255,255,0.06)" 
-                    strokeWidth="2"
+                    stroke="rgba(59,130,246,0.2)" 
+                    strokeWidth="12"
                   />
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
-                    stroke={workHealth?.cognitiveResilience <= 40 ? 'var(--whoop-red)' : 
-                            workHealth?.cognitiveResilience <= 75 ? 'var(--whoop-yellow)' : 'var(--whoop-green)'}
-                    strokeWidth="2"
+                    stroke="#3b82f6"
+                    strokeWidth="12"
                     strokeDasharray="339.29" 
                     strokeDashoffset={(339.29 - (workHealth?.cognitiveResilience || 0) / 100 * 339.29)} 
                     strokeLinecap="round"
@@ -1194,8 +1189,7 @@ export default function WorkHealthDashboard() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
-                      color: workHealth?.cognitiveResilience <= 40 ? 'var(--whoop-red)' : 
-                             workHealth?.cognitiveResilience <= 75 ? 'var(--whoop-yellow)' : 'var(--whoop-green)',
+                      color: '#3b82f6',
                       fontFeatureSettings: '"tnum"',
                       letterSpacing: '-0.04em'
                     }}>
@@ -1213,10 +1207,6 @@ export default function WorkHealthDashboard() {
                 </div>
               </div>
               
-              {/* Cognitive Resilience Description */}
-              <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
-                Your mental capacity for handling decisions and context changes throughout the day.
-              </p>
               
               {/* Cognitive Resilience Breakdown - Always visible */}
               <div 
@@ -1388,15 +1378,14 @@ export default function WorkHealthDashboard() {
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
-                    stroke="rgba(255,255,255,0.06)" 
-                    strokeWidth="2"
+                    stroke="rgba(107,114,128,0.2)" 
+                    strokeWidth="12"
                   />
                   <circle 
                     cx="60" cy="60" r="54" 
                     fill="none" 
-                    stroke={workHealth?.workRhythmRecovery <= 45 ? 'var(--whoop-red)' : 
-                            workHealth?.workRhythmRecovery <= 70 ? 'var(--whoop-yellow)' : 'var(--whoop-green)'}
-                    strokeWidth="2"
+                    stroke="#6b7280"
+                    strokeWidth="12"
                     strokeDasharray="339.29" 
                     strokeDashoffset={(339.29 - (workHealth?.workRhythmRecovery || 0) / 100 * 339.29)} 
                     strokeLinecap="round"
@@ -1406,8 +1395,7 @@ export default function WorkHealthDashboard() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{ 
-                      color: workHealth?.workRhythmRecovery <= 45 ? 'var(--whoop-red)' : 
-                             workHealth?.workRhythmRecovery <= 70 ? 'var(--whoop-yellow)' : 'var(--whoop-green)',
+                      color: '#6b7280',
                       fontFeatureSettings: '"tnum"',
                       letterSpacing: '-0.04em'
                     }}>
@@ -1425,10 +1413,6 @@ export default function WorkHealthDashboard() {
                 </div>
               </div>
               
-              {/* Sustainability Description */}
-              <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
-                How sustainable your current work patterns are for long-term performance.
-              </p>
               
               {/* Sustainability Breakdown - Always visible */}
               <div 
