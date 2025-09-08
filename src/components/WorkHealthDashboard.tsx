@@ -621,30 +621,11 @@ export default function WorkHealthDashboard() {
               </div>
             </div>
             
-            {/* Cognitive Resilience Label - 8 o'clock (Bottom Left) */}
+            {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
             <div className="absolute text-center" style={{ 
               left: '15%',
               bottom: '10px',
               transform: 'translateX(-50%)'
-            }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
-                color: '#3b82f6', 
-                lineHeight: '1'
-              }}>
-                {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
-              </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
-                color: '#3b82f6'
-              }}>
-                COGNITIVE<br />RESILIENCE
-              </div>
-            </div>
-            
-            {/* Sustainability Index Label - 4 o'clock (Bottom Right) */}
-            <div className="absolute text-center" style={{ 
-              right: '15%',
-              bottom: '10px',
-              transform: 'translateX(50%)'
             }}>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
                 color: '#6b7280', 
@@ -656,6 +637,25 @@ export default function WorkHealthDashboard() {
                 color: '#6b7280'
               }}>
                 SUSTAINABILITY<br />INDEX
+              </div>
+            </div>
+            
+            {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
+            <div className="absolute text-center" style={{ 
+              right: '15%',
+              bottom: '10px',
+              transform: 'translateX(50%)'
+            }}>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
+                color: '#3b82f6', 
+                lineHeight: '1'
+              }}>
+                {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
+              </div>
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
+                color: '#3b82f6'
+              }}>
+                COGNITIVE<br />RESILIENCE
               </div>
             </div>
           </div>
