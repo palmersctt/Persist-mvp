@@ -1003,7 +1003,7 @@ export default function WorkHealthDashboard() {
               
               {/* Performance Description */}
               <p className="text-sm max-w-sm mx-auto leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
-                {workCapacity.description}
+                Your overall cognitive capacity and readiness to perform at your best based on schedule density and work patterns.
               </p>
               
               {/* Performance Breakdown - Always visible */}
@@ -1161,45 +1161,6 @@ export default function WorkHealthDashboard() {
                     </p>
                   </div>
                 </div>
-              </div>
-            </section>
-
-            {/* Performance-specific Insights */}
-            <section>
-              <h2 className="whoop-section-title mb-8">
-                Performance Insights
-              </h2>
-              
-              <div className="space-y-8">
-                {insights.filter(insight => {
-                  const title = insight.title.toLowerCase();
-                  return title.includes('work health') || title.includes('adaptive performance') || title.includes('performance');
-                }).map((insight, index) => {
-                  const getDotColorForInsight = () => {
-                    const score = workHealth?.adaptivePerformanceIndex || 0;
-                    if (score >= 75) return 'var(--whoop-green)';
-                    if (score >= 65) return 'var(--whoop-yellow)';
-                    if (score >= 55) return '#ff9500';
-                    return 'var(--whoop-red)';
-                  };
-                  
-                  return (
-                    <div key={index}>
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="whoop-insight-title flex-1">
-                          {insight.title}
-                        </h4>
-                        <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight() }} />
-                      </div>
-                      <p className="whoop-insight-text mb-4">
-                        {insight.message}
-                      </p>
-                      <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                        {insight.dataSource}
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </section>
           </div>
@@ -1414,44 +1375,6 @@ export default function WorkHealthDashboard() {
                 </div>
               </div>
             </section>
-
-            {/* Cognitive Resilience-specific Insights */}
-            <section>
-              <h2 className="whoop-section-title mb-8">
-                Cognitive Insights
-              </h2>
-              
-              <div className="space-y-8">
-                {insights.filter(insight => {
-                  const title = insight.title.toLowerCase();
-                  return title.includes('cognitive resilience') || title.includes('cognitive');
-                }).map((insight, index) => {
-                  const getDotColorForInsight = () => {
-                    const resilience = workHealth?.cognitiveResilience || 0;
-                    if (resilience > 65) return 'var(--whoop-green)';
-                    if (resilience > 40) return 'var(--whoop-yellow)';
-                    return 'var(--whoop-red)';
-                  };
-                  
-                  return (
-                    <div key={index}>
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="whoop-insight-title flex-1">
-                          {insight.title}
-                        </h4>
-                        <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight() }} />
-                      </div>
-                      <p className="whoop-insight-text mb-4">
-                        {insight.message}
-                      </p>
-                      <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                        {insight.dataSource}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
           </div>
         )}
 
@@ -1664,43 +1587,6 @@ export default function WorkHealthDashboard() {
               </div>
             </section>
 
-            {/* Sustainability-specific Insights */}
-            <section>
-              <h2 className="whoop-section-title mb-8">
-                Sustainability Insights
-              </h2>
-              
-              <div className="space-y-8">
-                {insights.filter(insight => {
-                  const title = insight.title.toLowerCase();
-                  return title.includes('sustainability') || title.includes('sustainable') || title.includes('unsustainable');
-                }).map((insight, index) => {
-                  const getDotColorForInsight = () => {
-                    const sustainability = workHealth?.workRhythmRecovery || 0;
-                    if (sustainability > 70) return 'var(--whoop-green)';
-                    if (sustainability > 45) return 'var(--whoop-yellow)';
-                    return 'var(--whoop-red)';
-                  };
-                  
-                  return (
-                    <div key={index}>
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="whoop-insight-title flex-1">
-                          {insight.title}
-                        </h4>
-                        <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight() }} />
-                      </div>
-                      <p className="whoop-insight-text mb-4">
-                        {insight.message}
-                      </p>
-                      <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                        {insight.dataSource}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
           </div>
         )}
 
