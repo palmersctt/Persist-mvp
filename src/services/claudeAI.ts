@@ -74,11 +74,25 @@ class ClaudeAIService {
   }
 
   private createSystemPrompt(): string {
-    return `You are analyzing someone's real work day. Write like a smart colleague who understands their work patterns and can predict how their day will actually go. Be conversational and insightful, not clinical or robotic.
+    return `You are a smart colleague who knows this person's work patterns and can predict how their day will actually feel and go.
 
-Your goal is to provide meaningful work intelligence that feels personal and actionable. Speak as if you know this person's work style and can predict their actual experience throughout the day.
+WRITE INSIGHTS THAT SOUND LIKE YOU'RE TALKING TO THEM:
+- "You'll probably feel energized this morning, but that 3-hour meeting might drain you by evening"
+- "Your brain typically hits its stride around 10 AM - perfect timing for that presentation" 
+- "Back-to-back meetings until lunch might leave you feeling scattered for the afternoon work"
+- "This feels like one of those productive days where everything just clicks"
+- "Your afternoon looks packed - you might feel rushed between those client calls"
 
-Always provide JSON responses that sound like insights from a thoughtful colleague who understands their work reality.`;
+FOCUS ON THEIR ACTUAL EXPERIENCE:
+- How they'll likely feel during different parts of the day
+- What their energy levels will be like hour by hour
+- Whether they're set up for a good day or a stressful one
+- How their workload will affect their mood and performance
+- What they should realistically expect from today
+
+AVOID technical language, clinical analysis, formal recommendations, or confidence percentages.
+
+Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
   }
 
   private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext): string {
@@ -110,13 +124,21 @@ USER CONTEXT:
 
     switch (tabContext.tabType) {
       case 'overview':
-        return `Analyze their overall work day experience combining performance (${workHealth.adaptivePerformanceIndex}%), resilience (${workHealth.cognitiveResilience}%), and sustainability (${workHealth.workRhythmRecovery}%).
+        return `Look at their whole day and predict how it'll feel from start to finish.
 
 ${baseContext}
 
-Focus on: How their entire day feels and flows, what kind of work day this will be for them, their overall energy and productivity story for today.
+Tell them what kind of day this will be for them:
+- How their energy will flow throughout the day
+- Whether this feels like a good day or a tough day ahead
+- What their overall mood and productivity will be like
+- How they'll probably feel at different times
 
-Example insights: 'Your day has a nice rhythm - strong morning energy should carry you through to a productive afternoon' or 'This feels like one of those days where you'll get a lot done but might feel drained by evening'
+Write conversational insights like:
+- "Your day has a nice rhythm - you'll feel energized in the morning and should stay productive through the afternoon"
+- "This feels like one of those days where you'll get a lot done but might feel pretty drained by evening"
+- "You're set up for a smooth day with good energy flow and manageable workload"
+- "Today might feel a bit overwhelming with everything packed in, but you should handle it fine"
 
 Provide a JSON response in exactly this format:
 {
@@ -138,13 +160,21 @@ Provide a JSON response in exactly this format:
 }`;
       
       case 'performance':
-        return `Focus ONLY on their PRODUCTIVITY and execution capability today. Performance Index: ${workHealth.adaptivePerformanceIndex}%.
+        return `Focus on how productive and sharp they'll feel today - when they'll do their best work and when they might struggle.
 
 ${baseContext}
 
-Analyze: How productive they'll be during different parts of today, when they'll do their best work vs when they might struggle, their capacity for complex tasks, how sharp their thinking will be.
+Tell them about their performance throughout the day:
+- When their brain will be firing on all cylinders vs feeling sluggish
+- What times they'll tackle complex work easily vs when to stick to simpler tasks
+- How sharp and focused they'll feel during different meetings
+- Whether they're set up for a high-performance day or need to manage expectations
 
-Example insights: 'Your brain will be firing on all cylinders this morning - perfect timing for that important decision' or 'Afternoon might feel sluggish, but that's normal for Wednesdays like this'
+Write conversational insights like:
+- "You'll probably feel sharp and focused this morning - perfect timing for that important client call"
+- "Your brain should be firing on all cylinders around 10 AM, but you might feel a bit sluggish after lunch"
+- "This looks like one of those days where you'll power through your to-do list without much trouble"
+- "You might feel scattered with all those meetings, but your afternoon focus block should help you get back on track"
 
 Provide a JSON response in exactly this format:
 {
@@ -166,13 +196,21 @@ Provide a JSON response in exactly this format:
 }`;
       
       case 'resilience':
-        return `Focus ONLY on their STRESS HANDLING and mental toughness today. Cognitive Resilience: ${workHealth.cognitiveResilience}%.
+        return `Focus on how well they'll handle stress and pressure today - whether they'll feel calm and composed or a bit overwhelmed.
 
 ${baseContext}
 
-Analyze: How well they'll handle pressure and difficult situations, their capacity for bouncing back from setbacks, how they'll manage stress and stay composed, their emotional regulation throughout the day.
+Tell them about their stress handling today:
+- How they'll react to pressure and difficult moments
+- Whether they'll bounce back easily from setbacks or feel more rattled
+- When they might feel calm and composed vs when stress could get to them
+- How they'll handle interruptions, changes, and curveballs
 
-Example insights: 'You're set up to handle whatever curveballs come your way today' or 'Might feel a bit more reactive than usual - those back-to-back decisions are adding up'
+Write conversational insights like:
+- "You should feel pretty calm and collected today - ready to handle whatever comes your way"
+- "You might feel a bit more reactive than usual with all those back-to-back meetings piling up"
+- "That long afternoon meeting could test your patience, but you'll probably bounce back fine"
+- "You're in good shape to stay composed, even if things don't go exactly as planned"
 
 You must respond with valid JSON only. Provide a JSON response in exactly this format:
 {
@@ -194,13 +232,21 @@ You must respond with valid JSON only. Provide a JSON response in exactly this f
 }`;
       
       case 'sustainability':
-        return `Focus ONLY on the LONG-TERM SUSTAINABILITY of today's work pattern. Sustainability Index: ${workHealth.workRhythmRecovery}%.
+        return `Focus on whether today's pace feels sustainable - if they can keep this up or if it might wear them down over time.
 
 ${baseContext}
 
-Analyze: Whether this pace can be maintained over time, if they're building toward burnout or building resilience, how today affects their long-term work health, if this is a sustainable rhythm.
+Tell them about the long-term impact of today's workload:
+- Whether this pace feels manageable to maintain or might lead to burnout
+- If they're building good work habits or pushing too hard
+- How today fits into their overall work rhythm and energy
+- Whether they'll feel refreshed tomorrow or need recovery time
 
-Example insights: 'This pace feels sustainable - you're in a good groove that could last' or 'Today's intensity is fine short-term, but this pattern could wear you down if it continues'
+Write conversational insights like:
+- "This pace feels sustainable - you're in a good groove that you could keep up for weeks"
+- "Today's intensity is fine for now, but this pattern might wear you down if it becomes the norm"
+- "You're hitting a nice sustainable rhythm that should leave you energized for tomorrow"
+- "This workload feels a bit much - you might need some lighter days after this to recharge"
 
 Provide a JSON response in exactly this format:
 {
