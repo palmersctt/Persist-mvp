@@ -1,6 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
+// AI Insights interfaces
+interface AIInsight {
+  category: 'performance' | 'wellness' | 'productivity' | 'balance' | 'prediction';
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'critical' | 'success';
+  actionable: boolean;
+  recommendation?: string;
+  timeframe?: string;
+  confidence: number;
+}
+
+interface AIRecommendation {
+  type: 'schedule' | 'wellness' | 'productivity' | 'focus' | 'meeting';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  actionSteps?: string[];
+  expectedImpact?: string;
+  timeToImplement?: string;
+}
+
+interface AIPersonalizedInsights {
+  insights: AIInsight[];
+  summary: string;
+  overallScore: number;
+  riskFactors: string[];
+  opportunities: string[];
+  predictiveAlerts: string[];
+  recommendations?: AIRecommendation[];
+}
+
 interface WorkHealthData {
   // New intelligent metrics
   adaptivePerformanceIndex: number;
@@ -45,6 +77,10 @@ interface WorkHealthMetrics {
   cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
+  
+  // AI-powered insights (optional)
+  ai?: AIPersonalizedInsights;
+  aiStatus?: 'success' | 'fallback' | 'unavailable';
 }
 
 export const useWorkHealth = () => {
@@ -176,5 +212,19 @@ export const useWorkHealth = () => {
     lastRefresh,
     refresh,
     isAuthenticated: status === 'authenticated',
+    // Helper functions for AI insights
+    hasAIInsights: !!workHealth?.ai && workHealth.aiStatus === 'success',
+    aiInsights: workHealth?.ai,
+    aiStatus: workHealth?.aiStatus || 'unavailable',
   };
+};
+
+// Export types for use in other components
+export type {
+  WorkHealthMetrics,
+  AIInsight,
+  AIRecommendation,
+  AIPersonalizedInsights,
+  ScheduleAnalysis,
+  WorkHealthBreakdown,
 };
