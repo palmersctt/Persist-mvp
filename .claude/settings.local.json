@@ -20,7 +20,8 @@
       "Bash(tasklist:*)",
       "Bash(npx supabase:*)",
       "Bash(node:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
