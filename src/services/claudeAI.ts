@@ -29,6 +29,11 @@ interface UserContext {
   currentGoals?: string[];
 }
 
+interface TabContext {
+  tabType: 'overview' | 'performance' | 'resilience' | 'sustainability';
+  focusArea?: string;
+}
+
 interface CalendarAnalysis {
   workHealth: WorkHealthMetrics;
   events: CalendarEvent[];
@@ -69,22 +74,156 @@ class ClaudeAIService {
   }
 
   private createSystemPrompt(): string {
-    return `You are an AI work-life balance and productivity coach analyzing calendar data to provide personalized insights. Your role is to:
+    return `You are analyzing someone's real work day. Write like a smart colleague who understands their work patterns and can predict how their day will actually go. Be conversational and insightful, not clinical or robotic.
 
-1. Analyze work patterns and cognitive load indicators
-2. Identify potential burnout risks and productivity opportunities
-3. Provide actionable, personalized recommendations
-4. Predict potential scheduling conflicts or wellness issues
-5. Generate insights that adapt to individual user patterns
+Your goal is to provide meaningful work intelligence that feels personal and actionable. Speak as if you know this person's work style and can predict their actual experience throughout the day.
 
-Focus on:
-- Cognitive sustainability and mental health
-- Work rhythm optimization
-- Meeting effectiveness and energy management
-- Personalized productivity patterns
-- Predictive wellness alerts
+Always provide JSON responses that sound like insights from a thoughtful colleague who understands their work reality.`;
+  }
 
-Always provide JSON responses that are practical, evidence-based, and tailored to the individual's work patterns.`;
+  private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext): string {
+    const { workHealth, events, patterns } = analysis;
+    
+    const baseContext = `WORK HEALTH METRICS:
+- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
+- Cognitive Resilience: ${workHealth.cognitiveResilience}%
+- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}%
+- Status: ${workHealth.status}
+- Meeting Count: ${workHealth.schedule.meetingCount}
+- Back-to-back Count: ${workHealth.schedule.backToBackCount}
+- Focus Time: ${workHealth.focusTime} minutes
+- Fragmentation Score: ${workHealth.schedule.fragmentationScore}
+
+CALENDAR EVENTS (${events.length} total):
+${events.map(event => 
+  `- ${event.summary} (${event.start.toTimeString().slice(0,5)}-${event.end.toTimeString().slice(0,5)}, ${event.category}, ${event.attendees} attendees)`
+).join('\n')}
+
+MEETING PATTERNS:
+${Object.entries(patterns.meetingTypes).map(([type, count]) => `- ${type}: ${count}`).join('\n')}
+
+USER CONTEXT:
+- Work Hours: ${userContext.preferences?.workStartTime || 9}:00 - ${userContext.preferences?.workEndTime || 17}:00
+- Meeting Preference: ${userContext.preferences?.meetingPreference || 'balanced'}
+- Historical Avg Meetings: ${userContext.historicalPatterns?.avgDailyMeetings || 'Unknown'}
+- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime || 'Unknown'} minutes`;
+
+    switch (tabContext.tabType) {
+      case 'overview':
+        return `Analyze their overall work day experience combining performance (${workHealth.adaptivePerformanceIndex}%), resilience (${workHealth.cognitiveResilience}%), and sustainability (${workHealth.workRhythmRecovery}%).
+
+${baseContext}
+
+Focus on: How their entire day feels and flows, what kind of work day this will be for them, their overall energy and productivity story for today.
+
+Example insights: 'Your day has a nice rhythm - strong morning energy should carry you through to a productive afternoon' or 'This feels like one of those days where you'll get a lot done but might feel drained by evening'
+
+Provide a JSON response in exactly this format:
+{
+  "insights": [
+    {
+      "category": "performance",
+      "title": "Insight Title",
+      "message": "Detailed conversational insight message",
+      "severity": "info",
+      "actionable": true,
+      "confidence": 85
+    }
+  ],
+  "summary": "Brief overview of the day",
+  "overallScore": 75,
+  "riskFactors": ["factor1", "factor2"],
+  "opportunities": ["opportunity1", "opportunity2"],
+  "predictiveAlerts": ["alert1", "alert2"]
+}`;
+      
+      case 'performance':
+        return `Focus ONLY on their PRODUCTIVITY and execution capability today. Performance Index: ${workHealth.adaptivePerformanceIndex}%.
+
+${baseContext}
+
+Analyze: How productive they'll be during different parts of today, when they'll do their best work vs when they might struggle, their capacity for complex tasks, how sharp their thinking will be.
+
+Example insights: 'Your brain will be firing on all cylinders this morning - perfect timing for that important decision' or 'Afternoon might feel sluggish, but that's normal for Wednesdays like this'
+
+Provide a JSON response in exactly this format:
+{
+  "insights": [
+    {
+      "category": "performance",
+      "title": "Performance Insight Title",
+      "message": "Detailed performance-focused insight",
+      "severity": "info",
+      "actionable": true,
+      "confidence": 85
+    }
+  ],
+  "summary": "Performance overview",
+  "overallScore": ${workHealth.adaptivePerformanceIndex},
+  "riskFactors": [],
+  "opportunities": [],
+  "predictiveAlerts": []
+}`;
+      
+      case 'resilience':
+        return `Focus ONLY on their STRESS HANDLING and mental toughness today. Cognitive Resilience: ${workHealth.cognitiveResilience}%.
+
+${baseContext}
+
+Analyze: How well they'll handle pressure and difficult situations, their capacity for bouncing back from setbacks, how they'll manage stress and stay composed, their emotional regulation throughout the day.
+
+Example insights: 'You're set up to handle whatever curveballs come your way today' or 'Might feel a bit more reactive than usual - those back-to-back decisions are adding up'
+
+You must respond with valid JSON only. Provide a JSON response in exactly this format:
+{
+  "insights": [
+    {
+      "category": "wellness",
+      "title": "Resilience Insight Title",
+      "message": "Detailed resilience-focused insight",
+      "severity": "info",
+      "actionable": true,
+      "confidence": 85
+    }
+  ],
+  "summary": "Resilience overview",
+  "overallScore": ${workHealth.cognitiveResilience},
+  "riskFactors": [],
+  "opportunities": [],
+  "predictiveAlerts": []
+}`;
+      
+      case 'sustainability':
+        return `Focus ONLY on the LONG-TERM SUSTAINABILITY of today's work pattern. Sustainability Index: ${workHealth.workRhythmRecovery}%.
+
+${baseContext}
+
+Analyze: Whether this pace can be maintained over time, if they're building toward burnout or building resilience, how today affects their long-term work health, if this is a sustainable rhythm.
+
+Example insights: 'This pace feels sustainable - you're in a good groove that could last' or 'Today's intensity is fine short-term, but this pattern could wear you down if it continues'
+
+Provide a JSON response in exactly this format:
+{
+  "insights": [
+    {
+      "category": "balance",
+      "title": "Sustainability Insight Title",
+      "message": "Detailed sustainability-focused insight",
+      "severity": "info",
+      "actionable": true,
+      "confidence": 85
+    }
+  ],
+  "summary": "Sustainability overview",
+  "overallScore": ${workHealth.workRhythmRecovery},
+  "riskFactors": [],
+  "opportunities": [],
+  "predictiveAlerts": []
+}`;
+      
+      default:
+        return this.createUserPrompt(analysis, userContext);
+    }
   }
 
   private createUserPrompt(analysis: CalendarAnalysis, userContext: UserContext): string {
@@ -190,7 +329,8 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
 
   async generatePersonalizedInsights(
     analysis: CalendarAnalysis,
-    userContext: UserContext = {}
+    userContext: UserContext = {},
+    tabContext?: TabContext
   ): Promise<PersonalizedInsightsResponse> {
     if (!this.validateApiKey()) {
       console.warn('Anthropic API key not configured, returning default insights');
@@ -198,14 +338,18 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     }
 
     try {
+      const promptContent = tabContext 
+        ? this.createTabSpecificPrompt(analysis, userContext, tabContext)
+        : this.createUserPrompt(analysis, userContext);
+      
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 4000,
         temperature: 0.3,
         system: this.createSystemPrompt(),
         messages: [{
           role: 'user',
-          content: this.createUserPrompt(analysis, userContext)
+          content: promptContent
         }]
       });
 
@@ -287,7 +431,7 @@ Identify productivity patterns and provide specific recommendations for optimiza
 Return JSON with 'patterns' and 'recommendations' arrays.`;
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 2000,
         temperature: 0.2,
         messages: [{
@@ -334,5 +478,6 @@ export type {
   PersonalizedInsight, 
   PersonalizedInsightsResponse, 
   UserContext, 
-  CalendarAnalysis 
+  CalendarAnalysis,
+  TabContext
 };

@@ -30,7 +30,6 @@ interface WorkCapacityStatus {
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
-  const { workHealth, isLoading, error, lastRefresh, refresh } = useWorkHealth();
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window !== 'undefined') {
       return !localStorage.getItem('persist-onboarding-complete');
@@ -39,6 +38,8 @@ export default function WorkHealthDashboard() {
   });
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
+  
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh } = useWorkHealth(activeTab);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -134,124 +135,165 @@ export default function WorkHealthDashboard() {
     ];
   };
 
-  const getTopInsights = (): DataDrivenInsight[] => {
+  // Get AI insights for specific tab, with static fallback
+  const getTabSpecificInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
+    // If AI insights are available, filter by relevance to tab
+    if (workHealth?.ai?.insights && workHealth.ai.insights.length > 0) {
+      return {
+        insights: workHealth.ai.insights,
+        isAI: true,
+        aiStatus: workHealth.aiStatus || 'success'
+      };
+    }
+    
+    // Fallback to static insights
+    return {
+      insights: getStaticFallbackInsights(tabType),
+      isAI: false,
+      aiStatus: workHealth?.aiStatus || 'unavailable'
+    };
+  };
+
+  // Static fallback insights - tab specific
+  const getStaticFallbackInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability'): DataDrivenInsight[] => {
     if (!workHealth) return [];
 
-    const insights: DataDrivenInsight[] = [];
     const schedule = workHealth.schedule;
     const adaptiveIndex = workHealth.adaptivePerformanceIndex;
     const resilience = workHealth.cognitiveResilience;
     const rhythm = workHealth.workRhythmRecovery;
 
-    // Adaptive Performance Analysis - Severity aligned with score
-    if (adaptiveIndex >= 85) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Excellent Work Health Conditions',
-        message: `Outstanding adaptive performance at ${adaptiveIndex}% maintains optimal cognitive conditions. Your current work pattern supports sustainable peak performance with excellent schedule balance and cognitive resource management.`,
-        dataSource: 'Adaptive Performance Intelligence',
-        urgency: 'low',
-        category: 'schedule'
-      });
-    } else if (adaptiveIndex >= 70) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Good Work Health with Optimization Potential',
-        message: `Solid adaptive performance at ${adaptiveIndex}% shows healthy work patterns with minor optimization opportunities. Schedule provides sustainable performance with ${schedule.meetingCount} meetings creating manageable cognitive demands.`,
-        dataSource: 'Performance Pattern Analysis',
-        urgency: 'low',
-        category: 'schedule'
-      });
-    } else if (adaptiveIndex >= 55) {
-      insights.push({
-        type: 'schedule_impact',
-        title: 'Significant Work Health Concerns Detected',
-        message: `Adaptive performance at ${adaptiveIndex}% indicates serious work health issues requiring immediate attention. Current schedule intensity with ${schedule.meetingCount} meetings is creating substantial cognitive load that threatens sustainable performance. Immediate schedule restructuring recommended to prevent further degradation.`,
-        dataSource: 'Work Health Risk Analysis',
-        urgency: 'high',
-        category: 'schedule'
-      });
-    } else if (adaptiveIndex >= 40) {
-      insights.push({
-        type: 'schedule_impact',
-        title: 'Critical Work Health Issues Demand Urgent Action',
-        message: `Adaptive performance at ${adaptiveIndex}% reveals critical work health problems requiring emergency intervention. Unsustainable schedule patterns are creating severe cognitive strain that poses serious risk to performance and wellbeing. Comprehensive schedule restructuring essential.`,
-        dataSource: 'Critical Performance Analysis',
-        urgency: 'high',
-        category: 'schedule'
-      });
-    } else {
-      insights.push({
-        type: 'schedule_impact',
-        title: 'Severe Work Health Crisis Requires Immediate Intervention',
-        message: `Adaptive performance at ${adaptiveIndex}% indicates a severe work health crisis demanding immediate comprehensive intervention. Current patterns pose serious risk to cognitive wellbeing and sustainable performance. Emergency schedule overhaul and recovery protocols essential.`,
-        dataSource: 'Emergency Performance Analysis',
-        urgency: 'high',
-        category: 'schedule'
-      });
+    switch (tabType) {
+      case 'overview':
+        // Return combined insights for overview
+        const insights: DataDrivenInsight[] = [];
+        
+        if (adaptiveIndex >= 75) {
+          insights.push({
+            type: 'current_analysis',
+            title: 'Strong Overall Work Health',
+            message: `Your combined metrics show solid work health with ${adaptiveIndex}% performance, ${resilience}% resilience, and ${rhythm}% sustainability. This balanced profile supports effective daily productivity.`,
+            dataSource: 'Static Analysis',
+            urgency: 'low',
+            category: 'combination'
+          });
+        } else if (adaptiveIndex >= 50) {
+          insights.push({
+            type: 'current_analysis',
+            title: 'Moderate Work Health Patterns',
+            message: `Your metrics indicate moderate work health patterns needing attention. Performance at ${adaptiveIndex}%, resilience at ${resilience}%, and sustainability at ${rhythm}% suggest room for schedule optimization.`,
+            dataSource: 'Static Analysis',
+            urgency: 'medium',
+            category: 'combination'
+          });
+        } else {
+          insights.push({
+            type: 'schedule_impact',
+            title: 'Work Health Requires Attention',
+            message: `Your combined metrics show significant work health concerns. With performance at ${adaptiveIndex}%, resilience at ${resilience}%, and sustainability at ${rhythm}%, schedule restructuring is recommended.`,
+            dataSource: 'Static Analysis',
+            urgency: 'high',
+            category: 'combination'
+          });
+        }
+        return insights;
+        
+      case 'performance':
+        // Performance-specific insights
+        if (adaptiveIndex >= 75) {
+          return [{
+            type: 'current_analysis',
+            title: 'Strong Performance Capacity',
+            message: `Your ${adaptiveIndex}% performance index indicates excellent cognitive capacity with ${schedule.meetingCount} meetings creating manageable demands. Current schedule structure supports sustained productivity.`,
+            dataSource: 'Static Performance Analysis',
+            urgency: 'low',
+            category: 'schedule'
+          }];
+        } else if (adaptiveIndex >= 50) {
+          return [{
+            type: 'current_analysis',
+            title: 'Moderate Performance Efficiency',
+            message: `Your ${adaptiveIndex}% performance index shows moderate productivity with ${schedule.meetingCount} meetings. Consider consolidating meetings to create longer focus periods for improved efficiency.`,
+            dataSource: 'Static Performance Analysis',
+            urgency: 'medium',
+            category: 'schedule'
+          }];
+        } else {
+          return [{
+            type: 'schedule_impact',
+            title: 'Performance Under Pressure',
+            message: `Your ${adaptiveIndex}% performance index indicates significant cognitive load from ${schedule.meetingCount} meetings. Schedule restructuring needed to restore productive capacity.`,
+            dataSource: 'Static Performance Analysis',
+            urgency: 'high',
+            category: 'schedule'
+          }];
+        }
+        
+      case 'resilience':
+        // Resilience-specific insights
+        if (resilience >= 70) {
+          return [{
+            type: 'current_analysis',
+            title: 'Strong Mental Resilience',
+            message: `Your ${resilience}% cognitive resilience demonstrates excellent mental capacity for handling decisions and context switching. Current patterns support sustained cognitive performance.`,
+            dataSource: 'Static Resilience Analysis',
+            urgency: 'low',
+            category: 'schedule'
+          }];
+        } else if (resilience >= 50) {
+          return [{
+            type: 'current_analysis',
+            title: 'Moderate Cognitive Strain',
+            message: `Your ${resilience}% cognitive resilience shows some mental fatigue from context switching. Group similar meetings together to reduce cognitive switching costs.`,
+            dataSource: 'Static Resilience Analysis',
+            urgency: 'medium',
+            category: 'schedule'
+          }];
+        } else {
+          return [{
+            type: 'current_analysis',
+            title: 'Cognitive Resilience Under Stress',
+            message: `Your ${resilience}% cognitive resilience indicates significant mental strain. Create buffer time between meetings to allow for mental transitions and recovery.`,
+            dataSource: 'Static Resilience Analysis',
+            urgency: 'high',
+            category: 'schedule'
+          }];
+        }
+        
+      case 'sustainability':
+        // Sustainability-specific insights
+        if (rhythm >= 70) {
+          return [{
+            type: 'current_analysis',
+            title: 'Sustainable Work Rhythm',
+            message: `Your ${rhythm}% sustainability index demonstrates maintainable work patterns with balanced intensity and recovery. This rhythm supports long-term cognitive health.`,
+            dataSource: 'Static Sustainability Analysis',
+            urgency: 'low',
+            category: 'schedule'
+          }];
+        } else if (rhythm >= 50) {
+          return [{
+            type: 'current_analysis',
+            title: 'Moderately Sustainable Pattern',
+            message: `Your ${rhythm}% sustainability index shows adequate work patterns with room for optimization. Consider adjusting meeting distribution for better long-term sustainability.`,
+            dataSource: 'Static Sustainability Analysis',
+            urgency: 'medium',
+            category: 'schedule'
+          }];
+        } else {
+          return [{
+            type: 'schedule_impact',
+            title: 'Sustainability Concerns',
+            message: `Your ${rhythm}% sustainability index indicates patterns that may not be maintainable long-term. Schedule intensity adjustments recommended to prevent burnout risk.`,
+            dataSource: 'Static Sustainability Analysis',
+            urgency: 'high',
+            category: 'schedule'
+          }];
+        }
+        
+      default:
+        return [];
     }
-
-    // Cognitive Resilience Analysis - Severity aligned
-    if (resilience <= 40) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Critical Cognitive Resilience Deficit',
-        message: `Cognitive resilience at ${resilience}% reveals serious mental capacity limitations requiring immediate intervention. Excessive context switching and decision fatigue are significantly impacting cognitive performance and decision quality. Urgent schedule simplification needed.`,
-        dataSource: 'Cognitive Risk Analysis',
-        urgency: 'high',
-        category: 'schedule'
-      });
-    } else if (resilience >= 80) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Excellent Cognitive Resilience Maintained',
-        message: `Outstanding cognitive resilience at ${resilience}% demonstrates strong mental capacity for complex decisions and high-cognitive tasks. Current schedule patterns support sustained cognitive excellence with effective recovery and minimal switching costs.`,
-        dataSource: 'Cognitive Excellence Analysis',
-        urgency: 'low',
-        category: 'schedule'
-      });
-    } else if (resilience >= 60) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Adequate Cognitive Resilience with Optimization Needed',
-        message: `Cognitive resilience at ${resilience}% shows reasonable mental capacity with noticeable context switching load. Some cognitive strain evident but manageable. Minor schedule adjustments could improve mental resource allocation.`,
-        dataSource: 'Cognitive Optimization Analysis',
-        urgency: 'low',
-        category: 'schedule'
-      });
-    }
-
-    // Sustainability Analysis - Severity aligned
-    if (rhythm <= 45) {
-      insights.push({
-        type: 'schedule_impact',
-        title: 'Unsustainable Work Patterns Threaten Long-term Performance',
-        message: `Sustainability index at ${rhythm}% reveals seriously unsustainable work patterns that threaten long-term performance capacity. Current schedule intensity far exceeds healthy recovery ratios, creating substantial risk of burnout and cognitive decline. Immediate pattern restructuring essential.`,
-        dataSource: 'Sustainability Risk Analysis',
-        urgency: 'high',
-        category: 'schedule'
-      });
-    } else if (rhythm >= 80) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Exceptional Work Sustainability Achieved',
-        message: `Outstanding sustainability index at ${rhythm}% demonstrates exceptionally maintainable schedule patterns with optimal intensity-recovery balance. Current work rhythm strongly supports long-term cognitive health and sustainable peak performance.`,
-        dataSource: 'Sustainability Excellence Analysis',
-        urgency: 'low',
-        category: 'schedule'
-      });
-    } else if (rhythm >= 60) {
-      insights.push({
-        type: 'current_analysis',
-        title: 'Sustainable Work Pattern with Enhancement Opportunities',
-        message: `Sustainability index at ${rhythm}% shows maintainable work patterns with adequate recovery periods. Current schedule supports consistent performance sustainability with opportunities for rhythm optimization to improve long-term outcomes.`,
-        dataSource: 'Sustainability Optimization Analysis',
-        urgency: 'low',
-        category: 'schedule'
-      });
-    }
-
-    return insights.slice(0, 3);
   };
 
   if (status === 'loading') {
@@ -343,7 +385,7 @@ export default function WorkHealthDashboard() {
 
   const workCapacity = getWorkCapacityStatus();
   const secondaryMetrics = getSecondaryMetrics();
-  const insights = getTopInsights();
+  const tabInsights = getTabSpecificInsights(activeTab);
 
   // Show error state if there's an error and no data
   if (error && !workHealth) {
@@ -845,16 +887,42 @@ export default function WorkHealthDashboard() {
           
         </section>
 
-        {/* Clean Insights Section */}
+        {/* AI-Powered Insights Section */}
         <section>
-          <h2 className="whoop-section-title mb-8">
-            Insights
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="whoop-section-title">
+              Insights
+            </h2>
+            {/* AI/Static Indicator Badge */}
+            <div className="flex items-center space-x-2">
+              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                tabInsights.isAI 
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+              }`}>
+                {tabInsights.isAI ? '🤖 AI Powered' : '📊 Static Analysis'}
+              </div>
+              {tabInsights.isAI && workHealth?.ai?.overallScore && (
+                <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                  {workHealth.ai.overallScore}% confidence
+                </div>
+              )}
+            </div>
+          </div>
           
           <div className="space-y-8">
-            {insights.length > 0 ? insights.map((insight, index) => {
+            {isAILoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Loading {activeTab} insights...
+                  </span>
+                </div>
+              </div>
+            ) : tabInsights.insights.length > 0 ? tabInsights.insights.map((insight, index) => {
               // Determine dot color based on which metric this insight is about
-              const getDotColorForInsight = (insight: DataDrivenInsight) => {
+              const getDotColorForInsight = (insight: any) => {
                 const title = insight.title.toLowerCase();
                 
                 // Check if insight is about Adaptive Performance Index (main metric)
@@ -882,6 +950,17 @@ export default function WorkHealthDashboard() {
                   return 'var(--whoop-red)';
                 }
                 
+                // For AI insights, use severity if available
+                if (tabInsights.isAI && insight.severity) {
+                  switch (insight.severity) {
+                    case 'success': return 'var(--whoop-green)';
+                    case 'info': return '#4F9CF9';
+                    case 'warning': return 'var(--whoop-yellow)';
+                    case 'critical': return 'var(--whoop-red)';
+                    default: return 'rgba(255,255,255,0.3)';
+                  }
+                }
+                
                 // Fallback to urgency-based color
                 switch (insight.urgency) {
                   case 'low': return 'var(--whoop-green)';
@@ -897,15 +976,29 @@ export default function WorkHealthDashboard() {
                     <h4 className="whoop-insight-title flex-1">
                       {insight.title}
                     </h4>
-                    <div className="w-2 h-2 rounded-full ml-3 mt-2 flex-shrink-0" style={{ backgroundColor: getDotColorForInsight(insight) }} />
+                    <div className="flex items-center space-x-2">
+                      {tabInsights.isAI && insight.confidence && (
+                        <span className="text-xs text-gray-400">
+                          {insight.confidence}%
+                        </span>
+                      )}
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getDotColorForInsight(insight) }} />
+                    </div>
                   </div>
                   <p className="whoop-insight-text mb-4">
                     {insight.message}
                   </p>
-                  <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                    {insight.dataSource}
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                      {tabInsights.isAI ? (insight.dataSource || 'AI Analysis') : insight.dataSource}
+                    </div>
+                    {tabInsights.isAI && insight.recommendation && (
+                      <div className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
+                        Actionable
+                      </div>
+                    )}
                   </div>
-                  {index < insights.length - 1 && <hr className="whoop-clean-divider mt-8" />}
+                  {index < tabInsights.insights.length - 1 && <hr className="whoop-clean-divider mt-8" />}
                 </div>
               );
             }) : (
@@ -1142,20 +1235,51 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
+                {/* AI-Powered Performance Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Key Insight
-                  </h4>
-                  <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                      {workHealth?.adaptivePerformanceIndex >= 75 ? 
-                        'Your current schedule structure supports sustainable performance. Consider maintaining this balance of meetings and focused work time.' :
-                        workHealth?.adaptivePerformanceIndex >= 50 ?
-                        'Your schedule shows moderate density. Try consolidating meetings into blocks to create longer periods for focused work.' :
-                        'Your schedule has high meeting density. Consider which meetings could be shortened, combined, or rescheduled to create more continuous work time.'
-                      }
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Performance Insights
+                    </h4>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      getTabSpecificInsights('performance').isAI 
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                    }`}>
+                      {getTabSpecificInsights('performance').isAI ? '🤖 AI' : '📊 Static'}
+                    </div>
                   </div>
+                  {isAILoading && activeTab === 'performance' ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Loading performance insights...
+                        </span>
+                      </div>
+                    </div>
+                  ) : getTabSpecificInsights('performance').insights.map((insight, index) => (
+                    <div key={index} className="p-3 rounded mb-3" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {insight.title}
+                        </h5>
+                        {getTabSpecificInsights('performance').isAI && insight.confidence && (
+                          <span className="text-xs text-blue-400">{insight.confidence}%</span>
+                        )}
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                        {insight.message}
+                      </p>
+                      {getTabSpecificInsights('performance').isAI && insight.recommendation && (
+                        <div className="mt-2 pt-2 border-t border-blue-500/30">
+                          <p className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
+                            Recommendation: {insight.recommendation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
@@ -1348,20 +1472,51 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
+                {/* AI-Powered Resilience Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Key Insight
-                  </h4>
-                  <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                      {workHealth?.cognitiveResilience >= 80 ? 
-                        'Your mental capacity appears strong for handling multiple decisions and context switches. Your current approach is working well.' :
-                        workHealth?.cognitiveResilience >= 60 ?
-                        'Your cognitive resilience is moderate. Consider grouping similar meetings together to reduce the mental effort needed for context switching.' :
-                        'Your schedule may be creating cognitive fatigue. Try creating buffer time between meetings to allow for mental transitions and recovery.'
-                      }
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Resilience Insights
+                    </h4>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      getTabSpecificInsights('resilience').isAI 
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                    }`}>
+                      {getTabSpecificInsights('resilience').isAI ? '🤖 AI' : '📊 Static'}
+                    </div>
                   </div>
+                  {isAILoading && activeTab === 'resilience' ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Loading resilience insights...
+                        </span>
+                      </div>
+                    </div>
+                  ) : getTabSpecificInsights('resilience').insights.map((insight, index) => (
+                    <div key={index} className="p-3 rounded mb-3" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {insight.title}
+                        </h5>
+                        {getTabSpecificInsights('resilience').isAI && insight.confidence && (
+                          <span className="text-xs text-blue-400">{insight.confidence}%</span>
+                        )}
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                        {insight.message}
+                      </p>
+                      {getTabSpecificInsights('resilience').isAI && insight.recommendation && (
+                        <div className="mt-2 pt-2 border-t border-blue-500/30">
+                          <p className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
+                            Recommendation: {insight.recommendation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
@@ -1553,20 +1708,51 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
+                {/* AI-Powered Sustainability Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Key Insight
-                  </h4>
-                  <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                      {workHealth?.workRhythmRecovery >= 70 ? 
-                        'Your schedule demonstrates sustainable work patterns with balanced meeting distribution and adequate recovery time. This rhythm supports long-term productivity while maintaining energy reserves throughout the day.' :
-                        workHealth?.workRhythmRecovery >= 45 ?
-                        'Your work pattern shows moderate sustainability with some areas for optimization. The distribution of meetings and recovery periods could be adjusted to better support sustained performance throughout the day.' :
-                        'Your current schedule pattern indicates limited sustainability for long-term performance. The meeting intensity and distribution suggest adjustments to recovery time and workload distribution would support better sustained productivity.'
-                      }
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Sustainability Insights
+                    </h4>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      getTabSpecificInsights('sustainability').isAI 
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                    }`}>
+                      {getTabSpecificInsights('sustainability').isAI ? '🤖 AI' : '📊 Static'}
+                    </div>
                   </div>
+                  {isAILoading && activeTab === 'sustainability' ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Loading sustainability insights...
+                        </span>
+                      </div>
+                    </div>
+                  ) : getTabSpecificInsights('sustainability').insights.map((insight, index) => (
+                    <div key={index} className="p-3 rounded mb-3" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {insight.title}
+                        </h5>
+                        {getTabSpecificInsights('sustainability').isAI && insight.confidence && (
+                          <span className="text-xs text-blue-400">{insight.confidence}%</span>
+                        )}
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                        {insight.message}
+                      </p>
+                      {getTabSpecificInsights('sustainability').isAI && insight.recommendation && (
+                        <div className="mt-2 pt-2 border-t border-blue-500/30">
+                          <p className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
+                            Recommendation: {insight.recommendation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>

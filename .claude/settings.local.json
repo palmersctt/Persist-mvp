@@ -21,7 +21,11 @@
       "Bash(npx supabase:*)",
       "Bash(node:*)",
       "Bash(powershell:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "WebSearch",
+      "Bash(npx kill-port:*)"
     ],
     "deny": [],
     "ask": []

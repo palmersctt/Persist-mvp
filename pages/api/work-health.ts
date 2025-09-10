@@ -2,12 +2,18 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
 import GoogleCalendarService, { WorkHealthMetrics, CalendarEvent, MeetingCategory } from '../../src/services/googleCalendar';
-import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext } from '../../src/services/claudeAI';
+import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext, TabContext } from '../../src/services/claudeAI';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Extract tab context from query parameters
+  const tabType = req.query.tab as string;
+  const tabContext: TabContext | undefined = tabType && ['overview', 'performance', 'resilience', 'sustainability'].includes(tabType)
+    ? { tabType: tabType as 'overview' | 'performance' | 'resilience' | 'sustainability' }
+    : undefined;
 
   try {
     const session = await getServerSession(req, res, authOptions);
@@ -91,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       };
       
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext);
+      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext);
       
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';

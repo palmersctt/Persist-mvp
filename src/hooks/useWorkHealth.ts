@@ -83,10 +83,11 @@ interface WorkHealthMetrics {
   aiStatus?: 'success' | 'fallback' | 'unavailable';
 }
 
-export const useWorkHealth = () => {
+export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
   const { data: session, status } = useSession();
   const [workHealth, setWorkHealth] = useState<WorkHealthMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAILoading, setIsAILoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
@@ -98,17 +99,24 @@ export const useWorkHealth = () => {
 
   // Remove automatic cache loading - only load cache on API failure
 
-  const fetchWorkHealth = async (retryCount = 0) => {
+  const fetchWorkHealth = async (retryCount = 0, specificTab?: string) => {
     if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
       return;
     }
 
-    setIsLoading(true);
+    // Set appropriate loading state
+    if (workHealth) {
+      setIsAILoading(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
-      const response = await fetch('/api/work-health', {
+      // Add tab parameter to URL if provided
+      const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
+      const response = await fetch(url, {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache'
@@ -170,7 +178,7 @@ export const useWorkHealth = () => {
         if (retryCount === 0 && err instanceof Error && err.message.includes('HTTP error')) {
           console.log('First attempt failed, retrying for new user...');
           setTimeout(() => {
-            fetchWorkHealth(1); // Retry once
+            fetchWorkHealth(1, specificTab); // Retry once with same tab
           }, 2000);
           return;
         }
@@ -188,26 +196,38 @@ export const useWorkHealth = () => {
       }
     } finally {
       setIsLoading(false);
+      setIsAILoading(false);
     }
   };
 
-  // Fetch data when session is available
+  // Smart loading: preserve metrics while refreshing AI insights for new tab
   useEffect(() => {
     if (status === 'authenticated' && session) {
-      fetchWorkHealth();
+      // If we have existing data, only clear AI insights and show AI loading
+      if (workHealth) {
+        setWorkHealth(prev => prev ? {
+          ...prev,
+          ai: undefined,
+          aiStatus: 'unavailable'
+        } : null);
+        setIsAILoading(true);
+      }
+      setError(null);
+      fetchWorkHealth(0, tabType);
     }
-  }, [session, status]);
+  }, [session, status, tabType]);
 
   const refresh = () => {
     // Clear current data and error state to force fresh load
     setWorkHealth(null);
     setError(null);
-    fetchWorkHealth();
+    fetchWorkHealth(0, tabType);
   };
 
   return {
     workHealth,
     isLoading,
+    isAILoading,
     error,
     lastRefresh,
     refresh,
