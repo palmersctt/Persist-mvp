@@ -492,7 +492,12 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     tabContext?: TabContext
   ): Promise<PersonalizedInsightsResponse> {
     if (!this.validateApiKey()) {
-      console.warn('Anthropic API key not configured, returning default insights');
+      console.warn('Anthropic API key validation failed. Debugging info:');
+      console.warn('- API Key exists:', !!this.apiKey);
+      console.warn('- API Key length:', this.apiKey?.length || 0);
+      console.warn('- API Key starts with sk-ant:', this.apiKey?.startsWith('sk-ant') || false);
+      console.warn('- Environment:', process.env.NODE_ENV);
+      console.warn('Returning default insights instead of AI-generated insights');
       return this.getDefaultInsights(analysis);
     }
 
@@ -540,14 +545,22 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
 
     } catch (error) {
       console.error('Error generating AI insights:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        environment: process.env.NODE_ENV
+      });
       
       if (error instanceof Error) {
         if (error.message.includes('rate_limit')) {
           console.warn('Rate limit hit, using fallback insights');
         } else if (error.message.includes('invalid_api_key')) {
-          console.error('Invalid Anthropic API key');
+          console.error('Invalid Anthropic API key - check environment variables in production');
         } else if (error.message.includes('timeout')) {
           console.warn('Request timeout, using fallback insights');
+        } else if (error.message.includes('network')) {
+          console.warn('Network error, using fallback insights');
         }
       }
       
