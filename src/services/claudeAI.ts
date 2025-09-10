@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { WorkHealthMetrics, CalendarEvent, MeetingCategory } from './googleCalendar';
+import crypto from 'crypto';
 
 interface PersonalizedInsight {
   category: 'performance' | 'wellness' | 'productivity' | 'balance' | 'prediction';
@@ -373,6 +374,118 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     };
   }
 
+  // Intelligent caching methods
+  private generateCacheKey(analysis: CalendarAnalysis, userContext: UserContext, tabContext?: TabContext): string {
+    // Create a deterministic hash based on the actual calendar data that affects insights
+    const cacheData = {
+      // Core calendar data that affects AI insights
+      events: analysis.events.map(event => ({
+        summary: event.summary,
+        start: event.start.toISOString(),
+        end: event.end.toISOString(),
+        category: event.category,
+        attendees: event.attendees
+      })),
+      // Work health metrics
+      workHealth: {
+        adaptivePerformanceIndex: analysis.workHealth.adaptivePerformanceIndex,
+        cognitiveResilience: analysis.workHealth.cognitiveResilience,
+        workRhythmRecovery: analysis.workHealth.workRhythmRecovery,
+        meetingCount: analysis.workHealth.schedule.meetingCount,
+        backToBackCount: analysis.workHealth.schedule.backToBackCount,
+        focusTime: analysis.workHealth.focusTime,
+        fragmentationScore: analysis.workHealth.schedule.fragmentationScore
+      },
+      // User context that might affect insights
+      userContext: {
+        workStartTime: userContext.preferences?.workStartTime,
+        workEndTime: userContext.preferences?.workEndTime,
+        meetingPreference: userContext.preferences?.meetingPreference
+      },
+      // Tab context
+      tabType: tabContext?.tabType || 'overview',
+      // Date to ensure daily cache invalidation
+      date: new Date().toDateString()
+    };
+    
+    const dataString = JSON.stringify(cacheData);
+    return crypto.createHash('md5').update(dataString).digest('hex');
+  }
+
+  private getCachedInsights(cacheKey: string, userId: string): PersonalizedInsightsResponse | null {
+    if (typeof window === 'undefined') return null; // Server-side, no localStorage
+    
+    try {
+      const cached = localStorage.getItem(`ai-insights-${userId}-${cacheKey}`);
+      if (!cached) return null;
+      
+      const cachedData = JSON.parse(cached);
+      
+      // Check if cache is still valid (within 4 hours for same data)
+      const cacheTime = new Date(cachedData.timestamp);
+      const now = new Date();
+      const hoursSinceCache = (now.getTime() - cacheTime.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceCache > 4) {
+        // Cache expired, remove it
+        localStorage.removeItem(`ai-insights-${userId}-${cacheKey}`);
+        return null;
+      }
+      
+      return cachedData.insights;
+    } catch (error) {
+      console.warn('Error reading AI insights cache:', error);
+      return null;
+    }
+  }
+
+  private setCachedInsights(cacheKey: string, userId: string, insights: PersonalizedInsightsResponse): void {
+    if (typeof window === 'undefined') return; // Server-side, no localStorage
+    
+    try {
+      const cacheData = {
+        insights,
+        timestamp: new Date().toISOString(),
+        cacheKey
+      };
+      
+      localStorage.setItem(`ai-insights-${userId}-${cacheKey}`, JSON.stringify(cacheData));
+      
+      // Clean up old cache entries to prevent localStorage bloat
+      this.cleanupOldCache(userId);
+    } catch (error) {
+      console.warn('Error saving AI insights cache:', error);
+    }
+  }
+
+  private cleanupOldCache(userId: string): void {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const keys = Object.keys(localStorage);
+      const aiCacheKeys = keys.filter(key => key.startsWith(`ai-insights-${userId}-`));
+      
+      // Keep only the 10 most recent cache entries per user
+      if (aiCacheKeys.length > 10) {
+        const cacheEntries = aiCacheKeys.map(key => {
+          try {
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            return { key, timestamp: new Date(data.timestamp || 0) };
+          } catch {
+            return { key, timestamp: new Date(0) };
+          }
+        }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        
+        // Remove oldest entries
+        cacheEntries.slice(10).forEach(entry => {
+          localStorage.removeItem(entry.key);
+        });
+      }
+    } catch (error) {
+      console.warn('Error cleaning up AI insights cache:', error);
+    }
+  }
+
   async generatePersonalizedInsights(
     analysis: CalendarAnalysis,
     userContext: UserContext = {},
@@ -384,6 +497,10 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     }
 
     try {
+      // Check if we should use cache (this will be handled client-side in the API)
+      const cacheKey = this.generateCacheKey(analysis, userContext, tabContext);
+      console.log('Generated cache key for AI insights:', cacheKey);
+
       const promptContent = tabContext 
         ? this.createTabSpecificPrompt(analysis, userContext, tabContext)
         : this.createUserPrompt(analysis, userContext);
@@ -516,6 +633,19 @@ Return JSON with 'patterns' and 'recommendations' arrays.`;
     }
     
     return 'healthy';
+  }
+
+  // Public methods for intelligent caching
+  public getCacheKeyForInsights(analysis: CalendarAnalysis, userContext: UserContext, tabContext?: TabContext): string {
+    return this.generateCacheKey(analysis, userContext, tabContext);
+  }
+
+  public getCachedInsightsForUser(cacheKey: string, userId: string): PersonalizedInsightsResponse | null {
+    return this.getCachedInsights(cacheKey, userId);
+  }
+
+  public setCachedInsightsForUser(cacheKey: string, userId: string, insights: PersonalizedInsightsResponse): void {
+    this.setCachedInsights(cacheKey, userId, insights);
   }
 }
 

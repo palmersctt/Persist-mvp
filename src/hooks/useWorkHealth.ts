@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { aiInsightsCache } from '../utils/aiInsightsCache';
 
 // AI Insights interfaces
 interface AIInsight {
@@ -114,8 +115,40 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     setError(null);
 
     try {
-      // Add tab parameter to URL if provided
+      const userId = session.user?.email || session.user?.id || 'anonymous';
+      const currentTab = specificTab || 'overview';
+      
+      // For now, let's use a simplified approach that just fetches with the tab parameter
+      // and handles caching after the response (but check cache first)
       const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
+      
+      // Generate a provisional hash for cache checking (we'll need to fetch base data first)
+      // For now, let's cache based on tab + date + user, then improve it later
+      const cacheKey = `${userId}-${currentTab}-${new Date().toDateString()}`;
+      
+      // Check if we have recent cached AI insights for this tab
+      const cachedInsights = aiInsightsCache.getCachedInsights(userId, currentTab, cacheKey);
+      
+      if (cachedInsights) {
+        console.log(`✅ Using cached AI insights for ${currentTab} tab`);
+        // We still need base metrics, so fetch without AI processing
+        const baseResponse = await fetch('/api/work-health', {
+          cache: 'no-cache',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        
+        if (baseResponse.ok) {
+          const baseData = await baseResponse.json();
+          baseData.ai = cachedInsights;
+          baseData.aiStatus = 'success';
+          setWorkHealth(baseData);
+          setLastRefresh(new Date());
+          return;
+        }
+      }
+      
+      // No cache or cache miss - fetch fresh data with AI
+      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab`);
       const response = await fetch(url, {
         cache: 'no-cache',
         headers: {
@@ -126,7 +159,6 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         
-        // Check if this is a token refresh error
         if (errorData.needsReauth) {
           throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
         }
@@ -135,13 +167,20 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       }
       
       const data = await response.json();
+      
+      // Cache the AI insights if we got them
+      if (data.ai && data.aiStatus === 'success') {
+        aiInsightsCache.setCachedInsights(userId, currentTab, data.ai, cacheKey);
+        console.log(`💾 Cached fresh AI insights for ${currentTab} tab`);
+      }
+      
       setWorkHealth(data);
       setLastRefresh(new Date());
       
-      // Save successful data to localStorage for this user
-      const cacheKey = getCacheKey();
-      if (cacheKey) {
-        localStorage.setItem(cacheKey, JSON.stringify({
+      // Save successful data to localStorage for general cache
+      const generalCacheKey = getCacheKey();
+      if (generalCacheKey) {
+        localStorage.setItem(generalCacheKey, JSON.stringify({
           metrics: data,
           lastRefresh: new Date().toISOString()
         }));
