@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
-import WHIHexagonalSphere from './WHIHexagonalSphere'
 
 interface SecondaryMetric {
   label: string;
@@ -566,23 +565,82 @@ export default function WorkHealthDashboard() {
             {/* Primary Work Capacity Metric */}
         <section className="text-center">
           
-          {/* WHI Hexagonal Sphere Visualization */}
+          {/* Dual Concentric Ring Visualization */}
           <div className="relative mx-auto mt-12 mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{ 
             width: '100%', 
             maxWidth: '400px',
-            height: '340px',
-            minHeight: '300px'
+            height: '280px',
+            minHeight: '240px'
           }}>
-            {/* WHI Hexagonal Sphere */}
+            {/* SVG Ring System */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <WHIHexagonalSphere
-                workHealth={{
-                  adaptivePerformanceIndex: workHealth?.adaptivePerformanceIndex || 0,
-                  cognitiveResilience: workHealth?.cognitiveResilience || 0,
-                  workRhythmRecovery: workHealth?.workRhythmRecovery || 0
-                }}
-                isLoading={isLoading}
-              />
+              <svg 
+                className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 transition-all duration-1000 ease-out"
+                viewBox="0 0 180 180"
+                style={{ transform: 'rotate(-90deg)' }}
+              >
+                {/* Outer Ring Background */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="75"
+                  fill="none"
+                  stroke="rgba(16,185,129,0.2)"
+                  strokeWidth="12"
+                />
+                
+                {/* Outer Ring Progress (Performance Index) */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="75"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray="471.2"
+                  strokeDashoffset={471.2 * (1 - (workHealth?.adaptivePerformanceIndex || 0) / 100)}
+                  className="transition-all duration-1000 ease-out"
+                />
+                
+                {/* Inner Ring Background */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="55"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeWidth="10"
+                />
+                
+                {/* Inner Ring Left Half (Cognitive Resilience) */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="55"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray="172.8 172.8"
+                  strokeDashoffset={172.8 * (1 - (workHealth?.cognitiveResilience || 0) / 100)}
+                  className="transition-all duration-1000 ease-out"
+                />
+                
+                {/* Inner Ring Right Half (Sustainability Index) */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="55"
+                  fill="none"
+                  stroke="#6b7280"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={`${172.8 * (workHealth?.workRhythmRecovery || 0) / 100} 345.6`}
+                  strokeDashoffset="-172.8"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
             </div>
             
             {/* External Labels - Symmetric Three-Point Layout */}
@@ -607,8 +665,8 @@ export default function WorkHealthDashboard() {
             
             {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
             <div className="absolute text-center" style={{ 
-              left: '10%',
-              bottom: '20px',
+              left: '15%',
+              bottom: '10px',
               transform: 'translateX(-50%)'
             }}>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
@@ -626,8 +684,8 @@ export default function WorkHealthDashboard() {
             
             {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
             <div className="absolute text-center" style={{ 
-              right: '10%',
-              bottom: '20px',
+              right: '15%',
+              bottom: '10px',
               transform: 'translateX(50%)'
             }}>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
