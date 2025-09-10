@@ -74,6 +74,28 @@ class ClaudeAIService {
     return Boolean(this.apiKey && this.apiKey.length > 0);
   }
 
+  // Convert Date to 12-hour format (e.g., "6:00 PM")
+  private formatTime12Hour(date: Date): string {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  // Convert minutes to hours and minutes format (e.g., "2 hrs 38 mins")
+  private formatDuration(minutes: number): string {
+    if (minutes < 60) {
+      return `${minutes} mins`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMins = minutes % 60;
+    if (remainingMins === 0) {
+      return hours === 1 ? '1 hr' : `${hours} hrs`;
+    }
+    return `${hours} hr${hours === 1 ? '' : 's'} ${remainingMins} mins`;
+  }
+
   private createSystemPrompt(): string {
     return `You are a smart colleague who knows this person's work patterns and can predict how their day will actually feel and go.
 
@@ -106,12 +128,12 @@ Write like you're having a conversation with them using "you'll feel", "your ene
 - Status: ${workHealth.status}
 - Meeting Count: ${workHealth.schedule.meetingCount}
 - Back-to-back Count: ${workHealth.schedule.backToBackCount}
-- Focus Time: ${workHealth.focusTime} minutes
+- Focus Time: ${this.formatDuration(workHealth.focusTime)}
 - Fragmentation Score: ${workHealth.schedule.fragmentationScore}
 
 CALENDAR EVENTS (${events.length} total):
 ${events.map(event => 
-  `- ${event.summary} (${event.start.toTimeString().slice(0,5)}-${event.end.toTimeString().slice(0,5)}, ${event.category}, ${event.attendees} attendees)`
+  `- ${event.summary} (${this.formatTime12Hour(event.start)}-${this.formatTime12Hour(event.end)}, ${event.category}, ${event.attendees} attendees)`
 ).join('\n')}
 
 MEETING PATTERNS:
@@ -121,7 +143,7 @@ USER CONTEXT:
 - Work Hours: ${userContext.preferences?.workStartTime || 9}:00 - ${userContext.preferences?.workEndTime || 17}:00
 - Meeting Preference: ${userContext.preferences?.meetingPreference || 'balanced'}
 - Historical Avg Meetings: ${userContext.historicalPatterns?.avgDailyMeetings || 'Unknown'}
-- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime || 'Unknown'} minutes`;
+- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime ? this.formatDuration(userContext.historicalPatterns.avgFocusTime) : 'Unknown'}`;
 
     switch (tabContext.tabType) {
       case 'overview':
@@ -285,12 +307,12 @@ WORK HEALTH METRICS:
 - Status: ${workHealth.status}
 - Meeting Count: ${workHealth.schedule.meetingCount}
 - Back-to-back Count: ${workHealth.schedule.backToBackCount}
-- Focus Time: ${workHealth.focusTime} minutes
+- Focus Time: ${this.formatDuration(workHealth.focusTime)}
 - Fragmentation Score: ${workHealth.schedule.fragmentationScore}
 
 CALENDAR EVENTS (${events.length} total):
 ${events.map(event => 
-  `- ${event.summary} (${event.start.toTimeString().slice(0,5)}-${event.end.toTimeString().slice(0,5)}, ${event.category}, ${event.attendees} attendees)`
+  `- ${event.summary} (${this.formatTime12Hour(event.start)}-${this.formatTime12Hour(event.end)}, ${event.category}, ${event.attendees} attendees)`
 ).join('\n')}
 
 MEETING PATTERNS:
@@ -300,7 +322,7 @@ USER CONTEXT:
 - Work Hours: ${userContext.preferences?.workStartTime || 9}:00 - ${userContext.preferences?.workEndTime || 17}:00
 - Meeting Preference: ${userContext.preferences?.meetingPreference || 'balanced'}
 - Historical Avg Meetings: ${userContext.historicalPatterns?.avgDailyMeetings || 'Unknown'}
-- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime || 'Unknown'} minutes
+- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime ? this.formatDuration(userContext.historicalPatterns.avgFocusTime) : 'Unknown'}
 
 Provide a JSON response with personalized insights that include:
 1. Performance optimization recommendations
@@ -356,7 +378,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       insights.push({
         category: 'productivity',
         title: 'Excellent Focus Time Available',
-        message: `You have ${Math.round(workHealth.focusTime / 60)} hours of focus time - great for deep work!`,
+        message: `You have ${this.formatDuration(workHealth.focusTime)} of focus time - great for deep work!`,
         severity: 'success',
         actionable: true,
         recommendation: 'Use your focus blocks for your most challenging and creative work.',
@@ -599,7 +621,7 @@ ${historicalData.map((day, index) => `
 Day ${index + 1}:
 - Performance Index: ${day.workHealth.adaptivePerformanceIndex}%
 - Meetings: ${day.workHealth.schedule.meetingCount}
-- Focus Time: ${day.workHealth.focusTime} minutes
+- Focus Time: ${this.formatDuration(day.workHealth.focusTime)}
 - Status: ${day.workHealth.status}
 `).join('\n')}
 
