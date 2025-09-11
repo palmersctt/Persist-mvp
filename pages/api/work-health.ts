@@ -9,8 +9,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Set aggressive no-cache headers for production
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+
   // Extract tab context from query parameters
   const tabType = req.query.tab as string;
+  const forceRefresh = req.query.force === 'true' || req.query._t; // Force refresh if ?force=true or timestamp param
   const tabContext: TabContext | undefined = tabType && ['overview', 'performance', 'resilience', 'sustainability'].includes(tabType)
     ? { tabType: tabType as 'overview' | 'performance' | 'resilience' | 'sustainability' }
     : undefined;
@@ -48,6 +55,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Try to get AI insights
     try {
       const claudeService = new ClaudeAIService();
+      
+      // Clear server-side AI cache if force refresh is requested
+      if (forceRefresh) {
+        console.log('🧹 Force refresh requested - clearing server-side AI cache');
+        // Clear AI insights cache for this user
+        const { aiInsightsCache } = await import('../../src/utils/aiInsightsCache');
+        const userId = session.user?.id || session.user?.email || 'anonymous';
+        aiInsightsCache.clearUserCache(userId);
+      }
       
       // Create meeting patterns analysis
       const meetingTypes = events.reduce((acc, event) => {

@@ -101,7 +101,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
 
   // Remove automatic cache loading - only load cache on API failure
 
-  const fetchWorkHealth = async (retryCount = 0, specificTab?: string) => {
+  const fetchWorkHealth = async (retryCount = 0, specificTab?: string, forceRefresh = false) => {
     if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
       return;
@@ -120,10 +120,15 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       const currentTab = specificTab || 'overview';
       
       // Fetch fresh data from API (AI caching is handled server-side)
-      const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
+      let url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
+      
+      // Add force parameter for production cache clearing
+      if (forceRefresh) {
+        url += (url.includes('?') ? '&' : '?') + 'force=true';
+      }
       
       // No cache or cache miss - fetch fresh data with AI
-      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab`);
+      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab${forceRefresh ? ' (FORCE REFRESH)' : ''}`);
       const timestampedUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}`;
       const response = await fetch(timestampedUrl, {
         cache: 'no-cache',
@@ -189,7 +194,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
         if (retryCount === 0 && err instanceof Error && err.message.includes('HTTP error')) {
           console.log('First attempt failed, retrying for new user...');
           setTimeout(() => {
-            fetchWorkHealth(1, specificTab); // Retry once with same tab
+            fetchWorkHealth(1, specificTab, forceRefresh); // Retry once with same tab and force setting
           }, 2000);
           return;
         }
@@ -256,7 +261,9 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     setLastRefresh(new Date());
     
     console.log('🧹 Cleared all caches, fetching fresh data...');
-    fetchWorkHealth(0, tabType);
+    
+    // Force refresh with special parameter for production
+    fetchWorkHealth(0, tabType, true);
   };
 
   return {
