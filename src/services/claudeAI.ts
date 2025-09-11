@@ -511,8 +511,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
   async generatePersonalizedInsights(
     analysis: CalendarAnalysis,
     userContext: UserContext = {},
-    tabContext?: TabContext,
-    forceRefresh: boolean = false
+    tabContext?: TabContext
   ): Promise<PersonalizedInsightsResponse> {
     if (!this.validateApiKey()) {
       console.warn('Anthropic API key validation failed. Debugging info:');
@@ -535,7 +534,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       
       // Debug logging for production issues
       console.log('🔍 DEBUG - Prompt being sent to AI (first 500 chars):', promptContent.substring(0, 500));
-      console.log('🔍 DEBUG - Force refresh mode:', forceRefresh);
+      console.log('🔄 NO CACHING - Fresh AI request every time');
       
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',

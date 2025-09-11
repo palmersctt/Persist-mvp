@@ -17,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Extract tab context from query parameters
   const tabType = req.query.tab as string;
-  const forceRefresh = req.query.force === 'true' || req.query._t; // Force refresh if ?force=true or timestamp param
   const tabContext: TabContext | undefined = tabType && ['overview', 'performance', 'resilience', 'sustainability'].includes(tabType)
     ? { tabType: tabType as 'overview' | 'performance' | 'resilience' | 'sustainability' }
     : undefined;
@@ -66,27 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
     
-    // Try to get AI insights
+    // Try to get AI insights (NO CACHING - always fresh)
     try {
       const claudeService = new ClaudeAIService();
-      
-      // Clear server-side AI cache if force refresh is requested
-      if (forceRefresh) {
-        console.log('🧹 Force refresh requested - clearing server-side AI cache');
-        // Clear AI insights cache for this user
-        const { aiInsightsCache } = await import('../../src/utils/aiInsightsCache');
-        const userId = session.user?.id || session.user?.email || 'anonymous';
-        
-        // Get cache stats before clearing
-        const statsBefore = aiInsightsCache.getCacheStats(userId);
-        console.log('🔍 DEBUG - Cache stats before clear:', statsBefore);
-        
-        aiInsightsCache.clearUserCache(userId);
-        
-        // Verify cache was cleared
-        const statsAfter = aiInsightsCache.getCacheStats(userId);
-        console.log('🔍 DEBUG - Cache stats after clear:', statsAfter);
-      }
+      console.log('🔄 Generating fresh AI insights (no caching)');
       
       // Create meeting patterns analysis
       const meetingTypes = events.reduce((acc, event) => {
@@ -148,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         focusBlocks: calendarAnalysis.patterns.focusBlocks
       });
       
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext, forceRefresh);
+      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext);
       
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';

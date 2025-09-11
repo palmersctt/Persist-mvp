@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { aiInsightsCache } from '../utils/aiInsightsCache';
 
 // AI Insights interfaces
 interface AIInsight {
@@ -101,7 +100,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
 
   // Remove automatic cache loading - only load cache on API failure
 
-  const fetchWorkHealth = async (retryCount = 0, specificTab?: string, forceRefresh = false) => {
+  const fetchWorkHealth = async (retryCount = 0, specificTab?: string) => {
     if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
       return;
@@ -119,16 +118,11 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       const userId = session.user?.email || session.user?.id || 'anonymous';
       const currentTab = specificTab || 'overview';
       
-      // Fetch fresh data from API (AI caching is handled server-side)
-      let url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
+      // Fetch fresh data from API (NO CACHING - always fresh)
+      const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
       
-      // Add force parameter for production cache clearing
-      if (forceRefresh) {
-        url += (url.includes('?') ? '&' : '?') + 'force=true';
-      }
-      
-      // No cache or cache miss - fetch fresh data with AI
-      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab${forceRefresh ? ' (FORCE REFRESH)' : ''}`);
+      // Always add timestamp to prevent any caching
+      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab (NO CACHING)`);
       const timestampedUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}`;
       const response = await fetch(timestampedUrl, {
         cache: 'no-cache',
@@ -194,7 +188,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
         if (retryCount === 0 && err instanceof Error && err.message.includes('HTTP error')) {
           console.log('First attempt failed, retrying for new user...');
           setTimeout(() => {
-            fetchWorkHealth(1, specificTab, forceRefresh); // Retry once with same tab and force setting
+            fetchWorkHealth(1, specificTab); // Retry once with same tab
           }, 2000);
           return;
         }
@@ -243,13 +237,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
   }, [session, status, tabType, workHealth]);
 
   const refresh = () => {
-    // Clear ALL caches to force fresh data
-    const userId = session?.user?.email || session?.user?.id || 'anonymous';
-    
-    // Clear AI insights cache
-    aiInsightsCache.clearUserCache(userId);
-    
-    // Clear general localStorage cache
+    // Clear localStorage cache (just in case)
     const generalCacheKey = getCacheKey();
     if (generalCacheKey) {
       localStorage.removeItem(generalCacheKey);
@@ -260,10 +248,8 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     setError(null);
     setLastRefresh(new Date());
     
-    console.log('🧹 Cleared all caches, fetching fresh data...');
-    
-    // Force refresh with special parameter for production
-    fetchWorkHealth(0, tabType, true);
+    console.log('🔄 Refreshing data (NO CACHING)...');
+    fetchWorkHealth(0, tabType);
   };
 
   return {
