@@ -57,6 +57,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       meetingCount: workHealthData.schedule?.meetingCount
     });
     
+    // Create enhanced response with backward compatibility
+    interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
+      ai?: PersonalizedInsightsResponse;
+      aiStatus?: 'success' | 'fallback' | 'unavailable';
+    }
+    
+    let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
+    
     // Also add debug info to API response for easy debugging
     (enhancedResponse as any).debugInfo = {
       eventCount: events.length,
@@ -71,14 +79,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         workRhythmRecovery: workHealthData.workRhythmRecovery
       }
     };
-    
-    // Create enhanced response with backward compatibility
-    interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
-      ai?: PersonalizedInsightsResponse;
-      aiStatus?: 'success' | 'fallback' | 'unavailable';
-    }
-    
-    let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
     
     // Try to get AI insights (NO CACHING - always fresh)
     try {
