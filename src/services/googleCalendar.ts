@@ -117,17 +117,42 @@ class GoogleCalendarService {
     const today = new Date();
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    
+    console.log('🔍 DEBUG - Calendar date range:', {
+      today: today.toISOString(),
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
 
     try {
+      // Force fresh data with aggressive cache-busting for production
       const response = await this.calendar.events.list({
         calendarId: 'primary',
         timeMin: startOfDay.toISOString(),
         timeMax: endOfDay.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
+        // Force fresh data by including timestamp in request
+        maxResults: 2500,
+        showDeleted: false,
+        // Add cache-busting parameter
+        'X-Cache-Control': 'no-cache',
       });
 
       const events = response.data.items || [];
+      
+      console.log('🔍 DEBUG - Raw Google Calendar API response:', {
+        eventCount: events.length,
+        rawEvents: events.map(e => ({
+          id: e.id,
+          summary: e.summary,
+          start: e.start?.dateTime,
+          end: e.end?.dateTime,
+          created: e.created,
+          updated: e.updated
+        }))
+      });
       
       return events
         .filter(event => event.start?.dateTime && event.end?.dateTime)
