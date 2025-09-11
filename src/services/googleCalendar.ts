@@ -114,15 +114,23 @@ class GoogleCalendarService {
       throw new Error('Calendar service not initialized');
     }
 
+    // Get today's date in user's timezone, not server timezone
+    const now = new Date();
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Create date range for user's "today" regardless of server timezone
     const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
     
     console.log('🔍 DEBUG - Calendar date range:', {
       today: today.toISOString(),
+      todayLocal: today.toString(),
       startOfDay: startOfDay.toISOString(),
       endOfDay: endOfDay.toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      environment: process.env.NODE_ENV,
+      serverTimezone: process.env.TZ || 'default'
     });
 
     try {
