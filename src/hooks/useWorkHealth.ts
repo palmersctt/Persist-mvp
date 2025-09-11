@@ -119,43 +119,17 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       const userId = session.user?.email || session.user?.id || 'anonymous';
       const currentTab = specificTab || 'overview';
       
-      // For now, let's use a simplified approach that just fetches with the tab parameter
-      // and handles caching after the response (but check cache first)
+      // Fetch fresh data from API (AI caching is handled server-side)
       const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
-      
-      // Generate a provisional hash for cache checking (we'll need to fetch base data first)
-      // For now, let's cache based on tab + date + user, then improve it later
-      const cacheKey = `${userId}-${currentTab}-${new Date().toDateString()}`;
-      
-      // Check cache only if we don't have base data yet
-      if (!workHealth) {
-        const cachedInsights = aiInsightsCache.getCachedInsights(userId, currentTab, cacheKey);
-        
-        if (cachedInsights) {
-          console.log(`✅ Using cached AI insights for ${currentTab} tab during fetch`);
-          // We still need base metrics, so fetch without AI processing
-          const baseResponse = await fetch('/api/work-health', {
-            cache: 'no-cache',
-            headers: { 'Cache-Control': 'no-cache' }
-          });
-          
-          if (baseResponse.ok) {
-            const baseData = await baseResponse.json();
-            baseData.ai = cachedInsights;
-            baseData.aiStatus = 'success';
-            setWorkHealth(baseData);
-            setLastRefresh(new Date());
-            return;
-          }
-        }
-      }
       
       // No cache or cache miss - fetch fresh data with AI
       console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab`);
-      const response = await fetch(url, {
+      const timestampedUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}`;
+      const response = await fetch(timestampedUrl, {
         cache: 'no-cache',
         headers: {
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       });
       
@@ -171,12 +145,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       
       const data = await response.json();
       
-      // Cache the AI insights if we got them
-      if (data.ai && data.aiStatus === 'success') {
-        aiInsightsCache.setCachedInsights(userId, currentTab, data.ai, cacheKey);
-        console.log(`💾 Cached fresh AI insights for ${currentTab} tab`);
-      }
-      
+      // AI caching is handled server-side, just set the data
       setWorkHealth(data);
       setLastRefresh(new Date());
       
@@ -254,30 +223,11 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     setCurrentTab(newTab);
     
     if (status === 'authenticated' && session) {
-      const userId = session.user?.email || session.user?.id || 'anonymous';
-      
-      // Check if we have cached insights for this tab FIRST
-      const cacheKey = `${userId}-${newTab}-${new Date().toDateString()}`;
-      const cachedInsights = aiInsightsCache.getCachedInsights(userId, newTab, cacheKey);
-      
-      if (cachedInsights && workHealth) {
-        // INSTANT cache hit - update immediately without any loading
-        console.log(`⚡ Instant cached insights for ${newTab} (no API call needed)`);
-        setWorkHealth(prev => prev ? {
-          ...prev,
-          ai: cachedInsights,
-          aiStatus: 'success'
-        } : null);
-        return; // Skip all API calls
-      }
-      
-      // Cache miss - need to fetch
+      // Always fetch fresh data for tab changes (server handles AI caching)
       if (workHealth) {
-        // Have base data, just fetching AI for new tab
-        console.log(`🔄 Cache miss - fetching AI for ${newTab} tab`);
+        console.log(`🔄 Fetching fresh data for ${newTab} tab`);
         setIsAILoading(true);
       } else {
-        // Need everything
         console.log(`🔄 Initial load for ${newTab} tab`);
         setIsLoading(true);
       }
@@ -288,9 +238,24 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
   }, [session, status, tabType, workHealth]);
 
   const refresh = () => {
+    // Clear ALL caches to force fresh data
+    const userId = session?.user?.email || session?.user?.id || 'anonymous';
+    
+    // Clear AI insights cache
+    aiInsightsCache.clearUserCache(userId);
+    
+    // Clear general localStorage cache
+    const generalCacheKey = getCacheKey();
+    if (generalCacheKey) {
+      localStorage.removeItem(generalCacheKey);
+    }
+    
     // Clear current data and error state to force fresh load
     setWorkHealth(null);
     setError(null);
+    setLastRefresh(new Date());
+    
+    console.log('🧹 Cleared all caches, fetching fresh data...');
     fetchWorkHealth(0, tabType);
   };
 
