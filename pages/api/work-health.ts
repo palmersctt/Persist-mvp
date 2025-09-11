@@ -44,6 +44,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const events = await calendarService.getTodaysEvents();
     const workHealthData = await calendarService.analyzeWorkHealth();
     
+    // Debug logging for production issues
+    console.log('🔍 DEBUG - Calendar Events Count:', events.length);
+    console.log('🔍 DEBUG - Events Summary:', events.map(e => ({
+      summary: e.summary,
+      start: e.start?.toISOString(),
+      end: e.end?.toISOString()
+    })));
+    console.log('🔍 DEBUG - Work Health Metrics:', {
+      adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
+      cognitiveResilience: workHealthData.cognitiveResilience,
+      workRhythmRecovery: workHealthData.workRhythmRecovery,
+      meetingCount: workHealthData.schedule?.meetingCount
+    });
+    
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
       ai?: PersonalizedInsightsResponse;
@@ -62,7 +76,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Clear AI insights cache for this user
         const { aiInsightsCache } = await import('../../src/utils/aiInsightsCache');
         const userId = session.user?.id || session.user?.email || 'anonymous';
+        
+        // Get cache stats before clearing
+        const statsBefore = aiInsightsCache.getCacheStats(userId);
+        console.log('🔍 DEBUG - Cache stats before clear:', statsBefore);
+        
         aiInsightsCache.clearUserCache(userId);
+        
+        // Verify cache was cleared
+        const statsAfter = aiInsightsCache.getCacheStats(userId);
+        console.log('🔍 DEBUG - Cache stats after clear:', statsAfter);
       }
       
       // Create meeting patterns analysis
@@ -113,7 +136,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       };
       
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext);
+      // Log calendar analysis being sent to AI
+      console.log('🔍 DEBUG - Calendar Analysis for AI:', {
+        eventCount: calendarAnalysis.events.length,
+        eventsDetail: calendarAnalysis.events.map(e => ({
+          summary: e.summary,
+          start: e.start.toISOString(),
+          end: e.end.toISOString()
+        })),
+        meetingTypes: calendarAnalysis.patterns.meetingTypes,
+        focusBlocks: calendarAnalysis.patterns.focusBlocks
+      });
+      
+      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext, forceRefresh);
       
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';
