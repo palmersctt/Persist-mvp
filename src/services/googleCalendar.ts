@@ -334,6 +334,16 @@ class GoogleCalendarService {
   }
 
   private calculateAdaptivePerformanceIndex(events: CalendarEvent[]): number {
+    console.log('🔍 DEBUG - calculateAdaptivePerformanceIndex input:', {
+      totalEvents: events.length,
+      eventDetails: events.map(e => ({ 
+        summary: e.summary, 
+        category: e.category, 
+        start: e.start.toISOString(),
+        end: e.end.toISOString()
+      }))
+    });
+    
     // Filter events for performance calculation
     const actualMeetings = events.filter(event => 
       event.category !== 'BENEFICIAL' && 
@@ -343,7 +353,17 @@ class GoogleCalendarService {
     const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
     const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
     
-    if (actualMeetings.length === 0) return 98; // Near-perfect with no actual meetings
+    console.log('🔍 DEBUG - After filtering for performance calculation:', {
+      actualMeetingsCount: actualMeetings.length,
+      focusWorkEventsCount: focusWorkEvents.length,
+      beneficialEventsCount: beneficialEvents.length,
+      actualMeetingDetails: actualMeetings.map(e => ({ summary: e.summary, category: e.category }))
+    });
+    
+    if (actualMeetings.length === 0) {
+      console.log('🔍 DEBUG - No actual meetings, returning 98 for Performance Index');
+      return 98; // Near-perfect with no actual meetings
+    }
     
     const meetingCount = actualMeetings.length;
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
@@ -409,11 +429,26 @@ class GoogleCalendarService {
       recoveryScore * 0.15
     ) + bonusPoints;
     
-    return Math.round(Math.min(100, Math.max(0, adaptiveIndex)));
+    const finalScore = Math.round(Math.min(100, Math.max(0, adaptiveIndex)));
+    console.log('🔍 DEBUG - calculateAdaptivePerformanceIndex final score:', finalScore);
+    return finalScore;
   }
   
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
-    if (events.length === 0) return 90; // High resilience with no meetings
+    console.log('🔍 DEBUG - calculateCognitiveResilience input:', {
+      totalEvents: events.length,
+      eventDetails: events.map(e => ({ 
+        summary: e.summary, 
+        category: e.category, 
+        start: e.start.toISOString(),
+        end: e.end.toISOString()
+      }))
+    });
+    
+    if (events.length === 0) {
+      console.log('🔍 DEBUG - No events, returning 90 for Cognitive Resilience');
+      return 90; // High resilience with no meetings
+    }
     
     // Context switching load
     const uniqueContexts = new Set(events.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
@@ -452,10 +487,22 @@ class GoogleCalendarService {
       - energyDepletion * 0.15
     );
     
-    return Math.round(Math.min(100, Math.max(0, resilienceScore)));
+    const finalScore = Math.round(Math.min(100, Math.max(0, resilienceScore)));
+    console.log('🔍 DEBUG - calculateCognitiveResilience final score:', finalScore);
+    return finalScore;
   }
   
   private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
+    console.log('🔍 DEBUG - calculateWorkRhythmRecovery input:', {
+      totalEvents: events.length,
+      eventDetails: events.map(e => ({ 
+        summary: e.summary, 
+        category: e.category, 
+        start: e.start.toISOString(),
+        end: e.end.toISOString()
+      }))
+    });
+    
     // Filter out beneficial, neutral, and focus work events
     const actualMeetings = events.filter(event => 
       event.category !== 'BENEFICIAL' && 
@@ -463,7 +510,15 @@ class GoogleCalendarService {
       event.category !== 'FOCUS_WORK'
     );
     
-    if (actualMeetings.length === 0) return 98; // Excellent rhythm with no actual meetings
+    console.log('🔍 DEBUG - After filtering for rhythm recovery:', {
+      actualMeetingsCount: actualMeetings.length,
+      actualMeetingDetails: actualMeetings.map(e => ({ summary: e.summary, category: e.category }))
+    });
+    
+    if (actualMeetings.length === 0) {
+      console.log('🔍 DEBUG - No actual meetings, returning 98 for Work Rhythm Recovery');
+      return 98; // Excellent rhythm with no actual meetings
+    }
     
     // Work rhythm analysis - only consider actual meetings
     const morningBlock = actualMeetings.filter(e => e.start.getHours() >= 9 && e.start.getHours() < 12).length;
@@ -503,7 +558,9 @@ class GoogleCalendarService {
       alignmentScore * 0.15
     );
     
-    return Math.round(Math.min(100, Math.max(0, combinedScore)));
+    const finalScore = Math.round(Math.min(100, Math.max(0, combinedScore)));
+    console.log('🔍 DEBUG - calculateWorkRhythmRecovery final score:', finalScore);
+    return finalScore;
   }
   
   private findLongestConsecutiveStretch(events: CalendarEvent[]): number {
@@ -582,6 +639,13 @@ class GoogleCalendarService {
   async analyzeWorkHealth(): Promise<WorkHealthMetrics> {
     const events = await this.getTodaysEvents();
     
+    console.log('🔍 DEBUG - All events before categorization:', events.map(e => ({
+      summary: e.summary,
+      start: e.start.toISOString(),
+      end: e.end.toISOString(),
+      category: e.category
+    })));
+    
     // Separate different types of events for analysis
     const actualMeetings = events.filter(event => 
       event.category !== 'BENEFICIAL' && 
@@ -590,6 +654,14 @@ class GoogleCalendarService {
     );
     const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
     const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
+    
+    console.log('🔍 DEBUG - Categorized events:', {
+      totalEvents: events.length,
+      actualMeetings: actualMeetings.length,
+      focusWorkEvents: focusWorkEvents.length,
+      beneficialEvents: beneficialEvents.length,
+      actualMeetingsDetails: actualMeetings.map(e => ({ summary: e.summary, category: e.category }))
+    });
     
     const meetingCount = actualMeetings.length; // Only count actual meetings
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
