@@ -57,6 +57,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       meetingCount: workHealthData.schedule?.meetingCount
     });
     
+    // Also add debug info to API response for easy debugging
+    (enhancedResponse as any).debugInfo = {
+      eventCount: events.length,
+      eventsReceived: events.map(e => ({
+        summary: e.summary,
+        start: e.start?.toISOString(),
+        end: e.end?.toISOString()
+      })),
+      calculatedScores: {
+        adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
+        cognitiveResilience: workHealthData.cognitiveResilience,
+        workRhythmRecovery: workHealthData.workRhythmRecovery
+      }
+    };
+    
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
       ai?: PersonalizedInsightsResponse;
