@@ -31,6 +31,7 @@ interface AIPersonalizedInsights {
   opportunities: string[];
   predictiveAlerts: string[];
   recommendations?: AIRecommendation[];
+  heroMessage?: string; // Dynamic, creative day-setting message
 }
 
 interface WorkHealthData {

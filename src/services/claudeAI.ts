@@ -52,6 +52,7 @@ interface PersonalizedInsightsResponse {
   riskFactors: string[];
   opportunities: string[];
   predictiveAlerts: string[];
+  heroMessage?: string; // Dynamic, creative day-setting message
 }
 
 class ClaudeAIService {
@@ -170,6 +171,18 @@ Tell them what kind of day this will be for them:
 - What their overall mood and productivity will be like
 - How they'll probably feel at different times
 
+ALSO create a dynamic HERO MESSAGE - a short, creative, motivational phrase that captures the essence of their day:
+
+Hero Message Examples:
+- "You're set for a creative powerhouse day" (high performance + focus time)
+- "It's a steady momentum kind of day" (balanced workload)
+- "Today calls for gentle productivity" (light schedule)
+- "You're in for a collaborative energy surge" (lots of meetings)
+- "This feels like a breakthrough day" (optimal conditions)
+- "Time for some focused magic" (great focus blocks)
+- "Today's your sustainable rhythm day" (well-paced)
+- "You're primed for deep work mastery" (minimal interruptions)
+
 Write conversational insights like:
 - "Your day has a nice rhythm - you'll feel energized in the morning and should stay productive through the afternoon"
 - "This feels like one of those days where you'll get a lot done but might feel pretty drained by evening"
@@ -178,6 +191,7 @@ Write conversational insights like:
 
 Provide a JSON response in exactly this format:
 {
+  "heroMessage": "You're set for a creative powerhouse day",
   "insights": [
     {
       "category": "performance",
@@ -361,6 +375,22 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     const { workHealth } = analysis;
     const insights: PersonalizedInsight[] = [];
 
+    // Generate hero message based on metrics
+    let heroMessage = "Today's your day to shine";
+    if (workHealth.adaptivePerformanceIndex >= 85) {
+      heroMessage = "You're set for a creative powerhouse day";
+    } else if (workHealth.adaptivePerformanceIndex >= 70) {
+      heroMessage = "It's a steady momentum kind of day";
+    } else if (workHealth.focusTime >= 240) {
+      heroMessage = "Time for some focused magic";
+    } else if (workHealth.schedule.meetingCount <= 2) {
+      heroMessage = "Today calls for gentle productivity";
+    } else if (workHealth.schedule.meetingCount >= 6) {
+      heroMessage = "You're in for a collaborative energy surge";
+    } else {
+      heroMessage = "You're primed for balanced productivity";
+    }
+
     if (workHealth.adaptivePerformanceIndex < 50) {
       insights.push({
         category: 'performance',
@@ -410,6 +440,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     }
 
     return {
+      heroMessage,
       insights,
       summary: `Current work health status: ${workHealth.status}. Focus on ${insights.length > 0 ? insights[0].category : 'maintaining balance'}.`,
       overallScore: workHealth.adaptivePerformanceIndex,

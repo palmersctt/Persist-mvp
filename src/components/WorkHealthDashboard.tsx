@@ -562,6 +562,16 @@ export default function WorkHealthDashboard() {
         {/* Overview Tab - All current content */}
         {activeTab === 'overview' && (
           <>
+            {/* Hero Message Section */}
+            <section className="text-center mb-12">
+              <div className="max-w-2xl mx-auto">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
+                  {workHealth?.ai?.heroMessage || "Today's your day to shine"}
+                </h1>
+                <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
+              </div>
+            </section>
+            
             {/* Primary Work Capacity Metric */}
         <section className="text-center">
           
