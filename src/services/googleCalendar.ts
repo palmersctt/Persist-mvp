@@ -103,6 +103,53 @@ class GoogleCalendarService {
     );
   }
 
+  // Helper method to safely parse Google Calendar dateTime strings
+  private parseCalendarDateTime(dateTimeString: string, userTimezone: string): Date {
+    // Google Calendar API returns ISO 8601 strings with timezone info
+    // e.g., "2025-09-15T16:00:00-07:00" or "2025-09-15T23:00:00Z"
+    
+    try {
+      // Method 1: Direct Date parsing (should work but might behave differently across environments)
+      const directParse = new Date(dateTimeString);
+      
+      // Method 2: Explicit UTC parsing and timezone conversion
+      let utcDate: Date;
+      
+      if (dateTimeString.endsWith('Z')) {
+        // Already UTC
+        utcDate = new Date(dateTimeString);
+      } else if (dateTimeString.includes('+') || dateTimeString.match(/-\d{2}:\d{2}$/)) {
+        // Has timezone offset, parse normally
+        utcDate = new Date(dateTimeString);
+      } else {
+        // No timezone info, assume it's in the user's timezone and convert to UTC
+        console.warn('⚠️ DateTime string has no timezone info:', dateTimeString);
+        utcDate = new Date(dateTimeString + 'Z'); // Force UTC interpretation
+      }
+      
+      console.log('🔍 DEBUG - parseCalendarDateTime comparison:', {
+        input: dateTimeString,
+        directParse_toString: directParse.toString(),
+        directParse_ISO: directParse.toISOString(),
+        utcDate_toString: utcDate.toString(), 
+        utcDate_ISO: utcDate.toISOString(),
+        timeDifference: directParse.getTime() - utcDate.getTime(),
+        inUserTZ: directParse.toLocaleString('en-US', { 
+          timeZone: userTimezone,
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', hour12: true
+        })
+      });
+      
+      return directParse; // Use direct parsing for now, but with debugging
+      
+    } catch (error) {
+      console.error('Error parsing calendar dateTime:', dateTimeString, error);
+      // Fallback to current time if parsing fails
+      return new Date();
+    }
+  }
+
   private categorizeEvent(summary: string): MeetingCategory {
     const title = summary.toLowerCase().trim();
     
@@ -229,13 +276,66 @@ class GoogleCalendarService {
       
       return events
         .filter(event => event.start?.dateTime && event.end?.dateTime)
-        .map(event => {
+        .map((event, index) => {
           const summary = event.summary || 'No title';
+          
+          // DEBUG: Log raw dateTime strings from Google Calendar API
+          const rawStartDateTime = event.start!.dateTime!;
+          const rawEndDateTime = event.end!.dateTime!;
+          
+          // Create Date objects using our safe parsing method
+          const startDate = this.parseCalendarDateTime(rawStartDateTime, userTimezone);
+          const endDate = this.parseCalendarDateTime(rawEndDateTime, userTimezone);
+          
+          // Comprehensive debugging for timezone parsing issues
+          console.log(`🔍 DEBUG - Event ${index + 1} "${summary}" timezone parsing:`, {
+            // Raw API response
+            rawStartDateTime: rawStartDateTime,
+            rawEndDateTime: rawEndDateTime,
+            
+            // Parsed Date objects
+            startDate_toString: startDate.toString(),
+            endDate_toString: endDate.toString(),
+            startDate_toISOString: startDate.toISOString(),
+            endDate_toISOString: endDate.toISOString(),
+            
+            // Server timezone interpretation
+            startDate_getTime: startDate.getTime(),
+            endDate_getTime: endDate.getTime(),
+            
+            // User timezone display
+            startInUserTZ: startDate.toLocaleString('en-US', { 
+              timeZone: userTimezone,
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', hour12: true
+            }),
+            endInUserTZ: endDate.toLocaleString('en-US', { 
+              timeZone: userTimezone,
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', hour12: true  
+            }),
+            
+            // Server timezone display
+            startInServerTZ: startDate.toLocaleString('en-US', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', hour12: true
+            }),
+            endInServerTZ: endDate.toLocaleString('en-US', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', hour12: true
+            }),
+            
+            // Timezone offset information
+            serverTimezoneOffset: startDate.getTimezoneOffset(),
+            userTimezone: userTimezone,
+            environment: process.env.NODE_ENV
+          });
+          
           const calendarEvent: CalendarEvent = {
             id: event.id!,
             summary,
-            start: new Date(event.start!.dateTime!),
-            end: new Date(event.end!.dateTime!),
+            start: startDate,
+            end: endDate,
             attendees: event.attendees?.length || 1,
             isRecurring: !!event.recurringEventId,
             category: this.categorizeEvent(summary),
