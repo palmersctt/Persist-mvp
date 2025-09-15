@@ -74,12 +74,15 @@ class ClaudeAIService {
     return Boolean(this.apiKey && this.apiKey.length > 0);
   }
 
-  // Convert Date to 12-hour format (e.g., "6:00 PM")
-  private formatTime12Hour(date: Date): string {
+  // Convert Date to 12-hour format (e.g., "6:00 PM") in user's timezone
+  private formatTime12Hour(date: Date, userTimezone?: string): string {
+    const timezone = userTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZone: timezone
     });
   }
 
@@ -121,6 +124,9 @@ Write like you're having a conversation with them using "you'll feel", "your ene
   private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext): string {
     const { workHealth, events, patterns } = analysis;
     
+    // Get user's timezone for proper time formatting
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    
     const baseContext = `WORK HEALTH METRICS:
 - Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
 - Cognitive Resilience: ${workHealth.cognitiveResilience}%
@@ -133,7 +139,7 @@ Write like you're having a conversation with them using "you'll feel", "your ene
 
 CALENDAR EVENTS (${events.length} total):
 ${events.map(event => 
-  `- ${event.summary} (${this.formatTime12Hour(event.start)}-${this.formatTime12Hour(event.end)}, ${event.category}, ${event.attendees} attendees)`
+  `- ${event.summary} (${this.formatTime12Hour(event.start, userTimezone)}-${this.formatTime12Hour(event.end, userTimezone)}, ${event.category}, ${event.attendees} attendees)`
 ).join('\n')}
 
 MEETING PATTERNS:
@@ -298,6 +304,9 @@ Provide a JSON response in exactly this format:
   private createUserPrompt(analysis: CalendarAnalysis, userContext: UserContext): string {
     const { workHealth, events, patterns } = analysis;
     
+    // Get user's timezone for proper time formatting
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    
     return `Analyze this user's calendar data and provide personalized insights:
 
 WORK HEALTH METRICS:
@@ -312,7 +321,7 @@ WORK HEALTH METRICS:
 
 CALENDAR EVENTS (${events.length} total):
 ${events.map(event => 
-  `- ${event.summary} (${this.formatTime12Hour(event.start)}-${this.formatTime12Hour(event.end)}, ${event.category}, ${event.attendees} attendees)`
+  `- ${event.summary} (${this.formatTime12Hour(event.start, userTimezone)}-${this.formatTime12Hour(event.end, userTimezone)}, ${event.category}, ${event.attendees} attendees)`
 ).join('\n')}
 
 MEETING PATTERNS:
