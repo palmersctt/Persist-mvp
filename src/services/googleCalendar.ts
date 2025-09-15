@@ -114,28 +114,35 @@ class GoogleCalendarService {
       throw new Error('Calendar service not initialized');
     }
 
-    // Get user's timezone and current time
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Get user's timezone - default to PST if detection fails
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
     
-    // Create today's date in user's timezone, not server timezone
-    // This ensures we get the correct "today" regardless of server location
+    // Create today's date in user's timezone, completely independent of server timezone
     const now = new Date();
     
-    // Get today's date components in the user's timezone
-    const todayInUserTZString = now.toLocaleDateString("en-CA", { timeZone: userTimezone });
-    const [year, month, day] = todayInUserTZString.split('-').map(Number);
+    // Method 1: Create proper timezone-aware dates
+    // Get the current date/time in user's timezone as components
+    const nowInUserTZ = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+    const offsetDiff = now.getTime() - nowInUserTZ.getTime();
     
-    // Create start and end of day in user's timezone
-    const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
-    const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+    // Create start and end of day in the user's timezone
+    const startOfDay = new Date(nowInUserTZ.getFullYear(), nowInUserTZ.getMonth(), nowInUserTZ.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(nowInUserTZ.getFullYear(), nowInUserTZ.getMonth(), nowInUserTZ.getDate(), 23, 59, 59, 999);
+    
+    // Adjust back to UTC for API calls by adding the timezone offset difference
+    startOfDay.setTime(startOfDay.getTime() + offsetDiff);
+    endOfDay.setTime(endOfDay.getTime() + offsetDiff);
     
     console.log('🔍 DEBUG - Calendar date range:', {
       serverTime: now.toISOString(),
       serverTimeLocal: now.toString(),
       userTimezone: userTimezone,
-      todayInUserTZString: todayInUserTZString,
+      nowInUserTZ: nowInUserTZ.toString(),
+      offsetDiff: offsetDiff,
       startOfDay: startOfDay.toISOString(),
       endOfDay: endOfDay.toISOString(),
+      startOfDayLocal: startOfDay.toString(),
+      endOfDayLocal: endOfDay.toString(),
       environment: process.env.NODE_ENV,
       serverTimezone: process.env.TZ || 'default'
     });
