@@ -20,6 +20,13 @@ export type MeetingCategory =
   | 'HEAVY_MEETINGS' 
   | 'COLLABORATIVE';
 
+// Helper function to get timezone offset in minutes for a specific timezone and date
+function getUserTimezoneOffset(timezone: string, date: Date): number {
+  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const targetDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+  return (targetDate.getTime() - utcDate.getTime()) / (1000 * 60);
+}
+
 export interface WorkHealthMetrics {
   // New intelligent metrics
   adaptivePerformanceIndex: number; // Main metric: 0-100
@@ -117,28 +124,38 @@ class GoogleCalendarService {
     // Get user's timezone - default to PST if detection fails
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
     
-    // Create today's date in user's timezone, completely independent of server timezone
+    // SIMPLE AND BULLETPROOF: Create date ranges for user's timezone
     const now = new Date();
     
-    // Method 1: Create proper timezone-aware dates
-    // Get the current date/time in user's timezone as components
-    const nowInUserTZ = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
-    const offsetDiff = now.getTime() - nowInUserTZ.getTime();
+    // Get current time in user's timezone
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: userTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
     
-    // Create start and end of day in the user's timezone
-    const startOfDay = new Date(nowInUserTZ.getFullYear(), nowInUserTZ.getMonth(), nowInUserTZ.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(nowInUserTZ.getFullYear(), nowInUserTZ.getMonth(), nowInUserTZ.getDate(), 23, 59, 59, 999);
+    const parts = formatter.formatToParts(now);
+    const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+    const month = parseInt(parts.find(p => p.type === 'month')?.value || '0');
+    const day = parseInt(parts.find(p => p.type === 'day')?.value || '0');
     
-    // Adjust back to UTC for API calls by adding the timezone offset difference
-    startOfDay.setTime(startOfDay.getTime() + offsetDiff);
-    endOfDay.setTime(endOfDay.getTime() + offsetDiff);
+    // Create start and end of day in user's timezone by creating the date string first
+    // This ensures we get the exact dates the user expects regardless of server timezone
+    const startOfDayString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T00:00:00`;
+    const endOfDayString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T23:59:59`;
+    
+    // Parse these as local timezone dates, then convert to UTC for Google Calendar API
+    const startOfDay = new Date(startOfDayString);
+    const endOfDay = new Date(endOfDayString);
     
     console.log('🔍 DEBUG - Calendar date range:', {
       serverTime: now.toISOString(),
       serverTimeLocal: now.toString(),
       userTimezone: userTimezone,
-      nowInUserTZ: nowInUserTZ.toString(),
-      offsetDiff: offsetDiff,
+      extractedDate: { year, month, day },
+      startOfDayString: startOfDayString,
+      endOfDayString: endOfDayString,
       startOfDay: startOfDay.toISOString(),
       endOfDay: endOfDay.toISOString(),
       startOfDayLocal: startOfDay.toString(),
