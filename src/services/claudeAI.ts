@@ -173,7 +173,15 @@ Tell them what kind of day this will be for them:
 
 ALSO create a dynamic HERO MESSAGE - a short, creative, motivational phrase that captures the essence of their day:
 
-Hero Message Examples:
+IMPORTANT: Make the hero message UNIQUE and VARIED each time. Use different words and phrases. Consider:
+- Current time of day (morning energy vs afternoon focus)
+- Specific meeting types and timing
+- Unique combinations of their metrics
+- Creative metaphors and fresh language
+- Current date: ${new Date().toLocaleDateString()}
+- Current time: ${new Date().toLocaleTimeString()}
+
+Hero Message Examples (but CREATE NEW VARIATIONS):
 - "You're set for a creative powerhouse day" (high performance + focus time)
 - "It's a steady momentum kind of day" (balanced workload)
 - "Today calls for gentle productivity" (light schedule)
@@ -182,6 +190,8 @@ Hero Message Examples:
 - "Time for some focused magic" (great focus blocks)
 - "Today's your sustainable rhythm day" (well-paced)
 - "You're primed for deep work mastery" (minimal interruptions)
+
+CREATE A FRESH, UNIQUE HERO MESSAGE - not just picking from the examples above!
 
 Write conversational insights like:
 - "Your day has a nice rhythm - you'll feel energized in the morning and should stay productive through the afternoon"
@@ -375,20 +385,68 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     const { workHealth } = analysis;
     const insights: PersonalizedInsight[] = [];
 
-    // Generate hero message based on metrics
+    // Generate hero message based on metrics with variety
+    const heroMessages = {
+      highPerformance: [
+        "You're set for a creative powerhouse day",
+        "This feels like a breakthrough day",
+        "You're primed for peak performance",
+        "Today's your high-impact zone"
+      ],
+      steadyMomentum: [
+        "It's a steady momentum kind of day", 
+        "You're in for smooth sailing today",
+        "Today's your sustainable rhythm day",
+        "You're set for consistent progress"
+      ],
+      focusTime: [
+        "Time for some focused magic",
+        "You're primed for deep work mastery",
+        "Today's built for breakthrough thinking",
+        "Your mind has space to wander and create"
+      ],
+      lightSchedule: [
+        "Today calls for gentle productivity",
+        "You've got breathing room to excel",
+        "Today's pace feels just right",
+        "Space for thoughtful work ahead"
+      ],
+      collaborative: [
+        "You're in for a collaborative energy surge",
+        "Today's all about team momentum",
+        "Connection and collaboration await",
+        "You're set for dynamic teamwork"
+      ],
+      balanced: [
+        "You're primed for balanced productivity",
+        "Today has a nice flow to it",
+        "You're set for steady achievement",
+        "The day ahead feels manageable"
+      ]
+    };
+
+    // Use multiple factors to add variety to message selection
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const dayOfMonth = now.getDate();
+    
+    // Create a more dynamic index that changes more frequently
+    const messageIndex = (currentHour + Math.floor(currentMinute / 15) + dayOfMonth) % 4;
+
     let heroMessage = "Today's your day to shine";
     if (workHealth.adaptivePerformanceIndex >= 85) {
-      heroMessage = "You're set for a creative powerhouse day";
+      heroMessage = heroMessages.highPerformance[messageIndex];
     } else if (workHealth.adaptivePerformanceIndex >= 70) {
-      heroMessage = "It's a steady momentum kind of day";
+      heroMessage = heroMessages.steadyMomentum[messageIndex];
     } else if (workHealth.focusTime >= 240) {
-      heroMessage = "Time for some focused magic";
+      heroMessage = heroMessages.focusTime[messageIndex];
     } else if (workHealth.schedule.meetingCount <= 2) {
-      heroMessage = "Today calls for gentle productivity";
+      heroMessage = heroMessages.lightSchedule[messageIndex];
     } else if (workHealth.schedule.meetingCount >= 6) {
-      heroMessage = "You're in for a collaborative energy surge";
+      heroMessage = heroMessages.collaborative[messageIndex];
     } else {
-      heroMessage = "You're primed for balanced productivity";
+      heroMessage = heroMessages.balanced[messageIndex];
     }
 
     if (workHealth.adaptivePerformanceIndex < 50) {
@@ -594,7 +652,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',
         max_tokens: 4000,
-        temperature: 0.3,
+        temperature: 0.8, // Higher temperature for more creative variation
         system: this.createSystemPrompt(),
         messages: [{
           role: 'user',
@@ -617,6 +675,10 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       }
 
       const parsedResponse = JSON.parse(jsonMatch[0]);
+      
+      console.log('🎯 DEBUG - AI Response Keys:', Object.keys(parsedResponse));
+      console.log('🎯 DEBUG - Hero Message from AI:', parsedResponse.heroMessage);
+      console.log('🎯 DEBUG - Tab Context:', tabContext?.tabType);
       
       if (!this.validateInsightsResponse(parsedResponse)) {
         throw new Error('Invalid insights response format');
@@ -650,7 +712,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
   }
 
   private validateInsightsResponse(response: any): response is PersonalizedInsightsResponse {
-    return (
+    const isValid = (
       response &&
       typeof response === 'object' &&
       Array.isArray(response.insights) &&
@@ -659,7 +721,13 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       Array.isArray(response.riskFactors) &&
       Array.isArray(response.opportunities) &&
       Array.isArray(response.predictiveAlerts)
+      // heroMessage is optional, so we don't validate it here
     );
+    
+    console.log('🔍 DEBUG - Validation result:', isValid);
+    console.log('🔍 DEBUG - Response has heroMessage:', !!response?.heroMessage);
+    
+    return isValid;
   }
 
   async analyzeProductivityPatterns(
