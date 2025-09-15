@@ -97,49 +97,35 @@ class GoogleCalendarService {
     );
   }
 
-  // Helper method to safely parse Google Calendar dateTime strings
+  // Simplified helper method - NO additional timezone conversion
   private parseCalendarDateTime(dateTimeString: string, userTimezone: string): Date {
     // Google Calendar API returns ISO 8601 strings with timezone info
     // e.g., "2025-09-15T16:00:00-07:00" or "2025-09-15T23:00:00Z"
     
+    console.log('🧪 parseCalendarDateTime - SIMPLE PARSING:', {
+      input: dateTimeString,
+      hasTimezone: dateTimeString.includes('+') || dateTimeString.includes('-') || dateTimeString.endsWith('Z')
+    });
+    
     try {
-      // Method 1: Direct Date parsing (should work but might behave differently across environments)
-      const directParse = new Date(dateTimeString);
+      // SIMPLE: Just use direct Date parsing - Google's dateTime should have timezone info
+      // If it has timezone info, new Date() will handle it correctly
+      // If not, it will be interpreted as local time (which would be server time)
+      const parsed = new Date(dateTimeString);
       
-      // Method 2: Explicit UTC parsing and timezone conversion
-      let utcDate: Date;
-      
-      if (dateTimeString.endsWith('Z')) {
-        // Already UTC
-        utcDate = new Date(dateTimeString);
-      } else if (dateTimeString.includes('+') || dateTimeString.match(/-\d{2}:\d{2}$/)) {
-        // Has timezone offset, parse normally
-        utcDate = new Date(dateTimeString);
-      } else {
-        // No timezone info, assume it's in the user's timezone and convert to UTC
-        console.warn('⚠️ DateTime string has no timezone info:', dateTimeString);
-        utcDate = new Date(dateTimeString + 'Z'); // Force UTC interpretation
-      }
-      
-      console.log('🔍 DEBUG - parseCalendarDateTime comparison:', {
-        input: dateTimeString,
-        directParse_toString: directParse.toString(),
-        directParse_ISO: directParse.toISOString(),
-        utcDate_toString: utcDate.toString(), 
-        utcDate_ISO: utcDate.toISOString(),
-        timeDifference: directParse.getTime() - utcDate.getTime(),
-        inUserTZ: directParse.toLocaleString('en-US', { 
+      console.log('🧪 parseCalendarDateTime result:', {
+        parsed_toString: parsed.toString(),
+        parsed_ISO: parsed.toISOString(),
+        inUserTZ: parsed.toLocaleString('en-US', { 
           timeZone: userTimezone,
-          year: 'numeric', month: '2-digit', day: '2-digit',
           hour: '2-digit', minute: '2-digit', hour12: true
         })
       });
       
-      return directParse; // Use direct parsing for now, but with debugging
+      return parsed;
       
     } catch (error) {
       console.error('Error parsing calendar dateTime:', dateTimeString, error);
-      // Fallback to current time if parsing fails
       return new Date();
     }
   }
@@ -288,46 +274,33 @@ class GoogleCalendarService {
           const startDate = this.parseCalendarDateTime(rawStartDateTime, userTimezone);
           const endDate = this.parseCalendarDateTime(rawEndDateTime, userTimezone);
           
-          // Comprehensive debugging for timezone parsing issues
-          console.log(`🔍 DEBUG - Event ${index + 1} "${summary}" timezone parsing:`, {
-            // Raw API response
+          // 🧪 SIMPLE TIMEZONE TEST - Check for double conversion
+          console.log(`🧪 TIMEZONE TEST - Event ${index + 1} "${summary}":`, {
+            // Step 1: Raw Google Calendar dateTime string 
             rawStartDateTime: rawStartDateTime,
-            rawEndDateTime: rawEndDateTime,
             
-            // Parsed Date objects
-            startDate_toString: startDate.toString(),
-            endDate_toString: endDate.toString(),
-            startDate_toISOString: startDate.toISOString(),
-            endDate_toISOString: endDate.toISOString(),
+            // Step 2: Simple new Date() parsing
+            simpleParsed_toString: new Date(rawStartDateTime).toString(),
+            simpleParsed_toISOString: new Date(rawStartDateTime).toISOString(),
             
-            // Server timezone interpretation
-            startDate_getTime: startDate.getTime(),
-            endDate_getTime: endDate.getTime(),
-            
-            // User timezone display
-            startInUserTZ: startDate.toLocaleString('en-US', { 
+            // Step 3: Display in user's timezone (should match original time if no double conversion)
+            displayInUserTZ: new Date(rawStartDateTime).toLocaleString('en-US', {
               timeZone: userTimezone,
               year: 'numeric', month: '2-digit', day: '2-digit',
               hour: '2-digit', minute: '2-digit', hour12: true
             }),
-            endInUserTZ: endDate.toLocaleString('en-US', { 
-              timeZone: userTimezone,
-              year: 'numeric', month: '2-digit', day: '2-digit',
-              hour: '2-digit', minute: '2-digit', hour12: true  
-            }),
             
-            // Server timezone display
-            startInServerTZ: startDate.toLocaleString('en-US', {
-              year: 'numeric', month: '2-digit', day: '2-digit',
-              hour: '2-digit', minute: '2-digit', hour12: true
-            }),
-            endInServerTZ: endDate.toLocaleString('en-US', {
+            // Step 4: Display in UTC (for comparison)
+            displayInUTC: new Date(rawStartDateTime).toLocaleString('en-US', {
+              timeZone: 'UTC',
               year: 'numeric', month: '2-digit', day: '2-digit',
               hour: '2-digit', minute: '2-digit', hour12: true
             }),
             
-            // Timezone offset information
-            serverTimezoneOffset: startDate.getTimezoneOffset(),
+            // Step 5: Check if Google's dateTime has timezone info
+            hasTimezoneInfo: rawStartDateTime.includes('+') || rawStartDateTime.includes('-') || rawStartDateTime.endsWith('Z'),
+            
+            // Environment info
             userTimezone: userTimezone,
             environment: process.env.NODE_ENV
           });
