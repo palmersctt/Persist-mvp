@@ -118,17 +118,22 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       const userId = session.user?.email || session.user?.id || 'anonymous';
       const currentTab = specificTab || 'overview';
       
+      // CLIENT-SIDE TIMEZONE DETECTION - Only works in browser!
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('🌍 Client-side timezone detected:', userTimezone);
+      
       // Fetch fresh data from API (NO CACHING - always fresh)
       const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
       
-      // Always add timestamp to prevent any caching
-      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab (NO CACHING)`);
-      const timestampedUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}`;
+      // Always add timestamp to prevent any caching + user timezone
+      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab (NO CACHING) with timezone: ${userTimezone}`);
+      const timestampedUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}&timezone=${encodeURIComponent(userTimezone)}`;
       const response = await fetch(timestampedUrl, {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'X-User-Timezone': userTimezone  // Also pass as header for redundancy
         }
       });
       

@@ -20,12 +20,6 @@ export type MeetingCategory =
   | 'HEAVY_MEETINGS' 
   | 'COLLABORATIVE';
 
-// Helper function to get timezone offset in minutes for a specific timezone and date
-function getUserTimezoneOffset(timezone: string, date: Date): number {
-  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-  const targetDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-  return (targetDate.getTime() - utcDate.getTime()) / (1000 * 60);
-}
 
 export interface WorkHealthMetrics {
   // New intelligent metrics
@@ -163,13 +157,20 @@ class GoogleCalendarService {
     return 'COLLABORATIVE'; // Default for unmatched meetings
   }
 
-  async getTodaysEvents(): Promise<CalendarEvent[]> {
+  async getTodaysEvents(providedUserTimezone?: string): Promise<CalendarEvent[]> {
     if (!this.calendar) {
       throw new Error('Calendar service not initialized');
     }
 
-    // Get user's timezone - default to PST if detection fails
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    // Use provided timezone (from client-side) or fallback to server detection (which will be UTC in production)
+    const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    
+    console.log('🌍 getTodaysEvents timezone source:', {
+      providedUserTimezone: providedUserTimezone,
+      serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      finalUsed: userTimezone,
+      source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
+    });
     
     // BULLETPROOF TIMEZONE HANDLING: Create proper date ranges for user's timezone
     const now = new Date();

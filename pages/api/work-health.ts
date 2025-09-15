@@ -21,6 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ? { tabType: tabType as 'overview' | 'performance' | 'resilience' | 'sustainability' }
     : undefined;
 
+  // Extract user timezone from query parameter or header (CLIENT-SIDE DETECTION)
+  const userTimezone = (req.query.timezone as string) || req.headers['x-user-timezone'] as string || 'America/Los_Angeles';
+  console.log('🌍 Backend received user timezone:', {
+    fromQuery: req.query.timezone,
+    fromHeader: req.headers['x-user-timezone'],
+    final: userTimezone,
+    serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    environment: process.env.NODE_ENV
+  });
+
   try {
     const session = await getServerSession(req, res, authOptions);
     
@@ -39,8 +49,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const calendarService = new GoogleCalendarService();
     await calendarService.initialize(session.accessToken);
     
-    // Get calendar events and work health analysis
-    const events = await calendarService.getTodaysEvents();
+    // Get calendar events and work health analysis using CLIENT-SIDE detected timezone
+    const events = await calendarService.getTodaysEvents(userTimezone);
     const workHealthData = await calendarService.analyzeWorkHealth();
     
     // Debug logging for production issues
