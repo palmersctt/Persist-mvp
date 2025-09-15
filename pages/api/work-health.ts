@@ -155,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         focusBlocks: calendarAnalysis.patterns.focusBlocks
       });
       
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext);
+      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext, userTimezone);
       
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';

@@ -121,11 +121,18 @@ AVOID technical language, clinical analysis, formal recommendations, or confiden
 Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
   }
 
-  private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext): string {
+  private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext, providedUserTimezone?: string): string {
     const { workHealth, events, patterns } = analysis;
     
-    // Get user's timezone for proper time formatting
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    // Use provided timezone (from client-side) instead of server detection
+    const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    
+    console.log('🌍 createTabSpecificPrompt timezone:', {
+      providedUserTimezone: providedUserTimezone,
+      serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      finalUsed: userTimezone,
+      source: providedUserTimezone ? 'PROVIDED_FROM_CLIENT' : 'SERVER_FALLBACK'
+    });
     
     const baseContext = `WORK HEALTH METRICS:
 - Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
@@ -301,11 +308,18 @@ Provide a JSON response in exactly this format:
     }
   }
 
-  private createUserPrompt(analysis: CalendarAnalysis, userContext: UserContext): string {
+  private createUserPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string): string {
     const { workHealth, events, patterns } = analysis;
     
-    // Get user's timezone for proper time formatting
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    // Use provided timezone (from client-side) instead of server detection
+    const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    
+    console.log('🌍 createUserPrompt timezone:', {
+      providedUserTimezone: providedUserTimezone,
+      serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      finalUsed: userTimezone,
+      source: providedUserTimezone ? 'PROVIDED_FROM_CLIENT' : 'SERVER_FALLBACK'
+    });
     
     return `Analyze this user's calendar data and provide personalized insights:
 
@@ -520,7 +534,8 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
   async generatePersonalizedInsights(
     analysis: CalendarAnalysis,
     userContext: UserContext = {},
-    tabContext?: TabContext
+    tabContext?: TabContext,
+    providedUserTimezone?: string
   ): Promise<PersonalizedInsightsResponse> {
     if (!this.validateApiKey()) {
       console.warn('Anthropic API key validation failed. Debugging info:');
@@ -538,8 +553,8 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       console.log('Generated cache key for AI insights:', cacheKey);
 
       const promptContent = tabContext 
-        ? this.createTabSpecificPrompt(analysis, userContext, tabContext)
-        : this.createUserPrompt(analysis, userContext);
+        ? this.createTabSpecificPrompt(analysis, userContext, tabContext, providedUserTimezone)
+        : this.createUserPrompt(analysis, userContext, providedUserTimezone);
       
       // Debug logging for production issues
       console.log('🔍 DEBUG - Prompt being sent to AI (first 500 chars):', promptContent.substring(0, 500));
