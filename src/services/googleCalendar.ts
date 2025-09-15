@@ -124,44 +124,78 @@ class GoogleCalendarService {
     // Get user's timezone - default to PST if detection fails
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
     
-    // SIMPLE AND BULLETPROOF: Create date ranges for user's timezone
+    // BULLETPROOF TIMEZONE HANDLING: Create proper date ranges for user's timezone
     const now = new Date();
     
-    // Get current time in user's timezone
-    const formatter = new Intl.DateTimeFormat('en-CA', {
+    // Step 1: Get today's date in the user's timezone using proper timezone conversion
+    const userDateFormatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: userTimezone,
       year: 'numeric',
-      month: '2-digit',
+      month: '2-digit', 
       day: '2-digit'
     });
     
-    const parts = formatter.formatToParts(now);
-    const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
-    const month = parseInt(parts.find(p => p.type === 'month')?.value || '0');
-    const day = parseInt(parts.find(p => p.type === 'day')?.value || '0');
+    const userDateParts = userDateFormatter.formatToParts(now);
+    const userYear = parseInt(userDateParts.find(p => p.type === 'year')?.value || '0');
+    const userMonth = parseInt(userDateParts.find(p => p.type === 'month')?.value || '0');
+    const userDay = parseInt(userDateParts.find(p => p.type === 'day')?.value || '0');
     
-    // Create start and end of day in user's timezone by creating the date string first
-    // This ensures we get the exact dates the user expects regardless of server timezone
-    const startOfDayString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T00:00:00`;
-    const endOfDayString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T23:59:59`;
+    // Step 2: Create start and end of day timestamps in user's timezone
+    // We need to create these as UTC timestamps that represent midnight and end-of-day in user's TZ
     
-    // Parse these as local timezone dates, then convert to UTC for Google Calendar API
-    const startOfDay = new Date(startOfDayString);
-    const endOfDay = new Date(endOfDayString);
+    // Method: Create Date objects that represent the exact start/end of day in user's timezone
+    // then convert to proper UTC ISO strings for Google Calendar API
     
-    console.log('🔍 DEBUG - Calendar date range:', {
+    // Create temporary date objects to calculate timezone offset for this specific date
+    const tempStart = new Date(userYear, userMonth - 1, userDay, 0, 0, 0, 0);
+    const tempEnd = new Date(userYear, userMonth - 1, userDay, 23, 59, 59, 999);
+    
+    // Get the timezone offset for the user's timezone on this specific date
+    // This accounts for DST changes
+    const startInUserTZ = new Date(tempStart.toLocaleString('sv-SE', { timeZone: 'UTC' }));
+    const startAsIfUserTZ = new Date(tempStart.toLocaleString('sv-SE', { timeZone: userTimezone }));
+    const timezoneOffsetMs = startInUserTZ.getTime() - startAsIfUserTZ.getTime();
+    
+    // Apply the timezone offset to get the correct UTC times for the user's timezone boundaries
+    const startOfDay = new Date(tempStart.getTime() - timezoneOffsetMs);
+    const endOfDay = new Date(tempEnd.getTime() - timezoneOffsetMs);
+    
+    console.log('🔍 DEBUG - Timezone-aware Calendar date range:', {
+      // Server info
       serverTime: now.toISOString(),
       serverTimeLocal: now.toString(),
+      serverTimezone: process.env.TZ || 'UTC (default)',
+      environment: process.env.NODE_ENV,
+      
+      // User timezone detection
       userTimezone: userTimezone,
-      extractedDate: { year, month, day },
-      startOfDayString: startOfDayString,
-      endOfDayString: endOfDayString,
+      userDetectedDate: { userYear, userMonth, userDay },
+      
+      // Timezone calculation details
+      tempStartLocal: tempStart.toString(),
+      tempEndLocal: tempEnd.toString(),
+      startInUserTZ: startInUserTZ.toISOString(),
+      startAsIfUserTZ: startAsIfUserTZ.toISOString(),
+      timezoneOffsetMs: timezoneOffsetMs,
+      timezoneOffsetHours: timezoneOffsetMs / (1000 * 60 * 60),
+      
+      // Final UTC boundaries for Google Calendar API
       startOfDay: startOfDay.toISOString(),
       endOfDay: endOfDay.toISOString(),
       startOfDayLocal: startOfDay.toString(),
       endOfDayLocal: endOfDay.toString(),
-      environment: process.env.NODE_ENV,
-      serverTimezone: process.env.TZ || 'default'
+      
+      // Verification: What these UTC times look like in user's timezone
+      startOfDayInUserTZ: startOfDay.toLocaleString('en-US', { 
+        timeZone: userTimezone, 
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+      }),
+      endOfDayInUserTZ: endOfDay.toLocaleString('en-US', { 
+        timeZone: userTimezone,
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+      })
     });
 
     try {
