@@ -7,6 +7,9 @@
       "maxDuration": 15
     }
   },
+  "env": {
+    "TZ": "America/Los_Angeles"
+  },
   "rewrites": [
     {
       "source": "/api/auth/(.*)",

@@ -25,7 +25,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "WebSearch",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(echo $TZ)"
     ],
     "deny": [],
     "ask": []
