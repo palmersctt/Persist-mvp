@@ -1,20 +1,11 @@
 {
   "functions": {
     "pages/api/auth/[...nextauth].ts": {
-      "maxDuration": 30,
-      "env": {
-        "TZ": "America/Los_Angeles"
-      }
+      "maxDuration": 30
     },
     "pages/api/**/*.ts": {
-      "maxDuration": 15,
-      "env": {
-        "TZ": "America/Los_Angeles"
-      }
+      "maxDuration": 15
     }
-  },
-  "env": {
-    "TZ": "America/Los_Angeles"
   },
   "rewrites": [
     {
