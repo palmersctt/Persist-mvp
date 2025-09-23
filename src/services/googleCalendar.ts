@@ -50,6 +50,7 @@ export interface WorkHealthMetrics {
 
 class GoogleCalendarService {
   private calendar: calendar_v3.Calendar | null = null;
+  private userTimezone: string = 'America/Los_Angeles'; // Default timezone
   
   // Meeting categorization keywords
   private readonly BENEFICIAL_KEYWORDS = [
@@ -130,6 +131,23 @@ class GoogleCalendarService {
     }
   }
 
+  // Helper method to get timezone-aware hours from a Date object
+  private getTimezoneAwareHours(date: Date, timezone?: string): number {
+    if (!timezone) {
+      // Fallback to direct getHours() if no timezone provided
+      return date.getHours();
+    }
+
+    // Get the hour in the user's timezone
+    const timeInUserTZ = date.toLocaleString('en-US', {
+      timeZone: timezone,
+      hour12: false,
+      hour: 'numeric'
+    });
+
+    return parseInt(timeInUserTZ);
+  }
+
   private categorizeEvent(summary: string): MeetingCategory {
     const title = summary.toLowerCase().trim();
     
@@ -150,6 +168,9 @@ class GoogleCalendarService {
 
     // Use provided timezone (from client-side) or fallback to server detection (which will be UTC in production)
     const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+
+    // Store timezone for use in other methods
+    this.userTimezone = userTimezone;
     
     console.log('🌍 getTodaysEvents timezone source:', {
       providedUserTimezone: providedUserTimezone,
@@ -394,7 +415,7 @@ class GoogleCalendarService {
     cognitiveDepletion += largeMeetings.length * 3;
 
     // Time of day factor - afternoon meetings more taxing (only actual meetings)
-    const afternoonMeetings = actualMeetings.filter(event => event.start.getHours() >= 13);
+    const afternoonMeetings = actualMeetings.filter(event => this.getTimezoneAwareHours(event.start, this.userTimezone) >= 13);
     if (afternoonMeetings.length >= 3) {
       cognitiveDepletion += 5;
     }
@@ -418,7 +439,7 @@ class GoogleCalendarService {
     return count;
   }
 
-  private calculateFocusTime(events: CalendarEvent[]): number {
+  private calculateFocusTime(events: CalendarEvent[], userTimezone?: string): number {
     if (events.length === 0) return 480; // 8 hours if no meetings
 
     const workStart = 9; // 9 AM
@@ -426,51 +447,153 @@ class GoogleCalendarService {
     let totalFocusTime = 0;
     let qualityFocusTime = 0;
 
+    console.log('🔍 DEBUG - calculateFocusTime timezone-aware calculation:', {
+      eventsCount: events.length,
+      userTimezone: userTimezone || 'not provided',
+      workStart,
+      workEnd
+    });
+
+    // Helper function to get timezone-aware hours/minutes
+    const getTimezoneAwareTime = (date: Date, timezone?: string) => {
+      if (!timezone) {
+        // Fallback to direct getHours() if no timezone provided
+        return {
+          hours: date.getHours(),
+          minutes: date.getMinutes(),
+          totalHours: date.getHours() + (date.getMinutes() / 60)
+        };
+      }
+
+      // Get the time in the user's timezone
+      const timeInUserTZ = date.toLocaleString('en-US', {
+        timeZone: timezone,
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const [hourStr, minuteStr] = timeInUserTZ.split(':');
+      const hours = parseInt(hourStr);
+      const minutes = parseInt(minuteStr);
+
+      return {
+        hours,
+        minutes,
+        totalHours: hours + (minutes / 60)
+      };
+    };
+
     // Check time before first meeting
     const firstMeeting = events[0];
-    if (firstMeeting.start.getHours() > workStart) {
-      const morningGapHours = firstMeeting.start.getHours() + (firstMeeting.start.getMinutes() / 60) - workStart;
+    const firstMeetingTime = getTimezoneAwareTime(firstMeeting.start, userTimezone);
+
+    console.log('🔍 DEBUG - First meeting time analysis:', {
+      firstMeetingStart: firstMeeting.start.toISOString(),
+      timezoneAwareHours: firstMeetingTime.hours,
+      timezoneAwareTotalHours: firstMeetingTime.totalHours,
+      workStart,
+      morningGap: firstMeetingTime.totalHours > workStart ? firstMeetingTime.totalHours - workStart : 0
+    });
+
+    if (firstMeetingTime.totalHours > workStart) {
+      const morningGapHours = firstMeetingTime.totalHours - workStart;
       const morningGapMinutes = morningGapHours * 60;
-      
+
       if (morningGapMinutes >= 30) { // 30+ minute blocks count as some focus time
         totalFocusTime += morningGapMinutes;
         if (morningGapMinutes >= 90) { // 90+ minute blocks are quality focus time
           qualityFocusTime += morningGapMinutes;
         }
       }
+
+      console.log('🔍 DEBUG - Morning gap calculated:', {
+        morningGapHours,
+        morningGapMinutes,
+        addedToTotal: morningGapMinutes >= 30,
+        addedToQuality: morningGapMinutes >= 90
+      });
     }
 
-    // Check gaps between meetings
+    // Check gaps between meetings (time difference calculation is timezone-agnostic)
     for (let i = 0; i < events.length - 1; i++) {
       const currentEnd = events[i].end;
       const nextStart = events[i + 1].start;
       const gapMinutes = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60);
-      
+
       if (gapMinutes >= 30) { // 30+ minute gaps count as focus time
         totalFocusTime += gapMinutes;
         if (gapMinutes >= 90) { // 90+ minute gaps are quality focus time
           qualityFocusTime += gapMinutes;
         }
       }
+
+      console.log(`🔍 DEBUG - Gap ${i + 1} between meetings:`, {
+        currentEnd: currentEnd.toISOString(),
+        nextStart: nextStart.toISOString(),
+        gapMinutes,
+        addedToTotal: gapMinutes >= 30,
+        addedToQuality: gapMinutes >= 90
+      });
     }
 
     // Check time after last meeting
     const lastMeeting = events[events.length - 1];
-    const lastMeetingEndHours = lastMeeting.end.getHours() + (lastMeeting.end.getMinutes() / 60);
-    if (lastMeetingEndHours < workEnd) {
-      const eveningGapMinutes = (workEnd - lastMeetingEndHours) * 60;
+    const lastMeetingTime = getTimezoneAwareTime(lastMeeting.end, userTimezone);
+
+    console.log('🔍 DEBUG - Last meeting time analysis:', {
+      lastMeetingEnd: lastMeeting.end.toISOString(),
+      timezoneAwareHours: lastMeetingTime.hours,
+      timezoneAwareTotalHours: lastMeetingTime.totalHours,
+      workEnd,
+      eveningGap: lastMeetingTime.totalHours < workEnd ? workEnd - lastMeetingTime.totalHours : 0
+    });
+
+    if (lastMeetingTime.totalHours < workEnd) {
+      const eveningGapMinutes = (workEnd - lastMeetingTime.totalHours) * 60;
       if (eveningGapMinutes >= 30) {
         totalFocusTime += eveningGapMinutes;
         if (eveningGapMinutes >= 90) {
           qualityFocusTime += eveningGapMinutes;
         }
       }
+
+      console.log('🔍 DEBUG - Evening gap calculated:', {
+        eveningGapHours: workEnd - lastMeetingTime.totalHours,
+        eveningGapMinutes,
+        addedToTotal: eveningGapMinutes >= 30,
+        addedToQuality: eveningGapMinutes >= 90
+      });
     }
 
     // Weight quality focus time more heavily
     const effectiveFocusTime = totalFocusTime * 0.7 + qualityFocusTime * 0.3;
 
-    return Math.round(effectiveFocusTime);
+    console.log('🔍 DEBUG - Final focus time calculation:', {
+      totalFocusTime,
+      qualityFocusTime,
+      effectiveFocusTime,
+      finalRounded: Math.round(effectiveFocusTime)
+    });
+
+    // SAFEGUARD: Cap focus time to prevent timezone-related bugs
+    // Maximum possible focus time should be 8 hours (480 minutes) for a full workday
+    const maxFocusTime = 480; // 8 hours in minutes
+    const minFocusTime = 0;   // Can't have negative focus time
+
+    const safeFocusTime = Math.max(minFocusTime, Math.min(maxFocusTime, Math.round(effectiveFocusTime)));
+
+    if (Math.round(effectiveFocusTime) !== safeFocusTime) {
+      console.warn('🚨 FOCUS TIME CAPPED - Timezone bug detected:', {
+        originalFocusTime: Math.round(effectiveFocusTime),
+        cappedFocusTime: safeFocusTime,
+        userTimezone: userTimezone,
+        eventsCount: events.length,
+        environment: process.env.NODE_ENV
+      });
+    }
+
+    return safeFocusTime;
   }
 
   private calculateFragmentationScore(events: CalendarEvent[]): number {
@@ -478,7 +601,7 @@ class GoogleCalendarService {
     if (events.length === 1) return 85; // Very good for single meeting
 
     const totalWorkMinutes = 8 * 60; // 8-hour workday
-    const focusTimeMinutes = this.calculateFocusTime(events);
+    const focusTimeMinutes = this.calculateFocusTime(events, this.userTimezone);
     const focusTimeRatio = focusTimeMinutes / totalWorkMinutes;
 
     // Calculate gaps between meetings
@@ -539,7 +662,7 @@ class GoogleCalendarService {
     
     const meetingCount = actualMeetings.length;
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
-    const focusTime = this.calculateFocusTime(events); // Use all events for focus time calculation
+    const focusTime = this.calculateFocusTime(events, this.userTimezone); // Use all events for focus time calculation
     const focusHours = focusTime / 60;
     
     // Calculate meeting density impact with more nuanced scoring
@@ -570,8 +693,8 @@ class GoogleCalendarService {
     else if (backToBackCount === 1) transitionScore = 88;
     
     // Time-of-day alignment (afternoon meetings more taxing) - only actual meetings
-    const afternoonMeetings = actualMeetings.filter(e => e.start.getHours() >= 14).length;
-    const morningMeetings = actualMeetings.filter(e => e.start.getHours() < 12).length;
+    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
+    const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
     let timingScore = 100;
     if (afternoonMeetings > morningMeetings * 1.5) timingScore = 70;
     else if (afternoonMeetings > morningMeetings) timingScore = 85;
@@ -629,7 +752,7 @@ class GoogleCalendarService {
     // Decision fatigue accumulation
     let decisionFatigue = 0;
     events.forEach((event, index) => {
-      const hourOfDay = event.start.getHours();
+      const hourOfDay = this.getTimezoneAwareHours(event.start, this.userTimezone);
       const timeFactor = hourOfDay >= 14 ? 1.5 : 1; // Afternoon decisions more taxing
       const attendeeFactor = (event.attendees && event.attendees > 5) ? 1.3 : 1;
       decisionFatigue += (10 * timeFactor * attendeeFactor);
@@ -637,7 +760,7 @@ class GoogleCalendarService {
     decisionFatigue = Math.min(80, decisionFatigue);
     
     // Cognitive reserve calculation
-    const focusTime = this.calculateFocusTime(events);
+    const focusTime = this.calculateFocusTime(events, this.userTimezone);
     const focusHours = focusTime / 60;
     let cognitiveReserve = 0;
     if (focusHours >= 4) cognitiveReserve = 80;
@@ -693,8 +816,14 @@ class GoogleCalendarService {
     }
     
     // Work rhythm analysis - only consider actual meetings
-    const morningBlock = actualMeetings.filter(e => e.start.getHours() >= 9 && e.start.getHours() < 12).length;
-    const afternoonBlock = actualMeetings.filter(e => e.start.getHours() >= 12 && e.start.getHours() < 17).length;
+    const morningBlock = actualMeetings.filter(e => {
+      const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
+      return hour >= 9 && hour < 12;
+    }).length;
+    const afternoonBlock = actualMeetings.filter(e => {
+      const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
+      return hour >= 12 && hour < 17;
+    }).length;
     const rhythmBalance = Math.abs(morningBlock - afternoonBlock);
     let rhythmScore = 100 - (rhythmBalance * 15);
     rhythmScore = Math.max(40, rhythmScore);
@@ -717,8 +846,8 @@ class GoogleCalendarService {
     else sustainabilityScore = 95;
     
     // Natural energy alignment - only consider actual meetings
-    const earlyMorningMeetings = actualMeetings.filter(e => e.start.getHours() < 9).length;
-    const lateMeetings = actualMeetings.filter(e => e.start.getHours() >= 16).length;
+    const earlyMorningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 9).length;
+    const lateMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 16).length;
     let alignmentScore = 100 - (earlyMorningMeetings * 20) - (lateMeetings * 15);
     alignmentScore = Math.max(30, alignmentScore);
     
@@ -838,7 +967,7 @@ class GoogleCalendarService {
     const meetingCount = actualMeetings.length; // Only count actual meetings
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
     const cognitiveAvailability = this.calculateCognitiveAvailability(events);
-    const focusTime = this.calculateFocusTime(events);
+    const focusTime = this.calculateFocusTime(events, this.userTimezone);
     const fragmentationScore = this.calculateFragmentationScore(events);
     
     const totalDuration = actualMeetings.reduce((sum, event) => {

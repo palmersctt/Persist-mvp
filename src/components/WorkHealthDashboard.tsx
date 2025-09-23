@@ -48,6 +48,29 @@ export default function WorkHealthDashboard() {
     setShowOnboarding(false);
   };
 
+  // Helper function to safely format focus time and prevent timezone bugs
+  const formatFocusTime = (focusTimeMinutes: number): { hours: number, minutes: number, isRealistic: boolean } => {
+    const maxReasonableFocusTime = 480; // 8 hours max
+    const minReasonableFocusTime = 0;   // 0 hours min
+
+    const safeFocusTime = Math.max(minReasonableFocusTime, Math.min(maxReasonableFocusTime, focusTimeMinutes));
+    const isRealistic = safeFocusTime === focusTimeMinutes;
+
+    if (!isRealistic) {
+      console.warn('🚨 FRONTEND - Unrealistic focus time detected and capped:', {
+        originalFocusTime: focusTimeMinutes,
+        cappedFocusTime: safeFocusTime,
+        location: 'WorkHealthDashboard.tsx'
+      });
+    }
+
+    return {
+      hours: Math.floor(safeFocusTime / 60),
+      minutes: Math.round(safeFocusTime % 60),
+      isRealistic
+    };
+  };
+
   const getWorkCapacityStatus = (): WorkCapacityStatus => {
     if (!workHealth) {
       return {
@@ -782,23 +805,23 @@ export default function WorkHealthDashboard() {
                       color: 'var(--text-muted)',
                       fontWeight: '500'
                     }}>
-                      {((workHealth?.focusTime || 0) / 60) >= 4 ? 'Good' : 
-                       ((workHealth?.focusTime || 0) / 60) >= 2 ? 'Moderate' : 'Limited'}
+                      {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Good' :
+                       formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Limited'}
                     </span>
                   </div>
                   <div className="w-full bg-gray-800 rounded h-1.5">
                     <div 
                       className="h-1.5 rounded transition-all duration-700"
                       style={{ 
-                        width: `${Math.min(100, ((workHealth?.focusTime || 0) / 60) * 22)}%`,
+                        width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
                         backgroundColor: '#4F9CF9',
-                        opacity: Math.min(1, Math.max(0.4, ((workHealth?.focusTime || 0) / 60) / 4))
+                        opacity: Math.min(1, Math.max(0.4, formatFocusTime(workHealth?.focusTime || 0).hours / 4))
                       }}
                     />
                   </div>
                   <div className="mt-1">
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m uninterrupted time
+                      {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m uninterrupted time
                     </span>
                   </div>
                 </div>
@@ -1161,23 +1184,23 @@ export default function WorkHealthDashboard() {
                         color: 'var(--text-muted)',
                         fontWeight: '500'
                       }}>
-                        {((workHealth?.focusTime || 0) / 60) >= 4 ? 'Good' : 
-                         ((workHealth?.focusTime || 0) / 60) >= 2 ? 'Moderate' : 'Limited'}
+                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Good' :
+                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Limited'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
                       <div 
                         className="h-1.5 rounded transition-all duration-700"
                         style={{ 
-                          width: `${Math.min(100, ((workHealth?.focusTime || 0) / 60) * 22)}%`,
+                          width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
                           backgroundColor: '#4F9CF9',
-                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.focusTime || 0) / 60) / 4))
+                          opacity: Math.min(1, Math.max(0.4, formatFocusTime(workHealth?.focusTime || 0).hours / 4))
                         }}
                       />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m uninterrupted time
+                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m uninterrupted time
                       </span>
                     </div>
                   </div>
@@ -1368,23 +1391,23 @@ export default function WorkHealthDashboard() {
                         color: 'var(--text-muted)',
                         fontWeight: '500'
                       }}>
-                        {((workHealth?.focusTime || 0) / 60) >= 4 ? 'Good' : 
-                         ((workHealth?.focusTime || 0) / 60) >= 2 ? 'Moderate' : 'Limited'}
+                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Good' :
+                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Limited'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
                       <div 
                         className="h-1.5 rounded transition-all duration-700"
                         style={{ 
-                          width: `${Math.min(100, ((workHealth?.focusTime || 0) / 60) * 22)}%`,
+                          width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
                           backgroundColor: '#4F9CF9',
-                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.focusTime || 0) / 60) / 4))
+                          opacity: Math.min(1, Math.max(0.4, formatFocusTime(workHealth?.focusTime || 0).hours / 4))
                         }}
                       />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m for deep thinking
+                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m for deep thinking
                       </span>
                     </div>
                   </div>
