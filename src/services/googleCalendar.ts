@@ -451,7 +451,31 @@ class GoogleCalendarService {
       eventsCount: events.length,
       userTimezone: userTimezone || 'not provided',
       workStart,
-      workEnd
+      workEnd,
+      eventsTimeline: events.map(e => ({
+        summary: e.summary,
+        start: e.start.toISOString(),
+        end: e.end.toISOString(),
+        userTimezoneStart: userTimezone ? e.start.toLocaleString('en-US', { timeZone: userTimezone }) : 'N/A',
+        userTimezoneEnd: userTimezone ? e.end.toLocaleString('en-US', { timeZone: userTimezone }) : 'N/A'
+      }))
+    });
+
+    // Calculate total meeting time to validate our focus time calculation
+    const totalMeetingMinutes = events.reduce((total, event) => {
+      const duration = (event.end.getTime() - event.start.getTime()) / (1000 * 60);
+      return total + duration;
+    }, 0);
+
+    const totalWorkdayMinutes = (workEnd - workStart) * 60; // 8 hours = 480 minutes
+    const theoreticalMaxFocus = Math.max(0, totalWorkdayMinutes - totalMeetingMinutes);
+
+    console.log('🔍 DEBUG - Focus time validation baseline:', {
+      totalMeetingMinutes,
+      totalMeetingHours: (totalMeetingMinutes / 60).toFixed(1),
+      totalWorkdayMinutes,
+      theoreticalMaxFocus,
+      theoreticalMaxFocusHours: (theoreticalMaxFocus / 60).toFixed(1)
     });
 
     // Helper function to get timezone-aware hours/minutes
@@ -576,24 +600,55 @@ class GoogleCalendarService {
       finalRounded: Math.round(effectiveFocusTime)
     });
 
-    // SAFEGUARD: Cap focus time to prevent timezone-related bugs
-    // Maximum possible focus time should be 8 hours (480 minutes) for a full workday
-    const maxFocusTime = 480; // 8 hours in minutes
+    // ENHANCED SAFEGUARD: Use more realistic logic
+    // Focus time should never exceed theoretical maximum (workday - meetings)
+    const maxRealisticFocusTime = Math.min(480, theoreticalMaxFocus); // Cap at theoretical max or 8 hours
     const minFocusTime = 0;   // Can't have negative focus time
 
-    const safeFocusTime = Math.max(minFocusTime, Math.min(maxFocusTime, Math.round(effectiveFocusTime)));
+    const safeFocusTime = Math.max(minFocusTime, Math.min(maxRealisticFocusTime, Math.round(effectiveFocusTime)));
 
+    // Enhanced validation and warning
     if (Math.round(effectiveFocusTime) !== safeFocusTime) {
-      console.warn('🚨 FOCUS TIME CAPPED - Timezone bug detected:', {
+      console.warn('🚨 FOCUS TIME CORRECTED - Logic error detected:', {
         originalFocusTime: Math.round(effectiveFocusTime),
-        cappedFocusTime: safeFocusTime,
+        correctedFocusTime: safeFocusTime,
+        theoreticalMaxFocus,
+        totalMeetingMinutes,
         userTimezone: userTimezone,
         eventsCount: events.length,
-        environment: process.env.NODE_ENV
+        environment: process.env.NODE_ENV,
+        reasoning: Math.round(effectiveFocusTime) > theoreticalMaxFocus ?
+          'Focus time exceeded theoretical maximum (workday - meetings)' :
+          'Focus time was capped due to other constraints'
       });
     }
 
-    return safeFocusTime;
+    // ALTERNATIVE CALCULATION: Use simpler, more accurate approach
+    // If the complex calculation seems wrong, use theoretical maximum
+    const simpleCalculation = Math.max(0, theoreticalMaxFocus);
+
+    // Use the more conservative (lower) of the two calculations
+    const finalFocusTime = Math.min(safeFocusTime, simpleCalculation);
+
+    console.log('🔍 DEBUG - Focus time calculation comparison:', {
+      complexCalculation: safeFocusTime,
+      simpleCalculation: simpleCalculation,
+      finalChoice: finalFocusTime,
+      rationale: finalFocusTime === simpleCalculation ? 'Used simple (workday - meetings)' : 'Used complex gap-based calculation'
+    });
+
+    // If complex calculation is significantly higher than simple calculation, flag it
+    if (safeFocusTime > simpleCalculation + 60) { // More than 1 hour difference
+      console.warn('🚨 FOCUS TIME DISCREPANCY - Using conservative calculation:', {
+        complexResult: safeFocusTime,
+        simpleResult: simpleCalculation,
+        chosenResult: finalFocusTime,
+        meetingHours: (totalMeetingMinutes / 60).toFixed(1),
+        explanation: 'Complex gap calculation seems inflated, using conservative approach'
+      });
+    }
+
+    return finalFocusTime;
   }
 
   private calculateFragmentationScore(events: CalendarEvent[]): number {
