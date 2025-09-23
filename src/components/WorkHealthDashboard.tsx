@@ -534,9 +534,9 @@ export default function WorkHealthDashboard() {
           <div className="flex space-x-1 md:space-x-2">
             {[
               { id: 'overview', label: 'Overview', mobileLabel: 'Overview' },
-              { id: 'performance', label: 'Right Now', mobileLabel: 'Right Now' },
-              { id: 'resilience', label: 'Today\'s Flow', mobileLabel: 'Today\'s Flow' },
-              { id: 'sustainability', label: 'Patterns', mobileLabel: 'Patterns' }
+              { id: 'performance', label: 'Performance Index', mobileLabel: 'Performance' },
+              { id: 'resilience', label: 'Cognitive Resilience', mobileLabel: 'Cognitive' },
+              { id: 'sustainability', label: 'Sustainability Index', mobileLabel: 'Sustainability' }
             ].map((tab) => (
               <button
                 key={tab.id}
