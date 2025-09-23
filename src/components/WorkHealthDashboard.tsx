@@ -18,16 +18,14 @@ interface DataDrivenInsight {
   message: string;
   dataSource: string;
   urgency: 'low' | 'medium' | 'high';
-  category: 'schedule' | 'research' | 'combination' | 'productivity' | 'wellness';
+  category: 'schedule' | 'research' | 'combination';
 }
 
 interface WorkCapacityStatus {
-  level: 'optimal' | 'good' | 'moderate' | 'recovery' | 'estimated' | 'peak' | 'attention' | 'critical';
+  level: 'optimal' | 'good' | 'moderate' | 'recovery' | 'estimated' | 'peak';
   message: string;
   color: string;
   description: string;
-  conversationalMessage?: string;
-  nextStepsAdvice?: string;
 }
 
 export default function WorkHealthDashboard() {
@@ -69,54 +67,42 @@ export default function WorkHealthDashboard() {
         level: 'optimal',
         message: isCached ? 'OPTIMAL WORK HEALTH (CACHED)' : 'OPTIMAL WORK HEALTH',
         color: '#00ff88', // Green
-        description: 'Outstanding cognitive conditions with excellent schedule balance. Perfect for strategic initiatives, complex problem-solving, and important decisions.',
-        conversationalMessage: 'Your brain is firing on all cylinders right now',
-        nextStepsAdvice: 'This is the perfect time to tackle your most challenging work. Consider diving into complex analysis, strategic planning, or creative problem-solving.'
+        description: 'Outstanding cognitive conditions with excellent schedule balance. Perfect for strategic initiatives, complex problem-solving, and important decisions.'
       };
     } else if (adaptiveIndex >= 75) {
       return {
         level: 'peak',
-        message: isCached ? 'EXCELLENT WORK HEALTH (CACHED)' : 'EXCELLENT WORK HEALTH',
+        message: isCached ? 'EXCELLENT WORK HEALTH (CACHED)' : 'EXCELLENT WORK HEALTH', 
         color: '#25d366', // Green
-        description: 'Strong cognitive resilience with sustainable work rhythm. Ideal for challenging projects, creative tasks, and high-stakes activities.',
-        conversationalMessage: 'You\'re in peak performance mode',
-        nextStepsAdvice: 'Great time for important decisions, complex tasks, or high-stakes meetings. Your cognitive resources are strong and sustainable.'
+        description: 'Strong cognitive resilience with sustainable work rhythm. Ideal for challenging projects, creative tasks, and high-stakes activities.'
       };
     } else if (adaptiveIndex >= 65) {
       return {
         level: 'good',
         message: isCached ? 'GOOD WORK HEALTH (CACHED)' : 'GOOD WORK HEALTH',
         color: '#ffb347', // Yellow/Amber
-        description: 'Solid cognitive foundation with balanced schedule patterns. Good capacity for routine tasks, meetings, and moderate complexity projects.',
-        conversationalMessage: 'You\'re running smooth and steady',
-        nextStepsAdvice: 'Perfect for routine work, scheduled meetings, and moderate complexity tasks. You have good mental bandwidth without overextending.'
+        description: 'Solid cognitive foundation with balanced schedule patterns. Good capacity for routine tasks, meetings, and moderate complexity projects.'
       };
     } else if (adaptiveIndex >= 55) {
       return {
         level: 'moderate',
         message: isCached ? 'MODERATE WORK HEALTH (CACHED)' : 'MODERATE WORK HEALTH',
         color: '#ff9500', // Orange
-        description: 'Some cognitive strain from schedule density. Consider optimizing meeting distribution and recovery periods.',
-        conversationalMessage: 'You\'re feeling the mental load building up',
-        nextStepsAdvice: 'Focus on essential tasks and avoid complex decisions. Consider rescheduling non-critical meetings to create breathing room.'
+        description: 'Some cognitive strain from schedule density. Consider optimizing meeting distribution and recovery periods.'
       };
     } else if (adaptiveIndex >= 40) {
       return {
         level: 'attention',
         message: isCached ? 'WORK HEALTH NEEDS ATTENTION (CACHED)' : 'WORK HEALTH NEEDS ATTENTION',
         color: '#ff7744', // Red-Orange
-        description: 'Performance compromised by schedule density and cognitive demands. Focus on essential tasks and schedule optimization.',
-        conversationalMessage: 'Your mental bandwidth is stretched thin',
-        nextStepsAdvice: 'Prioritize only essential tasks today. Consider which meetings could be shortened or moved to create recovery time.'
+        description: 'Performance compromised by schedule density and cognitive demands. Focus on essential tasks and schedule optimization.'
       };
     } else {
       return {
         level: 'critical',
         message: isCached ? 'CRITICAL WORK HEALTH (CACHED)' : 'CRITICAL WORK HEALTH',
         color: '#ff4444', // Red
-        description: 'Severe cognitive strain requiring immediate schedule intervention. Prioritize recovery and workload reduction.',
-        conversationalMessage: 'You\'re running on cognitive fumes',
-        nextStepsAdvice: 'Focus purely on recovery and damage control. Cancel non-essential meetings and delegate what you can. Your priority is mental restoration.'
+        description: 'Severe cognitive strain requiring immediate schedule intervention. Prioritize recovery and workload reduction.'
       };
     }
   };
@@ -150,149 +136,6 @@ export default function WorkHealthDashboard() {
   };
 
   // Get AI insights for specific tab, with static fallback
-  // Get immediate-term insights for "Right Now" tab
-  const getImmediateInsights = () => {
-    if (!workHealth) return [];
-
-    const insights: DataDrivenInsight[] = [];
-    const now = new Date();
-    const currentHour = now.getHours();
-    const workCapacity = getWorkCapacityStatus();
-
-    // Next 2-3 hours insights
-    if (currentHour < 11) {
-      // Morning insights
-      if (workHealth.adaptivePerformanceIndex >= 75) {
-        insights.push({
-          type: 'current_analysis',
-          title: 'Peak Morning Performance Window',
-          message: 'Your cognitive energy is at its highest right now. The next 2-3 hours are ideal for your most demanding work - complex analysis, strategic decisions, or creative problem-solving.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'low',
-          category: 'productivity'
-        });
-      } else if (workHealth.adaptivePerformanceIndex >= 50) {
-        insights.push({
-          type: 'current_analysis',
-          title: 'Solid Morning Capacity',
-          message: 'You have good cognitive resources this morning. Use the next 2-3 hours for important tasks, structured work, and key meetings before afternoon energy dips.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'low',
-          category: 'productivity'
-        });
-      } else {
-        insights.push({
-          type: 'schedule_impact',
-          title: 'Energy Conservation Mode',
-          message: 'Your morning capacity is limited. Focus on essential tasks only in the next 2-3 hours and avoid major decisions until you can recharge.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'medium',
-          category: 'wellness'
-        });
-      }
-    } else if (currentHour < 15) {
-      // Mid-day insights
-      if (workHealth.adaptivePerformanceIndex >= 65) {
-        insights.push({
-          type: 'current_analysis',
-          title: 'Sustained Midday Performance',
-          message: 'You\'re maintaining strong cognitive capacity through midday. The next 2-3 hours are good for collaborative work, meetings, and moderate complexity tasks.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'low',
-          category: 'productivity'
-        });
-      } else {
-        insights.push({
-          type: 'current_analysis',
-          title: 'Midday Maintenance Mode',
-          message: 'Your energy is in the typical midday range. Stick to routine tasks and scheduled meetings for the next 2-3 hours, saving complex work for later.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'medium',
-          category: 'productivity'
-        });
-      }
-    } else {
-      // Afternoon insights
-      if (workHealth.adaptivePerformanceIndex >= 60) {
-        insights.push({
-          type: 'current_analysis',
-          title: 'Afternoon Momentum',
-          message: 'Your afternoon performance is holding strong. Use the next 2-3 hours for follow-ups, administrative tasks, and wrapping up important projects.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'low',
-          category: 'productivity'
-        });
-      } else {
-        insights.push({
-          type: 'current_analysis',
-          title: 'Afternoon Wind-Down',
-          message: 'Your cognitive resources are naturally declining. Focus the next 2-3 hours on lighter tasks, planning tomorrow, and preparing for a strong finish.',
-          dataSource: 'Real-time Analysis',
-          urgency: 'low',
-          category: 'productivity'
-        });
-      }
-    }
-
-    return insights;
-  };
-
-  // Get next meeting countdown and readiness
-  const getNextMeetingInfo = () => {
-    // For now, we'll simulate this since we don't have direct access to events in this component
-    // This would ideally come from the workHealth data structure
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    // Simulate next meeting based on typical patterns
-    let nextMeetingMinutes = 0;
-    let meetingTitle = 'Team Standup';
-    let readinessScore = 85;
-
-    if (currentHour < 10) {
-      nextMeetingMinutes = (10 * 60) - (currentHour * 60 + currentMinute);
-      meetingTitle = 'Morning Team Sync';
-    } else if (currentHour < 14) {
-      nextMeetingMinutes = (14 * 60) - (currentHour * 60 + currentMinute);
-      meetingTitle = 'Project Review';
-    } else if (currentHour < 16) {
-      nextMeetingMinutes = (16 * 60) - (currentHour * 60 + currentMinute);
-      meetingTitle = 'Client Call';
-    } else {
-      nextMeetingMinutes = 0; // No more meetings today - set to 0 instead of null
-    }
-
-    // Calculate readiness based on current performance
-    if (workHealth?.adaptivePerformanceIndex) {
-      readinessScore = Math.min(95, workHealth.adaptivePerformanceIndex + 10);
-    }
-
-    return {
-      nextMeetingMinutes,
-      meetingTitle,
-      readinessScore,
-      impactPrediction: readinessScore >= 80 ? 'You\'re well-prepared for this meeting' :
-                       readinessScore >= 60 ? 'You should be able to participate effectively' :
-                       'Consider a quick mental reset before this meeting'
-    };
-  };
-
-  // Meeting readiness and attention fragmentation metrics
-  const getMeetingReadinessMetrics = () => {
-    if (!workHealth) return null;
-
-    const attentionFragmentation = Math.max(0, 100 - (workHealth.schedule.backToBackCount * 25));
-    const meetingReadiness = Math.min(100, workHealth.adaptivePerformanceIndex + (attentionFragmentation / 4));
-
-    return {
-      attentionFragmentation,
-      meetingReadiness,
-      contextSwitchingCost: workHealth.schedule.backToBackCount >= 3 ? 'High' :
-                           workHealth.schedule.backToBackCount >= 1 ? 'Moderate' : 'Low'
-    };
-  };
-
   const getTabSpecificInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
     // If AI insights are available, filter by relevance to tab
     if (workHealth?.ai?.insights && workHealth.ai.insights.length > 0) {
@@ -690,9 +533,9 @@ export default function WorkHealthDashboard() {
         <div className="flex justify-center">
           <div className="flex space-x-1 md:space-x-2">
             {[
-              { id: 'overview', label: 'Right Now', mobileLabel: 'Right Now' },
-              { id: 'performance', label: 'Today\'s Flow', mobileLabel: 'Today\'s Flow' },
-              { id: 'resilience', label: 'Patterns', mobileLabel: 'Patterns' },
+              { id: 'overview', label: 'Overview', mobileLabel: 'Overview' },
+              { id: 'performance', label: 'Performance Index', mobileLabel: 'Performance' },
+              { id: 'resilience', label: 'Cognitive Resilience', mobileLabel: 'Cognitive' },
               { id: 'sustainability', label: 'Sustainability Index', mobileLabel: 'Sustainability' }
             ].map((tab) => (
               <button
@@ -716,35 +559,32 @@ export default function WorkHealthDashboard() {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 pb-12 space-y-16">
         
-        {/* Right Now Tab - Immediate work capacity experience */}
+        {/* Overview Tab - All current content */}
         {activeTab === 'overview' && (
           <>
-            {/* Conversational Hero Message */}
+            {/* Hero Message Section */}
             <section className="text-center mb-12">
               <div className="max-w-2xl mx-auto">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
-                  {getWorkCapacityStatus().conversationalMessage || "Let's see how you're doing right now"}
+                  {workHealth?.ai?.heroMessage || "Today's your day to shine"}
                 </h1>
-                <p className="text-lg text-gray-400 mt-4">
-                  {getWorkCapacityStatus().nextStepsAdvice}
-                </p>
-                <div className="w-16 h-0.5 mx-auto mt-6" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
+                <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
               </div>
             </section>
             
             {/* Primary Work Capacity Metric */}
         <section className="text-center">
-
+          
           {/* Dual Concentric Ring Visualization */}
-          <div className="relative mx-auto mt-12 mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{
-            width: '100%',
+          <div className="relative mx-auto mt-12 mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{ 
+            width: '100%', 
             maxWidth: '400px',
             height: '280px',
             minHeight: '240px'
           }}>
             {/* SVG Ring System */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <svg
+              <svg 
                 className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 transition-all duration-1000 ease-out"
                 viewBox="0 0 180 180"
                 style={{ transform: 'rotate(-90deg)' }}
@@ -758,7 +598,7 @@ export default function WorkHealthDashboard() {
                   stroke="rgba(16,185,129,0.2)"
                   strokeWidth="12"
                 />
-
+                
                 {/* Outer Ring Progress (Performance Index) */}
                 <circle
                   cx="90"
@@ -772,7 +612,7 @@ export default function WorkHealthDashboard() {
                   strokeDashoffset={471.2 * (1 - (workHealth?.adaptivePerformanceIndex || 0) / 100)}
                   className="transition-all duration-1000 ease-out"
                 />
-
+                
                 {/* Inner Ring Background */}
                 <circle
                   cx="90"
@@ -782,7 +622,7 @@ export default function WorkHealthDashboard() {
                   stroke="rgba(255,255,255,0.06)"
                   strokeWidth="10"
                 />
-
+                
                 {/* Inner Ring Left Half (Cognitive Resilience) */}
                 <circle
                   cx="90"
@@ -796,7 +636,7 @@ export default function WorkHealthDashboard() {
                   strokeDashoffset={172.8 * (1 - (workHealth?.cognitiveResilience || 0) / 100)}
                   className="transition-all duration-1000 ease-out"
                 />
-
+                
                 {/* Inner Ring Right Half (Sustainability Index) */}
                 <circle
                   cx="90"
@@ -812,198 +652,372 @@ export default function WorkHealthDashboard() {
                 />
               </svg>
             </div>
-
+            
             {/* External Labels - Symmetric Three-Point Layout */}
             {/* Performance Index Label - 12 o'clock (Top) */}
-            <div className="absolute text-center" style={{
-              left: '50%',
+            <div className="absolute text-center" style={{ 
+              left: '50%', 
               top: '-30px',
               transform: 'translateX(-50%)'
             }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{
-                color: '#10b981',
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
+                color: '#10b981', 
                 lineHeight: '1'
               }}>
                 {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
                 color: '#10b981'
               }}>
                 PERFORMANCE<br />INDEX
               </div>
             </div>
-
+            
             {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
-            <div className="absolute text-center" style={{
+            <div className="absolute text-center" style={{ 
               left: '15%',
               bottom: '10px',
               transform: 'translateX(-50%)'
             }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{
-                color: '#6b7280',
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
+                color: '#6b7280', 
                 lineHeight: '1'
               }}>
                 {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
                 color: '#6b7280'
               }}>
                 SUSTAINABILITY<br />INDEX
               </div>
             </div>
-
+            
             {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
-            <div className="absolute text-center" style={{
+            <div className="absolute text-center" style={{ 
               right: '15%',
               bottom: '10px',
               transform: 'translateX(50%)'
             }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{
-                color: '#3b82f6',
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
+                color: '#3b82f6', 
                 lineHeight: '1'
               }}>
                 {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
                 color: '#3b82f6'
               }}>
                 COGNITIVE<br />RESILIENCE
               </div>
             </div>
           </div>
+          
+          {/* Score Explanation - positioned directly below the metric */}
+          {activeExplanation === 'performance' && (
+            <div 
+              className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform"
+              onClick={() => setActiveExplanation(null)}
+              style={{ 
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}
+              ref={(el) => {
+                if (el) {
+                  setTimeout(() => {
+                    el.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'nearest',
+                      inline: 'center'
+                    });
+                  }, 100);
+                }
+              }}>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                Your {workHealth?.adaptivePerformanceIndex || 0} Performance Index
+              </h3>
+              <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                Based on your meeting patterns, focus availability, and schedule structure.
+              </p>
+              
+              {/* Simplified Components - Max 4 */}
+              <div className="space-y-5 mb-6">
+                {/* Meeting Load */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Meeting Load
+                    </span>
+                    <span className="text-xs" style={{ 
+                      color: 'var(--text-muted)',
+                      fontWeight: '500'
+                    }}>
+                      {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
+                       (workHealth?.schedule?.meetingCount || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-800 rounded h-1.5">
+                    <div 
+                      className="h-1.5 rounded transition-all duration-700"
+                      style={{ 
+                        width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
+                        backgroundColor: '#4F9CF9',
+                        opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 15)) / 100)
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {workHealth?.schedule?.meetingCount || 0} meetings scheduled
+                    </span>
+                  </div>
+                </div>
 
+                {/* Focus Availability */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Focus Availability
+                    </span>
+                    <span className="text-xs" style={{ 
+                      color: 'var(--text-muted)',
+                      fontWeight: '500'
+                    }}>
+                      {((workHealth?.focusTime || 0) / 60) >= 4 ? 'Good' : 
+                       ((workHealth?.focusTime || 0) / 60) >= 2 ? 'Moderate' : 'Limited'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-800 rounded h-1.5">
+                    <div 
+                      className="h-1.5 rounded transition-all duration-700"
+                      style={{ 
+                        width: `${Math.min(100, ((workHealth?.focusTime || 0) / 60) * 22)}%`,
+                        backgroundColor: '#4F9CF9',
+                        opacity: Math.min(1, Math.max(0.4, ((workHealth?.focusTime || 0) / 60) / 4))
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {Math.floor((workHealth?.focusTime || 0) / 60)}h {(workHealth?.focusTime || 0) % 60}m uninterrupted time
+                    </span>
+                  </div>
+                </div>
+
+                {/* Schedule Flow */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Schedule Flow
+                    </span>
+                    <span className="text-xs" style={{ 
+                      color: 'var(--text-muted)',
+                      fontWeight: '500'
+                    }}>
+                      {(workHealth?.schedule?.fragmentationScore || 0) >= 80 ? 'Good' : 
+                       (workHealth?.schedule?.fragmentationScore || 0) >= 60 ? 'Moderate' : 'Fragmented'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-800 rounded h-1.5">
+                    <div 
+                      className="h-1.5 rounded transition-all duration-700"
+                      style={{ 
+                        width: `${workHealth?.schedule?.fragmentationScore || 20}%`,
+                        backgroundColor: '#4F9CF9',
+                        opacity: Math.max(0.4, (workHealth?.schedule?.fragmentationScore || 20) / 100)
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {(workHealth?.schedule?.backToBackCount || 0) > 0 ? 
+                        `${workHealth?.schedule?.backToBackCount} back-to-back transitions` : 
+                        'Well-spaced meetings'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Recovery Time */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      Recovery Time
+                    </span>
+                    <span className="text-xs" style={{ 
+                      color: 'var(--text-muted)',
+                      fontWeight: '500'
+                    }}>
+                      {((workHealth?.schedule?.bufferTime || 0) / 60) >= 3 ? 'Good' : 
+                       ((workHealth?.schedule?.bufferTime || 0) / 60) >= 1 ? 'Moderate' : 'Limited'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-800 rounded h-1.5">
+                    <div 
+                      className="h-1.5 rounded transition-all duration-700"
+                      style={{ 
+                        width: `${Math.min(100, ((workHealth?.schedule?.bufferTime || 0) / 60) * 25)}%`,
+                        backgroundColor: '#4F9CF9',
+                        opacity: Math.min(1, Math.max(0.4, ((workHealth?.schedule?.bufferTime || 0) / 60) / 4))
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m between activities
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-gray-700">
+                <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  Key Insight
+                </h4>
+                <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    {workHealth?.adaptivePerformanceIndex >= 75 ? 
+                      'Your current schedule structure supports sustainable performance. Consider maintaining this balance of meetings and focused work time.' :
+                      workHealth?.adaptivePerformanceIndex >= 50 ?
+                      'Your schedule shows moderate density. Try consolidating meetings into blocks to create longer periods for focused work.' :
+                      'Your schedule has high meeting density. Consider which meetings could be shortened, combined, or rescheduled to create more continuous work time.'
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <strong>Remember:</strong> This score reflects your current week's pattern. Small changes in meeting structure can significantly improve your cognitive performance.
+                </p>
+                <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                  Click anywhere to close
+                </p>
+              </div>
+            </div>
+          )}
+          
         </section>
 
-        {/* Simplified AI-Driven Insights */}
+        {/* AI-Powered Insights Section */}
         <section>
-
-          <div className="space-y-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="whoop-section-title">
+              Insights
+            </h2>
+            {/* AI/Static Indicator Badge */}
+            <div className="flex items-center space-x-2">
+              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                tabInsights.isAI 
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+              }`}>
+                {tabInsights.isAI ? '🤖 AI Powered' : '📊 Static Analysis'}
+              </div>
+              {tabInsights.isAI && workHealth?.ai?.overallScore && (
+                <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                  {workHealth.ai.overallScore}% confidence
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="space-y-8">
             {isAILoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex items-center space-x-3">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
                   <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Analyzing your current state...
+                    Loading {activeTab} insights...
                   </span>
                 </div>
               </div>
-            ) : (() => {
-              // Get the most relevant insight for current state
-              const getCurrentStateInsight = () => {
-                // Use AI insights if available, otherwise create a smart immediate insight
-                if (tabInsights.isAI && tabInsights.insights.length > 0) {
-                  return tabInsights.insights[0]; // Take the first AI insight as most relevant
-                } else {
-                  // Generate smart immediate insight based on current state
-                  const now = new Date();
-                  const currentHour = now.getHours();
-                  const workCapacity = getWorkCapacityStatus();
-                  const nextMeeting = getNextMeetingInfo();
-                  const readinessMetrics = getMeetingReadinessMetrics();
-
-                  // Handle case when workHealth is null/loading
-                  if (!workHealth) {
-                    return {
-                      type: 'current_analysis' as const,
-                      title: 'Loading Your Work Health Analysis',
-                      message: 'We\'re analyzing your calendar data to provide personalized insights about your current capacity and what to focus on in the next 2-3 hours.',
-                      dataSource: 'Loading...',
-                      urgency: 'low' as const,
-                      category: 'combination' as const
-                    };
+            ) : tabInsights.insights.length > 0 ? tabInsights.insights.map((insight, index) => {
+              // Determine dot color based on which metric this insight is about
+              const getDotColorForInsight = (insight: any) => {
+                const title = insight.title.toLowerCase();
+                
+                // Check if insight is about Adaptive Performance Index (main metric)
+                if (title.includes('work health') || title.includes('adaptive performance') || title.includes('performance')) {
+                  const score = workHealth?.adaptivePerformanceIndex || 0;
+                  if (score >= 75) return 'var(--whoop-green)';
+                  if (score >= 65) return 'var(--whoop-yellow)';
+                  if (score >= 55) return '#ff9500'; // Orange
+                  return 'var(--whoop-red)';
+                }
+                
+                // Check if insight is about Cognitive Resilience
+                if (title.includes('cognitive resilience') || title.includes('cognitive')) {
+                  const resilience = workHealth?.cognitiveResilience || 0;
+                  if (resilience > 65) return 'var(--whoop-green)';
+                  if (resilience > 40) return 'var(--whoop-yellow)';
+                  return 'var(--whoop-red)';
+                }
+                
+                // Check if insight is about Sustainability
+                if (title.includes('sustainability') || title.includes('sustainable') || title.includes('unsustainable')) {
+                  const sustainability = workHealth?.workRhythmRecovery || 0;
+                  if (sustainability > 70) return 'var(--whoop-green)';
+                  if (sustainability > 45) return 'var(--whoop-yellow)';
+                  return 'var(--whoop-red)';
+                }
+                
+                // For AI insights, use severity if available
+                if (tabInsights.isAI && insight.severity) {
+                  switch (insight.severity) {
+                    case 'success': return 'var(--whoop-green)';
+                    case 'info': return '#4F9CF9';
+                    case 'warning': return 'var(--whoop-yellow)';
+                    case 'critical': return 'var(--whoop-red)';
+                    default: return 'rgba(255,255,255,0.3)';
                   }
-
-                  // Create a comprehensive insight about current state
-                  let title = "Current State Analysis";
-                  let message = "";
-                  let urgency: 'low' | 'medium' | 'high' = 'low';
-
-                  const performanceIndex = workHealth.adaptivePerformanceIndex || 0;
-                  const backToBackCount = workHealth.schedule?.backToBackCount || 0;
-
-                  if (performanceIndex >= 75) {
-                    title = "Strong Performance Window";
-                    if (currentHour < 12) {
-                      message = `You're in peak morning performance (${performanceIndex}% capacity). Next 2-3 hours are perfect for complex work, strategic decisions, or challenging projects before afternoon energy dips. ${nextMeeting.nextMeetingMinutes > 0 ? `Your next meeting is in ${Math.floor(nextMeeting.nextMeetingMinutes / 60)}h ${nextMeeting.nextMeetingMinutes % 60}m - you're well-prepared.` : 'No immediate meetings to interrupt your flow.'}`;
-                    } else if (currentHour < 15) {
-                      message = `You're maintaining strong midday performance (${performanceIndex}% capacity). Great time for collaborative work and important meetings. ${readinessMetrics?.contextSwitchingCost === 'Low' ? 'Your schedule flow supports sustained productivity.' : 'Consider grouping similar meetings to reduce context switching.'}`;
-                    } else {
-                      message = `Your afternoon performance is holding strong (${performanceIndex}% capacity). Use the next 2-3 hours for follow-ups, planning, and wrapping up key projects. ${nextMeeting.nextMeetingMinutes > 0 ? 'You have good energy for remaining meetings.' : 'Good time for reflection and tomorrow planning.'}`;
-                    }
-                  } else if (performanceIndex >= 50) {
-                    title = "Moderate Capacity - Optimize Your Approach";
-                    urgency = 'medium';
-                    message = `Your current capacity is moderate (${performanceIndex}% performance). ${backToBackCount >= 3 ? `With ${backToBackCount} back-to-back meetings, consider taking 5-minute breaks between sessions to reset.` : 'Focus on essential tasks and structured work.'} ${readinessMetrics?.meetingReadiness < 70 ? 'Your meeting readiness is lower than optimal - take a moment to mentally prepare before your next session.' : 'You should be able to handle scheduled meetings effectively.'}`;
-                  } else {
-                    title = "Low Capacity - Energy Conservation Mode";
-                    urgency = 'high';
-                    message = `Your capacity is currently limited (${performanceIndex}% performance). Focus on damage control and essential tasks only. ${backToBackCount >= 4 ? 'Your packed schedule is contributing to mental fatigue - consider which meetings could be shortened or rescheduled.' : 'Avoid complex decisions and delegate what you can.'} ${nextMeeting.nextMeetingMinutes > 0 && nextMeeting.nextMeetingMinutes < 60 ? 'Take a few deep breaths before your upcoming meeting to reset your mental state.' : 'Use any available time for recovery.'}`;
-                  }
-
-                  return {
-                    type: 'current_analysis' as const,
-                    title,
-                    message,
-                    dataSource: 'Real-time Analysis',
-                    urgency,
-                    category: 'combination' as const
-                  };
+                }
+                
+                // Fallback to urgency-based color
+                switch (insight.urgency) {
+                  case 'low': return 'var(--whoop-green)';
+                  case 'medium': return 'var(--whoop-yellow)';
+                  case 'high': return 'var(--whoop-red)';
+                  default: return 'rgba(255,255,255,0.3)';
                 }
               };
-
-              const mainInsight = getCurrentStateInsight();
-
+              
               return (
-                <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700/50">
-                  {/* Insight Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: getWorkCapacityStatus().color }}
-                      />
-                      <h3 className="text-lg font-medium text-white">
-                        {mainInsight.title}
-                      </h3>
+                <div key={index}>
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="whoop-insight-title flex-1">
+                      {insight.title}
+                    </h4>
+                    <div className="flex items-center space-x-2">
+                      {tabInsights.isAI && insight.confidence && (
+                        <span className="text-xs text-gray-400">
+                          {insight.confidence}%
+                        </span>
+                      )}
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getDotColorForInsight(insight) }} />
                     </div>
                   </div>
-
-                  {/* Main Message */}
-                  <p className="text-gray-300 leading-relaxed mb-4">
-                    {mainInsight.message}
+                  <p className="whoop-insight-text mb-4">
+                    {insight.message}
                   </p>
-
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-600/50">
-                    <div className="text-center">
-                      <div className="text-xl font-light mb-1" style={{ color: '#10b981' }}>
-                        {workHealth?.adaptivePerformanceIndex || 0}%
-                      </div>
-                      <div className="text-xs text-gray-400">Performance</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                      {tabInsights.isAI ? (insight.dataSource || 'AI Analysis') : insight.dataSource}
                     </div>
-                    <div className="text-center">
-                      <div className="text-xl font-light mb-1" style={{ color: '#3b82f6' }}>
-                        {workHealth?.cognitiveResilience || 0}%
+                    {tabInsights.isAI && insight.recommendation && (
+                      <div className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
+                        Actionable
                       </div>
-                      <div className="text-xs text-gray-400">Resilience</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-light mb-1" style={{ color: '#6b7280' }}>
-                        {workHealth?.workRhythmRecovery || 0}%
-                      </div>
-                      <div className="text-xs text-gray-400">Sustainability</div>
-                    </div>
+                    )}
                   </div>
-
-                  {/* Data Source */}
-                  <div className="mt-4 pt-3 border-t border-gray-600/30">
-                    <span className="text-xs text-gray-500">
-                      Source: {tabInsights.isAI ? 'AI Analysis + Calendar Data' : 'Calendar Data Analysis'}
-                    </span>
-                  </div>
+                  {index < tabInsights.insights.length - 1 && <hr className="whoop-clean-divider mt-8" />}
                 </div>
               );
-            })()}
+            }) : (
+              <div className="text-center py-8">
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
