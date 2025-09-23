@@ -171,6 +171,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Add production debug logging to compare with local environment
+    console.log('🚨 PRODUCTION DEBUG - TIMEZONE USED:', userTimezone);
     console.log('🚨 PRODUCTION DEBUG - Events Count:', events.length);
     console.log('🚨 PRODUCTION DEBUG - Adaptive Index:', workHealthData.adaptivePerformanceIndex);
     console.log('🚨 PRODUCTION DEBUG - Meeting Count:', workHealthData.schedule?.meetingCount);
