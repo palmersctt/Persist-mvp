@@ -26,7 +26,9 @@
       "Bash(findstr:*)",
       "WebSearch",
       "Bash(npx kill-port:*)",
-      "Bash(echo $TZ)"
+      "Bash(echo $TZ)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
