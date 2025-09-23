@@ -169,7 +169,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('AI Error details:', aiError.message);
       }
     }
-    
+
+    // Add production debug logging to compare with local environment
+    console.log('🚨 PRODUCTION DEBUG - Events Count:', events.length);
+    console.log('🚨 PRODUCTION DEBUG - Adaptive Index:', workHealthData.adaptivePerformanceIndex);
+    console.log('🚨 PRODUCTION DEBUG - Meeting Count:', workHealthData.schedule?.meetingCount);
+    console.log('🚨 PRODUCTION DEBUG - Full WorkHealth:', JSON.stringify({
+      adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
+      cognitiveResilience: workHealthData.cognitiveResilience,
+      workRhythmRecovery: workHealthData.workRhythmRecovery,
+      meetingCount: workHealthData.schedule?.meetingCount,
+      backToBackCount: workHealthData.schedule?.backToBackCount,
+      focusTime: workHealthData.schedule?.durationHours,
+      events: events.map(e => ({
+        summary: e.summary,
+        start: e.start?.toISOString(),
+        end: e.end?.toISOString(),
+        category: e.category
+      }))
+    }, null, 2));
+
     res.status(200).json(enhancedResponse);
   } catch (error) {
     console.error('Error fetching work health data:', error);
