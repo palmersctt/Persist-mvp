@@ -440,10 +440,10 @@ class GoogleCalendarService {
   }
 
   private calculateFocusTime(events: CalendarEvent[], userTimezone?: string): number {
-    if (events.length === 0) return 480; // 8 hours if no meetings
+    if (events.length === 0) return 720; // 12 hours if no meetings (6 AM - 6 PM)
 
-    const workStart = 9; // 9 AM
-    const workEnd = 17; // 5 PM
+    const workStart = 6; // 6 AM - expanded to capture broader daily picture
+    const workEnd = 18; // 6 PM - expanded to capture broader daily picture
     let totalFocusTime = 0;
     let qualityFocusTime = 0;
 
@@ -467,7 +467,7 @@ class GoogleCalendarService {
       return total + duration;
     }, 0);
 
-    const totalWorkdayMinutes = (workEnd - workStart) * 60; // 8 hours = 480 minutes
+    const totalWorkdayMinutes = (workEnd - workStart) * 60; // 12 hours = 720 minutes
     const theoreticalMaxFocus = Math.max(0, totalWorkdayMinutes - totalMeetingMinutes);
 
     console.log('🔍 DEBUG - Focus time validation baseline:', {
@@ -655,7 +655,7 @@ class GoogleCalendarService {
     if (events.length === 0) return 100; // Perfect score for no meetings
     if (events.length === 1) return 85; // Very good for single meeting
 
-    const totalWorkMinutes = 8 * 60; // 8-hour workday
+    const totalWorkMinutes = 12 * 60; // 12-hour workday (6 AM - 6 PM)
     const focusTimeMinutes = this.calculateFocusTime(events, this.userTimezone);
     const focusTimeRatio = focusTimeMinutes / totalWorkMinutes;
 
@@ -870,14 +870,14 @@ class GoogleCalendarService {
       return 98; // Excellent rhythm with no actual meetings
     }
     
-    // Work rhythm analysis - only consider actual meetings
+    // Work rhythm analysis - only consider actual meetings (expanded 6 AM - 6 PM window)
     const morningBlock = actualMeetings.filter(e => {
       const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
-      return hour >= 9 && hour < 12;
+      return hour >= 6 && hour < 12;
     }).length;
     const afternoonBlock = actualMeetings.filter(e => {
       const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
-      return hour >= 12 && hour < 17;
+      return hour >= 12 && hour < 18;
     }).length;
     const rhythmBalance = Math.abs(morningBlock - afternoonBlock);
     let rhythmScore = 100 - (rhythmBalance * 15);
@@ -900,9 +900,9 @@ class GoogleCalendarService {
     else if (totalMeetingHours > 4) sustainabilityScore = 80;
     else sustainabilityScore = 95;
     
-    // Natural energy alignment - only consider actual meetings
-    const earlyMorningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 9).length;
-    const lateMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 16).length;
+    // Natural energy alignment - only consider actual meetings (expanded window)
+    const earlyMorningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 7).length; // Before 7 AM
+    const lateMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 17).length; // After 5 PM
     let alignmentScore = 100 - (earlyMorningMeetings * 20) - (lateMeetings * 15);
     alignmentScore = Math.max(30, alignmentScore);
     
@@ -1029,7 +1029,7 @@ class GoogleCalendarService {
       return sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
     }, 0);
 
-    const bufferTime = Math.max(0, (8 * 60) - (totalDuration * 60) - (meetingCount * 15)); // Account for transitions
+    const bufferTime = Math.max(0, (12 * 60) - (totalDuration * 60) - (meetingCount * 15)); // Account for transitions
     
     // Calculate new intelligent metrics
     const adaptivePerformanceIndex = this.calculateAdaptivePerformanceIndex(events);
