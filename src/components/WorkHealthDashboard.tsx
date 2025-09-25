@@ -162,13 +162,48 @@ export default function WorkHealthDashboard() {
   const getTabSpecificInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
     // If AI insights are available, filter by relevance to tab
     if (workHealth?.ai?.insights && workHealth.ai.insights.length > 0) {
+      // Filter AI insights by tab relevance
+      const filteredInsights = workHealth.ai.insights.filter(insight => {
+        switch (tabType) {
+          case 'overview':
+            return true; // Show all insights on overview
+          case 'performance':
+            return insight.category === 'performance' || insight.category === 'productivity';
+          case 'resilience':
+            return insight.category === 'wellness' || insight.category === 'balance';
+          case 'sustainability':
+            return insight.category === 'balance' || insight.category === 'prediction';
+          default:
+            return true;
+        }
+      });
+
+      // If we have filtered insights, return them
+      if (filteredInsights.length > 0) {
+        return {
+          insights: filteredInsights,
+          isAI: true,
+          aiStatus: workHealth.aiStatus || 'success'
+        };
+      }
+
+      // If no filtered insights, fall back to first 2 insights for non-overview tabs
+      if (tabType !== 'overview') {
+        return {
+          insights: workHealth.ai.insights.slice(0, 2),
+          isAI: true,
+          aiStatus: workHealth.aiStatus || 'success'
+        };
+      }
+
+      // For overview, show all insights
       return {
         insights: workHealth.ai.insights,
         isAI: true,
         aiStatus: workHealth.aiStatus || 'success'
       };
     }
-    
+
     // Fallback to static insights
     return {
       insights: getStaticFallbackInsights(tabType),
