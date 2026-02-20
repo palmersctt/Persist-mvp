@@ -53,6 +53,7 @@ interface PersonalizedInsightsResponse {
   opportunities: string[];
   predictiveAlerts: string[];
   heroMessage?: string; // Dynamic, creative day-setting message
+  comicReliefSaying?: string; // 90's motivational poster style saying
 }
 
 class ClaudeAIService {
@@ -497,8 +498,14 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       });
     }
 
+    // Generate a movie quote based on metrics (fallback version)
+    const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
+    const quote = comicReliefGenerator.generateQuote(workHealth);
+    const comicReliefSaying = comicReliefGenerator.formatQuote(quote);
+
     return {
       heroMessage,
+      comicReliefSaying,
       insights,
       summary: `Current work health status: ${workHealth.status}. Focus on ${insights.length > 0 ? insights[0].category : 'maintaining balance'}.`,
       overallScore: workHealth.adaptivePerformanceIndex,
@@ -650,7 +657,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       console.log('🔄 NO CACHING - Fresh AI request every time');
       
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-3-5-sonnet-20241220',
         max_tokens: 4000,
         temperature: 0.8, // Higher temperature for more creative variation
         system: this.createSystemPrompt(),
@@ -682,6 +689,18 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       
       if (!this.validateInsightsResponse(parsedResponse)) {
         throw new Error('Invalid insights response format');
+      }
+
+      // Generate a dynamic comic relief saying using Claude AI
+      try {
+        const comicReliefSaying = await this.generateComicReliefSaying(analysis.workHealth);
+        parsedResponse.comicReliefSaying = comicReliefSaying;
+      } catch (error) {
+        console.warn('Failed to generate comic relief saying, using fallback:', error);
+        // Fallback to local movie quote generator
+        const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
+        const quote = comicReliefGenerator.generateQuote(analysis.workHealth);
+        parsedResponse.comicReliefSaying = comicReliefGenerator.formatQuote(quote);
       }
 
       return parsedResponse;
@@ -756,7 +775,7 @@ Identify productivity patterns and provide specific recommendations for optimiza
 Return JSON with 'patterns' and 'recommendations' arrays.`;
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-3-5-sonnet-20241220',
         max_tokens: 2000,
         temperature: 0.2,
         messages: [{
@@ -808,6 +827,75 @@ Return JSON with 'patterns' and 'recommendations' arrays.`;
 
   public setCachedInsightsForUser(cacheKey: string, userId: string, insights: PersonalizedInsightsResponse): void {
     this.setCachedInsights(cacheKey, userId, insights);
+  }
+
+  // Generate dry sarcastic movie/TV quotes based on work health metrics
+  async generateComicReliefSaying(workHealth: WorkHealthMetrics): Promise<string> {
+    if (!this.validateApiKey()) {
+      // Fallback to local movie quotes when API is not available
+      const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
+      const quote = comicReliefGenerator.generateQuote(workHealth);
+      return comicReliefGenerator.formatQuote(quote);
+    }
+
+    try {
+      const prompt = `Generate a funny movie or TV quote that matches the mood of this work situation. Use ACTUAL quotes, don't adapt them for work.
+
+WORK METRICS:
+- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
+- Cognitive Resilience: ${workHealth.cognitiveResilience}%
+- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}%
+- Meeting Count: ${workHealth.schedule?.meetingCount || 0}
+- Back-to-back Meetings: ${workHealth.schedule?.backToBackCount || 0}
+- Focus Time: ${this.formatDuration(workHealth.focusTime || 0)}
+- Meeting Density: ${Math.round((workHealth.meetingDensity || 0) * 100)}%
+
+REQUIREMENTS:
+- Use the EXACT original quote from the movie/TV show - DO NOT adapt it for work
+- Include the character and source (e.g., "- Darth Vader, Star Wars")
+- Match the quote's tone to their situation:
+  * High performance (85%+): Confident, powerful quotes
+  * Many meetings (>6): Overwhelmed or tired character quotes
+  * Low focus time (<60min): Confused or chaotic character quotes
+  * Good balance: Content or satisfied character quotes
+  * Low performance (<50%): Defeated or resigned quotes
+
+Examples of EXACT quotes:
+- High performance: "I am inevitable. - Thanos, Avengers: Endgame"
+- Many meetings: "I'm getting too old for this. - Roger Murtaugh, Lethal Weapon"
+- Low focus: "I feel like I'm taking crazy pills! - Derek Zoolander, Zoolander"
+- Good balance: "Everything is awesome! - Emmet, The Lego Movie"
+- Low performance: "This is fine. - Dog in burning room, This is Fine Meme"
+
+Generate ONE exact quote with proper attribution that matches their current mood/situation.`;
+
+      const response = await this.anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241220',
+        max_tokens: 150,
+        temperature: 0.8, // Higher temperature for more creativity
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      });
+
+      const textContent = response.content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('')
+        .trim();
+
+      // Remove any quotes that might wrap the response
+      return textContent.replace(/^["']|["']$/g, '');
+
+    } catch (error) {
+      console.error('Error generating comic relief saying:', error);
+
+      // Fallback to local movie quote generator
+      const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
+      const quote = comicReliefGenerator.generateQuote(workHealth);
+      return comicReliefGenerator.formatQuote(quote);
+    }
   }
 }
 

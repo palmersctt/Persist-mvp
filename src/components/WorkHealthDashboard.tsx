@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
+import ComicReliefSaying from './ComicReliefSaying'
 
 interface SecondaryMetric {
   label: string;
@@ -158,11 +159,11 @@ export default function WorkHealthDashboard() {
     ];
   };
 
-  // Get AI insights for specific tab, with static fallback
+  // Get insights for specific tab
   const getTabSpecificInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
-    // If AI insights are available, filter by relevance to tab
+    // If insights are available, filter by relevance to tab
     if (workHealth?.ai?.insights && workHealth.ai.insights.length > 0) {
-      // Filter AI insights by tab relevance
+      // Filter insights by tab relevance
       const filteredInsights = workHealth.ai.insights.filter(insight => {
         switch (tabType) {
           case 'overview':
@@ -623,9 +624,25 @@ export default function WorkHealthDashboard() {
             {/* Hero Message Section */}
             <section className="text-center mb-12">
               <div className="max-w-2xl mx-auto">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
-                  {workHealth?.ai?.heroMessage || "Today's your day to shine"}
-                </h1>
+                {/* Only show content when not loading and we have data */}
+                {!isLoading && !isAILoading && workHealth?.ai?.comicReliefSaying ? (
+                  <>
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
+                      {workHealth.ai.comicReliefSaying.split(' - ')[0].replace(/^["']|["']$/g, '')}
+                    </h1>
+                    <p className="text-lg opacity-60 font-light" style={{ color: 'var(--text-muted)' }}>
+                      - {workHealth.ai.comicReliefSaying.split(' - ').slice(1).join(' - ')}
+                    </p>
+                  </>
+                ) : !isLoading && !isAILoading && workHealth?.ai?.heroMessage ? (
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
+                    {workHealth.ai.heroMessage}
+                  </h1>
+                ) : (!isLoading && !isAILoading) ? (
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight opacity-50">
+                    Loading your daily insight...
+                  </h1>
+                ) : null}
                 <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
               </div>
             </section>
@@ -955,7 +972,7 @@ export default function WorkHealthDashboard() {
           
         </section>
 
-        {/* AI-Powered Insights Section */}
+        {/* Insights Section */}
         <section>
           <div className="flex items-center justify-between mb-8">
             <h2 className="whoop-section-title">
@@ -968,13 +985,8 @@ export default function WorkHealthDashboard() {
                   ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                   : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
               }`}>
-                {tabInsights.isAI ? '🤖 AI Powered' : '📊 Static Analysis'}
+                {'📊 Analysis'}
               </div>
-              {tabInsights.isAI && workHealth?.ai?.overallScore && (
-                <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                  {workHealth.ai.overallScore}% confidence
-                </div>
-              )}
             </div>
           </div>
           
@@ -1018,8 +1030,8 @@ export default function WorkHealthDashboard() {
                   return 'var(--whoop-red)';
                 }
                 
-                // For AI insights, use severity if available
-                if (tabInsights.isAI && insight.severity) {
+                // Use severity if available
+                if (insight.severity) {
                   switch (insight.severity) {
                     case 'success': return 'var(--whoop-green)';
                     case 'info': return '#4F9CF9';
@@ -1045,11 +1057,6 @@ export default function WorkHealthDashboard() {
                       {insight.title}
                     </h4>
                     <div className="flex items-center space-x-2">
-                      {tabInsights.isAI && insight.confidence && (
-                        <span className="text-xs text-gray-400">
-                          {insight.confidence}%
-                        </span>
-                      )}
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getDotColorForInsight(insight) }} />
                     </div>
                   </div>
@@ -1058,9 +1065,9 @@ export default function WorkHealthDashboard() {
                   </p>
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                      {tabInsights.isAI ? (insight.dataSource || 'AI Analysis') : insight.dataSource}
+                      {insight.dataSource || 'Data Analysis'}
                     </div>
-                    {tabInsights.isAI && insight.recommendation && (
+                    {insight.recommendation && (
                       <div className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
                         Actionable
                       </div>
@@ -1303,7 +1310,7 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
-                {/* AI-Powered Performance Insights */}
+                {/* Performance Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -1314,7 +1321,7 @@ export default function WorkHealthDashboard() {
                         ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                         : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                     }`}>
-                      {getTabSpecificInsights('performance').isAI ? '🤖 AI' : '📊 Static'}
+                      {'📊 Analysis'}
                     </div>
                   </div>
                   {isAILoading && activeTab === 'performance' ? (
@@ -1332,9 +1339,6 @@ export default function WorkHealthDashboard() {
                         <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
                           {insight.title}
                         </h5>
-                        {getTabSpecificInsights('performance').isAI && insight.confidence && (
-                          <span className="text-xs text-blue-400">{insight.confidence}%</span>
-                        )}
                       </div>
                       <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                         {insight.message}
@@ -1540,7 +1544,7 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
-                {/* AI-Powered Resilience Insights */}
+                {/* Resilience Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -1551,7 +1555,7 @@ export default function WorkHealthDashboard() {
                         ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                         : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                     }`}>
-                      {getTabSpecificInsights('resilience').isAI ? '🤖 AI' : '📊 Static'}
+                      {'📊 Analysis'}
                     </div>
                   </div>
                   {isAILoading && activeTab === 'resilience' ? (
@@ -1569,9 +1573,6 @@ export default function WorkHealthDashboard() {
                         <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
                           {insight.title}
                         </h5>
-                        {getTabSpecificInsights('resilience').isAI && insight.confidence && (
-                          <span className="text-xs text-blue-400">{insight.confidence}%</span>
-                        )}
                       </div>
                       <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                         {insight.message}
@@ -1776,7 +1777,7 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
-                {/* AI-Powered Sustainability Insights */}
+                {/* Sustainability Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -1787,7 +1788,7 @@ export default function WorkHealthDashboard() {
                         ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
                         : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                     }`}>
-                      {getTabSpecificInsights('sustainability').isAI ? '🤖 AI' : '📊 Static'}
+                      {'📊 Analysis'}
                     </div>
                   </div>
                   {isAILoading && activeTab === 'sustainability' ? (
@@ -1805,9 +1806,6 @@ export default function WorkHealthDashboard() {
                         <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
                           {insight.title}
                         </h5>
-                        {getTabSpecificInsights('sustainability').isAI && insight.confidence && (
-                          <span className="text-xs text-blue-400">{insight.confidence}%</span>
-                        )}
                       </div>
                       <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                         {insight.message}

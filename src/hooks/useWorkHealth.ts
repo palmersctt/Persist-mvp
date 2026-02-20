@@ -32,6 +32,7 @@ interface AIPersonalizedInsights {
   predictiveAlerts: string[];
   recommendations?: AIRecommendation[];
   heroMessage?: string; // Dynamic, creative day-setting message
+  comicReliefSaying?: string; // 90's motivational poster style saying
 }
 
 interface WorkHealthData {
@@ -79,7 +80,7 @@ interface WorkHealthMetrics {
   focusTime: number;
   meetingDensity: number;
   
-  // AI-powered insights (optional)
+  // Intelligent insights (optional)
   ai?: AIPersonalizedInsights;
   aiStatus?: 'success' | 'fallback' | 'unavailable';
 }
