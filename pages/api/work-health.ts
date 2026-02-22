@@ -163,11 +163,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (aiError) {
       console.warn('AI insights generation failed, continuing with calendar data only:', aiError);
       enhancedResponse.aiStatus = 'fallback';
-      
+
       // Add minimal AI status info for debugging
       if (aiError instanceof Error) {
         console.log('AI Error details:', aiError.message);
       }
+
+      // Provide fallback hero message so the UI doesn't show a blank/stuck state
+      const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
+      const quote = comicReliefGenerator.generateQuote(workHealthData);
+      enhancedResponse.ai = {
+        heroMessage: {
+          quote: quote.text,
+          source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
+          subtitle: 'AI insights temporarily unavailable'
+        },
+        insights: [],
+        summary: `Current work health status: ${workHealthData.status}.`,
+        overallScore: workHealthData.adaptivePerformanceIndex,
+        riskFactors: [],
+        opportunities: [],
+        predictiveAlerts: []
+      };
     }
 
     // Add production debug logging to compare with local environment

@@ -96,7 +96,7 @@ export default function WorkHealthDashboard() {
     } else if (adaptiveIndex >= 75) {
       return {
         level: 'peak',
-        message: isCached ? 'EXCELLENT WORK HEALTH (CACHED)' : 'EXCELLENT WORK HEALTH', 
+        message: isCached ? 'EXCELLENT WORK HEALTH (CACHED)' : 'EXCELLENT WORK HEALTH',
         color: '#25d366', // Green
         description: 'Strong cognitive resilience with sustainable work rhythm. Ideal for challenging projects, creative tasks, and high-stakes activities.'
       };
@@ -624,29 +624,36 @@ export default function WorkHealthDashboard() {
             {/* Hero Message Section */}
             <section className="text-center mb-12">
               <div className="max-w-2xl mx-auto">
-                {/* Only show content when not loading and we have data */}
-                {!isLoading && !isAILoading && workHealth?.ai?.comicReliefSaying ? (
-                  <>
+                {!isLoading && !isAILoading && workHealth?.ai?.heroMessage ? (
+                  typeof workHealth.ai.heroMessage === 'object' && workHealth.ai.heroMessage.quote ? (
+                    <>
+                      <h1 className="text-2xl md:text-3xl lg:text-4xl font-light mb-2 gradient-text leading-tight" style={{ opacity: 0.85 }}>
+                        &ldquo;{workHealth.ai.heroMessage.quote}&rdquo;
+                      </h1>
+                      <p className="text-xs mt-1 mb-4 font-light tracking-wide uppercase" style={{ color: 'var(--text-muted)', opacity: 0.4 }}>
+                        — {workHealth.ai.heroMessage.source}
+                      </p>
+                      <p className="text-sm md:text-base font-light leading-relaxed" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
+                        {workHealth.ai.heroMessage.subtitle}
+                      </p>
+                    </>
+                  ) : (
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
-                      {workHealth.ai.comicReliefSaying.split(' - ')[0].replace(/^["']|["']$/g, '')}
+                      {typeof workHealth.ai.heroMessage === 'string' ? workHealth.ai.heroMessage : "Today's your day to shine"}
                     </h1>
-                    <p className="text-lg opacity-60 font-light" style={{ color: 'var(--text-muted)' }}>
-                      - {workHealth.ai.comicReliefSaying.split(' - ').slice(1).join(' - ')}
-                    </p>
-                  </>
-                ) : !isLoading && !isAILoading && workHealth?.ai?.heroMessage ? (
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
-                    {workHealth.ai.heroMessage}
-                  </h1>
-                ) : (!isLoading && !isAILoading) ? (
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight opacity-50">
-                    Loading your daily insight...
-                  </h1>
-                ) : null}
-                <div className="w-16 h-0.5 mx-auto" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
+                  )
+                ) : (
+                  /* Loading skeleton for hero message */
+                  <div className="animate-pulse">
+                    <div className="h-10 md:h-12 lg:h-14 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '80%' }} />
+                    <div className="h-4 rounded mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.04)', maxWidth: '40%' }} />
+                    <div className="h-3 rounded mx-auto" style={{ backgroundColor: 'rgba(255,255,255,0.03)', maxWidth: '50%' }} />
+                  </div>
+                )}
+                <div className="w-16 h-0.5 mx-auto mt-4" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
               </div>
             </section>
-            
+
             {/* Primary Work Capacity Metric */}
         <section className="text-center">
           
@@ -659,106 +666,134 @@ export default function WorkHealthDashboard() {
           }}>
             {/* SVG Ring System */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <svg 
-                className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 transition-all duration-1000 ease-out"
-                viewBox="0 0 180 180"
-                style={{ transform: 'rotate(-90deg)' }}
-              >
-                {/* Outer Ring Background */}
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="75"
-                  fill="none"
-                  stroke="rgba(16,185,129,0.2)"
-                  strokeWidth="12"
-                />
-                
-                {/* Outer Ring Progress (Performance Index) */}
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="75"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray="471.2"
-                  strokeDashoffset={471.2 * (1 - (workHealth?.adaptivePerformanceIndex || 0) / 100)}
-                  className="transition-all duration-1000 ease-out"
-                />
-                
-                {/* Inner Ring Background */}
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="55"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.06)"
-                  strokeWidth="10"
-                />
-                
-                {/* Inner Ring Left Half (Cognitive Resilience) */}
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="55"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray="172.8 172.8"
-                  strokeDashoffset={172.8 * (1 - (workHealth?.cognitiveResilience || 0) / 100)}
-                  className="transition-all duration-1000 ease-out"
-                />
-                
-                {/* Inner Ring Right Half (Sustainability Index) */}
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="55"
-                  fill="none"
-                  stroke="#6b7280"
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={`${172.8 * (workHealth?.workRhythmRecovery || 0) / 100} 345.6`}
-                  strokeDashoffset="-172.8"
-                  className="transition-all duration-1000 ease-out"
-                />
-              </svg>
+              {isLoading || isAILoading ? (
+                /* Loading spinner rings */
+                <svg
+                  className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48"
+                  viewBox="0 0 180 180"
+                >
+                  {/* Outer ring track */}
+                  <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(16,185,129,0.15)" strokeWidth="12" />
+                  {/* Outer ring spinner */}
+                  <circle
+                    cx="90" cy="90" r="75" fill="none"
+                    stroke="#10b981" strokeWidth="12" strokeLinecap="round"
+                    strokeDasharray="120 351.2"
+                    style={{ transformOrigin: 'center', animation: 'spin 1.4s linear infinite' }}
+                  />
+                  {/* Inner ring track */}
+                  <circle cx="90" cy="90" r="55" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
+                  {/* Inner ring spinner */}
+                  <circle
+                    cx="90" cy="90" r="55" fill="none"
+                    stroke="#3b82f6" strokeWidth="10" strokeLinecap="round"
+                    strokeDasharray="90 255.6"
+                    style={{ transformOrigin: 'center', animation: 'spin 1.8s linear infinite reverse' }}
+                  />
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                </svg>
+              ) : (
+                <svg
+                  className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 transition-all duration-1000 ease-out"
+                  viewBox="0 0 180 180"
+                  style={{ transform: 'rotate(-90deg)' }}
+                >
+                  {/* Outer Ring Background */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="75"
+                    fill="none"
+                    stroke="rgba(16,185,129,0.2)"
+                    strokeWidth="12"
+                  />
+
+                  {/* Outer Ring Progress (Performance Index) */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="75"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray="471.2"
+                    strokeDashoffset={471.2 * (1 - (workHealth?.adaptivePerformanceIndex || 0) / 100)}
+                    className="transition-all duration-1000 ease-out"
+                  />
+
+                  {/* Inner Ring Background */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="55"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.06)"
+                    strokeWidth="10"
+                  />
+
+                  {/* Inner Ring Left Half (Cognitive Resilience) */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="55"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray="172.8 172.8"
+                    strokeDashoffset={172.8 * (1 - (workHealth?.cognitiveResilience || 0) / 100)}
+                    className="transition-all duration-1000 ease-out"
+                  />
+
+                  {/* Inner Ring Right Half (Sustainability Index) */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="55"
+                    fill="none"
+                    stroke="#6b7280"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={`${172.8 * (workHealth?.workRhythmRecovery || 0) / 100} 345.6`}
+                    strokeDashoffset="-172.8"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+              )}
             </div>
             
             {/* External Labels - Symmetric Three-Point Layout */}
             {/* Performance Index Label - 12 o'clock (Top) */}
-            <div className="absolute text-center" style={{ 
-              left: '50%', 
+            <div className="absolute text-center" style={{
+              left: '50%',
               top: '-30px',
               transform: 'translateX(-50%)'
             }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
-                color: '#10b981', 
+              <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
+                color: '#10b981',
                 lineHeight: '1'
               }}>
-                {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
+                {(isLoading || isAILoading) ? '...' : `${workHealth?.adaptivePerformanceIndex || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
                 color: '#10b981'
               }}>
                 PERFORMANCE<br />INDEX
               </div>
             </div>
-            
+
             {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
-            <div className="absolute text-center" style={{ 
+            <div className="absolute text-center" style={{
               left: '15%',
               bottom: '10px',
               transform: 'translateX(-50%)'
             }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
-                color: '#6b7280', 
+              <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
+                color: '#6b7280',
                 lineHeight: '1'
               }}>
-                {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
+                {(isLoading || isAILoading) ? '...' : `${workHealth?.workRhythmRecovery || 0}`}
               </div>
               <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
                 color: '#6b7280'
@@ -768,18 +803,18 @@ export default function WorkHealthDashboard() {
             </div>
             
             {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
-            <div className="absolute text-center" style={{ 
+            <div className="absolute text-center" style={{
               right: '15%',
               bottom: '10px',
               transform: 'translateX(50%)'
             }}>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-semibold" style={{ 
-                color: '#3b82f6', 
+              <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
+                color: '#3b82f6',
                 lineHeight: '1'
               }}>
-                {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
+                {(isLoading || isAILoading) ? '...' : `${workHealth?.cognitiveResilience || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
                 color: '#3b82f6'
               }}>
                 COGNITIVE<br />RESILIENCE
@@ -990,7 +1025,7 @@ export default function WorkHealthDashboard() {
             </div>
           </div>
           
-          <div className="space-y-8">
+          <div>
             {isAILoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex items-center space-x-3">
@@ -1000,83 +1035,11 @@ export default function WorkHealthDashboard() {
                   </span>
                 </div>
               </div>
-            ) : tabInsights.insights.length > 0 ? tabInsights.insights.map((insight, index) => {
-              // Determine dot color based on which metric this insight is about
-              const getDotColorForInsight = (insight: any) => {
-                const title = insight.title.toLowerCase();
-                
-                // Check if insight is about Adaptive Performance Index (main metric)
-                if (title.includes('work health') || title.includes('adaptive performance') || title.includes('performance')) {
-                  const score = workHealth?.adaptivePerformanceIndex || 0;
-                  if (score >= 75) return 'var(--whoop-green)';
-                  if (score >= 65) return 'var(--whoop-yellow)';
-                  if (score >= 55) return '#ff9500'; // Orange
-                  return 'var(--whoop-red)';
-                }
-                
-                // Check if insight is about Cognitive Resilience
-                if (title.includes('cognitive resilience') || title.includes('cognitive')) {
-                  const resilience = workHealth?.cognitiveResilience || 0;
-                  if (resilience > 65) return 'var(--whoop-green)';
-                  if (resilience > 40) return 'var(--whoop-yellow)';
-                  return 'var(--whoop-red)';
-                }
-                
-                // Check if insight is about Sustainability
-                if (title.includes('sustainability') || title.includes('sustainable') || title.includes('unsustainable')) {
-                  const sustainability = workHealth?.workRhythmRecovery || 0;
-                  if (sustainability > 70) return 'var(--whoop-green)';
-                  if (sustainability > 45) return 'var(--whoop-yellow)';
-                  return 'var(--whoop-red)';
-                }
-                
-                // Use severity if available
-                if (insight.severity) {
-                  switch (insight.severity) {
-                    case 'success': return 'var(--whoop-green)';
-                    case 'info': return '#4F9CF9';
-                    case 'warning': return 'var(--whoop-yellow)';
-                    case 'critical': return 'var(--whoop-red)';
-                    default: return 'rgba(255,255,255,0.3)';
-                  }
-                }
-                
-                // Fallback to urgency-based color
-                switch (insight.urgency) {
-                  case 'low': return 'var(--whoop-green)';
-                  case 'medium': return 'var(--whoop-yellow)';
-                  case 'high': return 'var(--whoop-red)';
-                  default: return 'rgba(255,255,255,0.3)';
-                }
-              };
-              
-              return (
-                <div key={index}>
-                  <div className="flex items-start justify-between mb-3">
-                    <h4 className="whoop-insight-title flex-1">
-                      {insight.title}
-                    </h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getDotColorForInsight(insight) }} />
-                    </div>
-                  </div>
-                  <p className="whoop-insight-text mb-4">
-                    {insight.message}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                      {insight.dataSource || 'Data Analysis'}
-                    </div>
-                    {insight.recommendation && (
-                      <div className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
-                        Actionable
-                      </div>
-                    )}
-                  </div>
-                  {index < tabInsights.insights.length - 1 && <hr className="whoop-clean-divider mt-8" />}
-                </div>
-              );
-            }) : (
+            ) : tabInsights.insights.length > 0 ? (
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                {tabInsights.insights.map(insight => insight.message).join(' ')}
+              </p>
+            ) : (
               <div className="text-center py-8">
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}

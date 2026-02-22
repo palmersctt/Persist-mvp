@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { WorkHealthMetrics, CalendarEvent, MeetingCategory } from './googleCalendar';
 import crypto from 'crypto';
+import { comicReliefGenerator } from '../utils/comicReliefGenerator';
 
 interface PersonalizedInsight {
   category: 'performance' | 'wellness' | 'productivity' | 'balance' | 'prediction';
@@ -45,6 +46,12 @@ interface CalendarAnalysis {
   };
 }
 
+interface HeroMessage {
+  quote: string;
+  source: string;
+  subtitle: string;
+}
+
 interface PersonalizedInsightsResponse {
   insights: PersonalizedInsight[];
   summary: string;
@@ -52,8 +59,8 @@ interface PersonalizedInsightsResponse {
   riskFactors: string[];
   opportunities: string[];
   predictiveAlerts: string[];
-  heroMessage?: string; // Dynamic, creative day-setting message
-  comicReliefSaying?: string; // 90's motivational poster style saying
+  heroMessage?: string | HeroMessage;
+  comicReliefSaying?: string; // legacy fallback
 }
 
 class ClaudeAIService {
@@ -123,7 +130,7 @@ AVOID technical language, clinical analysis, formal recommendations, or confiden
 Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
   }
 
-  private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext, providedUserTimezone?: string): string {
+  private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext, providedUserTimezone?: string, prePickedQuote?: { text: string; source: string; character?: string }): string {
     const { workHealth, events, patterns } = analysis;
     
     // Use provided timezone (from client-side) instead of server detection
@@ -161,7 +168,8 @@ USER CONTEXT:
 - Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime ? this.formatDuration(userContext.historicalPatterns.avgFocusTime) : 'Unknown'}`;
 
     switch (tabContext.tabType) {
-      case 'overview':
+      case 'overview': {
+        const q = prePickedQuote || comicReliefGenerator.generateQuote(workHealth);
         return `Look at their whole day and predict how it'll feel from start to finish.
 
 ${baseContext}
@@ -172,27 +180,15 @@ Tell them what kind of day this will be for them:
 - What their overall mood and productivity will be like
 - How they'll probably feel at different times
 
-ALSO create a dynamic HERO MESSAGE - a short, creative, motivational phrase that captures the essence of their day:
+MOVIE QUOTE HERO MESSAGE:
 
-IMPORTANT: Make the hero message UNIQUE and VARIED each time. Use different words and phrases. Consider:
-- Current time of day (morning energy vs afternoon focus)
-- Specific meeting types and timing
-- Unique combinations of their metrics
-- Creative metaphors and fresh language
-- Current date: ${new Date().toLocaleDateString()}
-- Current time: ${new Date().toLocaleTimeString()}
+The quote has already been selected for you:
+"${q.text}" — ${q.source}${q.character ? ` (${q.character})` : ''}
 
-Hero Message Examples (but CREATE NEW VARIATIONS):
-- "You're set for a creative powerhouse day" (high performance + focus time)
-- "It's a steady momentum kind of day" (balanced workload)
-- "Today calls for gentle productivity" (light schedule)
-- "You're in for a collaborative energy surge" (lots of meetings)
-- "This feels like a breakthrough day" (optimal conditions)
-- "Time for some focused magic" (great focus blocks)
-- "Today's your sustainable rhythm day" (well-paced)
-- "You're primed for deep work mastery" (minimal interruptions)
+Your ONLY job for the heroMessage is to write a SHORT, witty subtitle (one sentence) connecting this quote to their specific calendar situation. Do NOT change the quote or source. Lean into dry humor, sarcasm, and irony.
 
-CREATE A FRESH, UNIQUE HERO MESSAGE - not just picking from the examples above!
+Current date: ${new Date().toLocaleDateString()}
+Current time: ${new Date().toLocaleTimeString()}
 
 Write conversational insights like:
 - "Your day has a nice rhythm - you'll feel energized in the morning and should stay productive through the afternoon"
@@ -200,9 +196,13 @@ Write conversational insights like:
 - "You're set up for a smooth day with good energy flow and manageable workload"
 - "Today might feel a bit overwhelming with everything packed in, but you should handle it fine"
 
-Provide a JSON response in exactly this format:
+You must respond with valid JSON only. Provide a JSON response in exactly this format:
 {
-  "heroMessage": "You're set for a creative powerhouse day",
+  "heroMessage": {
+    "quote": "${q.text.replace(/"/g, '\\"')}",
+    "source": "${q.source}${q.character ? ` — ${q.character}` : ''}",
+    "subtitle": "Your witty one-sentence subtitle connecting the quote to their calendar"
+  },
   "insights": [
     {
       "category": "performance",
@@ -219,6 +219,7 @@ Provide a JSON response in exactly this format:
   "opportunities": ["opportunity1", "opportunity2"],
   "predictiveAlerts": ["alert1", "alert2"]
 }`;
+      }
       
       case 'performance':
         return `Focus on how productive and sharp they'll feel today - when they'll do their best work and when they might struggle.
@@ -386,69 +387,53 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     const { workHealth } = analysis;
     const insights: PersonalizedInsight[] = [];
 
-    // Generate hero message based on metrics with variety
-    const heroMessages = {
-      highPerformance: [
-        "You're set for a creative powerhouse day",
-        "This feels like a breakthrough day",
-        "You're primed for peak performance",
-        "Today's your high-impact zone"
-      ],
-      steadyMomentum: [
-        "It's a steady momentum kind of day", 
-        "You're in for smooth sailing today",
-        "Today's your sustainable rhythm day",
-        "You're set for consistent progress"
-      ],
-      focusTime: [
-        "Time for some focused magic",
-        "You're primed for deep work mastery",
-        "Today's built for breakthrough thinking",
-        "Your mind has space to wander and create"
-      ],
-      lightSchedule: [
-        "Today calls for gentle productivity",
-        "You've got breathing room to excel",
-        "Today's pace feels just right",
-        "Space for thoughtful work ahead"
-      ],
-      collaborative: [
-        "You're in for a collaborative energy surge",
-        "Today's all about team momentum",
-        "Connection and collaboration await",
-        "You're set for dynamic teamwork"
-      ],
-      balanced: [
-        "You're primed for balanced productivity",
-        "Today has a nice flow to it",
-        "You're set for steady achievement",
-        "The day ahead feels manageable"
-      ]
-    };
+    // Use comicReliefGenerator for a large, metrics-aware quote pool (200+ quotes)
+    const quote = comicReliefGenerator.generateQuote(workHealth);
 
-    // Use multiple factors to add variety to message selection
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const dayOfMonth = now.getDate();
-    
-    // Create a more dynamic index that changes more frequently
-    const messageIndex = (currentHour + Math.floor(currentMinute / 15) + dayOfMonth) % 4;
-
-    let heroMessage = "Today's your day to shine";
-    if (workHealth.adaptivePerformanceIndex >= 85) {
-      heroMessage = heroMessages.highPerformance[messageIndex];
-    } else if (workHealth.adaptivePerformanceIndex >= 70) {
-      heroMessage = heroMessages.steadyMomentum[messageIndex];
-    } else if (workHealth.focusTime >= 240) {
-      heroMessage = heroMessages.focusTime[messageIndex];
-    } else if (workHealth.schedule.meetingCount <= 2) {
-      heroMessage = heroMessages.lightSchedule[messageIndex];
-    } else if (workHealth.schedule.meetingCount >= 6) {
-      heroMessage = heroMessages.collaborative[messageIndex];
+    // Determine scenario subtitle based on calendar state
+    let subtitle: string;
+    if (workHealth.schedule.meetingCount >= 6 || workHealth.schedule.backToBackCount >= 4) {
+      const subtitles = [
+        "Your calendar certainly didn't ask for your consent",
+        "That's a lot of meetings with nowhere to hide",
+        "Back-to-back meetings all day long",
+        "Your schedule needs mission control",
+        "Meetings as far as the eye can see",
+      ];
+      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
+    } else if (workHealth.adaptivePerformanceIndex >= 85 || workHealth.schedule.meetingCount === 0 || (workHealth.schedule.meetingCount <= 2 && workHealth.focusTime >= 240)) {
+      const subtitles = [
+        "A wide-open calendar is a rare gift",
+        "Nothing but clear runway ahead",
+        "All that focus time — the sky's the limit",
+        "Light schedule, maximum energy",
+        "Today's looking good for deep work",
+      ];
+      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
+    } else if (workHealth.adaptivePerformanceIndex < 50) {
+      const subtitles = [
+        "Scattered meetings ruining your focus blocks",
+        "One of those days — hang in there",
+        "The calendar giveth and the calendar taketh away",
+        "Your focus time is playing hide and seek",
+      ];
+      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
     } else {
-      heroMessage = heroMessages.balanced[messageIndex];
+      const subtitles = [
+        "A mixed bag — pace yourself",
+        "Some meetings, some focus — could go either way",
+        "Get through the tough parts, enjoy the rest",
+        "A bit of everything on the calendar today",
+        "Not bad, not great — just another day",
+      ];
+      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
     }
+
+    const heroMessage: HeroMessage = {
+      quote: quote.text,
+      source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
+      subtitle,
+    };
 
     if (workHealth.adaptivePerformanceIndex < 50) {
       insights.push({
@@ -498,14 +483,8 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       });
     }
 
-    // Generate a movie quote based on metrics (fallback version)
-    const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
-    const quote = comicReliefGenerator.generateQuote(workHealth);
-    const comicReliefSaying = comicReliefGenerator.formatQuote(quote);
-
     return {
       heroMessage,
-      comicReliefSaying,
       insights,
       summary: `Current work health status: ${workHealth.status}. Focus on ${insights.length > 0 ? insights[0].category : 'maintaining balance'}.`,
       overallScore: workHealth.adaptivePerformanceIndex,
@@ -648,18 +627,26 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       const cacheKey = this.generateCacheKey(analysis, userContext, tabContext);
       console.log('Generated cache key for AI insights:', cacheKey);
 
-      const promptContent = tabContext 
-        ? this.createTabSpecificPrompt(analysis, userContext, tabContext, providedUserTimezone)
+      // Pre-pick a random quote for overview tab so it's guaranteed unique each refresh
+      const prePickedQuote = (tabContext?.tabType === 'overview' || !tabContext)
+        ? comicReliefGenerator.generateQuote(analysis.workHealth)
+        : null;
+
+      const promptContent = tabContext
+        ? this.createTabSpecificPrompt(analysis, userContext, tabContext, providedUserTimezone, prePickedQuote || undefined)
         : this.createUserPrompt(analysis, userContext, providedUserTimezone);
-      
+
       // Debug logging for production issues
       console.log('🔍 DEBUG - Prompt being sent to AI (first 500 chars):', promptContent.substring(0, 500));
       console.log('🔄 NO CACHING - Fresh AI request every time');
-      
+      if (prePickedQuote) {
+        console.log('🎲 Pre-picked quote:', prePickedQuote.text, '-', prePickedQuote.source);
+      }
+
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
-        temperature: 0.8, // Higher temperature for more creative variation
+        temperature: 1.0, // Maximum variation for creative subtitle
         system: this.createSystemPrompt(),
         messages: [{
           role: 'user',
@@ -682,25 +669,19 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       }
 
       const parsedResponse = JSON.parse(jsonMatch[0]);
-      
+
       console.log('🎯 DEBUG - AI Response Keys:', Object.keys(parsedResponse));
       console.log('🎯 DEBUG - Hero Message from AI:', parsedResponse.heroMessage);
       console.log('🎯 DEBUG - Tab Context:', tabContext?.tabType);
-      
+
       if (!this.validateInsightsResponse(parsedResponse)) {
         throw new Error('Invalid insights response format');
       }
 
-      // Generate a dynamic comic relief saying using Claude AI
-      try {
-        const comicReliefSaying = await this.generateComicReliefSaying(analysis.workHealth);
-        parsedResponse.comicReliefSaying = comicReliefSaying;
-      } catch (error) {
-        console.warn('Failed to generate comic relief saying, using fallback:', error);
-        // Fallback to local movie quote generator
-        const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
-        const quote = comicReliefGenerator.generateQuote(analysis.workHealth);
-        parsedResponse.comicReliefSaying = comicReliefGenerator.formatQuote(quote);
+      // Override heroMessage quote/source with our pre-picked values (keep AI subtitle)
+      if (prePickedQuote && parsedResponse.heroMessage && typeof parsedResponse.heroMessage === 'object') {
+        parsedResponse.heroMessage.quote = prePickedQuote.text;
+        parsedResponse.heroMessage.source = `${prePickedQuote.source}${prePickedQuote.character ? ` — ${prePickedQuote.character}` : ''}`;
       }
 
       return parsedResponse;
@@ -740,13 +721,17 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       Array.isArray(response.riskFactors) &&
       Array.isArray(response.opportunities) &&
       Array.isArray(response.predictiveAlerts)
-      // heroMessage is optional, so we don't validate it here
     );
-    
-    console.log('🔍 DEBUG - Validation result:', isValid);
-    console.log('🔍 DEBUG - Response has heroMessage:', !!response?.heroMessage);
-    
-    return isValid;
+
+    // heroMessage can be a string (legacy) or object { quote, source, subtitle }
+    const hasValidHero = !response?.heroMessage ||
+      typeof response.heroMessage === 'string' ||
+      (response.heroMessage?.quote && response.heroMessage?.source);
+
+    console.log('🔍 DEBUG - Validation result:', isValid && hasValidHero);
+    console.log('🔍 DEBUG - Response heroMessage type:', typeof response?.heroMessage);
+
+    return isValid && hasValidHero;
   }
 
   async analyzeProductivityPatterns(
@@ -775,7 +760,7 @@ Identify productivity patterns and provide specific recommendations for optimiza
 Return JSON with 'patterns' and 'recommendations' arrays.`;
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         temperature: 0.2,
         messages: [{
@@ -870,7 +855,7 @@ Examples of EXACT quotes:
 Generate ONE exact quote with proper attribution that matches their current mood/situation.`;
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 150,
         temperature: 0.8, // Higher temperature for more creativity
         messages: [{

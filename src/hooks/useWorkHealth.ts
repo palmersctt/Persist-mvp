@@ -31,8 +31,7 @@ interface AIPersonalizedInsights {
   opportunities: string[];
   predictiveAlerts: string[];
   recommendations?: AIRecommendation[];
-  heroMessage?: string; // Dynamic, creative day-setting message
-  comicReliefSaying?: string; // 90's motivational poster style saying
+  heroMessage?: string | { quote: string; source: string; subtitle: string };
 }
 
 interface WorkHealthData {
