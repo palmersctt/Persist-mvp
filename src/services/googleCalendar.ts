@@ -195,26 +195,18 @@ class GoogleCalendarService {
       source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
     });
     
-    // SAFE WIDE-RANGE TIMEZONE APPROACH
+    // SIMPLE WORKING APPROACH - REVERT TO BASICS
     const now = new Date();
 
-    // Get user's current date components
-    const userTZDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
+    // Get today's date string in user's timezone (YYYY-MM-DD format)
+    const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
 
-    // Use a wide date range to ensure we catch all events
-    // Fetch from yesterday to tomorrow to account for timezone differences
-    const yesterday = new Date(userTZDate);
-    yesterday.setDate(yesterday.getDate() - 1);
+    // Create simple date boundaries - let Google API handle timezone conversion
+    const startOfDay = new Date(`${todayInUserTZ}T00:00:00`);
+    const endOfDay = new Date(`${todayInUserTZ}T23:59:59`);
 
-    const tomorrow = new Date(userTZDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Set boundaries in user timezone, then convert to UTC
-    const startOfRange = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0);
-    const endOfRange = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59);
-
-    const timeMin = startOfRange.toISOString();
-    const timeMax = endOfRange.toISOString();
+    const timeMin = startOfDay.toISOString();
+    const timeMax = endOfDay.toISOString();
     
     console.log('🔍 DEBUG - Simplified timezone handling:', {
       serverTime: now.toISOString(),
@@ -274,17 +266,8 @@ class GoogleCalendarService {
         providedTZ: !!providedUserTimezone
       });
       
-      // Get today's date in user timezone for filtering
-      const todayInUserTZ = userTZDate.toLocaleDateString('sv-SE');
-
       return events
         .filter(event => event.start?.dateTime && event.end?.dateTime)
-        .filter(event => {
-          // Filter to only include events that fall on "today" in user's timezone
-          const eventStart = new Date(event.start!.dateTime!);
-          const eventDateInUserTZ = eventStart.toLocaleDateString('sv-SE', { timeZone: userTimezone });
-          return eventDateInUserTZ === todayInUserTZ;
-        })
         .map((event, index) => {
           const summary = event.summary || 'No title';
           
