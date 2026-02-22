@@ -235,18 +235,29 @@ METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
    Action: Name one structural change. (e.g., "Move the Thursday standup to batch with the 10 AM sync — that frees a 90-minute focus block.")
    Do NOT talk about: individual event performance or stress points.
 
-HERO MESSAGE — AI-GENERATED MOVIE/TV QUOTE:
-You must select a REAL, EXACT quote from a real movie or TV show. Do NOT make up quotes or paraphrase.
-The quote must match this mood: ${quoteMood}
+HERO MESSAGE — AI-SELECTED MOVIE OR TV QUOTE:
+Pick a REAL, EXACT, VERBATIM quote from a real movie or TV show. Do NOT invent, paraphrase, or combine quotes.
+The quote must capture this vibe: ${quoteMood}
 
-CRITICAL RULES for the quote:
-- It MUST be a real, verbatim quote from an actual movie or TV show — no invented or modified quotes
-- Include the character name and the movie/TV show title
-- Do NOT use any of these overused quotes: "I'll be back", "May the Force be with you", "Here's looking at you, kid", "I'm gonna make him an offer he can't refuse", "You can't handle the truth", "Life is like a box of chocolates", "Houston, we have a problem", "I see dead people", "To infinity and beyond", "There's no place like home", "Just keep swimming", "Why so serious", "I am Groot", "This is the way"
-- Go DEEP — pick quotes from a wide range of movies and TV shows across all decades and genres
-- Surprise the user with quotes they might not immediately recognize but will appreciate
-- The quote should be funny, ironic, or perfectly fitting given their work situation
-${recentQuotes && recentQuotes.length > 0 ? `- IMPORTANT: This user has ALREADY seen these quotes recently. You MUST pick something COMPLETELY DIFFERENT:\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}\n- Do NOT repeat any of the above quotes or even quotes from the same movie/show.` : ''}
+GENRE MATCHING — match the genre to this person's day:
+- Brutal meeting-heavy day → survival movies, dark comedies, war films (Apocalypse Now, Full Metal Jacket, The Big Short, Succession)
+- Great focus day with clear schedule → triumph films, feel-good comedies (Rocky, Ferris Bueller, The Shawshank Redemption, Ted Lasso)
+- Mundane repetitive day → shows about absurdity of routine (Office Space, The Office, Seinfeld, Groundhog Day, Parks and Rec)
+- High-pressure deadline day → heist/thriller energy (Ocean's Eleven, Mission Impossible, Margin Call, Uncut Gems)
+- Day where nothing goes right → slapstick, dark humor, gallows wit (Arrested Development, Veep, Horrible Bosses, The Big Lebowski)
+- Day with one giant stressful event → underdog/boss confrontation (The Devil Wears Prada, 9 to 5, Working Girl, Glengarry Glen Ross)
+
+DRAW FROM TV SHOWS EQUALLY — not just movies. Workplace comedies and dramedies are gold:
+The Office, Parks and Rec, Seinfeld, Succession, Arrested Development, Veep, Silicon Valley, Scrubs, Brooklyn Nine-Nine, 30 Rock, Schitt's Creek, Ted Lasso, Abbott Elementary, Severance, Better Call Saul, Mad Men, Frasier, It's Always Sunny, Curb Your Enthusiasm, Fleabag, The Bear
+
+DEEP CUTS WELCOME — avoid the AFI top-quotes list. Skip "I'll be back", "May the Force be with you", "Here's looking at you kid", "You can't handle the truth", "Life is like a box of chocolates", "To infinity and beyond", "Just keep swimming", "I am Groot", "This is the way". Instead find quotes from well-known movies and shows that people recognize but don't see referenced every day. That sweet spot — "oh I forgot about that line" — is where the delight is.
+
+RULES:
+- It MUST be real and verbatim — do not modify, combine, or invent quotes
+- Include the character name and movie/TV show title
+- The quote should feel like it was written about this person's workday
+- Funny, ironic, or unexpectedly perfect > safe and generic
+${recentQuotes && recentQuotes.length > 0 ? `- AVOID REPEATS — this user recently saw these quotes. Pick something COMPLETELY DIFFERENT (different movie/show too):\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}` : ''}
 
 Then write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar?
 
