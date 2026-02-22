@@ -195,29 +195,26 @@ class GoogleCalendarService {
       source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
     });
     
-    // PRODUCTION-SPECIFIC TIMEZONE FIX
+    // SAFE WIDE-RANGE TIMEZONE APPROACH
     const now = new Date();
 
-    // Get the date components directly in user timezone
+    // Get user's current date components
     const userTZDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
 
-    // Build the target date string for the user's timezone "today"
-    const year = userTZDate.getFullYear();
-    const month = String(userTZDate.getMonth() + 1).padStart(2, '0');
-    const day = String(userTZDate.getDate()).padStart(2, '0');
-    const todayInUserTZ = `${year}-${month}-${day}`;
+    // Use a wide date range to ensure we catch all events
+    // Fetch from yesterday to tomorrow to account for timezone differences
+    const yesterday = new Date(userTZDate);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    // Create UTC boundaries that span the full day in user timezone
-    // For PST (-8), we need to fetch from 8:00 UTC to 7:59 UTC next day
-    const startOfDay = new Date(`${todayInUserTZ}T08:00:00.000Z`); // Start of day PST in UTC
-    const endOfDay = new Date();
-    endOfDay.setUTCFullYear(year);
-    endOfDay.setUTCMonth(userTZDate.getMonth());
-    endOfDay.setUTCDate(userTZDate.getDate() + 1);
-    endOfDay.setUTCHours(7, 59, 59, 999); // End of day PST in UTC
+    const tomorrow = new Date(userTZDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const timeMin = startOfDay.toISOString();
-    const timeMax = endOfDay.toISOString();
+    // Set boundaries in user timezone, then convert to UTC
+    const startOfRange = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0);
+    const endOfRange = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59, 59);
+
+    const timeMin = startOfRange.toISOString();
+    const timeMax = endOfRange.toISOString();
     
     console.log('🔍 DEBUG - Simplified timezone handling:', {
       serverTime: now.toISOString(),
@@ -277,8 +274,17 @@ class GoogleCalendarService {
         providedTZ: !!providedUserTimezone
       });
       
+      // Get today's date in user timezone for filtering
+      const todayInUserTZ = userTZDate.toLocaleDateString('sv-SE');
+
       return events
         .filter(event => event.start?.dateTime && event.end?.dateTime)
+        .filter(event => {
+          // Filter to only include events that fall on "today" in user's timezone
+          const eventStart = new Date(event.start!.dateTime!);
+          const eventDateInUserTZ = eventStart.toLocaleDateString('sv-SE', { timeZone: userTimezone });
+          return eventDateInUserTZ === todayInUserTZ;
+        })
         .map((event, index) => {
           const summary = event.summary || 'No title';
           
