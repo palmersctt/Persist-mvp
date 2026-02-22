@@ -195,15 +195,26 @@ class GoogleCalendarService {
       source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
     });
     
-    // SIMPLE WORKING APPROACH - REVERT TO BASICS
-    const now = new Date();
-
     // Get today's date string in user's timezone (YYYY-MM-DD format)
+    const now = new Date();
     const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
 
-    // Create simple date boundaries - let Google API handle timezone conversion
-    const startOfDay = new Date(`${todayInUserTZ}T00:00:00`);
-    const endOfDay = new Date(`${todayInUserTZ}T23:59:59`);
+    // Get the UTC offset for the user's timezone at start and end of day
+    // so that "midnight in user's timezone" converts correctly to UTC on any server
+    const getOffsetForDate = (dateStr: string, tz: string): string => {
+      const d = new Date(dateStr);
+      const utcStr = d.toLocaleString('en-US', { timeZone: 'UTC' });
+      const tzStr = d.toLocaleString('en-US', { timeZone: tz });
+      const diffMs = new Date(tzStr).getTime() - new Date(utcStr).getTime();
+      const diffHours = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((Math.abs(diffMs) % (1000 * 60 * 60)) / (1000 * 60));
+      const sign = diffMs >= 0 ? '+' : '-';
+      return `${sign}${String(diffHours).padStart(2, '0')}:${String(diffMinutes).padStart(2, '0')}`;
+    };
+
+    const offset = getOffsetForDate(`${todayInUserTZ}T12:00:00Z`, userTimezone);
+    const startOfDay = new Date(`${todayInUserTZ}T00:00:00${offset}`);
+    const endOfDay = new Date(`${todayInUserTZ}T23:59:59${offset}`);
 
     const timeMin = startOfDay.toISOString();
     const timeMax = endOfDay.toISOString();
