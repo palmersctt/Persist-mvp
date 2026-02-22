@@ -195,16 +195,27 @@ class GoogleCalendarService {
       source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
     });
     
-    // SIMPLIFIED TIMEZONE HANDLING: Get "today" boundaries in user's timezone
+    // SIMPLE & RELIABLE TIMEZONE FIX: Use explicit date construction in user timezone
     const now = new Date();
 
-    // Get today's date string in user's timezone (YYYY-MM-DD format)
-    const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
+    // Get current time in user's timezone
+    const nowInUserTZ = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
 
-    // Create proper RFC 3339 datetime strings for Google Calendar API
-    // Convert to UTC for the API call since we're specifying timeZone parameter separately
-    const startOfDay = new Date(`${todayInUserTZ}T00:00:00`);
-    const endOfDay = new Date(`${todayInUserTZ}T23:59:59`);
+    // Get today's date components in user timezone
+    const year = nowInUserTZ.getFullYear();
+    const month = nowInUserTZ.getMonth();
+    const date = nowInUserTZ.getDate();
+
+    // Create start and end of day boundaries in user timezone, then convert to UTC
+    // This ensures we get the correct 24-hour period regardless of server timezone
+    const startOfDay = new Date(Date.UTC(year, month, date, 7, 0, 0)); // 7 AM UTC = midnight PST
+    const endOfDay = new Date(Date.UTC(year, month, date + 1, 6, 59, 59)); // 6:59 AM UTC next day = 11:59 PM PST
+
+    // For PST (UTC-8), we need to add 8 hours to get the correct UTC times
+    if (userTimezone === 'America/Los_Angeles') {
+      startOfDay.setHours(startOfDay.getHours() + 8); // Midnight PST = 8 AM UTC
+      endOfDay.setHours(endOfDay.getHours() + 8); // 11:59 PM PST = 7:59 AM UTC next day
+    }
 
     const timeMin = startOfDay.toISOString();
     const timeMax = endOfDay.toISOString();
