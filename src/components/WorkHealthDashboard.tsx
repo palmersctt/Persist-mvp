@@ -422,6 +422,10 @@ export default function WorkHealthDashboard() {
                       <p className="text-sm md:text-base font-light leading-relaxed" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
                         {workHealth.ai.heroMessage.subtitle}
                       </p>
+                      {/* Temporary debug: shows whether quote came from AI or static fallback */}
+                      <p className="text-xs mt-2" style={{ color: workHealth.aiStatus === 'success' ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)', opacity: 0.6 }}>
+                        {workHealth.aiStatus === 'success' ? '✓ AI quote' : '⚠ fallback quote'}
+                      </p>
                     </>
                   ) : (
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
