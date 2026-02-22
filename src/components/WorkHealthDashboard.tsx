@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
 import ComicReliefSaying from './ComicReliefSaying'
+import ShareCard from './ShareCard'
 
 interface SecondaryMetric {
   label: string;
@@ -30,6 +31,7 @@ export default function WorkHealthDashboard() {
   });
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
+  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
   
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, history } = useWorkHealth(activeTab);
 
@@ -166,6 +168,28 @@ export default function WorkHealthDashboard() {
 
     return null;
   };
+
+  const handleShare = useCallback(async () => {
+    if (shareState === 'copied') return;
+
+    const heroMsg = workHealth?.ai?.heroMessage;
+    const quote = heroMsg && typeof heroMsg === 'object' ? heroMsg.quote : '';
+    const source = heroMsg && typeof heroMsg === 'object' ? heroMsg.source : '';
+    const subtitle = heroMsg && typeof heroMsg === 'object' ? heroMsg.subtitle : '';
+    const perf = workHealth?.adaptivePerformanceIndex || 0;
+    const resil = workHealth?.cognitiveResilience || 0;
+    const sust = workHealth?.workRhythmRecovery || 0;
+
+    const text = `"${quote}"\n\u2014 ${source}\n${subtitle}\n\nPerformance: ${perf} \u00b7 Resilience: ${resil} \u00b7 Sustainability: ${sust}\n\npersistwork.com`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2500);
+    } catch (err) {
+      console.error('Clipboard copy failed:', err);
+    }
+  }, [shareState, workHealth]);
 
   if (status === 'loading') {
     return <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-white">Loading...</div>;
@@ -407,295 +431,112 @@ export default function WorkHealthDashboard() {
         {/* Overview Tab - All current content */}
         {activeTab === 'overview' && (
           <>
-            {/* Hero Message Section */}
-            <section className="text-center mb-12">
-              <div className="max-w-2xl mx-auto">
-                {!isLoading && !isAILoading && workHealth?.ai?.heroMessage ? (
-                  typeof workHealth.ai.heroMessage === 'object' && workHealth.ai.heroMessage.quote ? (
-                    <>
-                      <h1 className="text-2xl md:text-3xl lg:text-4xl font-light mb-2 gradient-text leading-tight" style={{ opacity: 0.85 }}>
-                        &ldquo;{workHealth.ai.heroMessage.quote}&rdquo;
-                      </h1>
-                      <p className="text-sm mt-2 mb-4 font-normal italic" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-                        — {workHealth.ai.heroMessage.source}
-                      </p>
-                      <p className="text-sm md:text-base font-light leading-relaxed" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-                        {workHealth.ai.heroMessage.subtitle}
-                      </p>
-                    </>
-                  ) : (
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
-                      {typeof workHealth.ai.heroMessage === 'string' ? workHealth.ai.heroMessage : "Today's your day to shine"}
-                    </h1>
-                  )
-                ) : (
-                  /* Loading skeleton for hero message */
+            {/* Share Card as Hero */}
+            {!isLoading && !isAILoading && workHealth?.ai?.heroMessage && typeof workHealth.ai.heroMessage === 'object' ? (
+              <section>
+                <ShareCard
+                  quote={workHealth.ai.heroMessage.quote}
+                  source={workHealth.ai.heroMessage.source}
+                  subtitle={workHealth.ai.heroMessage.subtitle}
+                  performance={workHealth.adaptivePerformanceIndex}
+                  resilience={workHealth.cognitiveResilience}
+                  sustainability={workHealth.workRhythmRecovery}
+                  onMetricClick={(metric) => setActiveTab(metric)}
+                />
+                <div className="mt-4">
+                  <button
+                    onClick={handleShare}
+                    className="w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200"
+                    style={{
+                      backgroundColor: shareState === 'copied'
+                        ? 'rgba(37, 211, 102, 0.15)'
+                        : 'rgba(255, 255, 255, 0.04)',
+                      border: `1px solid ${shareState === 'copied'
+                        ? 'rgba(37, 211, 102, 0.3)'
+                        : 'rgba(255, 255, 255, 0.08)'}`,
+                      color: shareState === 'copied'
+                        ? '#25d366'
+                        : 'var(--text-secondary)',
+                    }}
+                  >
+                    {shareState === 'copied' ? '\u2713 Copied to clipboard' : 'Share today\u2019s quote \u2192'}
+                  </button>
+                </div>
+              </section>
+            ) : (
+              <section className="text-center">
+                <div className="w-full rounded-2xl overflow-hidden" style={{
+                  background: 'linear-gradient(180deg, rgba(10,10,10,0.9) 0%, rgba(17,17,17,0.9) 50%, rgba(10,10,10,0.9) 100%)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  padding: '48px 28px',
+                }}>
+                  {/* Animated ring spinner */}
+                  <div className="flex justify-center mb-8">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                      <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(16,185,129,0.15)" strokeWidth="5" />
+                      <circle
+                        cx="40" cy="40" r="32" fill="none"
+                        stroke="#10b981" strokeWidth="5" strokeLinecap="round"
+                        strokeDasharray="50 151"
+                        style={{ transformOrigin: 'center', animation: 'persist-spin 1.4s linear infinite' }}
+                      />
+                      <circle cx="40" cy="40" r="22" fill="none" stroke="rgba(59,130,246,0.1)" strokeWidth="4" />
+                      <circle
+                        cx="40" cy="40" r="22" fill="none"
+                        stroke="#3b82f6" strokeWidth="4" strokeLinecap="round"
+                        strokeDasharray="35 103"
+                        style={{ transformOrigin: 'center', animation: 'persist-spin 1.8s linear infinite reverse' }}
+                      />
+                      <circle cx="40" cy="40" r="13" fill="none" stroke="rgba(107,114,128,0.1)" strokeWidth="3" />
+                      <circle
+                        cx="40" cy="40" r="13" fill="none"
+                        stroke="#6b7280" strokeWidth="3" strokeLinecap="round"
+                        strokeDasharray="20 62"
+                        style={{ transformOrigin: 'center', animation: 'persist-spin 2.2s linear infinite' }}
+                      />
+                    </svg>
+                  </div>
+                  <style>{`@keyframes persist-spin { to { transform: rotate(360deg); } }`}</style>
+
+                  {/* Loading text */}
+                  <p className="text-sm font-light mb-8" style={{ color: 'var(--text-muted)' }}>
+                    Reading your calendar...
+                  </p>
+
+                  {/* Skeleton placeholders */}
                   <div className="animate-pulse">
-                    <div className="h-10 md:h-12 lg:h-14 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '80%' }} />
-                    <div className="h-4 rounded mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.04)', maxWidth: '40%' }} />
+                    <div className="h-6 md:h-8 rounded-lg mx-auto mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.05)', maxWidth: '75%' }} />
+                    <div className="h-3 rounded mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', maxWidth: '35%' }} />
                     <div className="h-3 rounded mx-auto" style={{ backgroundColor: 'rgba(255,255,255,0.03)', maxWidth: '50%' }} />
                   </div>
-                )}
-                <div className="w-16 h-0.5 mx-auto mt-4" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
-              </div>
-            </section>
 
-            {/* Primary Work Capacity Metric */}
-        <section className="text-center">
-          
-          {/* Dual Concentric Ring Visualization */}
-          <div className="relative mx-auto mt-12 mb-8 w-full max-w-sm sm:max-w-md lg:max-w-lg" style={{ 
-            width: '100%', 
-            maxWidth: '400px',
-            height: '280px',
-            minHeight: '240px'
-          }}>
-            {/* SVG Ring System */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              {isLoading || isAILoading ? (
-                /* Loading spinner rings */
-                <svg
-                  className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48"
-                  viewBox="0 0 180 180"
-                >
-                  {/* Outer ring track */}
-                  <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(16,185,129,0.15)" strokeWidth="12" />
-                  {/* Outer ring spinner */}
-                  <circle
-                    cx="90" cy="90" r="75" fill="none"
-                    stroke="#10b981" strokeWidth="12" strokeLinecap="round"
-                    strokeDasharray="120 351.2"
-                    style={{ transformOrigin: 'center', animation: 'spin 1.4s linear infinite' }}
-                  />
-                  {/* Inner ring track */}
-                  <circle cx="90" cy="90" r="55" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
-                  {/* Inner ring spinner */}
-                  <circle
-                    cx="90" cy="90" r="55" fill="none"
-                    stroke="#3b82f6" strokeWidth="10" strokeLinecap="round"
-                    strokeDasharray="90 255.6"
-                    style={{ transformOrigin: 'center', animation: 'spin 1.8s linear infinite reverse' }}
-                  />
-                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                </svg>
-              ) : (
-                <svg
-                  className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 transition-all duration-1000 ease-out"
-                  viewBox="0 0 180 180"
-                  style={{ transform: 'rotate(-90deg)' }}
-                >
-                  {/* Outer Ring Background */}
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="75"
-                    fill="none"
-                    stroke="rgba(16,185,129,0.2)"
-                    strokeWidth="12"
-                  />
+                  <div className="w-16 h-0.5 mx-auto mt-6 mb-7" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }} />
 
-                  {/* Outer Ring Progress (Performance Index) */}
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="75"
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                    strokeDasharray="471.2"
-                    strokeDashoffset={471.2 * (1 - (workHealth?.adaptivePerformanceIndex || 0) / 100)}
-                    className="transition-all duration-1000 ease-out"
-                  />
-
-                  {/* Inner Ring Background */}
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="55"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.06)"
-                    strokeWidth="10"
-                  />
-
-                  {/* Inner Ring Left Half (Cognitive Resilience) */}
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="55"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="10"
-                    strokeLinecap="round"
-                    strokeDasharray="172.8 172.8"
-                    strokeDashoffset={172.8 * (1 - (workHealth?.cognitiveResilience || 0) / 100)}
-                    className="transition-all duration-1000 ease-out"
-                  />
-
-                  {/* Inner Ring Right Half (Sustainability Index) */}
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="55"
-                    fill="none"
-                    stroke="#6b7280"
-                    strokeWidth="10"
-                    strokeLinecap="round"
-                    strokeDasharray={`${172.8 * (workHealth?.workRhythmRecovery || 0) / 100} 345.6`}
-                    strokeDashoffset="-172.8"
-                    className="transition-all duration-1000 ease-out"
-                  />
-                </svg>
-              )}
-            </div>
-            
-            {/* External Labels - Clickable to navigate to detail views */}
-            {/* Performance Index Label - 12 o'clock (Top) */}
-            <div
-              className="absolute text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
-              style={{ left: '50%', top: '-30px', transform: 'translateX(-50%)' }}
-              onClick={() => !(isLoading || isAILoading) && setActiveTab('performance')}
-            >
-              <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
-                color: '#10b981',
-                lineHeight: '1'
-              }}>
-                {(isLoading || isAILoading) ? '...' : `${workHealth?.adaptivePerformanceIndex || 0}${trendArrow(history?.trend.performance)}`}
-              </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#10b981' }}>
-                PERFORMANCE<br />INDEX
-              </div>
-              {history && (
-                <div className="text-xs mt-1" style={{ color: '#10b981', opacity: 0.5 }}>
-                  avg {history.weeklyAvg.performance}
-                </div>
-              )}
-            </div>
-
-            {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
-            <div
-              className="absolute text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
-              style={{ left: '15%', bottom: '10px', transform: 'translateX(-50%)' }}
-              onClick={() => !(isLoading || isAILoading) && setActiveTab('sustainability')}
-            >
-              <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
-                color: '#6b7280',
-                lineHeight: '1'
-              }}>
-                {(isLoading || isAILoading) ? '...' : `${workHealth?.workRhythmRecovery || 0}${trendArrow(history?.trend.sustainability)}`}
-              </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#6b7280' }}>
-                SUSTAINABILITY<br />INDEX
-              </div>
-              {history && (
-                <div className="text-xs mt-1" style={{ color: '#6b7280', opacity: 0.5 }}>
-                  avg {history.weeklyAvg.sustainability}
-                </div>
-              )}
-            </div>
-
-            {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
-            <div
-              className="absolute text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
-              style={{ right: '15%', bottom: '10px', transform: 'translateX(50%)' }}
-              onClick={() => !(isLoading || isAILoading) && setActiveTab('resilience')}
-            >
-              <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
-                color: '#3b82f6',
-                lineHeight: '1'
-              }}>
-                {(isLoading || isAILoading) ? '...' : `${workHealth?.cognitiveResilience || 0}${trendArrow(history?.trend.resilience)}`}
-              </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#3b82f6' }}>
-                COGNITIVE<br />RESILIENCE
-              </div>
-              {history && (
-                <div className="text-xs mt-1" style={{ color: '#3b82f6', opacity: 0.5 }}>
-                  avg {history.weeklyAvg.resilience}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Score Explanation - positioned directly below the metric */}
-          {activeExplanation === 'performance' && (
-            <div 
-              className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg cursor-pointer hover:bg-opacity-80 transition-all duration-300 transform"
-              onClick={() => setActiveExplanation(null)}
-              style={{ 
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)'
-              }}
-              ref={(el) => {
-                if (el) {
-                  setTimeout(() => {
-                    el.scrollIntoView({ 
-                      behavior: 'smooth', 
-                      block: 'nearest',
-                      inline: 'center'
-                    });
-                  }, 100);
-                }
-              }}>
-              <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                How much capacity you have today for your best work — based on meeting load, available focus blocks, and schedule flow.
-              </p>
-
-              {/* At-a-glance: one bar per metric */}
-              <div className="space-y-5 mb-6">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: '#10b981' }}>Performance</span>
-                    <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{workHealth?.adaptivePerformanceIndex || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div className="h-1.5 rounded transition-all duration-700" style={{ width: `${workHealth?.adaptivePerformanceIndex || 0}%`, backgroundColor: '#10b981' }} />
-                  </div>
-                  <div className="mt-1">
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {workHealth?.schedule?.meetingCount || 0} meetings, {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m focus time
-                    </span>
+                  {/* Score placeholders with metric colors */}
+                  <div className="flex justify-center gap-8 md:gap-12">
+                    {[
+                      { color: '#10b981', label: 'PERFORMANCE' },
+                      { color: '#3b82f6', label: 'RESILIENCE' },
+                      { color: '#6b7280', label: 'SUSTAINABILITY' },
+                    ].map((s) => (
+                      <div key={s.label} className="text-center animate-pulse">
+                        <div className="text-3xl md:text-4xl font-semibold" style={{ color: s.color, lineHeight: 1, opacity: 0.3 }}>
+                          --
+                        </div>
+                        <div className="text-xs sm:text-sm uppercase tracking-wider mt-2" style={{ color: s.color, opacity: 0.3 }}>
+                          {s.label}
+                        </div>
+                        <div className="w-20 md:w-24 h-1 rounded-full mt-2.5 overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                          <div className="h-full rounded-full" style={{ width: '0%', backgroundColor: s.color }} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: '#3b82f6' }}>Resilience</span>
-                    <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{workHealth?.cognitiveResilience || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div className="h-1.5 rounded transition-all duration-700" style={{ width: `${workHealth?.cognitiveResilience || 0}%`, backgroundColor: '#3b82f6' }} />
-                  </div>
-                  <div className="mt-1">
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {workHealth?.schedule?.uniqueContexts || 0} context switches, {workHealth?.schedule?.longestStretch || 0} longest chain
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: '#6b7280' }}>Sustainability</span>
-                    <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{workHealth?.workRhythmRecovery || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div className="h-1.5 rounded transition-all duration-700" style={{ width: `${workHealth?.workRhythmRecovery || 0}%`, backgroundColor: '#6b7280' }} />
-                  </div>
-                  <div className="mt-1">
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {workHealth?.schedule?.adequateBreaks || 0} recovery breaks, {workHealth?.schedule?.durationHours || 0}h committed
-                    </span>
-                  </div>
-                </div>
-              </div>
+              </section>
+            )}
 
-              <p className="text-xs text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
-                Tap a metric above for the full breakdown
-              </p>
-            </div>
-          )}
-          
-        </section>
-
-        {/* Insights Section */}
+            {/* Insights Section */}
         <section>
           <div className="mb-8 text-center">
             <h2 className="whoop-section-title">
