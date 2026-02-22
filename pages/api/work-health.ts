@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Get calendar events and work health analysis using CLIENT-SIDE detected timezone
     const events = await calendarService.getTodaysEvents(userTimezone);
-    const workHealthData = await calendarService.analyzeWorkHealth();
+    const workHealthData = await calendarService.analyzeWorkHealth(userTimezone);
     
     // Debug logging for production issues
     console.log('🔍 DEBUG - Calendar Events Count:', events.length);

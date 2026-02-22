@@ -976,8 +976,8 @@ class GoogleCalendarService {
     return Math.min(100, Math.max(15, Math.round(performanceIndex)));
   }
 
-  async analyzeWorkHealth(): Promise<WorkHealthMetrics> {
-    const events = await this.getTodaysEvents();
+  async analyzeWorkHealth(userTimezone?: string): Promise<WorkHealthMetrics> {
+    const events = await this.getTodaysEvents(userTimezone);
     
     console.log('🔍 DEBUG - All events before categorization:', events.map(e => ({
       summary: e.summary,
