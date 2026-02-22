@@ -3,6 +3,9 @@
     "pages/api/auth/[...nextauth].ts": {
       "maxDuration": 30
     },
+    "pages/api/work-health.ts": {
+      "maxDuration": 30
+    },
     "pages/api/**/*.ts": {
       "maxDuration": 15
     }

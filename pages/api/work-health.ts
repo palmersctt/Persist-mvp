@@ -23,13 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Extract user timezone from query parameter or header (CLIENT-SIDE DETECTION)
   const userTimezone = (req.query.timezone as string) || req.headers['x-user-timezone'] as string || 'America/Los_Angeles';
-  console.log('🌍 Backend received user timezone:', {
-    fromQuery: req.query.timezone,
-    fromHeader: req.headers['x-user-timezone'],
-    final: userTimezone,
-    serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    environment: process.env.NODE_ENV
-  });
 
   try {
     const session = await getServerSession(req, res, authOptions);
@@ -53,20 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const events = await calendarService.getTodaysEvents(userTimezone);
     const workHealthData = await calendarService.analyzeWorkHealth(userTimezone);
     
-    // Debug logging for production issues
-    console.log('🔍 DEBUG - Calendar Events Count:', events.length);
-    console.log('🔍 DEBUG - Events Summary:', events.map(e => ({
-      summary: e.summary,
-      start: e.start?.toISOString(),
-      end: e.end?.toISOString()
-    })));
-    console.log('🔍 DEBUG - Work Health Metrics:', {
-      adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
-      cognitiveResilience: workHealthData.cognitiveResilience,
-      workRhythmRecovery: workHealthData.workRhythmRecovery,
-      meetingCount: workHealthData.schedule?.meetingCount
-    });
-    
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
       ai?: PersonalizedInsightsResponse;
@@ -74,26 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
-    
-    // Also add debug info to API response for easy debugging
-    (enhancedResponse as any).debugInfo = {
-      eventCount: events.length,
-      eventsReceived: events.map(e => ({
-        summary: e.summary,
-        start: e.start?.toISOString(),
-        end: e.end?.toISOString()
-      })),
-      calculatedScores: {
-        adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
-        cognitiveResilience: workHealthData.cognitiveResilience,
-        workRhythmRecovery: workHealthData.workRhythmRecovery
-      }
-    };
-    
+
     // Try to get AI insights (NO CACHING - always fresh)
     try {
       const claudeService = new ClaudeAIService();
-      console.log('🔄 Generating fresh AI insights (no caching)');
       
       // Create meeting patterns analysis
       const meetingTypes = events.reduce((acc, event) => {
@@ -143,18 +106,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       };
       
-      // Log calendar analysis being sent to AI
-      console.log('🔍 DEBUG - Calendar Analysis for AI:', {
-        eventCount: calendarAnalysis.events.length,
-        eventsDetail: calendarAnalysis.events.map(e => ({
-          summary: e.summary,
-          start: e.start.toISOString(),
-          end: e.end.toISOString()
-        })),
-        meetingTypes: calendarAnalysis.patterns.meetingTypes,
-        focusBlocks: calendarAnalysis.patterns.focusBlocks
-      });
-      
       const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext, userTimezone);
       
       enhancedResponse.ai = aiInsights;
@@ -187,26 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     }
 
-    // Add production debug logging to compare with local environment
-    console.log('🚨 PRODUCTION DEBUG - TIMEZONE USED:', userTimezone);
-    console.log('🚨 PRODUCTION DEBUG - Events Count:', events.length);
-    console.log('🚨 PRODUCTION DEBUG - Adaptive Index:', workHealthData.adaptivePerformanceIndex);
-    console.log('🚨 PRODUCTION DEBUG - Meeting Count:', workHealthData.schedule?.meetingCount);
-    console.log('🚨 PRODUCTION DEBUG - Full WorkHealth:', JSON.stringify({
-      adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
-      cognitiveResilience: workHealthData.cognitiveResilience,
-      workRhythmRecovery: workHealthData.workRhythmRecovery,
-      meetingCount: workHealthData.schedule?.meetingCount,
-      backToBackCount: workHealthData.schedule?.backToBackCount,
-      focusTime: workHealthData.schedule?.durationHours,
-      events: events.map(e => ({
-        summary: e.summary,
-        start: e.start?.toISOString(),
-        end: e.end?.toISOString(),
-        category: e.category
-      }))
-    }, null, 2));
-
+    console.log(`work-health: ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, tz=${userTimezone}`);
     res.status(200).json(enhancedResponse);
   } catch (error) {
     console.error('Error fetching work health data:', error);

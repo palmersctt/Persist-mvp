@@ -639,20 +639,12 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     providedUserTimezone?: string
   ): Promise<PersonalizedInsightsResponse> {
     if (!this.validateApiKey()) {
-      console.warn('Anthropic API key validation failed. Debugging info:');
-      console.warn('- API Key exists:', !!this.apiKey);
-      console.warn('- API Key length:', this.apiKey?.length || 0);
-      console.warn('- API Key starts with sk-ant:', this.apiKey?.startsWith('sk-ant') || false);
-      console.warn('- Environment:', process.env.NODE_ENV);
-      console.warn('Returning default insights instead of AI-generated insights');
+      console.warn('Anthropic API key validation failed, using default insights');
       return this.getDefaultInsights(analysis);
     }
 
     try {
       // Check if we should use cache (this will be handled client-side in the API)
-      const cacheKey = this.generateCacheKey(analysis, userContext, tabContext);
-      console.log('Generated cache key for AI insights:', cacheKey);
-
       // Pre-pick a random quote for overview tab so it's guaranteed unique each refresh
       const prePickedQuote = (tabContext?.tabType === 'overview' || !tabContext)
         ? comicReliefGenerator.generateQuote(analysis.workHealth)
@@ -661,13 +653,6 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       const promptContent = tabContext
         ? this.createTabSpecificPrompt(analysis, userContext, tabContext, providedUserTimezone, prePickedQuote || undefined)
         : this.createUserPrompt(analysis, userContext, providedUserTimezone);
-
-      // Debug logging for production issues
-      console.log('🔍 DEBUG - Prompt being sent to AI (first 500 chars):', promptContent.substring(0, 500));
-      console.log('🔄 NO CACHING - Fresh AI request every time');
-      if (prePickedQuote) {
-        console.log('🎲 Pre-picked quote:', prePickedQuote.text, '-', prePickedQuote.source);
-      }
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
@@ -695,10 +680,6 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       }
 
       const parsedResponse = JSON.parse(jsonMatch[0]);
-
-      console.log('🎯 DEBUG - AI Response Keys:', Object.keys(parsedResponse));
-      console.log('🎯 DEBUG - Hero Message from AI:', parsedResponse.heroMessage);
-      console.log('🎯 DEBUG - Tab Context:', tabContext?.tabType);
 
       if (!this.validateInsightsResponse(parsedResponse)) {
         throw new Error('Invalid insights response format');

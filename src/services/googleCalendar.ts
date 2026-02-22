@@ -103,26 +103,8 @@ class GoogleCalendarService {
     // Google Calendar API returns ISO 8601 strings with timezone info
     // e.g., "2025-09-15T16:00:00-07:00" or "2025-09-15T23:00:00Z"
     
-    console.log('🧪 parseCalendarDateTime - SIMPLE PARSING:', {
-      input: dateTimeString,
-      hasTimezone: dateTimeString.includes('+') || dateTimeString.includes('-') || dateTimeString.endsWith('Z')
-    });
-    
     try {
-      // SIMPLE: Just use direct Date parsing - Google's dateTime should have timezone info
-      // If it has timezone info, new Date() will handle it correctly
-      // If not, it will be interpreted as local time (which would be server time)
       const parsed = new Date(dateTimeString);
-      
-      console.log('🧪 parseCalendarDateTime result:', {
-        parsed_toString: parsed.toString(),
-        parsed_ISO: parsed.toISOString(),
-        inUserTZ: parsed.toLocaleString('en-US', { 
-          timeZone: userTimezone,
-          hour: '2-digit', minute: '2-digit', hour12: true
-        })
-      });
-      
       return parsed;
       
     } catch (error) {
@@ -161,19 +143,6 @@ class GoogleCalendarService {
     else if (this.matchesKeywords(title, this.COLLABORATIVE_KEYWORDS)) category = 'COLLABORATIVE';
     else category = 'COLLABORATIVE'; // Default for unmatched meetings
 
-    // Production debugging for categorization issues
-    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
-      console.log(`🏷️ CATEGORIZATION - "${summary}" → ${category}`, {
-        originalTitle: summary,
-        normalizedTitle: title,
-        category: category,
-        environment: process.env.NODE_ENV,
-        matchedBeneficial: this.matchesKeywords(title, this.BENEFICIAL_KEYWORDS),
-        matchedNeutral: this.matchesKeywords(title, this.NEUTRAL_KEYWORDS),
-        matchedFocus: this.matchesKeywords(title, this.FOCUS_KEYWORDS)
-      });
-    }
-
     return category;
   }
 
@@ -187,13 +156,6 @@ class GoogleCalendarService {
 
     // Store timezone for use in other methods
     this.userTimezone = userTimezone;
-    
-    console.log('🌍 getTodaysEvents timezone source:', {
-      providedUserTimezone: providedUserTimezone,
-      serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      finalUsed: userTimezone,
-      source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
-    });
     
     // Get today's date string in user's timezone (YYYY-MM-DD format)
     const now = new Date();
@@ -219,24 +181,6 @@ class GoogleCalendarService {
     const timeMin = startOfDay.toISOString();
     const timeMax = endOfDay.toISOString();
     
-    console.log('🔍 DEBUG - Simplified timezone handling:', {
-      serverTime: now.toISOString(),
-      serverTimezone: process.env.TZ || 'UTC (default)',
-      userTimezone: userTimezone,
-      todayInUserTZ: todayInUserTZ,
-      timeMin: timeMin,
-      timeMax: timeMax,
-      localStartOfDay: startOfDay.toString(),
-      localEndOfDay: endOfDay.toString(),
-      environment: process.env.NODE_ENV,
-      // Additional production debugging
-      serverNowLocal: now.toString(),
-      serverHour: now.getHours(),
-      serverDate: now.getDate(),
-      clientProvidedTZ: !!providedUserTimezone,
-      actualTZSource: providedUserTimezone ? 'CLIENT' : 'SERVER'
-    });
-
     try {
       // Force fresh data with aggressive cache-busting for production
       const response = await this.calendar.events.list({
@@ -254,73 +198,14 @@ class GoogleCalendarService {
       });
 
       const events = response.data.items || [];
-      
-      console.log('🔍 DEBUG - Raw Google Calendar API response:', {
-        eventCount: events.length,
-        environment: process.env.NODE_ENV,
-        userTimezone: userTimezone,
-        rawEvents: events.map(e => ({
-          id: e.id,
-          summary: e.summary,
-          start: e.start?.dateTime,
-          end: e.end?.dateTime,
-          created: e.created,
-          updated: e.updated
-        }))
-      });
 
-      console.log('🚨 PRODUCTION DEBUG - Event Processing Details:', {
-        environment: process.env.NODE_ENV,
-        totalEventsFromAPI: events.length,
-        eventsWithDateTime: events.filter(e => e.start?.dateTime && e.end?.dateTime).length,
-        timezone: userTimezone,
-        providedTZ: !!providedUserTimezone
-      });
-      
       return events
         .filter(event => event.start?.dateTime && event.end?.dateTime)
         .map((event, index) => {
           const summary = event.summary || 'No title';
-          
-          // DEBUG: Log raw dateTime strings from Google Calendar API
-          const rawStartDateTime = event.start!.dateTime!;
-          const rawEndDateTime = event.end!.dateTime!;
-          
-          // Create Date objects using our safe parsing method
-          const startDate = this.parseCalendarDateTime(rawStartDateTime, userTimezone);
-          const endDate = this.parseCalendarDateTime(rawEndDateTime, userTimezone);
-          
-          // 🧪 SIMPLE TIMEZONE TEST - Check for double conversion
-          console.log(`🧪 TIMEZONE TEST - Event ${index + 1} "${summary}":`, {
-            // Step 1: Raw Google Calendar dateTime string 
-            rawStartDateTime: rawStartDateTime,
-            
-            // Step 2: Simple new Date() parsing
-            simpleParsed_toString: new Date(rawStartDateTime).toString(),
-            simpleParsed_toISOString: new Date(rawStartDateTime).toISOString(),
-            
-            // Step 3: Display in user's timezone (should match original time if no double conversion)
-            displayInUserTZ: new Date(rawStartDateTime).toLocaleString('en-US', {
-              timeZone: userTimezone,
-              year: 'numeric', month: '2-digit', day: '2-digit',
-              hour: '2-digit', minute: '2-digit', hour12: true
-            }),
-            
-            // Step 4: Display in UTC (for comparison)
-            displayInUTC: new Date(rawStartDateTime).toLocaleString('en-US', {
-              timeZone: 'UTC',
-              year: 'numeric', month: '2-digit', day: '2-digit',
-              hour: '2-digit', minute: '2-digit', hour12: true
-            }),
-            
-            // Step 5: Check if Google's dateTime has timezone info
-            hasTimezoneInfo: rawStartDateTime.includes('+') || rawStartDateTime.includes('-') || rawStartDateTime.endsWith('Z'),
-            
-            // Environment info
-            userTimezone: userTimezone,
-            environment: process.env.NODE_ENV
-          });
-          
+          const startDate = this.parseCalendarDateTime(event.start!.dateTime!, userTimezone);
+          const endDate = this.parseCalendarDateTime(event.end!.dateTime!, userTimezone);
+
           const calendarEvent: CalendarEvent = {
             id: event.id!,
             summary,
@@ -442,20 +327,6 @@ class GoogleCalendarService {
     let totalFocusTime = 0;
     let qualityFocusTime = 0;
 
-    console.log('🔍 DEBUG - calculateFocusTime timezone-aware calculation:', {
-      eventsCount: events.length,
-      userTimezone: userTimezone || 'not provided',
-      workStart,
-      workEnd,
-      eventsTimeline: events.map(e => ({
-        summary: e.summary,
-        start: e.start.toISOString(),
-        end: e.end.toISOString(),
-        userTimezoneStart: userTimezone ? e.start.toLocaleString('en-US', { timeZone: userTimezone }) : 'N/A',
-        userTimezoneEnd: userTimezone ? e.end.toLocaleString('en-US', { timeZone: userTimezone }) : 'N/A'
-      }))
-    });
-
     // Calculate total meeting time to validate our focus time calculation
     const totalMeetingMinutes = events.reduce((total, event) => {
       const duration = (event.end.getTime() - event.start.getTime()) / (1000 * 60);
@@ -464,14 +335,6 @@ class GoogleCalendarService {
 
     const totalWorkdayMinutes = (workEnd - workStart) * 60; // 12 hours = 720 minutes
     const theoreticalMaxFocus = Math.max(0, totalWorkdayMinutes - totalMeetingMinutes);
-
-    console.log('🔍 DEBUG - Focus time validation baseline:', {
-      totalMeetingMinutes,
-      totalMeetingHours: (totalMeetingMinutes / 60).toFixed(1),
-      totalWorkdayMinutes,
-      theoreticalMaxFocus,
-      theoreticalMaxFocusHours: (theoreticalMaxFocus / 60).toFixed(1)
-    });
 
     // Helper function to get timezone-aware hours/minutes
     const getTimezoneAwareTime = (date: Date, timezone?: string) => {
@@ -507,14 +370,6 @@ class GoogleCalendarService {
     const firstMeeting = events[0];
     const firstMeetingTime = getTimezoneAwareTime(firstMeeting.start, userTimezone);
 
-    console.log('🔍 DEBUG - First meeting time analysis:', {
-      firstMeetingStart: firstMeeting.start.toISOString(),
-      timezoneAwareHours: firstMeetingTime.hours,
-      timezoneAwareTotalHours: firstMeetingTime.totalHours,
-      workStart,
-      morningGap: firstMeetingTime.totalHours > workStart ? firstMeetingTime.totalHours - workStart : 0
-    });
-
     if (firstMeetingTime.totalHours > workStart) {
       const morningGapHours = firstMeetingTime.totalHours - workStart;
       const morningGapMinutes = morningGapHours * 60;
@@ -526,12 +381,6 @@ class GoogleCalendarService {
         }
       }
 
-      console.log('🔍 DEBUG - Morning gap calculated:', {
-        morningGapHours,
-        morningGapMinutes,
-        addedToTotal: morningGapMinutes >= 30,
-        addedToQuality: morningGapMinutes >= 90
-      });
     }
 
     // Check gaps between meetings (time difference calculation is timezone-agnostic)
@@ -547,26 +396,11 @@ class GoogleCalendarService {
         }
       }
 
-      console.log(`🔍 DEBUG - Gap ${i + 1} between meetings:`, {
-        currentEnd: currentEnd.toISOString(),
-        nextStart: nextStart.toISOString(),
-        gapMinutes,
-        addedToTotal: gapMinutes >= 30,
-        addedToQuality: gapMinutes >= 90
-      });
     }
 
     // Check time after last meeting
     const lastMeeting = events[events.length - 1];
     const lastMeetingTime = getTimezoneAwareTime(lastMeeting.end, userTimezone);
-
-    console.log('🔍 DEBUG - Last meeting time analysis:', {
-      lastMeetingEnd: lastMeeting.end.toISOString(),
-      timezoneAwareHours: lastMeetingTime.hours,
-      timezoneAwareTotalHours: lastMeetingTime.totalHours,
-      workEnd,
-      eveningGap: lastMeetingTime.totalHours < workEnd ? workEnd - lastMeetingTime.totalHours : 0
-    });
 
     if (lastMeetingTime.totalHours < workEnd) {
       const eveningGapMinutes = (workEnd - lastMeetingTime.totalHours) * 60;
@@ -577,23 +411,10 @@ class GoogleCalendarService {
         }
       }
 
-      console.log('🔍 DEBUG - Evening gap calculated:', {
-        eveningGapHours: workEnd - lastMeetingTime.totalHours,
-        eveningGapMinutes,
-        addedToTotal: eveningGapMinutes >= 30,
-        addedToQuality: eveningGapMinutes >= 90
-      });
     }
 
     // Weight quality focus time more heavily
     const effectiveFocusTime = totalFocusTime * 0.7 + qualityFocusTime * 0.3;
-
-    console.log('🔍 DEBUG - Final focus time calculation:', {
-      totalFocusTime,
-      qualityFocusTime,
-      effectiveFocusTime,
-      finalRounded: Math.round(effectiveFocusTime)
-    });
 
     // ENHANCED SAFEGUARD: Use more realistic logic
     // Focus time should never exceed theoretical maximum (workday - meetings)
@@ -602,46 +423,12 @@ class GoogleCalendarService {
 
     const safeFocusTime = Math.max(minFocusTime, Math.min(maxRealisticFocusTime, Math.round(effectiveFocusTime)));
 
-    // Enhanced validation and warning
-    if (Math.round(effectiveFocusTime) !== safeFocusTime) {
-      console.warn('🚨 FOCUS TIME CORRECTED - Logic error detected:', {
-        originalFocusTime: Math.round(effectiveFocusTime),
-        correctedFocusTime: safeFocusTime,
-        theoreticalMaxFocus,
-        totalMeetingMinutes,
-        userTimezone: userTimezone,
-        eventsCount: events.length,
-        environment: process.env.NODE_ENV,
-        reasoning: Math.round(effectiveFocusTime) > theoreticalMaxFocus ?
-          'Focus time exceeded theoretical maximum (workday - meetings)' :
-          'Focus time was capped due to other constraints'
-      });
-    }
-
     // ALTERNATIVE CALCULATION: Use simpler, more accurate approach
     // If the complex calculation seems wrong, use theoretical maximum
     const simpleCalculation = Math.max(0, theoreticalMaxFocus);
 
     // Use the more conservative (lower) of the two calculations
     const finalFocusTime = Math.min(safeFocusTime, simpleCalculation);
-
-    console.log('🔍 DEBUG - Focus time calculation comparison:', {
-      complexCalculation: safeFocusTime,
-      simpleCalculation: simpleCalculation,
-      finalChoice: finalFocusTime,
-      rationale: finalFocusTime === simpleCalculation ? 'Used simple (workday - meetings)' : 'Used complex gap-based calculation'
-    });
-
-    // If complex calculation is significantly higher than simple calculation, flag it
-    if (safeFocusTime > simpleCalculation + 60) { // More than 1 hour difference
-      console.warn('🚨 FOCUS TIME DISCREPANCY - Using conservative calculation:', {
-        complexResult: safeFocusTime,
-        simpleResult: simpleCalculation,
-        chosenResult: finalFocusTime,
-        meetingHours: (totalMeetingMinutes / 60).toFixed(1),
-        explanation: 'Complex gap calculation seems inflated, using conservative approach'
-      });
-    }
 
     return finalFocusTime;
   }
@@ -679,16 +466,6 @@ class GoogleCalendarService {
   }
 
   private calculateAdaptivePerformanceIndex(events: CalendarEvent[]): number {
-    console.log('🔍 DEBUG - calculateAdaptivePerformanceIndex input:', {
-      totalEvents: events.length,
-      eventDetails: events.map(e => ({ 
-        summary: e.summary, 
-        category: e.category, 
-        start: e.start.toISOString(),
-        end: e.end.toISOString()
-      }))
-    });
-    
     // Filter events for performance calculation
     const actualMeetings = events.filter(event => 
       event.category !== 'BENEFICIAL' && 
@@ -698,15 +475,7 @@ class GoogleCalendarService {
     const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
     const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
     
-    console.log('🔍 DEBUG - After filtering for performance calculation:', {
-      actualMeetingsCount: actualMeetings.length,
-      focusWorkEventsCount: focusWorkEvents.length,
-      beneficialEventsCount: beneficialEvents.length,
-      actualMeetingDetails: actualMeetings.map(e => ({ summary: e.summary, category: e.category }))
-    });
-    
     if (actualMeetings.length === 0) {
-      console.log('🔍 DEBUG - No actual meetings, returning 98 for Performance Index');
       return 98; // Near-perfect with no actual meetings
     }
     
@@ -775,23 +544,11 @@ class GoogleCalendarService {
     ) + bonusPoints;
     
     const finalScore = Math.round(Math.min(100, Math.max(0, adaptiveIndex)));
-    console.log('🔍 DEBUG - calculateAdaptivePerformanceIndex final score:', finalScore);
     return finalScore;
   }
   
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
-    console.log('🔍 DEBUG - calculateCognitiveResilience input:', {
-      totalEvents: events.length,
-      eventDetails: events.map(e => ({ 
-        summary: e.summary, 
-        category: e.category, 
-        start: e.start.toISOString(),
-        end: e.end.toISOString()
-      }))
-    });
-    
     if (events.length === 0) {
-      console.log('🔍 DEBUG - No events, returning 90 for Cognitive Resilience');
       return 90; // High resilience with no meetings
     }
     
@@ -833,21 +590,10 @@ class GoogleCalendarService {
     );
     
     const finalScore = Math.round(Math.min(100, Math.max(0, resilienceScore)));
-    console.log('🔍 DEBUG - calculateCognitiveResilience final score:', finalScore);
     return finalScore;
   }
   
   private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
-    console.log('🔍 DEBUG - calculateWorkRhythmRecovery input:', {
-      totalEvents: events.length,
-      eventDetails: events.map(e => ({ 
-        summary: e.summary, 
-        category: e.category, 
-        start: e.start.toISOString(),
-        end: e.end.toISOString()
-      }))
-    });
-    
     // Filter out beneficial, neutral, and focus work events
     const actualMeetings = events.filter(event => 
       event.category !== 'BENEFICIAL' && 
@@ -855,13 +601,7 @@ class GoogleCalendarService {
       event.category !== 'FOCUS_WORK'
     );
     
-    console.log('🔍 DEBUG - After filtering for rhythm recovery:', {
-      actualMeetingsCount: actualMeetings.length,
-      actualMeetingDetails: actualMeetings.map(e => ({ summary: e.summary, category: e.category }))
-    });
-    
     if (actualMeetings.length === 0) {
-      console.log('🔍 DEBUG - No actual meetings, returning 98 for Work Rhythm Recovery');
       return 98; // Excellent rhythm with no actual meetings
     }
     
@@ -910,7 +650,6 @@ class GoogleCalendarService {
     );
     
     const finalScore = Math.round(Math.min(100, Math.max(0, combinedScore)));
-    console.log('🔍 DEBUG - calculateWorkRhythmRecovery final score:', finalScore);
     return finalScore;
   }
   
@@ -990,13 +729,6 @@ class GoogleCalendarService {
   async analyzeWorkHealth(userTimezone?: string): Promise<WorkHealthMetrics> {
     const events = await this.getTodaysEvents(userTimezone);
     
-    console.log('🔍 DEBUG - All events before categorization:', events.map(e => ({
-      summary: e.summary,
-      start: e.start.toISOString(),
-      end: e.end.toISOString(),
-      category: e.category
-    })));
-    
     // Separate different types of events for analysis
     const actualMeetings = events.filter(event => 
       event.category !== 'BENEFICIAL' && 
@@ -1005,14 +737,6 @@ class GoogleCalendarService {
     );
     const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
     const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
-    
-    console.log('🔍 DEBUG - Categorized events:', {
-      totalEvents: events.length,
-      actualMeetings: actualMeetings.length,
-      focusWorkEvents: focusWorkEvents.length,
-      beneficialEvents: beneficialEvents.length,
-      actualMeetingsDetails: actualMeetings.map(e => ({ summary: e.summary, category: e.category }))
-    });
     
     const meetingCount = actualMeetings.length; // Only count actual meetings
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
