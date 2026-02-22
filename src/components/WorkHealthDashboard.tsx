@@ -555,14 +555,20 @@ export default function WorkHealthDashboard() {
                 </div>
               );
               return (
-                <div className={`text-center transition-opacity duration-300 ${isAILoading ? 'opacity-50' : ''}`}>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <div className={`transition-opacity duration-300 ${isAILoading ? 'opacity-50' : ''}`}>
+                  <p className="text-sm leading-relaxed text-center" style={{ color: 'var(--text-secondary)' }}>
                     {insight.message}
                   </p>
                   {insight.action && (
-                    <p className="text-sm mt-3 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
-                      {insight.action}
-                    </p>
+                    <div className="mt-4 rounded-xl" style={{
+                      background: 'rgba(16, 185, 129, 0.06)',
+                      border: '1px solid rgba(16, 185, 129, 0.15)',
+                      padding: '16px 20px',
+                    }}>
+                      <p className="text-sm leading-relaxed text-center" style={{ color: '#10b981' }}>
+                        {insight.action}
+                      </p>
+                    </div>
                   )}
                 </div>
               );
