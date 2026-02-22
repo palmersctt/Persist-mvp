@@ -179,86 +179,34 @@ class GoogleCalendarService {
       source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
     });
     
-    // BULLETPROOF TIMEZONE HANDLING: Create proper date ranges for user's timezone
+    // SIMPLIFIED TIMEZONE HANDLING: Get "today" boundaries in user's timezone
     const now = new Date();
+
+    // Get today's date string in user's timezone (YYYY-MM-DD format)
+    const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
+
+    // Create proper RFC 3339 datetime strings for Google Calendar API
+    // Google Calendar API expects timezone-aware datetime strings
+    const timeMin = `${todayInUserTZ}T00:00:00`;
+    const timeMax = `${todayInUserTZ}T23:59:59`;
     
-    // Step 1: Get today's date in the user's timezone using proper timezone conversion
-    const userDateFormatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: userTimezone,
-      year: 'numeric',
-      month: '2-digit', 
-      day: '2-digit'
-    });
-    
-    const userDateParts = userDateFormatter.formatToParts(now);
-    const userYear = parseInt(userDateParts.find(p => p.type === 'year')?.value || '0');
-    const userMonth = parseInt(userDateParts.find(p => p.type === 'month')?.value || '0');
-    const userDay = parseInt(userDateParts.find(p => p.type === 'day')?.value || '0');
-    
-    // Step 2: Create start and end of day timestamps in user's timezone
-    // We need to create these as UTC timestamps that represent midnight and end-of-day in user's TZ
-    
-    // Method: Create Date objects that represent the exact start/end of day in user's timezone
-    // then convert to proper UTC ISO strings for Google Calendar API
-    
-    // Create temporary date objects to calculate timezone offset for this specific date
-    const tempStart = new Date(userYear, userMonth - 1, userDay, 0, 0, 0, 0);
-    const tempEnd = new Date(userYear, userMonth - 1, userDay, 23, 59, 59, 999);
-    
-    // Get the timezone offset for the user's timezone on this specific date
-    // This accounts for DST changes
-    const startInUserTZ = new Date(tempStart.toLocaleString('sv-SE', { timeZone: 'UTC' }));
-    const startAsIfUserTZ = new Date(tempStart.toLocaleString('sv-SE', { timeZone: userTimezone }));
-    const timezoneOffsetMs = startInUserTZ.getTime() - startAsIfUserTZ.getTime();
-    
-    // Apply the timezone offset to get the correct UTC times for the user's timezone boundaries
-    const startOfDay = new Date(tempStart.getTime() - timezoneOffsetMs);
-    const endOfDay = new Date(tempEnd.getTime() - timezoneOffsetMs);
-    
-    console.log('🔍 DEBUG - Timezone-aware Calendar date range:', {
-      // Server info
+    console.log('🔍 DEBUG - Simplified timezone handling:', {
       serverTime: now.toISOString(),
-      serverTimeLocal: now.toString(),
       serverTimezone: process.env.TZ || 'UTC (default)',
-      environment: process.env.NODE_ENV,
-      
-      // User timezone detection
       userTimezone: userTimezone,
-      userDetectedDate: { userYear, userMonth, userDay },
-      
-      // Timezone calculation details
-      tempStartLocal: tempStart.toString(),
-      tempEndLocal: tempEnd.toString(),
-      startInUserTZ: startInUserTZ.toISOString(),
-      startAsIfUserTZ: startAsIfUserTZ.toISOString(),
-      timezoneOffsetMs: timezoneOffsetMs,
-      timezoneOffsetHours: timezoneOffsetMs / (1000 * 60 * 60),
-      
-      // Final UTC boundaries for Google Calendar API
-      startOfDay: startOfDay.toISOString(),
-      endOfDay: endOfDay.toISOString(),
-      startOfDayLocal: startOfDay.toString(),
-      endOfDayLocal: endOfDay.toString(),
-      
-      // Verification: What these UTC times look like in user's timezone
-      startOfDayInUserTZ: startOfDay.toLocaleString('en-US', { 
-        timeZone: userTimezone, 
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
-      }),
-      endOfDayInUserTZ: endOfDay.toLocaleString('en-US', { 
-        timeZone: userTimezone,
-        year: 'numeric', month: '2-digit', day: '2-digit', 
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
-      })
+      todayInUserTZ: todayInUserTZ,
+      timeMin: timeMin,
+      timeMax: timeMax,
+      environment: process.env.NODE_ENV
     });
 
     try {
       // Force fresh data with aggressive cache-busting for production
       const response = await this.calendar.events.list({
         calendarId: 'primary',
-        timeMin: startOfDay.toISOString(),
-        timeMax: endOfDay.toISOString(),
+        timeMin: timeMin,
+        timeMax: timeMax,
+        timeZone: userTimezone,
         singleEvents: true,
         orderBy: 'startTime',
         // Force fresh data by including timestamp in request
