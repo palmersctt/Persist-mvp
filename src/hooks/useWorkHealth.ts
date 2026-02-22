@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 // AI Insights interfaces
@@ -39,9 +39,9 @@ interface WorkHealthData {
   adaptivePerformanceIndex: number;
   cognitiveResilience: number;
   workRhythmRecovery: number;
-  
+
   status: string;
-  
+
   // Legacy fields for backward compatibility
   readiness: number;
   cognitiveAvailability: number;
@@ -68,21 +68,24 @@ interface WorkHealthMetrics {
   adaptivePerformanceIndex: number;
   cognitiveResilience: number;
   workRhythmRecovery: number;
-  
+
   status: string;
   schedule: ScheduleAnalysis;
   breakdown: WorkHealthBreakdown;
-  
+
   // Legacy fields for backward compatibility
   readiness: number;
   cognitiveAvailability: number;
   focusTime: number;
   meetingDensity: number;
-  
+
   // Intelligent insights (optional)
   ai?: AIPersonalizedInsights;
   aiStatus?: 'success' | 'fallback' | 'unavailable';
 }
+
+// How often to poll for calendar changes (5 minutes)
+const POLL_INTERVAL_MS = 5 * 60 * 1000;
 
 export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
   const { data: session, status } = useSession();
@@ -91,7 +94,13 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
   const [isAILoading, setIsAILoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [currentTab, setCurrentTab] = useState<string>('overview');
+
+  // Track whether we've done the initial fetch
+  const hasFetched = useRef(false);
+  // Store a fingerprint of calendar data to detect changes
+  const calendarFingerprint = useRef<string | null>(null);
+  // Poll timer ref
+  const pollTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Helper function to get cache key for current user
   const getCacheKey = () => {
@@ -99,75 +108,76 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     return `persist-work-health-${session.user.email}`;
   };
 
-  // Remove automatic cache loading - only load cache on API failure
+  // Create a fingerprint from calendar metrics to detect real changes
+  const getFingerprint = (data: WorkHealthMetrics): string => {
+    return `${data.schedule?.meetingCount}-${data.schedule?.backToBackCount}-${data.schedule?.durationHours}-${data.adaptivePerformanceIndex}-${data.cognitiveResilience}-${data.workRhythmRecovery}`;
+  };
 
-  const fetchWorkHealth = async (retryCount = 0, specificTab?: string) => {
+  const fetchWorkHealth = useCallback(async (retryCount = 0, options?: { silent?: boolean }) => {
     if (status !== 'authenticated' || !session) {
       setError('Not authenticated');
       return;
     }
 
-    // Set appropriate loading state
-    if (workHealth) {
-      setIsAILoading(true);
-    } else {
-      setIsLoading(true);
+    const isSilent = options?.silent || false;
+
+    // Set loading state (skip for silent background polls)
+    if (!isSilent) {
+      if (workHealth) {
+        setIsAILoading(true);
+      } else {
+        setIsLoading(true);
+      }
     }
     setError(null);
 
     try {
-      const userId = session.user?.email || session.user?.id || 'anonymous';
-      const currentTab = specificTab || 'overview';
-      
-      // CLIENT-SIDE TIMEZONE DETECTION - Only works in browser!
+      // CLIENT-SIDE TIMEZONE DETECTION
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      console.log('🌍 Client-side timezone detected:', userTimezone);
-      
-      // Fetch fresh data from API (NO CACHING - always fresh)
-      const url = specificTab ? `/api/work-health?tab=${specificTab}` : '/api/work-health';
-      
-      // Always add timestamp to prevent any caching + user timezone
-      console.log(`🔄 Fetching fresh AI insights for ${currentTab} tab (NO CACHING) with timezone: ${userTimezone}`);
-      const timestampedUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}&timezone=${encodeURIComponent(userTimezone)}`;
+
+      // Always fetch overview — tab filtering happens client-side
+      const url = '/api/work-health';
+      const timestampedUrl = url + `?_t=${Date.now()}&timezone=${encodeURIComponent(userTimezone)}`;
+
+      console.log(`🔄 Fetching work health data${isSilent ? ' (background poll)' : ''}...`);
       const response = await fetch(timestampedUrl, {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
-          'X-User-Timezone': userTimezone  // Also pass as header for redundancy
+          'X-User-Timezone': userTimezone
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        
+
         if (errorData.needsReauth) {
           throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
         }
-        
+
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
 
-      // Debug production vs local differences
-      console.log('📊 CLIENT DEBUG - API Response Data:', {
-        environment: window.location.hostname.includes('vercel') ? 'PRODUCTION' : 'LOCAL',
-        hostname: window.location.hostname,
-        adaptivePerformanceIndex: data.adaptivePerformanceIndex,
-        cognitiveResilience: data.cognitiveResilience,
-        workRhythmRecovery: data.workRhythmRecovery,
-        meetingCount: data.schedule?.meetingCount,
-        backToBackCount: data.schedule?.backToBackCount,
-        focusTime: data.focusTime,
-        status: data.status
-      });
+      const newFingerprint = getFingerprint(data);
 
-      // AI caching is handled server-side, just set the data
+      // For silent polls, only update if calendar data actually changed
+      if (isSilent && calendarFingerprint.current === newFingerprint) {
+        console.log('📊 Background poll: no calendar changes detected');
+        return;
+      }
+
+      if (isSilent && calendarFingerprint.current !== null) {
+        console.log('📊 Background poll: calendar changed! Updating data.');
+      }
+
+      calendarFingerprint.current = newFingerprint;
       setWorkHealth(data);
       setLastRefresh(new Date());
-      
-      // Save successful data to localStorage for general cache
+
+      // Save to localStorage as fallback cache
       const generalCacheKey = getCacheKey();
       if (generalCacheKey) {
         localStorage.setItem(generalCacheKey, JSON.stringify({
@@ -177,12 +187,19 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       }
     } catch (err) {
       console.error('Error fetching work health:', err);
+
+      // For silent polls, don't overwrite existing data with errors
+      if (isSilent && workHealth) {
+        console.log('Background poll failed, keeping existing data');
+        return;
+      }
+
       setError(err instanceof Error ? err.message : 'Failed to fetch work health data');
-      
-      // Try to use cached data for this user first
+
+      // Try to use cached data
       const cacheKey = getCacheKey();
       let usedCache = false;
-      
+
       if (cacheKey) {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
@@ -190,7 +207,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
             const data = JSON.parse(cached);
             setWorkHealth({
               ...data.metrics,
-              status: 'CACHED' // Indicate this is cached data
+              status: 'CACHED'
             });
             setLastRefresh(new Date(data.lastRefresh));
             usedCache = true;
@@ -200,23 +217,18 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
           }
         }
       }
-      
-      // Don't show fake data - show clear error state
+
       if (!usedCache) {
-        // For new users, retry once automatically
         if (retryCount === 0 && err instanceof Error && err.message.includes('HTTP error')) {
-          console.log('First attempt failed, retrying for new user...');
+          console.log('First attempt failed, retrying...');
           setTimeout(() => {
-            fetchWorkHealth(1, specificTab); // Retry once with same tab
+            fetchWorkHealth(1);
           }, 2000);
           return;
         }
-        
-        // After retry or for other errors, show clear error message
-        console.log('Unable to fetch calendar data');
+
         setWorkHealth(null);
-        
-        // Provide clear, actionable error message
+
         if (err instanceof Error && err.message.includes('sign out and sign back in')) {
           setError('Calendar connection expired. Please sign out and sign back in.');
         } else {
@@ -224,51 +236,53 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
         }
       }
     } finally {
-      setIsLoading(false);
-      setIsAILoading(false);
-    }
-  };
-
-  // Handle tab changes with intelligent caching
-  useEffect(() => {
-    const newTab = tabType || 'overview';
-    
-    // If tab didn't actually change, do nothing
-    if (newTab === currentTab && workHealth) {
-      return;
-    }
-    
-    setCurrentTab(newTab);
-    
-    if (status === 'authenticated' && session) {
-      // Always fetch fresh data for tab changes (server handles AI caching)
-      if (workHealth) {
-        console.log(`🔄 Fetching fresh data for ${newTab} tab`);
-        setIsAILoading(true);
-      } else {
-        console.log(`🔄 Initial load for ${newTab} tab`);
-        setIsLoading(true);
+      if (!isSilent) {
+        setIsLoading(false);
+        setIsAILoading(false);
       }
-      
-      setError(null);
-      fetchWorkHealth(0, newTab);
     }
-  }, [session, status, tabType, workHealth]);
+  }, [session, status]);
+
+  // Initial fetch — only once when authenticated
+  useEffect(() => {
+    if (status === 'authenticated' && session && !hasFetched.current) {
+      hasFetched.current = true;
+      console.log('🔄 Initial data load');
+      fetchWorkHealth(0);
+    }
+  }, [session, status, fetchWorkHealth]);
+
+  // Poll for calendar changes every 5 minutes
+  useEffect(() => {
+    if (status !== 'authenticated' || !session) return;
+
+    pollTimer.current = setInterval(() => {
+      console.log('🔄 Polling for calendar changes...');
+      fetchWorkHealth(0, { silent: true });
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      if (pollTimer.current) {
+        clearInterval(pollTimer.current);
+      }
+    };
+  }, [session, status, fetchWorkHealth]);
 
   const refresh = () => {
-    // Clear localStorage cache (just in case)
+    // Clear localStorage cache
     const generalCacheKey = getCacheKey();
     if (generalCacheKey) {
       localStorage.removeItem(generalCacheKey);
     }
-    
-    // Clear current data and error state to force fresh load
+
+    // Reset state and fetch fresh
     setWorkHealth(null);
     setError(null);
     setLastRefresh(new Date());
-    
-    console.log('🔄 Refreshing data (NO CACHING)...');
-    fetchWorkHealth(0, tabType);
+    calendarFingerprint.current = null;
+
+    console.log('🔄 Manual refresh...');
+    fetchWorkHealth(0);
   };
 
   return {
@@ -279,7 +293,6 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     lastRefresh,
     refresh,
     isAuthenticated: status === 'authenticated',
-    // Helper functions for AI insights
     hasAIInsights: !!workHealth?.ai && workHealth.aiStatus === 'success',
     aiInsights: workHealth?.ai,
     aiStatus: workHealth?.aiStatus || 'unavailable',
