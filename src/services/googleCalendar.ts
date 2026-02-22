@@ -63,13 +63,19 @@ class GoogleCalendarService {
   
   // Meeting categorization keywords
   private readonly BENEFICIAL_KEYWORDS = [
-    'workout', 'gym', 'exercise', 'walk', 'run', 'yoga', 'meditation', 'break', 
-    'lunch', 'eat', 'personal', 'doctor', 'dentist', 'therapy', 'massage', 'health'
+    'workout', 'gym', 'exercise', 'walk', 'run', 'yoga', 'meditation', 'break',
+    'lunch', 'eat', 'personal', 'doctor', 'dentist', 'therapy', 'massage', 'health',
+    'family', 'kids', 'school pickup', 'school drop', 'date night', 'self-care',
+    'nap', 'rest', 'recovery', 'hobby', 'read', 'journal', 'breathe', 'stretch',
+    'swim', 'hike', 'bike', 'sport', 'game', 'play', 'volunteer', 'church',
+    'prayer', 'worship', 'social', 'friends', 'happy hour', 'dinner'
   ];
-  
+
   private readonly NEUTRAL_KEYWORDS = [
     'commute', 'travel', 'vacation', 'holiday', 'sick', 'pto', 'personal day',
-    'out of office', 'not available', 'busy', 'blocked', 'unavailable'
+    'out of office', 'not available', 'busy', 'blocked', 'unavailable',
+    'appointment', 'errand', 'pickup', 'drop off', 'buffer', 'hold',
+    'tentative', 'maybe', 'optional'
   ];
   
   private readonly FOCUS_KEYWORDS = [

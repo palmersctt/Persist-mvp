@@ -219,7 +219,7 @@ METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
 HERO MESSAGE:
 The quote has already been selected:
 "${q.text}" — ${q.source}${q.character ? ` (${q.character})` : ''}
-Write a SHORT, witty subtitle (one sentence) connecting this quote to their specific calendar situation. Lean into dry humor and irony. Do NOT change the quote or source.
+Write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar? Do NOT change the quote or source.
 
 Current date: ${new Date().toLocaleDateString()}
 Current time: ${new Date().toLocaleTimeString()}
@@ -271,43 +271,43 @@ You must respond with valid JSON only. Use exactly this format:
     // Use comicReliefGenerator for a large, metrics-aware quote pool (200+ quotes)
     const quote = comicReliefGenerator.generateQuote(workHealth);
 
-    // Determine scenario subtitle based on calendar state
+    // Subtitle = emotional punchline connecting quote mood to day's vibe
     let subtitle: string;
-    if (workHealth.schedule.meetingCount >= 6 || workHealth.schedule.backToBackCount >= 4) {
-      const subtitles = [
-        "Your calendar certainly didn't ask for your consent",
-        "That's a lot of meetings with nowhere to hide",
-        "Back-to-back meetings all day long",
-        "Your schedule needs mission control",
-        "Meetings as far as the eye can see",
+    if (workHealth.schedule.meetingCount === 0 || workHealth.adaptivePerformanceIndex >= 90) {
+      const options = [
+        "Today's yours — do something worth remembering",
+        "The kind of day where you actually get to think",
+        "Wide open and full of possibility",
+        "No one's coming for your calendar today",
+        "This is what freedom looks like in corporate America",
       ];
-      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
-    } else if (workHealth.adaptivePerformanceIndex >= 85 || workHealth.schedule.meetingCount === 0 || (workHealth.schedule.meetingCount <= 2 && workHealth.focusTime >= 240)) {
-      const subtitles = [
-        "A wide-open calendar is a rare gift",
-        "Nothing but clear runway ahead",
-        "All that focus time — the sky's the limit",
-        "Light schedule, maximum energy",
-        "Today's looking good for deep work",
+      subtitle = options[Math.floor(Math.random() * options.length)];
+    } else if (workHealth.schedule.meetingCount >= 6 || workHealth.schedule.backToBackCount >= 4) {
+      const options = [
+        "Survival mode activated — and that's okay",
+        "Today's about getting through, not getting ahead",
+        "Your calendar wrote checks your brain can't cash",
+        "Breathe when you can, coast when you can't",
+        "Some days you ride the wave, today you hold on",
       ];
-      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
+      subtitle = options[Math.floor(Math.random() * options.length)];
     } else if (workHealth.adaptivePerformanceIndex < 50) {
-      const subtitles = [
-        "Scattered meetings ruining your focus blocks",
-        "One of those days — hang in there",
-        "The calendar giveth and the calendar taketh away",
-        "Your focus time is playing hide and seek",
+      const options = [
+        "Not your best day on paper, but you've handled worse",
+        "The kind of day that builds character (unfortunately)",
+        "Hang in there — tomorrow's a fresh calendar",
+        "You'll earn that evening on the couch tonight",
       ];
-      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
+      subtitle = options[Math.floor(Math.random() * options.length)];
     } else {
-      const subtitles = [
-        "A mixed bag — pace yourself",
-        "Some meetings, some focus — could go either way",
-        "Get through the tough parts, enjoy the rest",
-        "A bit of everything on the calendar today",
-        "Not bad, not great — just another day",
+      const options = [
+        "A solid day if you play it right",
+        "Enough breathing room to actually be creative",
+        "Not too heavy, not too light — just right",
+        "The kind of day where small wins add up",
+        "You've got this — just don't volunteer for anything new",
       ];
-      subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
+      subtitle = options[Math.floor(Math.random() * options.length)];
     }
 
     const heroMessage: HeroMessage = {
