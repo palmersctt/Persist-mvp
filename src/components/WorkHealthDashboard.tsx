@@ -416,7 +416,7 @@ export default function WorkHealthDashboard() {
                       <h1 className="text-2xl md:text-3xl lg:text-4xl font-light mb-2 gradient-text leading-tight" style={{ opacity: 0.85 }}>
                         &ldquo;{workHealth.ai.heroMessage.quote}&rdquo;
                       </h1>
-                      <p className="text-xs mt-2 mb-4 font-normal tracking-wider uppercase" style={{ color: 'var(--text-muted)', opacity: 0.6, letterSpacing: '0.12em' }}>
+                      <p className="text-sm mt-2 mb-4 font-normal italic" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
                         — {workHealth.ai.heroMessage.source}
                       </p>
                       <p className="text-sm md:text-base font-light leading-relaxed" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
