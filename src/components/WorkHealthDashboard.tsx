@@ -812,7 +812,7 @@ export default function WorkHealthDashboard() {
                 </div>
               );
               return (
-                <div>
+                <div className="text-center">
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                     {insight.message}
                   </p>
@@ -830,7 +830,7 @@ export default function WorkHealthDashboard() {
             {lastRefresh && (
               <div className="text-center pt-8">
                 <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                  Last updated {lastRefresh.toLocaleTimeString()}
+                  Last updated {lastRefresh.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                 </p>
               </div>
             )}
@@ -1024,7 +1024,7 @@ export default function WorkHealthDashboard() {
                 </div>
                 
                 {/* Performance Insights */}
-                <div className="mt-6 pt-4 border-t border-gray-700">
+                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                     Performance Insights
                   </h4>
@@ -1039,9 +1039,9 @@ export default function WorkHealthDashboard() {
                     </div>
                   ) : (() => {
                     const insight = getMetricInsight('performance');
-                    if (!insight) return <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
                     return (
-                      <>
+                      <div className="text-center">
                         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                           {insight.message}
                         </p>
@@ -1050,7 +1050,7 @@ export default function WorkHealthDashboard() {
                             {insight.action}
                           </p>
                         )}
-                      </>
+                      </div>
                     );
                   })()}
                 </div>
@@ -1246,7 +1246,7 @@ export default function WorkHealthDashboard() {
                 </div>
                 
                 {/* Resilience Insights */}
-                <div className="mt-6 pt-4 border-t border-gray-700">
+                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                     Resilience Insights
                   </h4>
@@ -1261,9 +1261,9 @@ export default function WorkHealthDashboard() {
                     </div>
                   ) : (() => {
                     const insight = getMetricInsight('resilience');
-                    if (!insight) return <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
                     return (
-                      <>
+                      <div className="text-center">
                         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                           {insight.message}
                         </p>
@@ -1272,7 +1272,7 @@ export default function WorkHealthDashboard() {
                             {insight.action}
                           </p>
                         )}
-                      </>
+                      </div>
                     );
                   })()}
                 </div>
@@ -1467,7 +1467,7 @@ export default function WorkHealthDashboard() {
                 </div>
                 
                 {/* Sustainability Insights */}
-                <div className="mt-6 pt-4 border-t border-gray-700">
+                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                     Sustainability Insights
                   </h4>
@@ -1482,9 +1482,9 @@ export default function WorkHealthDashboard() {
                     </div>
                   ) : (() => {
                     const insight = getMetricInsight('sustainability');
-                    if (!insight) return <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
                     return (
-                      <>
+                      <div className="text-center">
                         <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                           {insight.message}
                         </p>
@@ -1493,7 +1493,7 @@ export default function WorkHealthDashboard() {
                             {insight.action}
                           </p>
                         )}
-                      </>
+                      </div>
                     );
                   })()}
                 </div>
