@@ -188,18 +188,18 @@ export default function WorkHealthDashboard() {
         };
       }
 
-      // If no filtered insights, fall back to first 2 insights for non-overview tabs
+      // If no filtered insights, fall back to first insight for non-overview tabs
       if (tabType !== 'overview') {
         return {
-          insights: workHealth.ai.insights.slice(0, 2),
+          insights: workHealth.ai.insights.slice(0, 1),
           isAI: true,
           aiStatus: workHealth.aiStatus || 'success'
         };
       }
 
-      // For overview, show all insights
+      // For overview, show only the top 2 most important insights
       return {
-        insights: workHealth.ai.insights,
+        insights: workHealth.ai.insights.slice(0, 2),
         isAI: true,
         aiStatus: workHealth.aiStatus || 'success'
       };
@@ -978,20 +978,10 @@ export default function WorkHealthDashboard() {
 
         {/* Insights Section */}
         <section>
-          <div className="flex items-center justify-between mb-8">
+          <div className="mb-8 text-center">
             <h2 className="whoop-section-title">
               Insights
             </h2>
-            {/* AI/Static Indicator Badge */}
-            <div className="flex items-center space-x-2">
-              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                tabInsights.isAI 
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                  : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-              }`}>
-                {'📊 Analysis'}
-              </div>
-            </div>
           </div>
           
           <div>
@@ -1018,34 +1008,6 @@ export default function WorkHealthDashboard() {
           </div>
         </section>
 
-        {/* Clean Connections Section */}
-        <section>
-          <h2 className="whoop-section-title mb-8">
-            Connections
-          </h2>
-          
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <h3 className="whoop-insight-title mb-1">
-                    Data Sources
-                  </h3>
-                  <p className="text-xs font-medium" style={{ 
-                    color: session ? 'var(--whoop-green)' : 'var(--text-muted)' 
-                  }}>
-                    {session ? 'Google Calendar Connected' : 'Connect Google Calendar'}
-                  </p>
-                </div>
-                
-                {session && (
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--whoop-green)' }} />
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-        
             {lastRefresh && (
               <div className="text-center pt-8">
                 <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
@@ -1247,46 +1209,23 @@ export default function WorkHealthDashboard() {
                 
                 {/* Performance Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      Performance Insights
-                    </h4>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      getTabSpecificInsights('performance').isAI 
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                    }`}>
-                      {'📊 Analysis'}
-                    </div>
-                  </div>
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Performance Insights
+                  </h4>
                   {isAILoading && activeTab === 'performance' ? (
-                    <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center justify-center py-4">
                       <div className="flex items-center space-x-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Loading performance insights...
+                          Loading insights...
                         </span>
                       </div>
                     </div>
-                  ) : getTabSpecificInsights('performance').insights.map((insight, index) => (
-                    <div key={index} className="p-3 rounded mb-3" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                      <div className="flex items-start justify-between mb-2">
-                        <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {insight.title}
-                        </h5>
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                        {insight.message}
-                      </p>
-                      {getTabSpecificInsights('performance').isAI && insight.recommendation && (
-                        <div className="mt-2 pt-2 border-t border-blue-500/30">
-                          <p className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
-                            Recommendation: {insight.recommendation}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  ) : (
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      {getTabSpecificInsights('performance').insights.map(insight => insight.message).join(' ')}
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -1484,46 +1423,23 @@ export default function WorkHealthDashboard() {
                 
                 {/* Resilience Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      Resilience Insights
-                    </h4>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      getTabSpecificInsights('resilience').isAI 
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                    }`}>
-                      {'📊 Analysis'}
-                    </div>
-                  </div>
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Resilience Insights
+                  </h4>
                   {isAILoading && activeTab === 'resilience' ? (
-                    <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center justify-center py-4">
                       <div className="flex items-center space-x-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Loading resilience insights...
+                          Loading insights...
                         </span>
                       </div>
                     </div>
-                  ) : getTabSpecificInsights('resilience').insights.map((insight, index) => (
-                    <div key={index} className="p-3 rounded mb-3" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                      <div className="flex items-start justify-between mb-2">
-                        <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {insight.title}
-                        </h5>
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                        {insight.message}
-                      </p>
-                      {getTabSpecificInsights('resilience').isAI && insight.recommendation && (
-                        <div className="mt-2 pt-2 border-t border-blue-500/30">
-                          <p className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
-                            Recommendation: {insight.recommendation}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  ) : (
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      {getTabSpecificInsights('resilience').insights.map(insight => insight.message).join(' ')}
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -1720,46 +1636,23 @@ export default function WorkHealthDashboard() {
                 
                 {/* Sustainability Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      Sustainability Insights
-                    </h4>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      getTabSpecificInsights('sustainability').isAI 
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                    }`}>
-                      {'📊 Analysis'}
-                    </div>
-                  </div>
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Sustainability Insights
+                  </h4>
                   {isAILoading && activeTab === 'sustainability' ? (
-                    <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center justify-center py-4">
                       <div className="flex items-center space-x-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Loading sustainability insights...
+                          Loading insights...
                         </span>
                       </div>
                     </div>
-                  ) : getTabSpecificInsights('sustainability').insights.map((insight, index) => (
-                    <div key={index} className="p-3 rounded mb-3" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                      <div className="flex items-start justify-between mb-2">
-                        <h5 className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {insight.title}
-                        </h5>
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                        {insight.message}
-                      </p>
-                      {getTabSpecificInsights('sustainability').isAI && insight.recommendation && (
-                        <div className="mt-2 pt-2 border-t border-blue-500/30">
-                          <p className="text-xs font-medium" style={{ color: '#4F9CF9' }}>
-                            Recommendation: {insight.recommendation}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  ) : (
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      {getTabSpecificInsights('sustainability').insights.map(insight => insight.message).join(' ')}
+                    </p>
+                  )}
                 </div>
               </div>
             </section>

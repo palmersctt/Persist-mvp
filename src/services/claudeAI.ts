@@ -143,15 +143,33 @@ Write like you're having a conversation with them using "you'll feel", "your ene
       source: providedUserTimezone ? 'PROVIDED_FROM_CLIENT' : 'SERVER_FALLBACK'
     });
     
+    // Interpret scores so Claude knows what they mean
+    const interpretScore = (score: number): string => {
+      if (score >= 85) return 'excellent';
+      if (score >= 75) return 'good';
+      if (score >= 65) return 'moderate — room for improvement';
+      if (score >= 55) return 'concerning — needs attention';
+      if (score >= 40) return 'poor — significant issues';
+      return 'critical — immediate action needed';
+    };
+
     const baseContext = `WORK HEALTH METRICS:
-- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
-- Cognitive Resilience: ${workHealth.cognitiveResilience}%
-- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}%
+- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
+- Cognitive Resilience: ${workHealth.cognitiveResilience}% (${interpretScore(workHealth.cognitiveResilience)})
+- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
 - Status: ${workHealth.status}
 - Meeting Count: ${workHealth.schedule.meetingCount}
 - Back-to-back Count: ${workHealth.schedule.backToBackCount}
 - Focus Time: ${this.formatDuration(workHealth.focusTime)}
 - Fragmentation Score: ${workHealth.schedule.fragmentationScore}
+
+SCORE INTERPRETATION (use this to calibrate your tone):
+- 85%+ = excellent, genuinely great day
+- 75-84% = good, solid and positive
+- 65-74% = moderate, okay but not great — be honest about areas to watch
+- 55-64% = concerning, flag real issues
+- Below 55% = problematic, be direct about challenges
+IMPORTANT: Do NOT sugarcoat moderate or low scores. A 67% is NOT "great" or "sustainable for weeks" — it means there are real areas that need improvement. Match your tone to the actual score.
 
 CALENDAR EVENTS (${events.length} total):
 ${events.map(event => 
@@ -196,6 +214,8 @@ Write conversational insights like:
 - "You're set up for a smooth day with good energy flow and manageable workload"
 - "Today might feel a bit overwhelming with everything packed in, but you should handle it fine"
 
+IMPORTANT: Keep insights SHORT. Provide only 1-2 insights maximum, each 1-2 sentences. Focus on the single most important takeaway for their day.
+
 You must respond with valid JSON only. Provide a JSON response in exactly this format:
 {
   "heroMessage": {
@@ -206,8 +226,8 @@ You must respond with valid JSON only. Provide a JSON response in exactly this f
   "insights": [
     {
       "category": "performance",
-      "title": "Insight Title",
-      "message": "Detailed conversational insight message",
+      "title": "Short Title",
+      "message": "One or two sentences max. The single most important thing about their day.",
       "severity": "info",
       "actionable": true,
       "confidence": 85
@@ -238,13 +258,15 @@ Write conversational insights like:
 - "This looks like one of those days where you'll power through your to-do list without much trouble"
 - "You might feel scattered with all those meetings, but your afternoon focus block should help you get back on track"
 
+IMPORTANT: Keep it brief. Provide only 1 insight, 1-2 sentences max. Focus on the single most important performance takeaway.
+
 Provide a JSON response in exactly this format:
 {
   "insights": [
     {
       "category": "performance",
-      "title": "Performance Insight Title",
-      "message": "Detailed performance-focused insight",
+      "title": "Short Title",
+      "message": "One or two sentences about their performance today.",
       "severity": "info",
       "actionable": true,
       "confidence": 85
@@ -274,13 +296,15 @@ Write conversational insights like:
 - "That long afternoon meeting could test your patience, but you'll probably bounce back fine"
 - "You're in good shape to stay composed, even if things don't go exactly as planned"
 
+IMPORTANT: Keep it brief. Provide only 1 insight, 1-2 sentences max. Focus on the single most important resilience takeaway.
+
 You must respond with valid JSON only. Provide a JSON response in exactly this format:
 {
   "insights": [
     {
       "category": "wellness",
-      "title": "Resilience Insight Title",
-      "message": "Detailed resilience-focused insight",
+      "title": "Short Title",
+      "message": "One or two sentences about their resilience today.",
       "severity": "info",
       "actionable": true,
       "confidence": 85
@@ -310,13 +334,15 @@ Write conversational insights like:
 - "You're hitting a nice sustainable rhythm that should leave you energized for tomorrow"
 - "This workload feels a bit much - you might need some lighter days after this to recharge"
 
+IMPORTANT: Keep it brief. Provide only 1 insight, 1-2 sentences max. Focus on the single most important sustainability takeaway.
+
 Provide a JSON response in exactly this format:
 {
   "insights": [
     {
       "category": "balance",
-      "title": "Sustainability Insight Title",
-      "message": "Detailed sustainability-focused insight",
+      "title": "Short Title",
+      "message": "One or two sentences about their sustainability today.",
       "severity": "info",
       "actionable": true,
       "confidence": 85
