@@ -587,33 +587,8 @@ export default function WorkHealthDashboard() {
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <div className="max-w-5xl mx-auto px-6 pt-8 pb-4">
-        <div className="flex justify-center">
-          <div className="flex space-x-1 md:space-x-2">
-            {[
-              { id: 'overview', label: 'Overview', mobileLabel: 'Overview' },
-              { id: 'performance', label: 'Performance Index', mobileLabel: 'Performance' },
-              { id: 'resilience', label: 'Cognitive Resilience', mobileLabel: 'Cognitive' },
-              { id: 'sustainability', label: 'Sustainability Index', mobileLabel: 'Sustainability' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className="px-2 md:px-4 py-2 text-xs md:text-sm font-medium rounded-md transition-all duration-200"
-                style={{
-                  color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  border: activeTab === tab.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
-                }}
-              >
-                <span className="hidden md:inline">{tab.label}</span>
-                <span className="md:hidden">{tab.mobileLabel}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Spacer (tab bar removed — navigate by clicking metrics) */}
+      <div className="pt-8" />
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 pb-12 space-y-16">
@@ -763,60 +738,54 @@ export default function WorkHealthDashboard() {
               )}
             </div>
             
-            {/* External Labels - Symmetric Three-Point Layout */}
+            {/* External Labels - Clickable to navigate to detail views */}
             {/* Performance Index Label - 12 o'clock (Top) */}
-            <div className="absolute text-center" style={{
-              left: '50%',
-              top: '-30px',
-              transform: 'translateX(-50%)'
-            }}>
+            <div
+              className="absolute text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
+              style={{ left: '50%', top: '-30px', transform: 'translateX(-50%)' }}
+              onClick={() => !(isLoading || isAILoading) && setActiveTab('performance')}
+            >
               <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
                 color: '#10b981',
                 lineHeight: '1'
               }}>
                 {(isLoading || isAILoading) ? '...' : `${workHealth?.adaptivePerformanceIndex || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
-                color: '#10b981'
-              }}>
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#10b981' }}>
                 PERFORMANCE<br />INDEX
               </div>
             </div>
 
             {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
-            <div className="absolute text-center" style={{
-              left: '15%',
-              bottom: '10px',
-              transform: 'translateX(-50%)'
-            }}>
+            <div
+              className="absolute text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
+              style={{ left: '15%', bottom: '10px', transform: 'translateX(-50%)' }}
+              onClick={() => !(isLoading || isAILoading) && setActiveTab('sustainability')}
+            >
               <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
                 color: '#6b7280',
                 lineHeight: '1'
               }}>
                 {(isLoading || isAILoading) ? '...' : `${workHealth?.workRhythmRecovery || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ 
-                color: '#6b7280'
-              }}>
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#6b7280' }}>
                 SUSTAINABILITY<br />INDEX
               </div>
             </div>
-            
+
             {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
-            <div className="absolute text-center" style={{
-              right: '15%',
-              bottom: '10px',
-              transform: 'translateX(50%)'
-            }}>
+            <div
+              className="absolute text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
+              style={{ right: '15%', bottom: '10px', transform: 'translateX(50%)' }}
+              onClick={() => !(isLoading || isAILoading) && setActiveTab('resilience')}
+            >
               <div className={`text-2xl sm:text-3xl lg:text-4xl font-semibold ${(isLoading || isAILoading) ? 'animate-pulse' : ''}`} style={{
                 color: '#3b82f6',
                 lineHeight: '1'
               }}>
                 {(isLoading || isAILoading) ? '...' : `${workHealth?.cognitiveResilience || 0}`}
               </div>
-              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{
-                color: '#3b82f6'
-              }}>
+              <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#3b82f6' }}>
                 COGNITIVE<br />RESILIENCE
               </div>
             </div>
@@ -1090,6 +1059,9 @@ export default function WorkHealthDashboard() {
         {/* Performance Index Tab */}
         {activeTab === 'performance' && (
           <div className="space-y-16">
+            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+              <span>&larr;</span><span>Back to Overview</span>
+            </button>
             {/* Large Performance Index Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
@@ -1324,6 +1296,9 @@ export default function WorkHealthDashboard() {
         {/* Cognitive Resilience Tab */}
         {activeTab === 'resilience' && (
           <div className="space-y-16">
+            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+              <span>&larr;</span><span>Back to Overview</span>
+            </button>
             {/* Large Cognitive Resilience Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
@@ -1558,6 +1533,9 @@ export default function WorkHealthDashboard() {
         {/* Sustainability Index Tab */}
         {activeTab === 'sustainability' && (
           <div className="space-y-16">
+            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+              <span>&larr;</span><span>Back to Overview</span>
+            </button>
             {/* Large Sustainability Index Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
