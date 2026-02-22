@@ -34,6 +34,15 @@ export interface WorkHealthMetrics {
     bufferTime: number;
     durationHours: number;
     fragmentationScore: number;
+    // Per-metric breakdown data
+    morningMeetings: number;
+    afternoonMeetings: number;
+    meetingRatio: number; // meeting hours / 8hr workday (0-1)
+    uniqueContexts: number; // distinct meeting types for context switching
+    longestStretch: number; // longest consecutive meeting chain
+    adequateBreaks: number; // gaps >= 30 min
+    shortBreaks: number; // gaps 15-29 min
+    earlyLateMeetings: number; // meetings before 7am or after 5pm
   };
   breakdown: {
     source: 'calendar';
@@ -768,7 +777,7 @@ class GoogleCalendarService {
 
     // Generate insights based on new metrics
     const contributors = [
-      `Adaptive Performance: ${adaptivePerformanceIndex}%${adaptivePerformanceIndex >= 85 ? ' (Optimal)' : adaptivePerformanceIndex >= 75 ? ' (Excellent)' : adaptivePerformanceIndex >= 65 ? ' (Good)' : adaptivePerformanceIndex >= 50 ? ' (Moderate)' : ' (Needs Attention)'}`,
+      `Performance Index: ${adaptivePerformanceIndex}%${adaptivePerformanceIndex >= 85 ? ' (Optimal)' : adaptivePerformanceIndex >= 75 ? ' (Excellent)' : adaptivePerformanceIndex >= 65 ? ' (Good)' : adaptivePerformanceIndex >= 50 ? ' (Moderate)' : ' (Needs Attention)'}`,
       `Cognitive Resilience: ${cognitiveResilience}%${cognitiveResilience >= 80 ? ' (Strong)' : cognitiveResilience >= 60 ? ' (Good)' : cognitiveResilience >= 40 ? ' (Moderate)' : ' (Limited)'}`,
       `Sustainability Index: ${workRhythmRecovery}%${workRhythmRecovery >= 80 ? ' (Excellent)' : workRhythmRecovery >= 60 ? ' (Good)' : workRhythmRecovery >= 40 ? ' (Moderate)' : ' (Needs Attention)'}`
     ];
@@ -803,19 +812,41 @@ class GoogleCalendarService {
       primaryFactors.push(`${backToBackCount} back-to-back session${backToBackCount > 1 ? 's' : ''} requiring transition management`);
     }
 
+    // Compute per-metric breakdown data
+    const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
+    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
+    const meetingRatio = totalDuration / 8;
+    const uniqueContexts = new Set(events.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
+    const longestStretch = this.findLongestConsecutiveStretch(events);
+    const gaps = this.calculateGapsBetweenMeetings(events);
+    const adequateBreaks = gaps.filter(g => g >= 30).length;
+    const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
+    const earlyLateMeetings = actualMeetings.filter(e => {
+      const h = this.getTimezoneAwareHours(e.start, this.userTimezone);
+      return h < 7 || h >= 17;
+    }).length;
+
     return {
       // New intelligent metrics
       adaptivePerformanceIndex,
       cognitiveResilience,
       workRhythmRecovery,
-      
+
       status,
       schedule: {
         meetingCount,
         backToBackCount,
         bufferTime: Math.round(bufferTime),
         durationHours: Number(totalDuration.toFixed(1)),
-        fragmentationScore
+        fragmentationScore,
+        morningMeetings,
+        afternoonMeetings,
+        meetingRatio: Number(meetingRatio.toFixed(2)),
+        uniqueContexts,
+        longestStretch,
+        adequateBreaks,
+        shortBreaks,
+        earlyLateMeetings
       },
       breakdown: {
         source: 'calendar',

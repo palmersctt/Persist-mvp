@@ -14,7 +14,7 @@ interface SecondaryMetric {
 }
 
 interface WorkCapacityStatus {
-  level: 'optimal' | 'good' | 'moderate' | 'recovery' | 'estimated' | 'peak';
+  level: 'optimal' | 'excellent' | 'good' | 'moderate' | 'attention' | 'estimated';
   message: string;
   color: string;
   description: string;
@@ -31,7 +31,13 @@ export default function WorkHealthDashboard() {
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
   
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh } = useWorkHealth(activeTab);
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, history } = useWorkHealth(activeTab);
+
+  // Trend arrow helper
+  const trendArrow = (trend?: 'up' | 'down' | 'flat') => {
+    if (!trend || trend === 'flat') return '';
+    return trend === 'up' ? ' ↑' : ' ↓';
+  };
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -75,49 +81,43 @@ export default function WorkHealthDashboard() {
 
     const adaptiveIndex = workHealth.adaptivePerformanceIndex;
     const isCached = workHealth.status === 'CACHED';
-    
-    // Color logic matches performance index ring exactly
+    const cached = isCached ? ' (CACHED)' : '';
+
+    // 5-tier hierarchy aligned with googleCalendar.ts thresholds
     if (adaptiveIndex >= 85) {
       return {
         level: 'optimal',
-        message: isCached ? 'OPTIMAL WORK HEALTH (CACHED)' : 'OPTIMAL WORK HEALTH',
-        color: '#00ff88', // Green
-        description: 'Outstanding cognitive conditions with excellent schedule balance. Perfect for strategic initiatives, complex problem-solving, and important decisions.'
+        message: `OPTIMAL WORK HEALTH${cached}`,
+        color: '#00ff88',
+        description: 'You have the capacity for your hardest work today. Great day for strategic thinking, complex problems, and big decisions.'
       };
     } else if (adaptiveIndex >= 75) {
       return {
-        level: 'peak',
-        message: isCached ? 'EXCELLENT WORK HEALTH (CACHED)' : 'EXCELLENT WORK HEALTH',
-        color: '#25d366', // Green
-        description: 'Strong cognitive resilience with sustainable work rhythm. Ideal for challenging projects, creative tasks, and high-stakes activities.'
+        level: 'excellent',
+        message: `EXCELLENT WORK HEALTH${cached}`,
+        color: '#25d366',
+        description: 'Strong capacity with a sustainable schedule. Good day for challenging projects and creative work.'
       };
     } else if (adaptiveIndex >= 65) {
       return {
         level: 'good',
-        message: isCached ? 'GOOD WORK HEALTH (CACHED)' : 'GOOD WORK HEALTH',
-        color: '#ffb347', // Yellow/Amber
-        description: 'Solid cognitive foundation with balanced schedule patterns. Good capacity for routine tasks, meetings, and moderate complexity projects.'
+        message: `GOOD WORK HEALTH${cached}`,
+        color: '#ffb347',
+        description: 'Solid foundation with a balanced schedule. You can handle routine work and moderate complexity comfortably.'
       };
-    } else if (adaptiveIndex >= 55) {
+    } else if (adaptiveIndex >= 50) {
       return {
         level: 'moderate',
-        message: isCached ? 'MODERATE WORK HEALTH (CACHED)' : 'MODERATE WORK HEALTH',
-        color: '#ff9500', // Orange
-        description: 'Some cognitive strain from schedule density. Consider optimizing meeting distribution and recovery periods.'
-      };
-    } else if (adaptiveIndex >= 40) {
-      return {
-        level: 'attention',
-        message: isCached ? 'WORK HEALTH NEEDS ATTENTION (CACHED)' : 'WORK HEALTH NEEDS ATTENTION',
-        color: '#ff7744', // Red-Orange
-        description: 'Performance compromised by schedule density and cognitive demands. Focus on essential tasks and schedule optimization.'
+        message: `MODERATE WORK HEALTH${cached}`,
+        color: '#ff9500',
+        description: 'Your schedule is putting some strain on your capacity. Consider spacing out meetings or protecting a focus block.'
       };
     } else {
       return {
-        level: 'critical',
-        message: isCached ? 'CRITICAL WORK HEALTH (CACHED)' : 'CRITICAL WORK HEALTH',
-        color: '#ff4444', // Red
-        description: 'Severe cognitive strain requiring immediate schedule intervention. Prioritize recovery and workload reduction.'
+        level: 'attention',
+        message: `NEEDS ATTENTION${cached}`,
+        color: '#ff7744',
+        description: 'Heavy schedule today. Focus on what matters most and try to create some breathing room between commitments.'
       };
     }
   };
@@ -560,11 +560,16 @@ export default function WorkHealthDashboard() {
                 color: '#10b981',
                 lineHeight: '1'
               }}>
-                {(isLoading || isAILoading) ? '...' : `${workHealth?.adaptivePerformanceIndex || 0}`}
+                {(isLoading || isAILoading) ? '...' : `${workHealth?.adaptivePerformanceIndex || 0}${trendArrow(history?.trend.performance)}`}
               </div>
               <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#10b981' }}>
                 PERFORMANCE<br />INDEX
               </div>
+              {history && (
+                <div className="text-xs mt-1" style={{ color: '#10b981', opacity: 0.5 }}>
+                  avg {history.weeklyAvg.performance}
+                </div>
+              )}
             </div>
 
             {/* Sustainability Index Label - 8 o'clock (Bottom Left) */}
@@ -577,11 +582,16 @@ export default function WorkHealthDashboard() {
                 color: '#6b7280',
                 lineHeight: '1'
               }}>
-                {(isLoading || isAILoading) ? '...' : `${workHealth?.workRhythmRecovery || 0}`}
+                {(isLoading || isAILoading) ? '...' : `${workHealth?.workRhythmRecovery || 0}${trendArrow(history?.trend.sustainability)}`}
               </div>
               <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#6b7280' }}>
                 SUSTAINABILITY<br />INDEX
               </div>
+              {history && (
+                <div className="text-xs mt-1" style={{ color: '#6b7280', opacity: 0.5 }}>
+                  avg {history.weeklyAvg.sustainability}
+                </div>
+              )}
             </div>
 
             {/* Cognitive Resilience Label - 4 o'clock (Bottom Right) */}
@@ -594,11 +604,16 @@ export default function WorkHealthDashboard() {
                 color: '#3b82f6',
                 lineHeight: '1'
               }}>
-                {(isLoading || isAILoading) ? '...' : `${workHealth?.cognitiveResilience || 0}`}
+                {(isLoading || isAILoading) ? '...' : `${workHealth?.cognitiveResilience || 0}${trendArrow(history?.trend.resilience)}`}
               </div>
               <div className="text-xs sm:text-sm uppercase leading-tight mt-1" style={{ color: '#3b82f6' }}>
                 COGNITIVE<br />RESILIENCE
               </div>
+              {history && (
+                <div className="text-xs mt-1" style={{ color: '#3b82f6', opacity: 0.5 }}>
+                  avg {history.weeklyAvg.resilience}
+                </div>
+              )}
             </div>
           </div>
           
@@ -626,159 +641,55 @@ export default function WorkHealthDashboard() {
                 How much capacity you have today for your best work — based on meeting load, available focus blocks, and schedule flow.
               </p>
 
-              {/* Simplified Components - Max 4 */}
+              {/* At-a-glance: one bar per metric */}
               <div className="space-y-5 mb-6">
-                {/* Meeting Load */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Meeting Load
-                    </span>
-                    <span className="text-xs" style={{ 
-                      color: 'var(--text-muted)',
-                      fontWeight: '500'
-                    }}>
-                      {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
-                       (workHealth?.schedule?.meetingCount || 0) <= 5 ? 'Moderate' : 'Heavy'}
-                    </span>
+                    <span className="text-xs font-medium" style={{ color: '#10b981' }}>Performance</span>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{workHealth?.adaptivePerformanceIndex || 0}</span>
                   </div>
                   <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div 
-                      className="h-1.5 rounded transition-all duration-700"
-                      style={{ 
-                        width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
-                        backgroundColor: '#4F9CF9',
-                        opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 15)) / 100)
-                      }}
-                    />
+                    <div className="h-1.5 rounded transition-all duration-700" style={{ width: `${workHealth?.adaptivePerformanceIndex || 0}%`, backgroundColor: '#10b981' }} />
                   </div>
                   <div className="mt-1">
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {workHealth?.schedule?.meetingCount || 0} meetings scheduled
+                      {workHealth?.schedule?.meetingCount || 0} meetings, {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m focus time
                     </span>
                   </div>
                 </div>
-
-                {/* Focus Availability */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Focus Availability
-                    </span>
-                    <span className="text-xs" style={{ 
-                      color: 'var(--text-muted)',
-                      fontWeight: '500'
-                    }}>
-                      {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Good' :
-                       formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Limited'}
-                    </span>
+                    <span className="text-xs font-medium" style={{ color: '#3b82f6' }}>Resilience</span>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{workHealth?.cognitiveResilience || 0}</span>
                   </div>
                   <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div 
-                      className="h-1.5 rounded transition-all duration-700"
-                      style={{ 
-                        width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                        backgroundColor: '#4F9CF9',
-                        opacity: Math.min(1, Math.max(0.4, formatFocusTime(workHealth?.focusTime || 0).hours / 4))
-                      }}
-                    />
+                    <div className="h-1.5 rounded transition-all duration-700" style={{ width: `${workHealth?.cognitiveResilience || 0}%`, backgroundColor: '#3b82f6' }} />
                   </div>
                   <div className="mt-1">
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m uninterrupted time
+                      {workHealth?.schedule?.uniqueContexts || 0} context switches, {workHealth?.schedule?.longestStretch || 0} longest chain
                     </span>
                   </div>
                 </div>
-
-                {/* Schedule Flow */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Schedule Flow
-                    </span>
-                    <span className="text-xs" style={{ 
-                      color: 'var(--text-muted)',
-                      fontWeight: '500'
-                    }}>
-                      {(workHealth?.schedule?.fragmentationScore || 0) >= 80 ? 'Good' : 
-                       (workHealth?.schedule?.fragmentationScore || 0) >= 60 ? 'Moderate' : 'Fragmented'}
-                    </span>
+                    <span className="text-xs font-medium" style={{ color: '#6b7280' }}>Sustainability</span>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>{workHealth?.workRhythmRecovery || 0}</span>
                   </div>
                   <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div 
-                      className="h-1.5 rounded transition-all duration-700"
-                      style={{ 
-                        width: `${workHealth?.schedule?.fragmentationScore || 20}%`,
-                        backgroundColor: '#4F9CF9',
-                        opacity: Math.max(0.4, (workHealth?.schedule?.fragmentationScore || 20) / 100)
-                      }}
-                    />
+                    <div className="h-1.5 rounded transition-all duration-700" style={{ width: `${workHealth?.workRhythmRecovery || 0}%`, backgroundColor: '#6b7280' }} />
                   </div>
                   <div className="mt-1">
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {(workHealth?.schedule?.backToBackCount || 0) > 0 ? 
-                        `${workHealth?.schedule?.backToBackCount} back-to-back transitions` : 
-                        'Well-spaced meetings'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Recovery Time */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      Recovery Time
-                    </span>
-                    <span className="text-xs" style={{ 
-                      color: 'var(--text-muted)',
-                      fontWeight: '500'
-                    }}>
-                      {((workHealth?.schedule?.bufferTime || 0) / 60) >= 3 ? 'Good' : 
-                       ((workHealth?.schedule?.bufferTime || 0) / 60) >= 1 ? 'Moderate' : 'Limited'}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-800 rounded h-1.5">
-                    <div 
-                      className="h-1.5 rounded transition-all duration-700"
-                      style={{ 
-                        width: `${Math.min(100, ((workHealth?.schedule?.bufferTime || 0) / 60) * 25)}%`,
-                        backgroundColor: '#4F9CF9',
-                        opacity: Math.min(1, Math.max(0.4, ((workHealth?.schedule?.bufferTime || 0) / 60) / 4))
-                      }}
-                    />
-                  </div>
-                  <div className="mt-1">
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m between activities
+                      {workHealth?.schedule?.adequateBreaks || 0} recovery breaks, {workHealth?.schedule?.durationHours || 0}h committed
                     </span>
                   </div>
                 </div>
               </div>
-              
-              <div className="mt-6 pt-4 border-t border-gray-700">
-                <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                  Key Insight
-                </h4>
-                <div className="p-3 rounded" style={{ backgroundColor: 'rgba(79, 156, 249, 0.1)', border: '1px solid rgba(79, 156, 249, 0.2)' }}>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                    {workHealth?.adaptivePerformanceIndex >= 75 ? 
-                      'Your current schedule structure supports sustainable performance. Consider maintaining this balance of meetings and focused work time.' :
-                      workHealth?.adaptivePerformanceIndex >= 50 ?
-                      'Your schedule shows moderate density. Try consolidating meetings into blocks to create longer periods for focused work.' :
-                      'Your schedule has high meeting density. Consider which meetings could be shortened, combined, or rescheduled to create more continuous work time.'
-                    }
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-6 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <strong>Remember:</strong> This score reflects your current week's pattern. Small changes in meeting structure can significantly improve your cognitive performance.
-                </p>
-                <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
-                  Click anywhere to close
-                </p>
-              </div>
+
+              <p className="text-xs text-center" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                Tap a metric above for the full breakdown
+              </p>
             </div>
           )}
           
@@ -889,126 +800,101 @@ export default function WorkHealthDashboard() {
                   How much capacity you have today for your best work — based on meeting load, available focus blocks, and schedule flow.
                 </p>
 
-                {/* Performance Components */}
+                {/* Performance Components — unique to this metric's calculation */}
                 <div className="space-y-5 mb-6">
+                  {/* Meeting Density (25% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Meeting Load
+                        Meeting Density
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
-                         (workHealth?.schedule?.meetingCount || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.meetingCount || 0) <= 2 ? 'Light' :
+                         (workHealth?.schedule?.meetingCount || 0) <= 4 ? 'Moderate' : 'Heavy'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 15)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
+                        backgroundColor: '#10b981'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.meetingCount || 0} meetings scheduled
+                        {workHealth?.schedule?.meetingCount || 0} meetings competing for your attention
                       </span>
                     </div>
                   </div>
 
+                  {/* Focus Fragmentation (30% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Focus Availability
+                        Deep Work Blocks
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Good' :
-                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Limited'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Plenty' :
+                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Some' : 'Scarce'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.min(1, Math.max(0.4, formatFocusTime(workHealth?.focusTime || 0).hours / 4))
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
+                        backgroundColor: '#10b981'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m uninterrupted time
+                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m available for uninterrupted work
                       </span>
                     </div>
                   </div>
 
+                  {/* Timing Alignment (10% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Schedule Flow
+                        Meeting Timing
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.fragmentationScore || 0) >= 80 ? 'Good' : 
-                         (workHealth?.schedule?.fragmentationScore || 0) >= 60 ? 'Moderate' : 'Fragmented'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) * 1.5 ? 'Afternoon-heavy' :
+                         (workHealth?.schedule?.morningMeetings || 0) > 0 && (workHealth?.schedule?.afternoonMeetings || 0) > 0 ? 'Spread out' : 'Well-timed'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${workHealth?.schedule?.fragmentationScore || 20}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (workHealth?.schedule?.fragmentationScore || 20) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${(workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) * 1.5 ? 40 :
+                                  (workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) ? 70 : 100}%`,
+                        backgroundColor: '#10b981'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {(workHealth?.schedule?.backToBackCount || 0) > 0 ? 
-                          `${workHealth?.schedule?.backToBackCount} back-to-back transitions` : 
-                          'Well-spaced meetings'}
+                        {workHealth?.schedule?.morningMeetings || 0} morning, {workHealth?.schedule?.afternoonMeetings || 0} afternoon
                       </span>
                     </div>
                   </div>
 
+                  {/* Meeting-to-Work Ratio (15% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Recovery Time
+                        Calendar Commitment
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {((workHealth?.schedule?.bufferTime || 0) / 60) >= 3 ? 'Good' : 
-                         ((workHealth?.schedule?.bufferTime || 0) / 60) >= 1 ? 'Moderate' : 'Limited'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.meetingRatio || 0) <= 0.3 ? 'Light' :
+                         (workHealth?.schedule?.meetingRatio || 0) <= 0.5 ? 'Moderate' : 'Heavy'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.min(100, ((workHealth?.schedule?.bufferTime || 0) / 60) * 25)}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.schedule?.bufferTime || 0) / 60) / 4))
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(15, 100 - ((workHealth?.schedule?.meetingRatio || 0) * 100))}%`,
+                        backgroundColor: '#10b981'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m between activities
+                        {workHealth?.schedule?.durationHours || 0}h of your day is in meetings ({Math.round((workHealth?.schedule?.meetingRatio || 0) * 100)}%)
                       </span>
                     </div>
                   </div>
@@ -1111,126 +997,101 @@ export default function WorkHealthDashboard() {
                   How well you can handle tough decisions and context switches today — before mental fatigue sets in.
                 </p>
 
-                {/* Cognitive Resilience Components */}
+                {/* Cognitive Resilience Components — unique to this metric */}
                 <div className="space-y-5 mb-6">
+                  {/* Context Switching (unique contexts) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Mental Energy
+                        Context Switching
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Good' :
-                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Limited'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.uniqueContexts || 0) <= 3 ? 'Low' :
+                         (workHealth?.schedule?.uniqueContexts || 0) <= 5 ? 'Moderate' : 'High'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.min(1, Math.max(0.4, formatFocusTime(workHealth?.focusTime || 0).hours / 4))
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.uniqueContexts || 0) * 12))}%`,
+                        backgroundColor: '#3b82f6'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m for deep thinking
+                        {workHealth?.schedule?.uniqueContexts || 0} different contexts your brain has to shift between
                       </span>
                     </div>
                   </div>
 
+                  {/* Decision Fatigue (afternoon-weighted meetings) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Task Switching
+                        Decision Fatigue Risk
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.meetingCount || 0) <= 2 ? 'Light' : 
-                         (workHealth?.schedule?.meetingCount || 0) <= 4 ? 'Moderate' : 'Heavy'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.afternoonMeetings || 0) <= 1 ? 'Low' :
+                         (workHealth?.schedule?.afternoonMeetings || 0) <= 3 ? 'Moderate' : 'High'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 18))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 18)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.afternoonMeetings || 0) * 20))}%`,
+                        backgroundColor: '#3b82f6'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.meetingCount || 0} different meetings to navigate
+                        {workHealth?.schedule?.afternoonMeetings || 0} afternoon meetings when willpower is lower
                       </span>
                     </div>
                   </div>
 
+                  {/* Longest Consecutive Stretch */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Decision Load
+                        Longest Meeting Chain
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
-                         (workHealth?.schedule?.meetingCount || 0) <= 6 ? 'Moderate' : 'Heavy'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.longestStretch || 0) <= 1 ? 'None' :
+                         (workHealth?.schedule?.longestStretch || 0) <= 2 ? 'Short' : 'Long'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(20, 100 - ((workHealth?.schedule?.meetingCount || 0) * 12))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 12)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.longestStretch || 0) * 25))}%`,
+                        backgroundColor: '#3b82f6'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        Choices and decisions across meetings
+                        {(workHealth?.schedule?.longestStretch || 0) <= 1 ? 'No back-to-back chains' :
+                         `${workHealth?.schedule?.longestStretch} meetings in a row without a real break`}
                       </span>
                     </div>
                   </div>
 
+                  {/* Cognitive Reserve (focus time for recharging) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Reset Opportunities
+                        Cognitive Reserve
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 'Good' : 
-                         (workHealth?.schedule?.backToBackCount || 0) <= 2 ? 'Moderate' : 'Limited'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Strong' :
+                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Low'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(30, 100 - ((workHealth?.schedule?.backToBackCount || 0) * 25))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.backToBackCount || 0) * 25)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
+                        backgroundColor: '#3b82f6'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 
-                          'Well-spaced meetings' : 
-                          `${workHealth?.schedule?.backToBackCount} back-to-back sessions`}
+                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m of quiet time to recharge between demands
                       </span>
                     </div>
                   </div>
@@ -1333,125 +1194,102 @@ export default function WorkHealthDashboard() {
                   Can you keep this pace up? Measures whether you have enough recovery time between demands to avoid burnout.
                 </p>
 
-                {/* Sustainability Components */}
+                {/* Sustainability Components — unique to this metric */}
                 <div className="space-y-5 mb-6">
+                  {/* Morning/Afternoon Balance */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Work Load Balance
+                        Day Balance
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.meetingCount || 0) <= 3 ? 'Light' : 
-                         (workHealth?.schedule?.meetingCount || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {Math.abs((workHealth?.schedule?.morningMeetings || 0) - (workHealth?.schedule?.afternoonMeetings || 0)) <= 1 ? 'Balanced' :
+                         (workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) ? 'Afternoon-loaded' : 'Morning-loaded'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 12))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.meetingCount || 0) * 12)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(30, 100 - Math.abs((workHealth?.schedule?.morningMeetings || 0) - (workHealth?.schedule?.afternoonMeetings || 0)) * 20)}%`,
+                        backgroundColor: '#6b7280'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.meetingCount || 0} meetings across your day
+                        {workHealth?.schedule?.morningMeetings || 0} morning vs {workHealth?.schedule?.afternoonMeetings || 0} afternoon meetings
                       </span>
                     </div>
                   </div>
 
+                  {/* Break Adequacy */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Time Commitment
+                        Recovery Breaks
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.durationHours || 0) <= 3 ? 'Light' : 
-                         (workHealth?.schedule?.durationHours || 0) <= 5 ? 'Moderate' : 'Heavy'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.adequateBreaks || 0) >= 3 ? 'Plenty' :
+                         (workHealth?.schedule?.adequateBreaks || 0) >= 1 ? 'Some' : 'None'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(20, 100 - ((workHealth?.schedule?.durationHours || 0) * 18))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.durationHours || 0) * 18)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.min(100, (workHealth?.schedule?.adequateBreaks || 0) * 25 + (workHealth?.schedule?.shortBreaks || 0) * 12)}%`,
+                        backgroundColor: '#6b7280'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.durationHours || 0}h in structured meetings
+                        {workHealth?.schedule?.adequateBreaks || 0} real breaks (30+ min) and {workHealth?.schedule?.shortBreaks || 0} short pauses
                       </span>
                     </div>
                   </div>
 
+                  {/* Work Intensity */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Recovery Balance
+                        Work Intensity
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {((workHealth?.schedule?.bufferTime || 0) / 60) >= 3 ? 'Good' : 
-                         ((workHealth?.schedule?.bufferTime || 0) / 60) >= 1 ? 'Moderate' : 'Limited'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.durationHours || 0) <= 3 ? 'Sustainable' :
+                         (workHealth?.schedule?.durationHours || 0) <= 5 ? 'Moderate' : 'Unsustainable'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.min(100, ((workHealth?.schedule?.bufferTime || 0) / 60) * 25)}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.min(1, Math.max(0.4, ((workHealth?.schedule?.bufferTime || 0) / 60) / 4))
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(15, 100 - ((workHealth?.schedule?.durationHours || 0) * 15))}%`,
+                        backgroundColor: '#6b7280'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {Math.floor((workHealth?.schedule?.bufferTime || 0) / 60)}h {(workHealth?.schedule?.bufferTime || 0) % 60}m for transitions
+                        {workHealth?.schedule?.durationHours || 0}h locked into meetings today
                       </span>
                     </div>
                   </div>
 
+                  {/* Off-Hours Meetings */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Schedule Pattern
+                        Boundary Health
                       </span>
-                      <span className="text-xs" style={{ 
-                        color: 'var(--text-muted)',
-                        fontWeight: '500'
-                      }}>
-                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 'Structured' : 'Condensed'}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
+                        {(workHealth?.schedule?.earlyLateMeetings || 0) === 0 ? 'Clean' :
+                         (workHealth?.schedule?.earlyLateMeetings || 0) <= 1 ? 'Minor' : 'Overextended'}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded h-1.5">
-                      <div 
-                        className="h-1.5 rounded transition-all duration-700"
-                        style={{ 
-                          width: `${Math.max(30, 100 - ((workHealth?.schedule?.backToBackCount || 0) * 20))}%`,
-                          backgroundColor: '#4F9CF9',
-                          opacity: Math.max(0.4, (100 - ((workHealth?.schedule?.backToBackCount || 0) * 20)) / 100)
-                        }}
-                      />
+                      <div className="h-1.5 rounded transition-all duration-700" style={{
+                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.earlyLateMeetings || 0) * 30))}%`,
+                        backgroundColor: '#6b7280'
+                      }} />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {(workHealth?.schedule?.backToBackCount || 0) === 0 ? 
-                          'Distributed throughout day' : 
-                          `${workHealth?.schedule?.backToBackCount} compressed blocks`}
+                        {(workHealth?.schedule?.earlyLateMeetings || 0) === 0
+                          ? 'All meetings within core hours'
+                          : `${workHealth?.schedule?.earlyLateMeetings} meeting${(workHealth?.schedule?.earlyLateMeetings || 0) > 1 ? 's' : ''} before 7am or after 5pm`}
                       </span>
                     </div>
                   </div>

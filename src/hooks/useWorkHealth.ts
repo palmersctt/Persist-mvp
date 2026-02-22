@@ -69,6 +69,14 @@ interface ScheduleAnalysis {
   bufferTime: number;
   durationHours: number;
   fragmentationScore: number;
+  morningMeetings: number;
+  afternoonMeetings: number;
+  meetingRatio: number;
+  uniqueContexts: number;
+  longestStretch: number;
+  adequateBreaks: number;
+  shortBreaks: number;
+  earlyLateMeetings: number;
 }
 
 interface WorkHealthBreakdown {
@@ -101,6 +109,23 @@ interface WorkHealthMetrics {
 // How often to poll for calendar changes (5 minutes)
 const POLL_INTERVAL_MS = 5 * 60 * 1000;
 
+// Historical score entry
+interface DailyScore {
+  date: string; // YYYY-MM-DD
+  performance: number;
+  resilience: number;
+  sustainability: number;
+}
+
+// Trend direction
+type Trend = 'up' | 'down' | 'flat';
+
+interface HistoricalContext {
+  weeklyAvg: { performance: number; resilience: number; sustainability: number };
+  trend: { performance: Trend; resilience: Trend; sustainability: Trend };
+  daysTracked: number;
+}
+
 export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
   const { data: session, status } = useSession();
   const [workHealth, setWorkHealth] = useState<WorkHealthMetrics | null>(null);
@@ -108,6 +133,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
   const [isAILoading, setIsAILoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [history, setHistory] = useState<HistoricalContext | null>(null);
 
   // Track whether we've done the initial fetch
   const hasFetched = useRef(false);
@@ -121,6 +147,72 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     if (!session?.user?.email) return null;
     return `persist-work-health-${session.user.email}`;
   };
+
+  const getHistoryKey = () => {
+    if (!session?.user?.email) return null;
+    return `persist-history-${session.user.email}`;
+  };
+
+  // Save today's scores and compute historical context
+  const updateHistory = useCallback((data: WorkHealthMetrics) => {
+    const historyKey = getHistoryKey();
+    if (!historyKey) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const entry: DailyScore = {
+      date: today,
+      performance: data.adaptivePerformanceIndex,
+      resilience: data.cognitiveResilience,
+      sustainability: data.workRhythmRecovery,
+    };
+
+    let scores: DailyScore[] = [];
+    try {
+      const raw = localStorage.getItem(historyKey);
+      if (raw) scores = JSON.parse(raw);
+    } catch {}
+
+    // Update or add today's entry
+    const idx = scores.findIndex(s => s.date === today);
+    if (idx >= 0) scores[idx] = entry;
+    else scores.push(entry);
+
+    // Keep last 30 days
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    scores = scores.filter(s => new Date(s.date) >= cutoff);
+    localStorage.setItem(historyKey, JSON.stringify(scores));
+
+    // Compute 7-day context
+    const last7 = scores.slice(-7);
+    if (last7.length < 2) {
+      setHistory(null);
+      return;
+    }
+
+    const avg = {
+      performance: Math.round(last7.reduce((s, d) => s + d.performance, 0) / last7.length),
+      resilience: Math.round(last7.reduce((s, d) => s + d.resilience, 0) / last7.length),
+      sustainability: Math.round(last7.reduce((s, d) => s + d.sustainability, 0) / last7.length),
+    };
+
+    const getTrend = (current: number, weekAvg: number): Trend => {
+      const diff = current - weekAvg;
+      if (diff >= 5) return 'up';
+      if (diff <= -5) return 'down';
+      return 'flat';
+    };
+
+    setHistory({
+      weeklyAvg: avg,
+      trend: {
+        performance: getTrend(data.adaptivePerformanceIndex, avg.performance),
+        resilience: getTrend(data.cognitiveResilience, avg.resilience),
+        sustainability: getTrend(data.workRhythmRecovery, avg.sustainability),
+      },
+      daysTracked: last7.length,
+    });
+  }, [session]);
 
   // Create a fingerprint from calendar metrics to detect real changes
   const getFingerprint = (data: WorkHealthMetrics): string => {
@@ -190,6 +282,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       calendarFingerprint.current = newFingerprint;
       setWorkHealth(data);
       setLastRefresh(new Date());
+      updateHistory(data);
 
       // Save to localStorage as fallback cache
       const generalCacheKey = getCacheKey();
@@ -306,6 +399,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     error,
     lastRefresh,
     refresh,
+    history,
     isAuthenticated: status === 'authenticated',
     hasAIInsights: !!workHealth?.ai && workHealth.aiStatus === 'success',
     aiInsights: workHealth?.ai,
@@ -322,4 +416,6 @@ export type {
   AIPersonalizedInsights,
   ScheduleAnalysis,
   WorkHealthBreakdown,
+  HistoricalContext,
+  Trend,
 };

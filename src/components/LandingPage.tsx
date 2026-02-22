@@ -167,14 +167,14 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Card 1 - Adaptive Performance Index */}
+            {/* Card 1 - Performance Index */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300">
               <div className="text-center">
                 <h3 className="text-2xl font-light text-gray-900 mb-4">
-                  Adaptive Performance Index
+                  Performance Index
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Comprehensive score measuring your current cognitive capacity and schedule sustainability
+                  How much capacity you have today for your best work
                 </p>
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function LandingPage() {
                   Cognitive Resilience
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Your mental capacity to handle complex decisions and cognitive demands without degradation
+                  How well you can handle tough decisions and context switches before fatigue sets in
                 </p>
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function LandingPage() {
                   Sustainability Index
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How maintainable your current work patterns are over the long term
+                  Can you keep this pace up without burning out?
                 </p>
               </div>
             </div>

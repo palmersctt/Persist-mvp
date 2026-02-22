@@ -162,9 +162,9 @@ Write like you're having a conversation with them using "you'll feel", "your ene
     return `Analyze this person's calendar and write FOUR distinct insights — one for each metric below. Each insight MUST reference SPECIFIC events from their calendar by name and time. Do NOT repeat the same observation across metrics. Do NOT just restate a metric number — tell them what it MEANS for their actual day.
 
 WORK HEALTH METRICS:
-- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
+- Performance Index: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
 - Cognitive Resilience: ${workHealth.cognitiveResilience}% (${interpretScore(workHealth.cognitiveResilience)})
-- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
+- Sustainability Index: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
 - Status: ${workHealth.status}
 - Meeting Count: ${workHealth.schedule.meetingCount}
 - Back-to-back Count: ${workHealth.schedule.backToBackCount}
@@ -736,9 +736,9 @@ Return JSON with 'patterns' and 'recommendations' arrays.`;
       const prompt = `Generate a funny movie or TV quote that matches the mood of this work situation. Use ACTUAL quotes, don't adapt them for work.
 
 WORK METRICS:
-- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
+- Performance Index: ${workHealth.adaptivePerformanceIndex}%
 - Cognitive Resilience: ${workHealth.cognitiveResilience}%
-- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}%
+- Sustainability Index: ${workHealth.workRhythmRecovery}%
 - Meeting Count: ${workHealth.schedule?.meetingCount || 0}
 - Back-to-back Meetings: ${workHealth.schedule?.backToBackCount || 0}
 - Focus Time: ${this.formatDuration(workHealth.focusTime || 0)}
