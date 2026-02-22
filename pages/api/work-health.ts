@@ -18,6 +18,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Extract user timezone from query parameter or header (CLIENT-SIDE DETECTION)
   const userTimezone = (req.query.timezone as string) || req.headers['x-user-timezone'] as string || 'America/Los_Angeles';
 
+  // Extract recent quotes so AI avoids repeats
+  let recentQuotes: string[] = [];
+  try {
+    const quotesHeader = req.headers['x-recent-quotes'] as string;
+    if (quotesHeader) {
+      recentQuotes = JSON.parse(decodeURIComponent(quotesHeader));
+    }
+  } catch {
+    // Ignore malformed header
+  }
+
   try {
     const session = await getServerSession(req, res, authOptions);
     
@@ -100,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       };
       
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone);
+      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone, recentQuotes);
       
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';

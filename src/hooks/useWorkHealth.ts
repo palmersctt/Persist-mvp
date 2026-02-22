@@ -148,6 +148,46 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     return `persist-work-health-${session.user.email}`;
   };
 
+  const getQuoteHistoryKey = () => {
+    if (!session?.user?.email) return null;
+    return `persist-quote-history-${session.user.email}`;
+  };
+
+  // Get recent quotes from localStorage (last 20, within 7 days)
+  const getRecentQuotes = (): string[] => {
+    const key = getQuoteHistoryKey();
+    if (!key) return [];
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const entries: { quote: string; timestamp: string }[] = JSON.parse(raw);
+      const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      return entries
+        .filter(e => new Date(e.timestamp).getTime() > cutoff)
+        .map(e => e.quote);
+    } catch {
+      return [];
+    }
+  };
+
+  // Save a quote to history
+  const saveQuoteToHistory = (quote: string) => {
+    const key = getQuoteHistoryKey();
+    if (!key || !quote) return;
+    try {
+      const raw = localStorage.getItem(key);
+      let entries: { quote: string; timestamp: string }[] = raw ? JSON.parse(raw) : [];
+      // Deduplicate
+      entries = entries.filter(e => e.quote !== quote);
+      entries.push({ quote, timestamp: new Date().toISOString() });
+      // Keep last 20
+      if (entries.length > 20) entries = entries.slice(-20);
+      localStorage.setItem(key, JSON.stringify(entries));
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
   const getHistoryKey = () => {
     if (!session?.user?.email) return null;
     return `persist-history-${session.user.email}`;
@@ -245,13 +285,19 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       const url = '/api/work-health';
       const timestampedUrl = url + `?_t=${Date.now()}&timezone=${encodeURIComponent(userTimezone)}`;
 
+      // Send recent quote history so AI avoids repeats
+      const recentQuotes = getRecentQuotes();
+
       console.log(`🔄 Fetching work health data${isSilent ? ' (background poll)' : ''}...`);
       const response = await fetch(timestampedUrl, {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
-          'X-User-Timezone': userTimezone
+          'X-User-Timezone': userTimezone,
+          ...(recentQuotes.length > 0 && {
+            'X-Recent-Quotes': encodeURIComponent(JSON.stringify(recentQuotes))
+          })
         }
       });
 
@@ -283,6 +329,11 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       setWorkHealth(data);
       setLastRefresh(new Date());
       updateHistory(data);
+
+      // Track the AI quote so we don't get repeats
+      if (data.ai?.heroMessage && typeof data.ai.heroMessage === 'object' && data.ai.heroMessage.quote) {
+        saveQuoteToHistory(data.ai.heroMessage.quote);
+      }
 
       // Save to localStorage as fallback cache
       const generalCacheKey = getCacheKey();
