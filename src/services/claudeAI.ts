@@ -144,7 +144,7 @@ AVOID technical language, clinical analysis, formal recommendations, or confiden
 Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
   }
 
-  private createAllInsightsPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string, prePickedQuote?: { text: string; source: string; character?: string }): string {
+  private createAllInsightsPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string): string {
     const { workHealth, events, patterns } = analysis;
     const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
 
@@ -157,7 +157,26 @@ Write like you're having a conversation with them using "you'll feel", "your ene
       return 'critical — immediate action needed';
     };
 
-    const q = prePickedQuote || comicReliefGenerator.generateQuote(workHealth);
+    // Determine the mood/tone the quote should match based on metrics
+    let quoteMood: string;
+    if (workHealth.adaptivePerformanceIndex >= 85 && workHealth.cognitiveResilience >= 75) {
+      quoteMood = 'confident, powerful, triumphant — this person is crushing it today';
+    } else if (workHealth.adaptivePerformanceIndex >= 75) {
+      quoteMood = 'cool, assured, smooth — things are going well';
+    } else if (workHealth.adaptivePerformanceIndex >= 50) {
+      quoteMood = 'dry, wry, understated — an okay day, nothing spectacular';
+    } else if (workHealth.adaptivePerformanceIndex >= 25) {
+      quoteMood = 'sarcastic, self-deprecating, or darkly funny — things are rough';
+    } else {
+      quoteMood = 'defeated, dramatic, over-the-top despair — comically bad day';
+    }
+
+    if (workHealth.schedule.meetingCount > 5 || (workHealth.schedule?.backToBackCount && workHealth.schedule.backToBackCount > 3)) {
+      quoteMood += '. Also factor in: this person is drowning in meetings today';
+    }
+    if (workHealth.focusTime < 120) {
+      quoteMood += '. Also factor in: very little focus time, constant interruptions';
+    }
 
     return `Analyze this person's calendar and write FOUR distinct insights — one for each metric below. Each insight MUST reference SPECIFIC events from their calendar by name and time. Do NOT repeat the same observation across metrics. Do NOT just restate a metric number — tell them what it MEANS for their actual day.
 
@@ -216,10 +235,19 @@ METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
    Action: Name one structural change. (e.g., "Move the Thursday standup to batch with the 10 AM sync — that frees a 90-minute focus block.")
    Do NOT talk about: individual event performance or stress points.
 
-HERO MESSAGE:
-The quote has already been selected:
-"${q.text}" — ${q.source}${q.character ? ` (${q.character})` : ''}
-Write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar? Do NOT change the quote or source.
+HERO MESSAGE — AI-GENERATED MOVIE/TV QUOTE:
+You must select a REAL, EXACT quote from a real movie or TV show. Do NOT make up quotes or paraphrase.
+The quote must match this mood: ${quoteMood}
+
+CRITICAL RULES for the quote:
+- It MUST be a real, verbatim quote from an actual movie or TV show — no invented or modified quotes
+- Include the character name and the movie/TV show title
+- Do NOT use any of these overused quotes: "I'll be back", "May the Force be with you", "Here's looking at you, kid", "I'm gonna make him an offer he can't refuse", "You can't handle the truth", "Life is like a box of chocolates", "Houston, we have a problem", "I see dead people", "To infinity and beyond", "There's no place like home", "Just keep swimming", "Why so serious", "I am Groot", "This is the way"
+- Go DEEP — pick quotes from a wide range of movies and TV shows across all decades and genres
+- Surprise the user with quotes they might not immediately recognize but will appreciate
+- The quote should be funny, ironic, or perfectly fitting given their work situation
+
+Then write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar?
 
 Current date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: userTimezone })}
 Current time: ${new Date().toLocaleTimeString('en-US', { timeZone: userTimezone })}
@@ -227,8 +255,8 @@ Current time: ${new Date().toLocaleTimeString('en-US', { timeZone: userTimezone 
 You must respond with valid JSON only. Use exactly this format:
 {
   "heroMessage": {
-    "quote": "${q.text.replace(/"/g, '\\"')}",
-    "source": "${q.source}${q.character ? ` — ${q.character}` : ''}",
+    "quote": "The exact movie/TV quote",
+    "source": "Movie or TV Show Title — Character Name",
     "subtitle": "Your witty one-sentence subtitle"
   },
   "overview": {
@@ -554,13 +582,12 @@ You must respond with valid JSON only. Use exactly this format:
     }
 
     try {
-      const prePickedQuote = comicReliefGenerator.generateQuote(analysis.workHealth);
-      const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone, prePickedQuote);
+      const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone);
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
-        temperature: 1.0, // Maximum variation for creative subtitle
+        temperature: 1.0, // Maximum variation for creative quotes and subtitles
         system: this.createSystemPrompt(),
         messages: [{
           role: 'user',
@@ -586,12 +613,6 @@ You must respond with valid JSON only. Use exactly this format:
 
       if (!this.validateInsightsResponse(parsedResponse)) {
         throw new Error('Invalid insights response format');
-      }
-
-      // Override heroMessage quote/source with our pre-picked values (keep AI subtitle)
-      if (parsedResponse.heroMessage && typeof parsedResponse.heroMessage === 'object') {
-        parsedResponse.heroMessage.quote = prePickedQuote.text;
-        parsedResponse.heroMessage.source = `${prePickedQuote.source}${prePickedQuote.character ? ` — ${prePickedQuote.character}` : ''}`;
       }
 
       return parsedResponse;
@@ -723,50 +744,52 @@ Return JSON with 'patterns' and 'recommendations' arrays.`;
     this.setCachedInsights(cacheKey, userId, insights);
   }
 
-  // Generate dry sarcastic movie/TV quotes based on work health metrics
+  // Generate AI-powered real movie/TV quotes based on work health metrics
   async generateComicReliefSaying(workHealth: WorkHealthMetrics): Promise<string> {
     if (!this.validateApiKey()) {
       // Fallback to local movie quotes when API is not available
-      const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
-      const quote = comicReliefGenerator.generateQuote(workHealth);
-      return comicReliefGenerator.formatQuote(quote);
+      const fallbackGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
+      const quote = fallbackGenerator.generateQuote(workHealth);
+      return fallbackGenerator.formatQuote(quote);
     }
 
     try {
-      const prompt = `Generate a funny movie or TV quote that matches the mood of this work situation. Use ACTUAL quotes, don't adapt them for work.
+      // Determine mood based on metrics
+      let mood: string;
+      if (workHealth.adaptivePerformanceIndex >= 85) {
+        mood = 'confident, triumphant, powerful';
+      } else if (workHealth.adaptivePerformanceIndex >= 65) {
+        mood = 'cool, assured, casually competent';
+      } else if (workHealth.adaptivePerformanceIndex >= 45) {
+        mood = 'dry, sarcastic, wryly self-aware';
+      } else {
+        mood = 'defeated, dramatically overwhelmed, darkly funny';
+      }
 
-WORK METRICS:
-- Performance Index: ${workHealth.adaptivePerformanceIndex}%
-- Cognitive Resilience: ${workHealth.cognitiveResilience}%
-- Sustainability Index: ${workHealth.workRhythmRecovery}%
-- Meeting Count: ${workHealth.schedule?.meetingCount || 0}
-- Back-to-back Meetings: ${workHealth.schedule?.backToBackCount || 0}
-- Focus Time: ${this.formatDuration(workHealth.focusTime || 0)}
-- Meeting Density: ${Math.round((workHealth.meetingDensity || 0) * 100)}%
+      if ((workHealth.schedule?.meetingCount || 0) > 5) {
+        mood += ', drowning in obligations';
+      }
+      if ((workHealth.focusTime || 0) < 60) {
+        mood += ', scattered and interrupted';
+      }
 
-REQUIREMENTS:
-- Use the EXACT original quote from the movie/TV show - DO NOT adapt it for work
-- Include the character and source (e.g., "- Darth Vader, Star Wars")
-- Match the quote's tone to their situation:
-  * High performance (85%+): Confident, powerful quotes
-  * Many meetings (>6): Overwhelmed or tired character quotes
-  * Low focus time (<60min): Confused or chaotic character quotes
-  * Good balance: Content or satisfied character quotes
-  * Low performance (<50%): Defeated or resigned quotes
+      const prompt = `Pick a REAL, EXACT, VERBATIM quote from an actual movie or TV show that matches this mood: ${mood}
 
-Examples of EXACT quotes:
-- High performance: "I am inevitable. - Thanos, Avengers: Endgame"
-- Many meetings: "I'm getting too old for this. - Roger Murtaugh, Lethal Weapon"
-- Low focus: "I feel like I'm taking crazy pills! - Derek Zoolander, Zoolander"
-- Good balance: "Everything is awesome! - Emmet, The Lego Movie"
-- Low performance: "This is fine. - Dog in burning room, This is Fine Meme"
+RULES:
+1. The quote MUST be real and verbatim — from an actual movie or TV show that exists
+2. Include the character name and movie/TV show title
+3. Format: "Quote text" - Character Name, Movie/TV Show Title
+4. Do NOT use these overused quotes: "I'll be back", "May the Force be with you", "Here's looking at you, kid", "Frankly my dear I don't give a damn", "You can't handle the truth", "I see dead people", "Houston we have a problem", "Life is like a box of chocolates", "I'm gonna make him an offer he can't refuse", "There's no place like home", "Just keep swimming", "To infinity and beyond", "I am Groot", "This is the way", "Why so serious"
+5. Go deep — pick something from a wide range of decades, genres, and obscurity levels
+6. The quote should feel fresh and surprising, not something the user has seen a hundred times
+7. Return ONLY the formatted quote, nothing else
 
-Generate ONE exact quote with proper attribution that matches their current mood/situation.`;
+Generate ONE quote now.`;
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 150,
-        temperature: 0.8, // Higher temperature for more creativity
+        temperature: 1.0, // Maximum variation for unique quotes every time
         messages: [{
           role: 'user',
           content: prompt
@@ -786,9 +809,9 @@ Generate ONE exact quote with proper attribution that matches their current mood
       console.error('Error generating comic relief saying:', error);
 
       // Fallback to local movie quote generator
-      const comicReliefGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
-      const quote = comicReliefGenerator.generateQuote(workHealth);
-      return comicReliefGenerator.formatQuote(quote);
+      const fallbackGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
+      const quote = fallbackGenerator.generateQuote(workHealth);
+      return fallbackGenerator.formatQuote(quote);
     }
   }
 }
