@@ -186,9 +186,12 @@ class GoogleCalendarService {
     const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
 
     // Create proper RFC 3339 datetime strings for Google Calendar API
-    // Google Calendar API expects timezone-aware datetime strings
-    const timeMin = `${todayInUserTZ}T00:00:00`;
-    const timeMax = `${todayInUserTZ}T23:59:59`;
+    // Convert to UTC for the API call since we're specifying timeZone parameter separately
+    const startOfDay = new Date(`${todayInUserTZ}T00:00:00`);
+    const endOfDay = new Date(`${todayInUserTZ}T23:59:59`);
+
+    const timeMin = startOfDay.toISOString();
+    const timeMax = endOfDay.toISOString();
     
     console.log('🔍 DEBUG - Simplified timezone handling:', {
       serverTime: now.toISOString(),
@@ -197,6 +200,8 @@ class GoogleCalendarService {
       todayInUserTZ: todayInUserTZ,
       timeMin: timeMin,
       timeMax: timeMax,
+      localStartOfDay: startOfDay.toString(),
+      localEndOfDay: endOfDay.toString(),
       environment: process.env.NODE_ENV
     });
 
