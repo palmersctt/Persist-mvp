@@ -191,8 +191,8 @@ export default function WorkHealthDashboard() {
                     <span className="text-white text-sm font-bold">📊</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Adaptive Performance Index</h3>
-                    <p className="text-gray-400 text-sm">Real-time cognitive capacity assessment based on calendar density, context switching, and decision fatigue patterns</p>
+                    <h3 className="font-semibold mb-1">Performance Index</h3>
+                    <p className="text-gray-400 text-sm">How much capacity you have today for your best work — based on meeting load, focus blocks, and schedule flow</p>
                   </div>
                 </div>
                 
@@ -202,7 +202,7 @@ export default function WorkHealthDashboard() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Cognitive Resilience</h3>
-                    <p className="text-gray-400 text-sm">Mental capacity analysis for handling complex decisions and context switching without performance degradation</p>
+                    <p className="text-gray-400 text-sm">How well you can handle tough decisions and context switches before mental fatigue sets in</p>
                   </div>
                 </div>
                 
@@ -212,7 +212,7 @@ export default function WorkHealthDashboard() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Sustainability Index</h3>
-                    <p className="text-gray-400 text-sm">Long-term work pattern sustainability measurement to maintain peak performance without burnout risk</p>
+                    <p className="text-gray-400 text-sm">Can you keep this pace up? Measures whether you have enough recovery time between demands to avoid burnout</p>
                   </div>
                 </div>
               </div>
@@ -622,13 +622,10 @@ export default function WorkHealthDashboard() {
                   }, 100);
                 }
               }}>
-              <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                Your {workHealth?.adaptivePerformanceIndex || 0} Performance Index
-              </h3>
               <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                Based on your meeting patterns, focus availability, and schedule structure.
+                How much capacity you have today for your best work — based on meeting load, available focus blocks, and schedule flow.
               </p>
-              
+
               {/* Simplified Components - Max 4 */}
               <div className="space-y-5 mb-6">
                 {/* Meeting Load */}
@@ -897,13 +894,10 @@ export default function WorkHealthDashboard() {
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
-                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                  Your {workHealth?.adaptivePerformanceIndex || 0} Performance Index
-                </h3>
                 <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Based on your meeting patterns, focus availability, and schedule structure.
+                  How much capacity you have today for your best work — based on meeting load, available focus blocks, and schedule flow.
                 </p>
-                
+
                 {/* Performance Components */}
                 <div className="space-y-5 mb-6">
                   <div>
@@ -1122,13 +1116,10 @@ export default function WorkHealthDashboard() {
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
-                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                  Your {workHealth?.cognitiveResilience || 0}% Cognitive Resilience
-                </h3>
                 <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Your mental capacity for handling decisions and context changes throughout the day.
+                  How well you can handle tough decisions and context switches today — before mental fatigue sets in.
                 </p>
-                
+
                 {/* Cognitive Resilience Components */}
                 <div className="space-y-5 mb-6">
                   <div>
@@ -1347,13 +1338,10 @@ export default function WorkHealthDashboard() {
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
-                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                  Your {workHealth?.workRhythmRecovery || 0}% Sustainability Index
-                </h3>
                 <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  How sustainable your current work patterns are for long-term performance.
+                  Can you keep this pace up? Measures whether you have enough recovery time between demands to avoid burnout.
                 </p>
-                
+
                 {/* Sustainability Components */}
                 <div className="space-y-5 mb-6">
                   <div>
