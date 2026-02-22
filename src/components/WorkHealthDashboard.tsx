@@ -793,16 +793,7 @@ export default function WorkHealthDashboard() {
           </div>
           
           <div>
-            {isAILoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex items-center space-x-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
-                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Loading insights...
-                  </span>
-                </div>
-              </div>
-            ) : (() => {
+            {(() => {
               const insight = getMetricInsight('overview');
               if (!insight) return (
                 <div className="text-center py-8">
@@ -812,7 +803,7 @@ export default function WorkHealthDashboard() {
                 </div>
               );
               return (
-                <div className="text-center">
+                <div className={`text-center transition-opacity duration-300 ${isAILoading ? 'opacity-50' : ''}`}>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                     {insight.message}
                   </p>
