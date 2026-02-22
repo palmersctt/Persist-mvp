@@ -195,16 +195,26 @@ class GoogleCalendarService {
       source: providedUserTimezone ? 'CLIENT_SIDE' : 'SERVER_SIDE_FALLBACK'
     });
     
-    // REVERT TO WORKING APPROACH - with slight modification
+    // PRODUCTION-SPECIFIC TIMEZONE FIX
     const now = new Date();
 
-    // Get today's date string in user's timezone (YYYY-MM-DD format)
-    const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
+    // Get the date components directly in user timezone
+    const userTZDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }));
 
-    // Simple approach - create date boundaries and let Google Calendar API handle timezone
-    // The key insight: pass timeZone parameter to Google API to let it handle the conversion
-    const startOfDay = new Date(`${todayInUserTZ}T00:00:00.000Z`);
-    const endOfDay = new Date(`${todayInUserTZ}T23:59:59.999Z`);
+    // Build the target date string for the user's timezone "today"
+    const year = userTZDate.getFullYear();
+    const month = String(userTZDate.getMonth() + 1).padStart(2, '0');
+    const day = String(userTZDate.getDate()).padStart(2, '0');
+    const todayInUserTZ = `${year}-${month}-${day}`;
+
+    // Create UTC boundaries that span the full day in user timezone
+    // For PST (-8), we need to fetch from 8:00 UTC to 7:59 UTC next day
+    const startOfDay = new Date(`${todayInUserTZ}T08:00:00.000Z`); // Start of day PST in UTC
+    const endOfDay = new Date();
+    endOfDay.setUTCFullYear(year);
+    endOfDay.setUTCMonth(userTZDate.getMonth());
+    endOfDay.setUTCDate(userTZDate.getDate() + 1);
+    endOfDay.setUTCHours(7, 59, 59, 999); // End of day PST in UTC
 
     const timeMin = startOfDay.toISOString();
     const timeMax = endOfDay.toISOString();
