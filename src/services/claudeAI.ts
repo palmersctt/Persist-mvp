@@ -657,7 +657,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       console.log('🔄 NO CACHING - Fresh AI request every time');
       
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 4000,
         temperature: 0.8, // Higher temperature for more creative variation
         system: this.createSystemPrompt(),
@@ -775,7 +775,7 @@ Identify productivity patterns and provide specific recommendations for optimiza
 Return JSON with 'patterns' and 'recommendations' arrays.`;
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 2000,
         temperature: 0.2,
         messages: [{
@@ -870,7 +870,7 @@ Examples of EXACT quotes:
 Generate ONE exact quote with proper attribution that matches their current mood/situation.`;
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-20240620',
         max_tokens: 150,
         temperature: 0.8, // Higher temperature for more creativity
         messages: [{
