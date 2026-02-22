@@ -428,9 +428,14 @@ export default function WorkHealthDashboard() {
                       </p>
                     </>
                   ) : (
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
-                      {typeof workHealth.ai.heroMessage === 'string' ? workHealth.ai.heroMessage : "Today's your day to shine"}
-                    </h1>
+                    <>
+                      <h1 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4 gradient-text leading-tight">
+                        {typeof workHealth.ai.heroMessage === 'string' ? workHealth.ai.heroMessage : "Today's your day to shine"}
+                      </h1>
+                      <p className="text-xs mt-2" style={{ color: 'rgba(239,68,68,0.5)', opacity: 0.6 }}>
+                        ⚠ fallback (heroMessage is {typeof workHealth.ai.heroMessage}, quote: {String(workHealth.ai.heroMessage?.quote ?? 'undefined')}, aiStatus: {workHealth.aiStatus || 'none'})
+                      </p>
+                    </>
                   )
                 ) : (
                   /* Loading skeleton for hero message */
@@ -440,6 +445,10 @@ export default function WorkHealthDashboard() {
                     <div className="h-3 rounded mx-auto" style={{ backgroundColor: 'rgba(255,255,255,0.03)', maxWidth: '50%' }} />
                   </div>
                 )}
+                {/* Always-visible debug: shows raw state */}
+                <p className="text-xs mt-2" style={{ color: 'rgba(168,85,247,0.7)' }}>
+                  DEBUG: loading={String(isLoading)}, aiLoading={String(isAILoading)}, hasAI={String(!!workHealth?.ai)}, heroType={workHealth?.ai?.heroMessage ? typeof workHealth.ai.heroMessage : 'none'}, aiStatus={workHealth?.aiStatus || 'none'}
+                </p>
                 <div className="w-16 h-0.5 mx-auto mt-4" style={{ backgroundColor: 'var(--whoop-green)', opacity: 0.6 }}></div>
               </div>
             </section>
