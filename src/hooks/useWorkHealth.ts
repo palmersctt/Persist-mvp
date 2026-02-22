@@ -150,7 +150,20 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       }
       
       const data = await response.json();
-      
+
+      // Debug production vs local differences
+      console.log('📊 CLIENT DEBUG - API Response Data:', {
+        environment: window.location.hostname.includes('vercel') ? 'PRODUCTION' : 'LOCAL',
+        hostname: window.location.hostname,
+        adaptivePerformanceIndex: data.adaptivePerformanceIndex,
+        cognitiveResilience: data.cognitiveResilience,
+        workRhythmRecovery: data.workRhythmRecovery,
+        meetingCount: data.schedule?.meetingCount,
+        backToBackCount: data.schedule?.backToBackCount,
+        focusTime: data.focusTime,
+        status: data.status
+      });
+
       // AI caching is handled server-side, just set the data
       setWorkHealth(data);
       setLastRefresh(new Date());
