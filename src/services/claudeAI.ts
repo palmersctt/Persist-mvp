@@ -221,8 +221,8 @@ The quote has already been selected:
 "${q.text}" — ${q.source}${q.character ? ` (${q.character})` : ''}
 Write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar? Do NOT change the quote or source.
 
-Current date: ${new Date().toLocaleDateString()}
-Current time: ${new Date().toLocaleTimeString()}
+Current date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: userTimezone })}
+Current time: ${new Date().toLocaleTimeString('en-US', { timeZone: userTimezone })}
 
 You must respond with valid JSON only. Use exactly this format:
 {
