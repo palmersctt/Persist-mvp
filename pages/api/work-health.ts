@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
 import GoogleCalendarService, { WorkHealthMetrics, CalendarEvent, MeetingCategory } from '../../src/services/googleCalendar';
-import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext, TabContext } from '../../src/services/claudeAI';
+import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext } from '../../src/services/claudeAI';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -14,12 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
-
-  // Extract tab context from query parameters
-  const tabType = req.query.tab as string;
-  const tabContext: TabContext | undefined = tabType && ['overview', 'performance', 'resilience', 'sustainability'].includes(tabType)
-    ? { tabType: tabType as 'overview' | 'performance' | 'resilience' | 'sustainability' }
-    : undefined;
 
   // Extract user timezone from query parameter or header (CLIENT-SIDE DETECTION)
   const userTimezone = (req.query.timezone as string) || req.headers['x-user-timezone'] as string || 'America/Los_Angeles';
@@ -106,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       };
       
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, tabContext, userTimezone);
+      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone);
       
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';

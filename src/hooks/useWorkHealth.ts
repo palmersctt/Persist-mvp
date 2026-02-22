@@ -23,7 +23,21 @@ interface AIRecommendation {
   timeToImplement?: string;
 }
 
+interface MetricInsight {
+  title: string;
+  message: string;
+  action: string;
+  severity: 'info' | 'warning' | 'critical' | 'success';
+}
+
 interface AIPersonalizedInsights {
+  // Per-metric structured insights
+  overview?: MetricInsight;
+  performance?: MetricInsight;
+  resilience?: MetricInsight;
+  sustainability?: MetricInsight;
+
+  // Legacy fields
   insights: AIInsight[];
   summary: string;
   overallScore: number;
@@ -302,6 +316,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
 // Export types for use in other components
 export type {
   WorkHealthMetrics,
+  MetricInsight,
   AIInsight,
   AIRecommendation,
   AIPersonalizedInsights,

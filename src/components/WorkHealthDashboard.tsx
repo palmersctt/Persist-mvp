@@ -13,15 +13,6 @@ interface SecondaryMetric {
   icon: string;
 }
 
-interface DataDrivenInsight {
-  type: 'current_analysis' | 'schedule_impact' | 'research_backed' | 'algorithm_explanation';
-  title: string;
-  message: string;
-  dataSource: string;
-  urgency: 'low' | 'medium' | 'high';
-  category: 'schedule' | 'research' | 'combination';
-}
-
 interface WorkCapacityStatus {
   level: 'optimal' | 'good' | 'moderate' | 'recovery' | 'estimated' | 'peak';
   message: string;
@@ -159,200 +150,21 @@ export default function WorkHealthDashboard() {
     ];
   };
 
-  // Get insights for specific tab
-  const getTabSpecificInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
-    // If insights are available, filter by relevance to tab
-    if (workHealth?.ai?.insights && workHealth.ai.insights.length > 0) {
-      // Filter insights by tab relevance
-      const filteredInsights = workHealth.ai.insights.filter(insight => {
-        switch (tabType) {
-          case 'overview':
-            return true; // Show all insights on overview
-          case 'performance':
-            return insight.category === 'performance' || insight.category === 'productivity';
-          case 'resilience':
-            return insight.category === 'wellness' || insight.category === 'balance';
-          case 'sustainability':
-            return insight.category === 'balance' || insight.category === 'prediction';
-          default:
-            return true;
-        }
-      });
+  // Get per-metric insight directly from AI response
+  const getMetricInsight = (metric: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
+    if (!workHealth?.ai) return null;
 
-      // If we have filtered insights, return them
-      if (filteredInsights.length > 0) {
-        return {
-          insights: filteredInsights,
-          isAI: true,
-          aiStatus: workHealth.aiStatus || 'success'
-        };
-      }
+    // Read directly from per-metric fields
+    const insight = workHealth.ai[metric];
+    if (insight && insight.message) return insight;
 
-      // If no filtered insights, fall back to first insight for non-overview tabs
-      if (tabType !== 'overview') {
-        return {
-          insights: workHealth.ai.insights.slice(0, 1),
-          isAI: true,
-          aiStatus: workHealth.aiStatus || 'success'
-        };
-      }
-
-      // For overview, show only the top 2 most important insights
-      return {
-        insights: workHealth.ai.insights.slice(0, 2),
-        isAI: true,
-        aiStatus: workHealth.aiStatus || 'success'
-      };
+    // Fallback to legacy insights array
+    if (workHealth.ai.insights && workHealth.ai.insights.length > 0) {
+      const first = workHealth.ai.insights[0];
+      return { title: first.title, message: first.message, action: first.recommendation || '', severity: first.severity || 'info' as const };
     }
 
-    // Fallback to static insights
-    return {
-      insights: getStaticFallbackInsights(tabType),
-      isAI: false,
-      aiStatus: workHealth?.aiStatus || 'unavailable'
-    };
-  };
-
-  // Static fallback insights - tab specific
-  const getStaticFallbackInsights = (tabType: 'overview' | 'performance' | 'resilience' | 'sustainability'): DataDrivenInsight[] => {
-    if (!workHealth) return [];
-
-    const schedule = workHealth.schedule;
-    const adaptiveIndex = workHealth.adaptivePerformanceIndex;
-    const resilience = workHealth.cognitiveResilience;
-    const rhythm = workHealth.workRhythmRecovery;
-
-    switch (tabType) {
-      case 'overview':
-        // Return combined insights for overview
-        const insights: DataDrivenInsight[] = [];
-        
-        if (adaptiveIndex >= 75) {
-          insights.push({
-            type: 'current_analysis',
-            title: 'Strong Overall Work Health',
-            message: `Your combined metrics show solid work health with ${adaptiveIndex}% performance, ${resilience}% resilience, and ${rhythm}% sustainability. This balanced profile supports effective daily productivity.`,
-            dataSource: 'Static Analysis',
-            urgency: 'low',
-            category: 'combination'
-          });
-        } else if (adaptiveIndex >= 50) {
-          insights.push({
-            type: 'current_analysis',
-            title: 'Moderate Work Health Patterns',
-            message: `Your metrics indicate moderate work health patterns needing attention. Performance at ${adaptiveIndex}%, resilience at ${resilience}%, and sustainability at ${rhythm}% suggest room for schedule optimization.`,
-            dataSource: 'Static Analysis',
-            urgency: 'medium',
-            category: 'combination'
-          });
-        } else {
-          insights.push({
-            type: 'schedule_impact',
-            title: 'Work Health Requires Attention',
-            message: `Your combined metrics show significant work health concerns. With performance at ${adaptiveIndex}%, resilience at ${resilience}%, and sustainability at ${rhythm}%, schedule restructuring is recommended.`,
-            dataSource: 'Static Analysis',
-            urgency: 'high',
-            category: 'combination'
-          });
-        }
-        return insights;
-        
-      case 'performance':
-        // Performance-specific insights
-        if (adaptiveIndex >= 75) {
-          return [{
-            type: 'current_analysis',
-            title: 'Strong Performance Capacity',
-            message: `Your ${adaptiveIndex}% performance index indicates excellent cognitive capacity with ${schedule.meetingCount} meetings creating manageable demands. Current schedule structure supports sustained productivity.`,
-            dataSource: 'Static Performance Analysis',
-            urgency: 'low',
-            category: 'schedule'
-          }];
-        } else if (adaptiveIndex >= 50) {
-          return [{
-            type: 'current_analysis',
-            title: 'Moderate Performance Efficiency',
-            message: `Your ${adaptiveIndex}% performance index shows moderate productivity with ${schedule.meetingCount} meetings. Consider consolidating meetings to create longer focus periods for improved efficiency.`,
-            dataSource: 'Static Performance Analysis',
-            urgency: 'medium',
-            category: 'schedule'
-          }];
-        } else {
-          return [{
-            type: 'schedule_impact',
-            title: 'Performance Under Pressure',
-            message: `Your ${adaptiveIndex}% performance index indicates significant cognitive load from ${schedule.meetingCount} meetings. Schedule restructuring needed to restore productive capacity.`,
-            dataSource: 'Static Performance Analysis',
-            urgency: 'high',
-            category: 'schedule'
-          }];
-        }
-        
-      case 'resilience':
-        // Resilience-specific insights
-        if (resilience >= 70) {
-          return [{
-            type: 'current_analysis',
-            title: 'Strong Mental Resilience',
-            message: `Your ${resilience}% cognitive resilience demonstrates excellent mental capacity for handling decisions and context switching. Current patterns support sustained cognitive performance.`,
-            dataSource: 'Static Resilience Analysis',
-            urgency: 'low',
-            category: 'schedule'
-          }];
-        } else if (resilience >= 50) {
-          return [{
-            type: 'current_analysis',
-            title: 'Moderate Cognitive Strain',
-            message: `Your ${resilience}% cognitive resilience shows some mental fatigue from context switching. Group similar meetings together to reduce cognitive switching costs.`,
-            dataSource: 'Static Resilience Analysis',
-            urgency: 'medium',
-            category: 'schedule'
-          }];
-        } else {
-          return [{
-            type: 'current_analysis',
-            title: 'Cognitive Resilience Under Stress',
-            message: `Your ${resilience}% cognitive resilience indicates significant mental strain. Create buffer time between meetings to allow for mental transitions and recovery.`,
-            dataSource: 'Static Resilience Analysis',
-            urgency: 'high',
-            category: 'schedule'
-          }];
-        }
-        
-      case 'sustainability':
-        // Sustainability-specific insights
-        if (rhythm >= 70) {
-          return [{
-            type: 'current_analysis',
-            title: 'Sustainable Work Rhythm',
-            message: `Your ${rhythm}% sustainability index demonstrates maintainable work patterns with balanced intensity and recovery. This rhythm supports long-term cognitive health.`,
-            dataSource: 'Static Sustainability Analysis',
-            urgency: 'low',
-            category: 'schedule'
-          }];
-        } else if (rhythm >= 50) {
-          return [{
-            type: 'current_analysis',
-            title: 'Moderately Sustainable Pattern',
-            message: `Your ${rhythm}% sustainability index shows adequate work patterns with room for optimization. Consider adjusting meeting distribution for better long-term sustainability.`,
-            dataSource: 'Static Sustainability Analysis',
-            urgency: 'medium',
-            category: 'schedule'
-          }];
-        } else {
-          return [{
-            type: 'schedule_impact',
-            title: 'Sustainability Concerns',
-            message: `Your ${rhythm}% sustainability index indicates patterns that may not be maintainable long-term. Schedule intensity adjustments recommended to prevent burnout risk.`,
-            dataSource: 'Static Sustainability Analysis',
-            urgency: 'high',
-            category: 'schedule'
-          }];
-        }
-        
-      default:
-        return [];
-    }
+    return null;
   };
 
   if (status === 'loading') {
@@ -444,7 +256,6 @@ export default function WorkHealthDashboard() {
 
   const workCapacity = getWorkCapacityStatus();
   const secondaryMetrics = getSecondaryMetrics();
-  const tabInsights = getTabSpecificInsights(activeTab);
 
   // Show error state if there's an error and no data
   if (error && !workHealth) {
@@ -990,21 +801,32 @@ export default function WorkHealthDashboard() {
                 <div className="flex items-center space-x-3">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
                   <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Loading {activeTab} insights...
+                    Loading insights...
                   </span>
                 </div>
               </div>
-            ) : tabInsights.insights.length > 0 ? (
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                {tabInsights.insights.map(insight => insight.message).join(' ')}
-              </p>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}
-                </p>
-              </div>
-            )}
+            ) : (() => {
+              const insight = getMetricInsight('overview');
+              if (!insight) return (
+                <div className="text-center py-8">
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}
+                  </p>
+                </div>
+              );
+              return (
+                <div>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    {insight.message}
+                  </p>
+                  {insight.action && (
+                    <p className="text-sm mt-3 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                      {insight.action}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </section>
 
@@ -1221,11 +1043,22 @@ export default function WorkHealthDashboard() {
                         </span>
                       </div>
                     </div>
-                  ) : (
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                      {getTabSpecificInsights('performance').insights.map(insight => insight.message).join(' ')}
-                    </p>
-                  )}
+                  ) : (() => {
+                    const insight = getMetricInsight('performance');
+                    if (!insight) return <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    return (
+                      <>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {insight.message}
+                        </p>
+                        {insight.action && (
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                            {insight.action}
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </section>
@@ -1435,11 +1268,22 @@ export default function WorkHealthDashboard() {
                         </span>
                       </div>
                     </div>
-                  ) : (
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                      {getTabSpecificInsights('resilience').insights.map(insight => insight.message).join(' ')}
-                    </p>
-                  )}
+                  ) : (() => {
+                    const insight = getMetricInsight('resilience');
+                    if (!insight) return <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    return (
+                      <>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {insight.message}
+                        </p>
+                        {insight.action && (
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                            {insight.action}
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </section>
@@ -1648,11 +1492,22 @@ export default function WorkHealthDashboard() {
                         </span>
                       </div>
                     </div>
-                  ) : (
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                      {getTabSpecificInsights('sustainability').insights.map(insight => insight.message).join(' ')}
-                    </p>
-                  )}
+                  ) : (() => {
+                    const insight = getMetricInsight('sustainability');
+                    if (!insight) return <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    return (
+                      <>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {insight.message}
+                        </p>
+                        {insight.action && (
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                            {insight.action}
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </section>

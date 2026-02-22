@@ -52,7 +52,21 @@ interface HeroMessage {
   subtitle: string;
 }
 
+interface MetricInsight {
+  title: string;
+  message: string;
+  action: string;
+  severity: 'info' | 'warning' | 'critical' | 'success';
+}
+
 interface PersonalizedInsightsResponse {
+  // Per-metric structured insights
+  overview?: MetricInsight;
+  performance?: MetricInsight;
+  resilience?: MetricInsight;
+  sustainability?: MetricInsight;
+
+  // Legacy fields
   insights: PersonalizedInsight[];
   summary: string;
   overallScore: number;
@@ -60,7 +74,7 @@ interface PersonalizedInsightsResponse {
   opportunities: string[];
   predictiveAlerts: string[];
   heroMessage?: string | HeroMessage;
-  comicReliefSaying?: string; // legacy fallback
+  comicReliefSaying?: string;
 }
 
 class ClaudeAIService {
@@ -130,20 +144,10 @@ AVOID technical language, clinical analysis, formal recommendations, or confiden
 Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
   }
 
-  private createTabSpecificPrompt(analysis: CalendarAnalysis, userContext: UserContext, tabContext: TabContext, providedUserTimezone?: string, prePickedQuote?: { text: string; source: string; character?: string }): string {
+  private createAllInsightsPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string, prePickedQuote?: { text: string; source: string; character?: string }): string {
     const { workHealth, events, patterns } = analysis;
-    
-    // Use provided timezone (from client-side) instead of server detection
     const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
-    
-    console.log('🌍 createTabSpecificPrompt timezone:', {
-      providedUserTimezone: providedUserTimezone,
-      serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      finalUsed: userTimezone,
-      source: providedUserTimezone ? 'PROVIDED_FROM_CLIENT' : 'SERVER_FALLBACK'
-    });
-    
-    // Interpret scores so Claude knows what they mean
+
     const interpretScore = (score: number): string => {
       if (score >= 85) return 'excellent';
       if (score >= 75) return 'good';
@@ -153,7 +157,11 @@ Write like you're having a conversation with them using "you'll feel", "your ene
       return 'critical — immediate action needed';
     };
 
-    const baseContext = `WORK HEALTH METRICS:
+    const q = prePickedQuote || comicReliefGenerator.generateQuote(workHealth);
+
+    return `Analyze this person's calendar and write FOUR distinct insights — one for each metric below. Each insight MUST reference SPECIFIC events from their calendar by name and time. Do NOT repeat the same observation across metrics. Do NOT just restate a metric number — tell them what it MEANS for their actual day.
+
+WORK HEALTH METRICS:
 - Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
 - Cognitive Resilience: ${workHealth.cognitiveResilience}% (${interpretScore(workHealth.cognitiveResilience)})
 - Work Rhythm Recovery: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
@@ -163,16 +171,16 @@ Write like you're having a conversation with them using "you'll feel", "your ene
 - Focus Time: ${this.formatDuration(workHealth.focusTime)}
 - Fragmentation Score: ${workHealth.schedule.fragmentationScore}
 
-SCORE INTERPRETATION (use this to calibrate your tone):
+SCORE INTERPRETATION (calibrate your tone to the actual score):
 - 85%+ = excellent, genuinely great day
 - 75-84% = good, solid and positive
 - 65-74% = moderate, okay but not great — be honest about areas to watch
 - 55-64% = concerning, flag real issues
 - Below 55% = problematic, be direct about challenges
-IMPORTANT: Do NOT sugarcoat moderate or low scores. A 67% is NOT "great" or "sustainable for weeks" — it means there are real areas that need improvement. Match your tone to the actual score.
+IMPORTANT: Do NOT sugarcoat moderate or low scores. Match your tone to the actual numbers.
 
 CALENDAR EVENTS (${events.length} total):
-${events.map(event => 
+${events.map(event =>
   `- ${event.summary} (${this.formatTime12Hour(event.start, userTimezone)}-${this.formatTime12Hour(event.end, userTimezone)}, ${event.category}, ${event.attendees} attendees)`
 ).join('\n')}
 
@@ -181,232 +189,79 @@ ${Object.entries(patterns.meetingTypes).map(([type, count]) => `- ${type}: ${cou
 
 USER CONTEXT:
 - Work Hours: ${userContext.preferences?.workStartTime || 9}:00 - ${userContext.preferences?.workEndTime || 17}:00
-- Meeting Preference: ${userContext.preferences?.meetingPreference || 'balanced'}
-- Historical Avg Meetings: ${userContext.historicalPatterns?.avgDailyMeetings || 'Unknown'}
-- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime ? this.formatDuration(userContext.historicalPatterns.avgFocusTime) : 'Unknown'}`;
 
-    switch (tabContext.tabType) {
-      case 'overview': {
-        const q = prePickedQuote || comicReliefGenerator.generateQuote(workHealth);
-        return `Look at their whole day and predict how it'll feel from start to finish.
+METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
 
-${baseContext}
+1. OVERVIEW — "How will today actually feel?"
+   Predict their emotional arc through the day. Reference the hardest and easiest parts by event name.
+   Focus: Energy flow hour by hour, overall vibe, when they'll feel sharp vs drained.
+   Action: The single most impactful thing they can do to improve their day — name a specific meeting to shorten, a gap to protect, etc.
+   Do NOT talk about: productivity tips, stress management, or burnout.
 
-Tell them what kind of day this will be for them:
-- How their energy will flow throughout the day
-- Whether this feels like a good day or a tough day ahead
-- What their overall mood and productivity will be like
-- How they'll probably feel at different times
+2. PERFORMANCE — "When will you do your best thinking?"
+   Identify peak cognitive windows and what threatens them. Name the events that block or enable deep work.
+   Focus: Which focus blocks are usable vs fragmented. Which meeting demands the most brainpower. When to tackle hard problems vs routine tasks.
+   Action: Tell them exactly WHEN to do their hardest work and what to protect. (e.g., "Do your deep work before the 11 AM design review — after that you're in meetings until 3.")
+   Do NOT talk about: feelings, stress, or sustainability.
 
-MOVIE QUOTE HERO MESSAGE:
+3. RESILIENCE — "What will test your patience today?"
+   Find the pressure points — specific events, transitions, or clusters that will stress them. Name them.
+   Focus: Back-to-back sequences with no recovery, high-stakes meetings, context switches between unrelated topics, the moment stress peaks.
+   Action: Name a specific buffer to add or a meeting where they should lower expectations for output afterward. (e.g., "Block 15 minutes after the 2 PM all-hands — you'll need a mental reset.")
+   Do NOT talk about: productivity, deep work, or long-term patterns.
 
-The quote has already been selected for you:
+4. SUSTAINABILITY — "Can you keep this up?"
+   Zoom out from today. Is this pace repeatable? Look at total meeting hours, recovery ratio, and late-day commitments.
+   Focus: Whether today depletes or energizes them for tomorrow. Meeting-to-recovery ratio. Real downtime vs fragmented gaps. End-of-day energy level.
+   Action: Name one structural change. (e.g., "Move the Thursday standup to batch with the 10 AM sync — that frees a 90-minute focus block.")
+   Do NOT talk about: individual event performance or stress points.
+
+HERO MESSAGE:
+The quote has already been selected:
 "${q.text}" — ${q.source}${q.character ? ` (${q.character})` : ''}
-
-Your ONLY job for the heroMessage is to write a SHORT, witty subtitle (one sentence) connecting this quote to their specific calendar situation. Do NOT change the quote or source. Lean into dry humor, sarcasm, and irony.
+Write a SHORT, witty subtitle (one sentence) connecting this quote to their specific calendar situation. Lean into dry humor and irony. Do NOT change the quote or source.
 
 Current date: ${new Date().toLocaleDateString()}
 Current time: ${new Date().toLocaleTimeString()}
 
-Write conversational insights like:
-- "Your day has a nice rhythm - you'll feel energized in the morning and should stay productive through the afternoon"
-- "This feels like one of those days where you'll get a lot done but might feel pretty drained by evening"
-- "You're set up for a smooth day with good energy flow and manageable workload"
-- "Today might feel a bit overwhelming with everything packed in, but you should handle it fine"
-
-IMPORTANT: Keep insights SHORT. Provide only 1-2 insights maximum, each 1-2 sentences. Focus on the single most important takeaway for their day.
-
-You must respond with valid JSON only. Provide a JSON response in exactly this format:
+You must respond with valid JSON only. Use exactly this format:
 {
   "heroMessage": {
     "quote": "${q.text.replace(/"/g, '\\"')}",
     "source": "${q.source}${q.character ? ` — ${q.character}` : ''}",
-    "subtitle": "Your witty one-sentence subtitle connecting the quote to their calendar"
+    "subtitle": "Your witty one-sentence subtitle"
   },
-  "insights": [
-    {
-      "category": "performance",
-      "title": "Short Title",
-      "message": "One or two sentences max. The single most important thing about their day.",
-      "severity": "info",
-      "actionable": true,
-      "confidence": 85
-    }
-  ],
-  "summary": "Brief overview of the day",
-  "overallScore": 75,
-  "riskFactors": ["factor1", "factor2"],
-  "opportunities": ["opportunity1", "opportunity2"],
-  "predictiveAlerts": ["alert1", "alert2"]
-}`;
-      }
-      
-      case 'performance':
-        return `Focus on how productive and sharp they'll feel today - when they'll do their best work and when they might struggle.
-
-${baseContext}
-
-Tell them about their performance throughout the day:
-- When their brain will be firing on all cylinders vs feeling sluggish
-- What times they'll tackle complex work easily vs when to stick to simpler tasks
-- How sharp and focused they'll feel during different meetings
-- Whether they're set up for a high-performance day or need to manage expectations
-
-Write conversational insights like:
-- "You'll probably feel sharp and focused this morning - perfect timing for that important client call"
-- "Your brain should be firing on all cylinders around 10 AM, but you might feel a bit sluggish after lunch"
-- "This looks like one of those days where you'll power through your to-do list without much trouble"
-- "You might feel scattered with all those meetings, but your afternoon focus block should help you get back on track"
-
-IMPORTANT: Keep it brief. Provide only 1 insight, 1-2 sentences max. Focus on the single most important performance takeaway.
-
-Provide a JSON response in exactly this format:
-{
-  "insights": [
-    {
-      "category": "performance",
-      "title": "Short Title",
-      "message": "One or two sentences about their performance today.",
-      "severity": "info",
-      "actionable": true,
-      "confidence": 85
-    }
-  ],
-  "summary": "Performance overview",
+  "overview": {
+    "title": "3-5 word title",
+    "message": "1-2 sentences about how today will feel. Reference specific events.",
+    "action": "One specific action referencing a calendar event or time.",
+    "severity": "info"
+  },
+  "performance": {
+    "title": "3-5 word title",
+    "message": "1-2 sentences about peak cognitive windows. Name events.",
+    "action": "When exactly to do hard work and what to protect.",
+    "severity": "info"
+  },
+  "resilience": {
+    "title": "3-5 word title",
+    "message": "1-2 sentences about pressure points. Name the culprit events.",
+    "action": "A specific buffer or adjustment.",
+    "severity": "info"
+  },
+  "sustainability": {
+    "title": "3-5 word title",
+    "message": "1-2 sentences about whether this pace is sustainable.",
+    "action": "One structural change.",
+    "severity": "info"
+  },
+  "insights": [],
+  "summary": "One-sentence day summary",
   "overallScore": ${workHealth.adaptivePerformanceIndex},
   "riskFactors": [],
   "opportunities": [],
   "predictiveAlerts": []
 }`;
-      
-      case 'resilience':
-        return `Focus on how well they'll handle stress and pressure today - whether they'll feel calm and composed or a bit overwhelmed.
-
-${baseContext}
-
-Tell them about their stress handling today:
-- How they'll react to pressure and difficult moments
-- Whether they'll bounce back easily from setbacks or feel more rattled
-- When they might feel calm and composed vs when stress could get to them
-- How they'll handle interruptions, changes, and curveballs
-
-Write conversational insights like:
-- "You should feel pretty calm and collected today - ready to handle whatever comes your way"
-- "You might feel a bit more reactive than usual with all those back-to-back meetings piling up"
-- "That long afternoon meeting could test your patience, but you'll probably bounce back fine"
-- "You're in good shape to stay composed, even if things don't go exactly as planned"
-
-IMPORTANT: Keep it brief. Provide only 1 insight, 1-2 sentences max. Focus on the single most important resilience takeaway.
-
-You must respond with valid JSON only. Provide a JSON response in exactly this format:
-{
-  "insights": [
-    {
-      "category": "wellness",
-      "title": "Short Title",
-      "message": "One or two sentences about their resilience today.",
-      "severity": "info",
-      "actionable": true,
-      "confidence": 85
-    }
-  ],
-  "summary": "Resilience overview",
-  "overallScore": ${workHealth.cognitiveResilience},
-  "riskFactors": [],
-  "opportunities": [],
-  "predictiveAlerts": []
-}`;
-      
-      case 'sustainability':
-        return `Focus on whether today's pace feels sustainable - if they can keep this up or if it might wear them down over time.
-
-${baseContext}
-
-Tell them about the long-term impact of today's workload:
-- Whether this pace feels manageable to maintain or might lead to burnout
-- If they're building good work habits or pushing too hard
-- How today fits into their overall work rhythm and energy
-- Whether they'll feel refreshed tomorrow or need recovery time
-
-Write conversational insights like:
-- "This pace feels sustainable - you're in a good groove that you could keep up for weeks"
-- "Today's intensity is fine for now, but this pattern might wear you down if it becomes the norm"
-- "You're hitting a nice sustainable rhythm that should leave you energized for tomorrow"
-- "This workload feels a bit much - you might need some lighter days after this to recharge"
-
-IMPORTANT: Keep it brief. Provide only 1 insight, 1-2 sentences max. Focus on the single most important sustainability takeaway.
-
-Provide a JSON response in exactly this format:
-{
-  "insights": [
-    {
-      "category": "balance",
-      "title": "Short Title",
-      "message": "One or two sentences about their sustainability today.",
-      "severity": "info",
-      "actionable": true,
-      "confidence": 85
-    }
-  ],
-  "summary": "Sustainability overview",
-  "overallScore": ${workHealth.workRhythmRecovery},
-  "riskFactors": [],
-  "opportunities": [],
-  "predictiveAlerts": []
-}`;
-      
-      default:
-        return this.createUserPrompt(analysis, userContext);
-    }
-  }
-
-  private createUserPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string): string {
-    const { workHealth, events, patterns } = analysis;
-    
-    // Use provided timezone (from client-side) instead of server detection
-    const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
-    
-    console.log('🌍 createUserPrompt timezone:', {
-      providedUserTimezone: providedUserTimezone,
-      serverDetected: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      finalUsed: userTimezone,
-      source: providedUserTimezone ? 'PROVIDED_FROM_CLIENT' : 'SERVER_FALLBACK'
-    });
-    
-    return `Analyze this user's calendar data and provide personalized insights:
-
-WORK HEALTH METRICS:
-- Adaptive Performance Index: ${workHealth.adaptivePerformanceIndex}%
-- Cognitive Resilience: ${workHealth.cognitiveResilience}%
-- Work Rhythm Recovery: ${workHealth.workRhythmRecovery}%
-- Status: ${workHealth.status}
-- Meeting Count: ${workHealth.schedule.meetingCount}
-- Back-to-back Count: ${workHealth.schedule.backToBackCount}
-- Focus Time: ${this.formatDuration(workHealth.focusTime)}
-- Fragmentation Score: ${workHealth.schedule.fragmentationScore}
-
-CALENDAR EVENTS (${events.length} total):
-${events.map(event => 
-  `- ${event.summary} (${this.formatTime12Hour(event.start, userTimezone)}-${this.formatTime12Hour(event.end, userTimezone)}, ${event.category}, ${event.attendees} attendees)`
-).join('\n')}
-
-MEETING PATTERNS:
-${Object.entries(patterns.meetingTypes).map(([type, count]) => `- ${type}: ${count}`).join('\n')}
-
-USER CONTEXT:
-- Work Hours: ${userContext.preferences?.workStartTime || 9}:00 - ${userContext.preferences?.workEndTime || 17}:00
-- Meeting Preference: ${userContext.preferences?.meetingPreference || 'balanced'}
-- Historical Avg Meetings: ${userContext.historicalPatterns?.avgDailyMeetings || 'Unknown'}
-- Historical Avg Focus: ${userContext.historicalPatterns?.avgFocusTime ? this.formatDuration(userContext.historicalPatterns.avgFocusTime) : 'Unknown'}
-
-Provide a JSON response with personalized insights that include:
-1. Performance optimization recommendations
-2. Wellness and burnout prevention insights
-3. Productivity enhancement suggestions
-4. Work-life balance guidance
-5. Predictive alerts for potential issues
-
-Focus on actionable, specific advice tailored to this user's patterns and current state.`;
   }
 
   private getDefaultInsights(analysis: CalendarAnalysis): PersonalizedInsightsResponse {
@@ -509,13 +364,70 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       });
     }
 
+    // Per-metric fallback insights
+    const meetingCount = workHealth.schedule.meetingCount;
+    const focusHours = Math.round(workHealth.focusTime / 60 * 10) / 10;
+    const backToBack = workHealth.schedule.backToBackCount;
+
+    const overviewInsight: MetricInsight = {
+      title: workHealth.adaptivePerformanceIndex >= 75 ? 'Solid Day Ahead' : workHealth.adaptivePerformanceIndex >= 50 ? 'Mixed Day Ahead' : 'Demanding Day Ahead',
+      message: meetingCount === 0
+        ? "Wide-open calendar today — you'll have plenty of room to set your own pace."
+        : `With ${meetingCount} meeting${meetingCount > 1 ? 's' : ''} and roughly ${focusHours} hours of focus time, today should feel ${workHealth.adaptivePerformanceIndex >= 75 ? 'manageable' : 'busy'}.`,
+      action: meetingCount === 0
+        ? 'Use the morning for your most creative work while energy is fresh.'
+        : 'Protect your longest gap between meetings for your most important task.',
+      severity: workHealth.adaptivePerformanceIndex >= 75 ? 'success' : workHealth.adaptivePerformanceIndex >= 50 ? 'info' : 'warning'
+    };
+
+    const performanceInsight: MetricInsight = {
+      title: workHealth.adaptivePerformanceIndex >= 75 ? 'Strong Cognitive Window' : 'Limited Deep Work Time',
+      message: focusHours >= 4
+        ? `You have about ${focusHours} hours of uninterrupted time — your best window for complex thinking.`
+        : `Only about ${focusHours} hours of focus time between meetings — be selective about what you tackle.`,
+      action: focusHours >= 4
+        ? 'Front-load your hardest task into the first open block before meetings start.'
+        : 'Save complex problems for your longest gap; use short gaps for admin and email.',
+      severity: workHealth.adaptivePerformanceIndex >= 75 ? 'success' : workHealth.adaptivePerformanceIndex >= 50 ? 'info' : 'warning'
+    };
+
+    const resilienceInsight: MetricInsight = {
+      title: backToBack >= 3 ? 'Back-to-Back Pressure' : workHealth.cognitiveResilience >= 70 ? 'Good Recovery Room' : 'Watch the Transitions',
+      message: backToBack >= 3
+        ? `${backToBack} back-to-back meetings will pile up context-switching fatigue — your patience may thin out by the last one.`
+        : backToBack >= 1
+          ? `${backToBack} consecutive meeting${backToBack > 1 ? 's' : ''} will require some mental resets, but you have enough gaps to recover.`
+          : 'No back-to-back meetings today — you should be able to handle whatever comes up without feeling rushed.',
+      action: backToBack >= 1
+        ? 'Add a 10-minute buffer after your consecutive meetings — step away from the screen.'
+        : 'Use the natural breaks between meetings to briefly reset before switching contexts.',
+      severity: backToBack >= 3 ? 'warning' : 'info'
+    };
+
+    const sustainabilityInsight: MetricInsight = {
+      title: workHealth.workRhythmRecovery >= 75 ? 'Sustainable Pace' : workHealth.workRhythmRecovery >= 50 ? 'Manageable for Now' : 'Unsustainable Load',
+      message: workHealth.workRhythmRecovery >= 75
+        ? "Today's workload leaves enough recovery time — you should end the day with energy to spare."
+        : workHealth.workRhythmRecovery >= 50
+          ? "This pace is okay for today, but too many days like this in a row will start to wear you down."
+          : "The meeting-to-recovery ratio today is too high — you'll likely feel drained by end of day.",
+      action: workHealth.workRhythmRecovery >= 75
+        ? 'Keep this rhythm going — this is a good template for your weekly schedule.'
+        : 'Look at your week ahead and find one meeting you can decline or shorten to create breathing room.',
+      severity: workHealth.workRhythmRecovery >= 75 ? 'success' : workHealth.workRhythmRecovery >= 50 ? 'info' : 'warning'
+    };
+
     return {
       heroMessage,
+      overview: overviewInsight,
+      performance: performanceInsight,
+      resilience: resilienceInsight,
+      sustainability: sustainabilityInsight,
       insights,
-      summary: `Current work health status: ${workHealth.status}. Focus on ${insights.length > 0 ? insights[0].category : 'maintaining balance'}.`,
+      summary: `Current work health status: ${workHealth.status}.`,
       overallScore: workHealth.adaptivePerformanceIndex,
       riskFactors: workHealth.cognitiveResilience < 40 ? ['High cognitive load', 'Decision fatigue'] : [],
-      opportunities: workHealth.focusTime >= 180 ? ['Deep work opportunities', 'Creative problem solving'] : ['Schedule optimization'],
+      opportunities: workHealth.focusTime >= 180 ? ['Deep work opportunities'] : ['Schedule optimization'],
       predictiveAlerts: workHealth.schedule.backToBackCount >= 4 ? ['Burnout risk from meeting overload'] : []
     };
   }
@@ -548,8 +460,6 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
         workEndTime: userContext.preferences?.workEndTime,
         meetingPreference: userContext.preferences?.meetingPreference
       },
-      // Tab context
-      tabType: tabContext?.tabType || 'overview',
       // Date to ensure daily cache invalidation
       date: new Date().toDateString()
     };
@@ -644,15 +554,8 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
     }
 
     try {
-      // Check if we should use cache (this will be handled client-side in the API)
-      // Pre-pick a random quote for overview tab so it's guaranteed unique each refresh
-      const prePickedQuote = (tabContext?.tabType === 'overview' || !tabContext)
-        ? comicReliefGenerator.generateQuote(analysis.workHealth)
-        : null;
-
-      const promptContent = tabContext
-        ? this.createTabSpecificPrompt(analysis, userContext, tabContext, providedUserTimezone, prePickedQuote || undefined)
-        : this.createUserPrompt(analysis, userContext, providedUserTimezone);
+      const prePickedQuote = comicReliefGenerator.generateQuote(analysis.workHealth);
+      const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone, prePickedQuote);
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
@@ -686,7 +589,7 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       }
 
       // Override heroMessage quote/source with our pre-picked values (keep AI subtitle)
-      if (prePickedQuote && parsedResponse.heroMessage && typeof parsedResponse.heroMessage === 'object') {
+      if (parsedResponse.heroMessage && typeof parsedResponse.heroMessage === 'object') {
         parsedResponse.heroMessage.quote = prePickedQuote.text;
         parsedResponse.heroMessage.source = `${prePickedQuote.source}${prePickedQuote.character ? ` — ${prePickedQuote.character}` : ''}`;
       }
@@ -719,10 +622,13 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
   }
 
   private validateInsightsResponse(response: any): response is PersonalizedInsightsResponse {
+    const hasPerMetricFormat = response?.overview && response?.performance && response?.resilience && response?.sustainability;
+    const hasLegacyFormat = Array.isArray(response?.insights);
+
     const isValid = (
       response &&
       typeof response === 'object' &&
-      Array.isArray(response.insights) &&
+      (hasPerMetricFormat || hasLegacyFormat) &&
       typeof response.summary === 'string' &&
       typeof response.overallScore === 'number' &&
       Array.isArray(response.riskFactors) &&
@@ -730,13 +636,9 @@ Focus on actionable, specific advice tailored to this user's patterns and curren
       Array.isArray(response.predictiveAlerts)
     );
 
-    // heroMessage can be a string (legacy) or object { quote, source, subtitle }
     const hasValidHero = !response?.heroMessage ||
       typeof response.heroMessage === 'string' ||
       (response.heroMessage?.quote && response.heroMessage?.source);
-
-    console.log('🔍 DEBUG - Validation result:', isValid && hasValidHero);
-    console.log('🔍 DEBUG - Response heroMessage type:', typeof response?.heroMessage);
 
     return isValid && hasValidHero;
   }
@@ -892,10 +794,11 @@ Generate ONE exact quote with proper attribution that matches their current mood
 }
 
 export default ClaudeAIService;
-export type { 
-  PersonalizedInsight, 
-  PersonalizedInsightsResponse, 
-  UserContext, 
+export type {
+  PersonalizedInsight,
+  PersonalizedInsightsResponse,
+  MetricInsight,
+  UserContext,
   CalendarAnalysis,
   TabContext
 };
