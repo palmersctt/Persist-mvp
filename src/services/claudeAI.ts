@@ -144,7 +144,7 @@ AVOID technical language, clinical analysis, formal recommendations, or confiden
 Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
   }
 
-  private createAllInsightsPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string): string {
+  private createAllInsightsPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string, recentQuotes?: string[]): string {
     const { workHealth, events, patterns } = analysis;
     const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
 
@@ -246,6 +246,7 @@ CRITICAL RULES for the quote:
 - Go DEEP — pick quotes from a wide range of movies and TV shows across all decades and genres
 - Surprise the user with quotes they might not immediately recognize but will appreciate
 - The quote should be funny, ironic, or perfectly fitting given their work situation
+${recentQuotes && recentQuotes.length > 0 ? `- IMPORTANT: This user has ALREADY seen these quotes recently. You MUST pick something COMPLETELY DIFFERENT:\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}\n- Do NOT repeat any of the above quotes or even quotes from the same movie/show.` : ''}
 
 Then write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar?
 
@@ -574,7 +575,8 @@ You must respond with valid JSON only. Use exactly this format:
     analysis: CalendarAnalysis,
     userContext: UserContext = {},
     tabContext?: TabContext,
-    providedUserTimezone?: string
+    providedUserTimezone?: string,
+    recentQuotes?: string[]
   ): Promise<PersonalizedInsightsResponse> {
     if (!this.validateApiKey()) {
       console.warn('Anthropic API key validation failed, using default insights');
@@ -582,7 +584,7 @@ You must respond with valid JSON only. Use exactly this format:
     }
 
     try {
-      const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone);
+      const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone, recentQuotes);
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
