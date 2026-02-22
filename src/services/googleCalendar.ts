@@ -150,15 +150,31 @@ class GoogleCalendarService {
 
   private categorizeEvent(summary: string): MeetingCategory {
     const title = summary.toLowerCase().trim();
-    
-    if (this.matchesKeywords(title, this.BENEFICIAL_KEYWORDS)) return 'BENEFICIAL';
-    if (this.matchesKeywords(title, this.NEUTRAL_KEYWORDS)) return 'NEUTRAL';
-    if (this.matchesKeywords(title, this.FOCUS_KEYWORDS)) return 'FOCUS_WORK';
-    if (this.matchesKeywords(title, this.LIGHT_KEYWORDS)) return 'LIGHT_MEETINGS';
-    if (this.matchesKeywords(title, this.HEAVY_KEYWORDS)) return 'HEAVY_MEETINGS';
-    if (this.matchesKeywords(title, this.COLLABORATIVE_KEYWORDS)) return 'COLLABORATIVE';
-    
-    return 'COLLABORATIVE'; // Default for unmatched meetings
+
+    let category: MeetingCategory;
+
+    if (this.matchesKeywords(title, this.BENEFICIAL_KEYWORDS)) category = 'BENEFICIAL';
+    else if (this.matchesKeywords(title, this.NEUTRAL_KEYWORDS)) category = 'NEUTRAL';
+    else if (this.matchesKeywords(title, this.FOCUS_KEYWORDS)) category = 'FOCUS_WORK';
+    else if (this.matchesKeywords(title, this.LIGHT_KEYWORDS)) category = 'LIGHT_MEETINGS';
+    else if (this.matchesKeywords(title, this.HEAVY_KEYWORDS)) category = 'HEAVY_MEETINGS';
+    else if (this.matchesKeywords(title, this.COLLABORATIVE_KEYWORDS)) category = 'COLLABORATIVE';
+    else category = 'COLLABORATIVE'; // Default for unmatched meetings
+
+    // Production debugging for categorization issues
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
+      console.log(`🏷️ CATEGORIZATION - "${summary}" → ${category}`, {
+        originalTitle: summary,
+        normalizedTitle: title,
+        category: category,
+        environment: process.env.NODE_ENV,
+        matchedBeneficial: this.matchesKeywords(title, this.BENEFICIAL_KEYWORDS),
+        matchedNeutral: this.matchesKeywords(title, this.NEUTRAL_KEYWORDS),
+        matchedFocus: this.matchesKeywords(title, this.FOCUS_KEYWORDS)
+      });
+    }
+
+    return category;
   }
 
   async getTodaysEvents(providedUserTimezone?: string): Promise<CalendarEvent[]> {
@@ -202,7 +218,13 @@ class GoogleCalendarService {
       timeMax: timeMax,
       localStartOfDay: startOfDay.toString(),
       localEndOfDay: endOfDay.toString(),
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
+      // Additional production debugging
+      serverNowLocal: now.toString(),
+      serverHour: now.getHours(),
+      serverDate: now.getDate(),
+      clientProvidedTZ: !!providedUserTimezone,
+      actualTZSource: providedUserTimezone ? 'CLIENT' : 'SERVER'
     });
 
     try {
@@ -225,6 +247,8 @@ class GoogleCalendarService {
       
       console.log('🔍 DEBUG - Raw Google Calendar API response:', {
         eventCount: events.length,
+        environment: process.env.NODE_ENV,
+        userTimezone: userTimezone,
         rawEvents: events.map(e => ({
           id: e.id,
           summary: e.summary,
@@ -233,6 +257,14 @@ class GoogleCalendarService {
           created: e.created,
           updated: e.updated
         }))
+      });
+
+      console.log('🚨 PRODUCTION DEBUG - Event Processing Details:', {
+        environment: process.env.NODE_ENV,
+        totalEventsFromAPI: events.length,
+        eventsWithDateTime: events.filter(e => e.start?.dateTime && e.end?.dateTime).length,
+        timezone: userTimezone,
+        providedTZ: !!providedUserTimezone
       });
       
       return events
