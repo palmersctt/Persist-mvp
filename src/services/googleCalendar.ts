@@ -68,7 +68,10 @@ class GoogleCalendarService {
     'family', 'kids', 'school pickup', 'school drop', 'date night', 'self-care',
     'nap', 'rest', 'recovery', 'hobby', 'read', 'journal', 'breathe', 'stretch',
     'swim', 'hike', 'bike', 'sport', 'game', 'play', 'volunteer', 'church',
-    'prayer', 'worship', 'social', 'friends', 'happy hour', 'dinner'
+    'prayer', 'worship', 'social', 'friends', 'happy hour', 'dinner',
+    'basketball', 'football', 'soccer', 'baseball', 'tennis', 'golf',
+    'hockey', 'volleyball', 'softball', 'lacrosse', 'wrestling', 'track',
+    'gymnastics', 'karate', 'ballet', 'dance', 'cheer', 'practice'
   ];
 
   private readonly NEUTRAL_KEYWORDS = [
