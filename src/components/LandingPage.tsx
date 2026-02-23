@@ -394,10 +394,10 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-8">
-            Free. Seriously.
+            Get Started Today
           </h2>
           <p className="text-xl text-gray-600 font-light mb-12 leading-relaxed">
-            Connect your Google Calendar and get your first card in seconds.
+            Connect your Google Calendar and get your first laugh in seconds.
           </p>
           <button
             onClick={handleGetStarted}
