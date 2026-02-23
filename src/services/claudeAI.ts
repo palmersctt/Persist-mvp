@@ -181,9 +181,9 @@ Write like you're having a conversation with them using "you'll feel", "your ene
     return `Analyze this person's calendar and write FOUR distinct insights — one for each metric below. Each insight MUST reference SPECIFIC events from their calendar by name and time. Do NOT repeat the same observation across metrics. Do NOT just restate a metric number — tell them what it MEANS for their actual day.
 
 WORK HEALTH METRICS:
-- Performance Index: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
-- Cognitive Resilience: ${workHealth.cognitiveResilience}% (${interpretScore(workHealth.cognitiveResilience)})
-- Sustainability Index: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
+- Focus: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
+- Strain: ${workHealth.cognitiveResilience}% (${interpretScore(workHealth.cognitiveResilience)})
+- Balance: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
 - Status: ${workHealth.status}
 - Meeting Count: ${workHealth.schedule.meetingCount}
 - Back-to-back Count: ${workHealth.schedule.backToBackCount}
@@ -693,7 +693,7 @@ You must respond with valid JSON only. Use exactly this format:
 
 ${historicalData.map((day, index) => `
 Day ${index + 1}:
-- Performance Index: ${day.workHealth.adaptivePerformanceIndex}%
+- Focus: ${day.workHealth.adaptivePerformanceIndex}%
 - Meetings: ${day.workHealth.schedule.meetingCount}
 - Focus Time: ${this.formatDuration(day.workHealth.focusTime)}
 - Status: ${day.workHealth.status}

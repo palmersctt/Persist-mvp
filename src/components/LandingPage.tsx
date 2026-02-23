@@ -167,35 +167,35 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Card 1 - Performance Index */}
+            {/* Card 1 - Focus */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300">
               <div className="text-center">
                 <h3 className="text-2xl font-light text-gray-900 mb-4">
-                  Performance Index
+                  Focus
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How much capacity you have today for your best work
+                  How much capacity you have today for deep, uninterrupted work
                 </p>
               </div>
             </div>
 
-            {/* Card 2 - Cognitive Resilience */}
+            {/* Card 2 - Strain */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300">
               <div className="text-center">
                 <h3 className="text-2xl font-light text-gray-900 mb-4">
-                  Cognitive Resilience
+                  Strain
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How well you can handle tough decisions and context switches before fatigue sets in
+                  How much cognitive load your schedule is putting on you today
                 </p>
               </div>
             </div>
 
-            {/* Card 3 - Sustainability Index */}
+            {/* Card 3 - Balance */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300">
               <div className="text-center">
                 <h3 className="text-2xl font-light text-gray-900 mb-4">
-                  Sustainability Index
+                  Balance
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
                   Can you keep this pace up without burning out?

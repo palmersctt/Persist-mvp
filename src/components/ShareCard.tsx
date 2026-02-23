@@ -9,9 +9,9 @@ interface ShareCardProps {
 }
 
 const scores = [
-  { key: 'performance', label: 'PERFORMANCE', color: '#10b981' },
-  { key: 'resilience', label: 'RESILIENCE', color: '#3b82f6' },
-  { key: 'sustainability', label: 'SUSTAINABILITY', color: '#6b7280' },
+  { key: 'performance', label: 'FOCUS', color: '#10b981' },
+  { key: 'resilience', label: 'STRAIN', color: '#3b82f6' },
+  { key: 'sustainability', label: 'BALANCE', color: '#6b7280' },
 ] as const;
 
 export default function ShareCard({ quote, source, subtitle, performance, resilience, sustainability, onMetricClick }: ShareCardProps) {

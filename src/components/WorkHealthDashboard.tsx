@@ -127,22 +127,22 @@ export default function WorkHealthDashboard() {
   const getSecondaryMetrics = (): SecondaryMetric[] => {
     if (!workHealth) {
       return [
-        { label: 'Cognitive Resilience', value: '—', status: 'average', icon: '🧠' },
-        { label: 'Sustainability Index', value: '—', status: 'average', icon: '♻️' }
+        { label: 'Strain', value: '—', status: 'average', icon: '🧠' },
+        { label: 'Balance', value: '—', status: 'average', icon: '♻️' }
       ];
     }
 
     return [
       {
-        label: 'Cognitive Resilience',
+        label: 'Strain',
         value: workHealth.cognitiveResilience,
         unit: '%',
-        status: workHealth.cognitiveResilience <= 40 ? 'needs_attention' : 
+        status: workHealth.cognitiveResilience <= 40 ? 'needs_attention' :
                 workHealth.cognitiveResilience <= 75 ? 'average' : 'good',
         icon: '🧠'
       },
       {
-        label: 'Sustainability Index',
+        label: 'Balance',
         value: workHealth.workRhythmRecovery,
         unit: '%',
         status: workHealth.workRhythmRecovery <= 45 ? 'needs_attention' : 
@@ -180,7 +180,7 @@ export default function WorkHealthDashboard() {
     const resil = workHealth?.cognitiveResilience || 0;
     const sust = workHealth?.workRhythmRecovery || 0;
 
-    const text = `"${quote}"\n\u2014 ${source}\n${subtitle}\n\nPerformance: ${perf} \u00b7 Resilience: ${resil} \u00b7 Sustainability: ${sust}\n\npersistwork.com`;
+    const text = `"${quote}"\n\u2014 ${source}\n${subtitle}\n\nFocus: ${perf} \u00b7 Strain: ${resil} \u00b7 Balance: ${sust}\n\npersistwork.com`;
 
     try {
       await navigator.clipboard.writeText(text);
@@ -215,8 +215,8 @@ export default function WorkHealthDashboard() {
                     <span className="text-white text-sm font-bold">📊</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Performance Index</h3>
-                    <p className="text-gray-400 text-sm">How much capacity you have today for your best work — based on meeting load, focus blocks, and schedule flow</p>
+                    <h3 className="font-semibold mb-1">Focus</h3>
+                    <p className="text-gray-400 text-sm">How much deep work time you actually have today — based on meeting load, focus blocks, and schedule flow</p>
                   </div>
                 </div>
                 
@@ -225,8 +225,8 @@ export default function WorkHealthDashboard() {
                     <span className="text-white text-sm font-bold">🧠</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Cognitive Resilience</h3>
-                    <p className="text-gray-400 text-sm">How well you can handle tough decisions and context switches before mental fatigue sets in</p>
+                    <h3 className="font-semibold mb-1">Strain</h3>
+                    <p className="text-gray-400 text-sm">How mentally taxing your schedule is — context switches, back-to-back chains, and decision fatigue</p>
                   </div>
                 </div>
                 
@@ -235,8 +235,8 @@ export default function WorkHealthDashboard() {
                     <span className="text-white text-sm font-bold">♻️</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Sustainability Index</h3>
-                    <p className="text-gray-400 text-sm">Can you keep this pace up? Measures whether you have enough recovery time between demands to avoid burnout</p>
+                    <h3 className="font-semibold mb-1">Balance</h3>
+                    <p className="text-gray-400 text-sm">Whether your pace is sustainable — enough recovery breaks between demands to avoid burning out</p>
                   </div>
                 </div>
               </div>
@@ -446,18 +446,11 @@ export default function WorkHealthDashboard() {
                 <div className="mt-4">
                   <button
                     onClick={handleShare}
-                    className="w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200"
-                    style={{
-                      backgroundColor: shareState === 'copied'
-                        ? 'rgba(37, 211, 102, 0.15)'
-                        : 'rgba(255, 255, 255, 0.04)',
-                      border: `1px solid ${shareState === 'copied'
-                        ? 'rgba(37, 211, 102, 0.3)'
-                        : 'rgba(255, 255, 255, 0.08)'}`,
-                      color: shareState === 'copied'
-                        ? '#25d366'
-                        : 'var(--text-secondary)',
-                    }}
+                    className={`w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
+                      shareState === 'copied'
+                        ? 'bg-[rgba(37,211,102,0.15)] border border-[rgba(37,211,102,0.3)] text-[#25d366]'
+                        : 'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.20)]'
+                    }`}
                   >
                     {shareState === 'copied' ? '\u2713 Copied to clipboard' : 'Share today\u2019s quote \u2192'}
                   </button>
@@ -515,9 +508,9 @@ export default function WorkHealthDashboard() {
                   {/* Score placeholders with metric colors */}
                   <div className="flex justify-center gap-8 md:gap-12">
                     {[
-                      { color: '#10b981', label: 'PERFORMANCE' },
-                      { color: '#3b82f6', label: 'RESILIENCE' },
-                      { color: '#6b7280', label: 'SUSTAINABILITY' },
+                      { color: '#10b981', label: 'FOCUS' },
+                      { color: '#3b82f6', label: 'STRAIN' },
+                      { color: '#6b7280', label: 'BALANCE' },
                     ].map((s) => (
                       <div key={s.label} className="text-center animate-pulse">
                         <div className="text-3xl md:text-4xl font-semibold" style={{ color: s.color, lineHeight: 1, opacity: 0.3 }}>
@@ -586,13 +579,13 @@ export default function WorkHealthDashboard() {
           </>
         )}
 
-        {/* Performance Index Tab */}
+        {/* Focus Tab */}
         {activeTab === 'performance' && (
           <div className="space-y-16">
             <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
               <span>&larr;</span><span>Back to Overview</span>
             </button>
-            {/* Large Performance Index Ring */}
+            {/* Large Focus Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
                 <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
@@ -623,11 +616,8 @@ export default function WorkHealthDashboard() {
                       {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
                     </div>
                     <div className="text-center">
-                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
-                        PERFORMANCE
-                      </div>
-                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
-                        INDEX
+                      <div className="whoop-metric-label" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                        FOCUS
                       </div>
                     </div>
                   </div>
@@ -644,10 +634,10 @@ export default function WorkHealthDashboard() {
                 }}
               >
                 <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  How much capacity you have today for your best work — based on meeting load, available focus blocks, and schedule flow.
+                  How much capacity you have today for deep, uninterrupted work — based on meeting load, available focus blocks, and schedule flow.
                 </p>
 
-                {/* Performance Components — unique to this metric's calculation */}
+                {/* Focus Components — unique to this metric's calculation */}
                 <div className="space-y-5 mb-6">
                   {/* Meeting Density (25% weight) */}
                   <div>
@@ -747,10 +737,10 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
-                {/* Performance Insights */}
+                {/* Focus Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700 text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Performance Insights
+                    Focus Insights
                   </h4>
                   {isAILoading && activeTab === 'performance' ? (
                     <div className="flex items-center justify-center py-4">
@@ -783,13 +773,13 @@ export default function WorkHealthDashboard() {
           </div>
         )}
 
-        {/* Cognitive Resilience Tab */}
+        {/* Strain Tab */}
         {activeTab === 'resilience' && (
           <div className="space-y-16">
             <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
               <span>&larr;</span><span>Back to Overview</span>
             </button>
-            {/* Large Cognitive Resilience Ring */}
+            {/* Large Strain Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
                 <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
@@ -820,11 +810,8 @@ export default function WorkHealthDashboard() {
                       {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
                     </div>
                     <div className="text-center">
-                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
-                        COGNITIVE
-                      </div>
-                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
-                        RESILIENCE
+                      <div className="whoop-metric-label" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                        STRAIN
                       </div>
                     </div>
                   </div>
@@ -832,19 +819,19 @@ export default function WorkHealthDashboard() {
               </div>
               
               
-              {/* Cognitive Resilience Breakdown - Always visible */}
-              <div 
+              {/* Strain Breakdown - Always visible */}
+              <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
-                style={{ 
+                style={{
                   backgroundColor: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
                 <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  How well you can handle tough decisions and context switches today — before mental fatigue sets in.
+                  How much cognitive load your schedule is putting on you today — context switches, back-to-back meetings, and decision fatigue.
                 </p>
 
-                {/* Cognitive Resilience Components — unique to this metric */}
+                {/* Strain Components — unique to this metric */}
                 <div className="space-y-5 mb-6">
                   {/* Context Switching (unique contexts) */}
                   <div>
@@ -944,10 +931,10 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
-                {/* Resilience Insights */}
+                {/* Strain Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700 text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Resilience Insights
+                    Strain Insights
                   </h4>
                   {isAILoading && activeTab === 'resilience' ? (
                     <div className="flex items-center justify-center py-4">
@@ -980,13 +967,13 @@ export default function WorkHealthDashboard() {
           </div>
         )}
 
-        {/* Sustainability Index Tab */}
+        {/* Balance Tab */}
         {activeTab === 'sustainability' && (
           <div className="space-y-16">
             <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
               <span>&larr;</span><span>Back to Overview</span>
             </button>
-            {/* Large Sustainability Index Ring */}
+            {/* Large Balance Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
                 <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
@@ -1017,11 +1004,8 @@ export default function WorkHealthDashboard() {
                       {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
                     </div>
                     <div className="text-center">
-                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1' }}>
-                        SUSTAINABILITY
-                      </div>
-                      <div className="whoop-metric-label" style={{ fontSize: '0.65rem', lineHeight: '1', marginTop: '2px' }}>
-                        INDEX
+                      <div className="whoop-metric-label" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                        BALANCE
                       </div>
                     </div>
                   </div>
@@ -1029,19 +1013,19 @@ export default function WorkHealthDashboard() {
               </div>
               
               
-              {/* Sustainability Breakdown - Always visible */}
-              <div 
+              {/* Balance Breakdown - Always visible */}
+              <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
-                style={{ 
+                style={{
                   backgroundColor: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
                 <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Can you keep this pace up? Measures whether you have enough recovery time between demands to avoid burnout.
+                  Can you keep this pace up? Measures whether your schedule has enough recovery time and healthy boundaries to avoid burnout.
                 </p>
 
-                {/* Sustainability Components — unique to this metric */}
+                {/* Balance Components — unique to this metric */}
                 <div className="space-y-5 mb-6">
                   {/* Morning/Afternoon Balance */}
                   <div>
@@ -1142,10 +1126,10 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
                 
-                {/* Sustainability Insights */}
+                {/* Balance Insights */}
                 <div className="mt-6 pt-4 border-t border-gray-700 text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Sustainability Insights
+                    Balance Insights
                   </h4>
                   {isAILoading && activeTab === 'sustainability' ? (
                     <div className="flex items-center justify-center py-4">
