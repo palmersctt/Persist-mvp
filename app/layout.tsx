@@ -14,10 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Persist - Comic Relief for Your Workday",
-  description: "Comic relief for your workday. Persist reads your calendar and finds the movie quote your day deserves.",
+  title: "persistwork.com",
+  description: "persistwork.com",
   icons: {
     icon: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
     capable: true,
