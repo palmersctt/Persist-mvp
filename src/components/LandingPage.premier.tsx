@@ -42,23 +42,29 @@ export default function LandingPage() {
             </div>
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <button
+              <button 
+                onClick={() => scrollToSection('intelligence')}
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Intelligence
+              </button>
+              <button 
                 onClick={() => scrollToSection('features')}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
-                What You Get
+                Features
               </button>
-              <button
+              <button 
                 onClick={() => scrollToSection('intelligence')}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
                 How It Works
               </button>
-              <button
+              <button 
                 onClick={() => scrollToSection('pricing')}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
-                Start Free
+                Pricing
               </button>
             </div>
             
@@ -95,10 +101,16 @@ export default function LandingPage() {
         <div className="md:hidden fixed inset-0 z-40 bg-white">
           <div className="px-6 py-6 space-y-4">
             <button
+              onClick={() => scrollToSection('intelligence')}
+              className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              Intelligence
+            </button>
+            <button
               onClick={() => scrollToSection('features')}
               className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
             >
-              What You Get
+              Features
             </button>
             <button
               onClick={() => scrollToSection('intelligence')}
@@ -110,7 +122,7 @@ export default function LandingPage() {
               onClick={() => scrollToSection('pricing')}
               className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
             >
-              Start Free
+              Pricing
             </button>
             <div className="pt-4 border-t border-gray-200">
               <button
@@ -128,16 +140,16 @@ export default function LandingPage() {
       <section id="hero" className="py-20 lg:py-32">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h1 className="text-5xl lg:text-7xl font-thin text-gray-900 mb-8 leading-tight">
-            Your workday has a sense of humor
+            Work Health Intelligence Platform
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
-            Persist finds the movie or TV moment that captures your day — so you can laugh at it and send it to someone who gets it.
+            Transform your work patterns into actionable insights for sustainable peak performance
           </p>
           <button
             onClick={handleGetStarted}
             className="inline-flex items-center px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
           >
-            Try It Free
+            Get Started
           </button>
         </div>
       </section>
@@ -147,10 +159,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-6">
-              It actually knows what kind of day you're having
+              Three Core Intelligence Metrics
             </h2>
             <p className="text-xl text-gray-600 font-light max-w-3xl mx-auto">
-              We read your calendar and turn it into three simple scores
+              Advanced analytics that measure what matters for sustainable performance
             </p>
           </div>
 
@@ -162,7 +174,7 @@ export default function LandingPage() {
                   Focus
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How much room you actually have to think today
+                  How much capacity you have today for deep, uninterrupted work
                 </p>
               </div>
             </div>
@@ -174,7 +186,7 @@ export default function LandingPage() {
                   Strain
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How packed and chaotic things are looking
+                  How much cognitive load your schedule is putting on you today
                 </p>
               </div>
             </div>
@@ -186,7 +198,7 @@ export default function LandingPage() {
                   Balance
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Whether you've got enough breathing room to keep going
+                  Can you keep this pace up without burning out?
                 </p>
               </div>
             </div>
@@ -198,10 +210,10 @@ export default function LandingPage() {
       <section id="intelligence" className="py-20 lg:py-32">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-8">
-            Something worth sending
+            Intelligent Work Analysis
           </h2>
           <p className="text-xl text-gray-600 font-light leading-relaxed">
-            Every morning you get a card with your scores and a perfectly matched movie or TV moment. It's funny because it's true. One tap to share it with someone who needs the laugh too.
+            Our platform analyzes your calendar patterns, meeting density, and cognitive load to provide personalized insights that help you maintain peak performance while preventing burnout.
           </p>
         </div>
       </section>
@@ -210,19 +222,19 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-8">
-            Free. Seriously.
+            Simple Pricing
           </h2>
           <p className="text-xl text-gray-600 font-light mb-12 leading-relaxed">
-            Connect your Google Calendar and get your first card in seconds.
+            Start with our free analysis and upgrade when you're ready for advanced insights.
           </p>
           <div className="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 max-w-md mx-auto">
-            <h3 className="text-2xl font-light text-gray-900 mb-4">Your Daily Card</h3>
-            <p className="text-gray-600 mb-8">A daily dose of comic relief matched to your actual schedule — plus three scores that tell you what kind of day you're in for</p>
+            <h3 className="text-2xl font-light text-gray-900 mb-4">Free Analysis</h3>
+            <p className="text-gray-600 mb-8">Get started with basic work health insights</p>
             <button
               onClick={handleGetStarted}
               className="w-full px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
             >
-              Try It Free
+              Get Started
             </button>
           </div>
         </div>
@@ -234,7 +246,7 @@ export default function LandingPage() {
           <div className="text-center">
             <div className="font-bold text-xl text-gray-900 mb-4">PERSIST</div>
             <p className="text-gray-600 text-sm mb-6">
-              Comic relief for your workday
+              Work Health Intelligence Platform
             </p>
             <div className="flex justify-center space-x-6 text-sm">
               <Link href="/privacy" className="text-gray-500 hover:text-gray-900 transition-colors">
@@ -246,7 +258,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-xs text-gray-400 mt-6">
-              © 2026 PERSIST. All rights reserved.
+              © 2025 PERSIST. All rights reserved.
             </p>
           </div>
         </div>
