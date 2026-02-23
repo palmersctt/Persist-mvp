@@ -31,8 +31,8 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         padding: '28px 28px 32px',
       }}
     >
-      {/* Quote area — centered vertically */}
-      <div className="flex-1 flex flex-col justify-center">
+      {/* Quote area — biased toward top */}
+      <div className="flex-1 flex flex-col justify-start pt-6">
         <p className="text-2xl md:text-3xl font-bold text-white text-center leading-snug mb-4 whitespace-pre-line">
           &ldquo;{quote}&rdquo;
         </p>
