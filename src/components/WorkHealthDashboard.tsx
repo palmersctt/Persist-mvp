@@ -271,24 +271,24 @@ export default function WorkHealthDashboard() {
         y += subLineHeight;
       }
 
-      // --- Mood label above score bar ---
-      ctx.font = `600 22px ${fontStack}`;
-      ctx.letterSpacing = '6px';
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, H - 380);
-      ctx.letterSpacing = '0px';
-
-      // --- Score bar (bottom area) ---
+      // --- Score bar (bottom area) with mood label inside ---
       const barPadX = 60;
-      const barY = H - 340;
+      const barY = H - 380;
       const barW = W - barPadX * 2;
-      const barH = 200;
+      const barH = 230;
       const barR = 40;
 
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.beginPath();
       ctx.roundRect(barPadX, barY, barW, barH, barR);
       ctx.fill();
+
+      // Mood label inside bar
+      ctx.font = `600 20px ${fontStack}`;
+      ctx.letterSpacing = '5px';
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, barY + 32);
+      ctx.letterSpacing = '0px';
 
       // Scores inside bar
       const scores = [
@@ -305,17 +305,17 @@ export default function WorkHealthDashboard() {
         // Number
         ctx.font = `700 72px ${fontStack}`;
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fillText(`${s.value}`, cx, barY + 40);
+        ctx.fillText(`${s.value}`, cx, barY + 75);
 
         // Label
         ctx.font = `500 18px ${fontStack}`;
         ctx.letterSpacing = '3px';
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText(s.label, cx, barY + 130);
+        ctx.fillText(s.label, cx, barY + 168);
         ctx.letterSpacing = '0px';
       }
 
-      // --- Branding (logo + text at very bottom) ---
+      // --- Branding (logo + text outside bar, at very bottom) ---
       const brandY = H - 100;
       const logoR = 14;
       const logoGap = 8;

@@ -28,7 +28,7 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       style={{
         aspectRatio: '9 / 16',
         background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-        padding: '28px 28px 32px',
+        padding: '28px 24px 20px',
       }}
     >
       {/* Quote area — biased toward top */}
@@ -44,16 +44,14 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         </p>
       </div>
 
-      {/* Mood label */}
-      <p className="text-xs text-center uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
-        {moodName}
-      </p>
-
-      {/* Score bar */}
+      {/* Score bar with mood label inside */}
       <div
-        className="rounded-2xl px-6 py-5"
+        className="rounded-2xl px-6 py-4"
         style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
       >
+        <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          {moodName}
+        </p>
         <div className="flex justify-center gap-8">
           {scores.map((s) => (
             <div
@@ -70,10 +68,12 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-center gap-1.5 mt-4">
-          <PersistLogo size={14} variant="light" />
-          <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.4)' }}>PERSIST</span>
-        </div>
+      </div>
+
+      {/* Branding — outside score bar */}
+      <div className="flex items-center justify-center gap-1.5 mt-3">
+        <PersistLogo size={12} variant="light" />
+        <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.3)' }}>PERSIST</span>
       </div>
     </div>
   )
