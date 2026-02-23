@@ -31,7 +31,7 @@ export default function WorkHealthDashboard() {
   });
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
-  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
   
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, history } = useWorkHealth(activeTab);
 
@@ -170,7 +170,7 @@ export default function WorkHealthDashboard() {
   };
 
   const handleShare = useCallback(async () => {
-    if (shareState === 'copied') return;
+    if (shareState === 'generating') return;
 
     const heroMsg = workHealth?.ai?.heroMessage;
     const quote = heroMsg && typeof heroMsg === 'object' ? heroMsg.quote : '';
@@ -180,15 +180,175 @@ export default function WorkHealthDashboard() {
     const resil = workHealth?.cognitiveResilience || 0;
     const sust = workHealth?.workRhythmRecovery || 0;
 
-    const text = `"${quote}"\n\u2014 ${source}\n${subtitle}\n\nFocus: ${perf} \u00b7 Strain: ${resil} \u00b7 Balance: ${sust}\n\npersistwork.com`;
+    setShareState('generating');
 
     try {
-      await navigator.clipboard.writeText(text);
-      setShareState('copied');
-      setTimeout(() => setShareState('idle'), 2500);
+      const W = 1080, H = 1080;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d')!;
+
+      // --- Background gradient ---
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#0a0a0a');
+      bg.addColorStop(0.5, '#131313');
+      bg.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle border
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(40, 40, W - 80, H - 80);
+
+      // --- Text helpers ---
+      const fontStack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+      const wrapText = (text: string, maxWidth: number, font: string): string[] => {
+        ctx.font = font;
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let line = '';
+        for (const word of words) {
+          const test = line ? `${line} ${word}` : word;
+          if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = test;
+          }
+        }
+        if (line) lines.push(line);
+        return lines;
+      };
+
+      const PAD = 80;
+      const contentWidth = W - PAD * 2;
+      let y = 160;
+
+      // --- Quote ---
+      const quoteFont = `300 44px ${fontStack}`;
+      const quoteText = `\u201C${quote}\u201D`;
+      const quoteLines = wrapText(quoteText, contentWidth, quoteFont);
+      const quoteLineHeight = 60;
+
+      ctx.font = quoteFont;
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (const line of quoteLines) {
+        ctx.fillText(line, W / 2, y);
+        y += quoteLineHeight;
+      }
+
+      // --- Source ---
+      y += 24;
+      ctx.font = `italic 22px ${fontStack}`;
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText(`\u2014 ${source}`, W / 2, y);
+      y += 40;
+
+      // --- Subtitle ---
+      const subFont = `300 24px ${fontStack}`;
+      const subLines = wrapText(subtitle, contentWidth - 40, subFont);
+      ctx.font = subFont;
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      for (const line of subLines) {
+        ctx.fillText(line, W / 2, y);
+        y += 34;
+      }
+
+      // --- Green divider ---
+      y += 40;
+      ctx.fillStyle = 'rgba(37,211,102,0.6)';
+      ctx.fillRect(W / 2 - 40, y, 80, 3);
+      y += 50;
+
+      // --- Scores ---
+      const scores = [
+        { value: perf, label: 'FOCUS', color: '#10b981' },
+        { value: resil, label: 'STRAIN', color: '#3b82f6' },
+        { value: sust, label: 'BALANCE', color: '#6b7280' },
+      ];
+      const colWidth = contentWidth / 3;
+
+      for (let i = 0; i < scores.length; i++) {
+        const cx = PAD + colWidth * i + colWidth / 2;
+        const s = scores[i];
+
+        // Number
+        ctx.font = `600 64px ${fontStack}`;
+        ctx.fillStyle = s.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${s.value}`, cx, y);
+
+        // Label
+        ctx.font = `500 16px ${fontStack}`;
+        ctx.letterSpacing = '3px';
+        ctx.fillText(s.label, cx, y + 40);
+        ctx.letterSpacing = '0px';
+
+        // Progress bar track
+        const barW = 100, barH = 6;
+        const barX = cx - barW / 2;
+        const barY = y + 60;
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barW, barH, 3);
+        ctx.fill();
+
+        // Progress bar fill
+        const fillW = (s.value / 100) * barW;
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, fillW, barH, 3);
+        ctx.fill();
+      }
+
+      // --- Branding ---
+      ctx.font = `500 14px ${fontStack}`;
+      ctx.fillStyle = '#666666';
+      ctx.textAlign = 'center';
+      ctx.letterSpacing = '4px';
+      ctx.fillText('PERSIST', W / 2, H - 60);
+      ctx.letterSpacing = '0px';
+
+      // --- Share / Download ---
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Canvas toBlob failed');
+
+      const file = new File([blob], 'persist-today.png', { type: 'image/png' });
+
+      // Try native share with image (mobile)
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          setShareState('idle');
+          return;
+        } catch (err: unknown) {
+          if (err instanceof Error && err.name === 'AbortError') {
+            setShareState('idle');
+            return;
+          }
+          // Fall through to download
+        }
+      }
+
+      // Fallback: download the image
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'persist-today.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Clipboard copy failed:', err);
+      console.error('Share failed:', err);
     }
+
+    setShareState('idle');
   }, [shareState, workHealth]);
 
   if (status === 'loading') {
@@ -446,13 +606,14 @@ export default function WorkHealthDashboard() {
                 <div className="mt-4">
                   <button
                     onClick={handleShare}
-                    className={`w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
-                      shareState === 'copied'
-                        ? 'bg-[rgba(37,211,102,0.15)] border border-[rgba(37,211,102,0.3)] text-[#25d366]'
-                        : 'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.20)]'
+                    disabled={shareState === 'generating'}
+                    className={`w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      shareState === 'generating'
+                        ? 'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[var(--text-muted)] cursor-wait'
+                        : 'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.20)] cursor-pointer'
                     }`}
                   >
-                    {shareState === 'copied' ? '\u2713 Copied to clipboard' : 'Share today\u2019s quote \u2192'}
+                    {shareState === 'generating' ? 'Generating image\u2026' : 'Share today\u2019s quote \u2192'}
                   </button>
                 </div>
               </section>
