@@ -24,32 +24,33 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
 
   return (
     <div
-      className="w-full rounded-2xl overflow-hidden flex flex-col"
+      className="w-full rounded-2xl overflow-hidden"
       style={{
-        aspectRatio: '9 / 16',
         background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-        padding: '28px 24px 20px',
+        padding: '32px 24px 20px',
       }}
     >
-      {/* Quote area — biased toward top */}
-      <div className="flex-1 flex flex-col justify-start pt-6">
-        <p className="text-2xl md:text-3xl font-bold text-white text-center leading-snug mb-4 whitespace-pre-line">
-          &ldquo;{quote}&rdquo;
-        </p>
-        <p className="text-sm text-center italic mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
-          &mdash; {source}
-        </p>
-        <p className="text-sm text-center font-light leading-relaxed whitespace-pre-line" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          {subtitle}
-        </p>
-      </div>
+      {/* Quote */}
+      <p className="text-xl font-bold text-white text-center leading-snug mb-3 whitespace-pre-line">
+        &ldquo;{quote}&rdquo;
+      </p>
+
+      {/* Source */}
+      <p className="text-xs text-center italic mb-3" style={{ color: 'rgba(255,255,255,0.55)' }}>
+        &mdash; {source}
+      </p>
+
+      {/* Subtitle */}
+      <p className="text-xs text-center font-light leading-relaxed whitespace-pre-line mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
+        {subtitle}
+      </p>
 
       {/* Score bar with mood label inside */}
       <div
-        className="rounded-2xl px-6 py-4"
-        style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
+        className="rounded-2xl px-5 py-4"
+        style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
       >
-        <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
           {moodName}
         </p>
         <div className="flex justify-center gap-8">
@@ -59,10 +60,10 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
               className={`text-center${onMetricClick ? ' cursor-pointer' : ''}`}
               onClick={onMetricClick ? () => onMetricClick(s.key) : undefined}
             >
-              <div className="text-2xl font-bold text-white" style={{ lineHeight: 1 }}>
+              <div className="text-xl font-bold text-white" style={{ lineHeight: 1 }}>
                 {values[s.prop]}
               </div>
-              <div className="text-[10px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 {s.label}
               </div>
             </div>
@@ -70,10 +71,10 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         </div>
       </div>
 
-      {/* Branding — outside score bar */}
+      {/* Branding */}
       <div className="flex items-center justify-center gap-1.5 mt-3">
         <PersistLogo size={12} variant="light" />
-        <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.3)' }}>PERSIST</span>
+        <span className="text-[9px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>PERSIST</span>
       </div>
     </div>
   )
