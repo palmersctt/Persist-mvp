@@ -18,22 +18,22 @@ export default function LandingPage() {
   const cards = [
     {
       quote: "I'm kind of a big deal.",
-      source: 'Anchorman',
-      subtitle: '2 meetings, both optional.\nThe calendar bows to you.',
+      source: 'Anchorman — Ron Burgundy',
+      subtitle: 'The kind of day where you actually get to think.',
       focus: 92, strain: 12, balance: 88,
       mood: 'flow' as Mood,
     },
     {
       quote: 'Houston, we have a problem.',
-      source: 'Apollo 13',
-      subtitle: '7 meetings. Zero breaks.\nGodspeed, astronaut.',
+      source: 'Apollo 13 — Jim Lovell',
+      subtitle: "Your calendar wrote checks your brain can't cash.",
       focus: 42, strain: 35, balance: 72,
       mood: 'coasting' as Mood,
     },
     {
       quote: "I'll be back.",
-      source: 'Terminator',
-      subtitle: '4 meetings before lunch.\nAfternoon is yours. No mercy.',
+      source: 'Terminator — The Terminator',
+      subtitle: "Not your best day on paper, but you've handled worse.",
       focus: 78, strain: 40, balance: 70,
       mood: 'locked-in' as Mood,
     },
