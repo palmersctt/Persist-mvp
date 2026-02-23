@@ -328,7 +328,7 @@ export default function WorkHealthDashboard() {
       ctx.font = `500 16px ${fontStack}`;
       ctx.fillStyle = '#555555';
       ctx.letterSpacing = '6px';
-      ctx.fillText('PERSIST', W / 2, y + scoresH + gapToBrand);
+      ctx.fillText('PERSISTWORK.COM', W / 2, y + scoresH + gapToBrand);
       ctx.letterSpacing = '0px';
 
       // --- Share / Download ---
@@ -340,7 +340,7 @@ export default function WorkHealthDashboard() {
       // Try native share with image (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file] });
+          await navigator.share({ files: [file], url: 'https://persistwork.com' });
           setShareState('idle');
           return;
         } catch (err: unknown) {
