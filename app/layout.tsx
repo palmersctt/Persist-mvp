@@ -28,6 +28,9 @@ export const metadata: Metadata = {
     title: "persistwork.com",
     description: "Comic relief for your workday",
   },
+  icons: {
+    icon: "/favicon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

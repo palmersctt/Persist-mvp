@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
+import PersistLogo from './PersistLogo'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -70,8 +71,9 @@ export default function LandingPage() {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div className="font-bold text-2xl text-gray-900 tracking-tight">
-              PERSIST
+            <div className="flex items-center gap-2">
+              <PersistLogo size={28} variant="dark" />
+              <span className="font-semibold text-xl text-gray-900" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
             </div>
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -224,7 +226,10 @@ export default function LandingPage() {
                           <span className="text-xs uppercase tracking-wider opacity-70">Balance</span>
                         </span>
                       </div>
-                      <p className="text-xs text-center mt-5 tracking-widest uppercase text-gray-600">persistwork.com</p>
+                      <div className="flex items-center justify-center gap-1.5 mt-5">
+                        <PersistLogo size={14} variant="light" />
+                        <span className="text-xs tracking-widest uppercase text-gray-600">persistwork.com</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -407,7 +412,10 @@ export default function LandingPage() {
       <footer className="py-12 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center">
-            <div className="font-bold text-xl text-gray-900 mb-4">PERSIST</div>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <PersistLogo size={22} variant="dark" />
+              <span className="font-semibold text-lg text-gray-900" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+            </div>
             <p className="text-gray-600 text-sm mb-6">
               Comic relief for your workday
             </p>

@@ -31,8 +31,11 @@ export default function AuthError() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2 text-white tracking-wide">PERSIST</h1>
+        <div className="mb-8 flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-2">
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#ffffff"/><path d="M38 30 L62 50 L38 70" stroke="#1a1a1a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+            <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+          </div>
           <p className="text-gray-500 text-sm">Something went wrong</p>
         </div>
 

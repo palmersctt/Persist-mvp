@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
 import ComicReliefSaying from './ComicReliefSaying'
 import ShareCard from './ShareCard'
+import PersistLogo from './PersistLogo'
 
 interface SecondaryMetric {
   label: string;
@@ -324,11 +325,38 @@ export default function WorkHealthDashboard() {
         ctx.fill();
       }
 
-      // --- Branding ---
+      // --- Branding (logo + text) ---
+      const brandY = y + scoresH + gapToBrand;
+      const logoR = 12; // logo circle radius
+      const logoGap = 6;
       ctx.font = `500 16px ${fontStack}`;
-      ctx.fillStyle = '#555555';
       ctx.letterSpacing = '6px';
-      ctx.fillText('PERSISTWORK.COM', W / 2, y + scoresH + gapToBrand);
+      const brandText = 'PERSISTWORK.COM';
+      const brandW = ctx.measureText(brandText).width;
+      const totalBrandW = logoR * 2 + logoGap + brandW;
+      const brandStartX = (W - totalBrandW) / 2;
+
+      // Draw logo circle
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(brandStartX + logoR, brandY, logoR, 0, Math.PI * 2);
+      ctx.fill();
+      // Draw chevron inside
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 1.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(brandStartX + logoR - 3, brandY - 5);
+      ctx.lineTo(brandStartX + logoR + 4, brandY);
+      ctx.lineTo(brandStartX + logoR - 3, brandY + 5);
+      ctx.stroke();
+
+      // Draw text
+      ctx.fillStyle = '#555555';
+      ctx.textAlign = 'left';
+      ctx.fillText(brandText, brandStartX + logoR * 2 + logoGap, brandY);
+      ctx.textAlign = 'center';
       ctx.letterSpacing = '0px';
 
       // --- Share / Download ---
@@ -371,8 +399,11 @@ export default function WorkHealthDashboard() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-white tracking-wide mb-3">PERSIST</div>
+        <div className="text-center flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-3">
+            <PersistLogo size={28} variant="light" />
+            <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+          </div>
           <div className="text-gray-500 text-sm">Loading...</div>
         </div>
       </div>
@@ -384,8 +415,11 @@ export default function WorkHealthDashboard() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center px-4">
           <div className="max-w-md w-full">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold mb-2 text-white tracking-wide">PERSIST</h1>
+            <div className="text-center mb-8 flex flex-col items-center">
+              <div className="flex items-center gap-2 mb-2">
+                <PersistLogo size={28} variant="light" />
+                <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+              </div>
               <p className="text-gray-500 text-sm">Comic relief for your workday</p>
             </div>
 
@@ -440,8 +474,11 @@ export default function WorkHealthDashboard() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-2 text-white tracking-wide">PERSIST</h1>
+          <div className="mb-8 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-2">
+              <PersistLogo size={28} variant="light" />
+              <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+            </div>
             <p className="text-gray-500 text-sm">Comic relief for your workday</p>
           </div>
 
@@ -470,9 +507,10 @@ export default function WorkHealthDashboard() {
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
         <header className="px-6 py-6 sticky top-0 z-40 bg-black/60 backdrop-blur-sm">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 className="text-lg font-medium tracking-wide" style={{ color: 'var(--text-primary)' }}>
-              PERSIST
-            </h1>
+            <div className="flex items-center gap-2">
+              <PersistLogo size={24} variant="light" />
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST</span>
+            </div>
             <button
               onClick={() => signOut()}
               className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
@@ -552,9 +590,10 @@ export default function WorkHealthDashboard() {
       {/* Clean Header */}
       <header className="px-6 py-6 sticky top-0 z-40 bg-black/60 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <h1 className="text-lg font-medium tracking-wide" style={{ color: 'var(--text-primary)' }}>
-            PERSIST
-          </h1>
+          <div className="flex items-center gap-2">
+            <PersistLogo size={24} variant="light" />
+            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST</span>
+          </div>
           <div className="flex items-center space-x-4">
             <button
               onClick={refresh}
