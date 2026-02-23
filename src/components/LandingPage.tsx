@@ -17,6 +17,13 @@ export default function LandingPage() {
 
   const cards = [
     {
+      quote: 'I volunteer as tribute.',
+      source: 'The Hunger Games',
+      subtitle: '1 meeting. 6 hours of deep work.\nThe calendar gods smile upon you.',
+      focus: 91, strain: 18, balance: 85,
+      mood: 'flow' as Mood,
+    },
+    {
       quote: "I feel the need...\nthe need for speed.",
       source: "Top Gun",
       subtitle: '2 meetings. 4 hours of focus time.\nToday\u2019s your day to ship something.',
@@ -29,13 +36,6 @@ export default function LandingPage() {
       subtitle: '5 meetings, 1 back-to-back stretch.\nYou\u2019ll survive. Probably.',
       focus: 55, strain: 38, balance: 78,
       mood: 'coasting' as Mood,
-    },
-    {
-      quote: 'I volunteer as tribute.',
-      source: 'The Hunger Games',
-      subtitle: '1 meeting. 6 hours of deep work.\nThe calendar gods smile upon you.',
-      focus: 91, strain: 18, balance: 85,
-      mood: 'flow' as Mood,
     },
   ]
 
