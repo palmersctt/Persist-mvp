@@ -6,6 +6,7 @@ import { useWorkHealth } from '../hooks/useWorkHealth'
 import ComicReliefSaying from './ComicReliefSaying'
 import ShareCard from './ShareCard'
 import PersistLogo from './PersistLogo'
+import { detectMood, MOODS } from '../lib/mood'
 
 interface SecondaryMetric {
   label: string;
@@ -180,28 +181,24 @@ export default function WorkHealthDashboard() {
     const perf = workHealth?.adaptivePerformanceIndex || 0;
     const resil = workHealth?.cognitiveResilience || 0;
     const sust = workHealth?.workRhythmRecovery || 0;
+    const mood = detectMood(perf, resil, sust);
+    const moodConfig = MOODS[mood];
 
     setShareState('generating');
 
     try {
-      const W = 1080, H = 1080;
+      const W = 1080, H = 1920;
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d')!;
 
-      // --- Background gradient ---
+      // --- Mood gradient background ---
       const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, '#0a0a0a');
-      bg.addColorStop(0.5, '#131313');
-      bg.addColorStop(1, '#0a0a0a');
+      bg.addColorStop(0, moodConfig.gradient[0]);
+      bg.addColorStop(1, moodConfig.gradient[1]);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
-
-      // Subtle border
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(40, 40, W - 80, H - 80);
 
       // --- Text helpers ---
       const fontStack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -227,133 +224,126 @@ export default function WorkHealthDashboard() {
       const PAD = 80;
       const contentWidth = W - PAD * 2;
 
-      // --- Measure content height first to center vertically ---
-      const quoteFont = `300 52px ${fontStack}`;
-      const quoteText = `\u201C${quote}\u201D`;
-      const quoteLines = wrapText(quoteText, contentWidth, quoteFont);
-      const quoteLineHeight = 70;
-      const quoteH = quoteLines.length * quoteLineHeight;
-
-      const sourceH = 28;
-      const gapAfterQuote = 28;
-      const gapAfterSource = 12;
-
-      const subFont = `300 26px ${fontStack}`;
-      const subLines = wrapText(subtitle, contentWidth - 40, subFont);
-      const subLineHeight = 38;
-      const subH = subLines.length * subLineHeight;
-
-      const gapToDivider = 48;
-      const dividerH = 3;
-      const gapToScores = 56;
-      const scoresH = 130; // number + label + bar
-      const gapToBrand = 48;
-      const brandH = 18;
-
-      const totalH = quoteH + gapAfterQuote + sourceH + gapAfterSource + subH + gapToDivider + dividerH + gapToScores + scoresH + gapToBrand + brandH;
-      let y = Math.max(80, (H - totalH) / 2);
-
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
-      // --- Quote ---
+      // --- Mood label at top ---
+      ctx.font = `600 22px ${fontStack}`;
+      ctx.letterSpacing = '6px';
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, 100);
+      ctx.letterSpacing = '0px';
+
+      // --- Quote (centered in upper area) ---
+      const quoteFont = `700 64px ${fontStack}`;
+      const quoteText = `\u201C${quote}\u201D`;
+      const quoteLines = wrapText(quoteText, contentWidth, quoteFont);
+      const quoteLineHeight = 82;
+      const quoteH = quoteLines.length * quoteLineHeight;
+
+      const sourceH = 34;
+      const gapAfterQuote = 36;
+      const gapAfterSource = 20;
+
+      const subFont = `300 28px ${fontStack}`;
+      const subLines = wrapText(subtitle, contentWidth - 40, subFont);
+      const subLineHeight = 40;
+      const subH = subLines.length * subLineHeight;
+
+      // Center the text block vertically in the top ~70% of the card
+      const textBlockH = quoteH + gapAfterQuote + sourceH + gapAfterSource + subH;
+      const topZone = H * 0.68;
+      let y = Math.max(180, (topZone - textBlockH) / 2 + 80);
+
+      // Quote
       ctx.font = quoteFont;
-      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
       for (const line of quoteLines) {
         ctx.fillText(line, W / 2, y);
         y += quoteLineHeight;
       }
 
-      // --- Source ---
+      // Source
       y += gapAfterQuote;
-      ctx.font = `italic 26px ${fontStack}`;
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = `italic 30px ${fontStack}`;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.fillText(`\u2014 ${source}`, W / 2, y);
       y += sourceH + gapAfterSource;
 
-      // --- Subtitle ---
+      // Subtitle
       ctx.font = subFont;
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
       for (const line of subLines) {
         ctx.fillText(line, W / 2, y);
         y += subLineHeight;
       }
 
-      // --- Green divider ---
-      y += gapToDivider;
-      ctx.fillStyle = 'rgba(37,211,102,0.6)';
-      ctx.fillRect(W / 2 - 50, y, 100, dividerH);
-      y += dividerH + gapToScores;
+      // --- Score bar (bottom area) ---
+      const barPadX = 60;
+      const barY = H - 340;
+      const barW = W - barPadX * 2;
+      const barH = 200;
+      const barR = 40;
 
-      // --- Scores ---
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.roundRect(barPadX, barY, barW, barH, barR);
+      ctx.fill();
+
+      // Scores inside bar
       const scores = [
-        { value: perf, label: 'FOCUS', color: '#10b981' },
-        { value: resil, label: 'STRAIN', color: '#3b82f6' },
-        { value: sust, label: 'BALANCE', color: '#6b7280' },
+        { value: perf, label: 'FOCUS' },
+        { value: resil, label: 'STRAIN' },
+        { value: sust, label: 'BALANCE' },
       ];
-      const colWidth = contentWidth / 3;
+      const colWidth = barW / 3;
 
       for (let i = 0; i < scores.length; i++) {
-        const cx = PAD + colWidth * i + colWidth / 2;
+        const cx = barPadX + colWidth * i + colWidth / 2;
         const s = scores[i];
 
         // Number
-        ctx.font = `600 80px ${fontStack}`;
-        ctx.fillStyle = s.color;
-        ctx.fillText(`${s.value}`, cx, y);
+        ctx.font = `700 72px ${fontStack}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fillText(`${s.value}`, cx, barY + 40);
 
         // Label
         ctx.font = `500 18px ${fontStack}`;
-        ctx.letterSpacing = '4px';
-        ctx.fillText(s.label, cx, y + 90);
+        ctx.letterSpacing = '3px';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillText(s.label, cx, barY + 130);
         ctx.letterSpacing = '0px';
-
-        // Progress bar track
-        const barW = 130, barH = 8;
-        const barX = cx - barW / 2;
-        const barY = y + 118;
-        ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        ctx.beginPath();
-        ctx.roundRect(barX, barY, barW, barH, 4);
-        ctx.fill();
-
-        // Progress bar fill
-        const fillW = (s.value / 100) * barW;
-        ctx.fillStyle = s.color;
-        ctx.beginPath();
-        ctx.roundRect(barX, barY, fillW, barH, 4);
-        ctx.fill();
       }
 
-      // --- Branding (logo + text) ---
-      const brandY = y + scoresH + gapToBrand;
-      const logoR = 12; // logo circle radius
-      const logoGap = 6;
-      ctx.font = `500 16px ${fontStack}`;
+      // --- Branding (logo + text at very bottom) ---
+      const brandY = H - 100;
+      const logoR = 14;
+      const logoGap = 8;
+      ctx.font = `500 18px ${fontStack}`;
       ctx.letterSpacing = '6px';
-      const brandText = 'PERSISTWORK.COM';
-      const brandW = ctx.measureText(brandText).width;
-      const totalBrandW = logoR * 2 + logoGap + brandW;
+      const brandText = 'PERSIST';
+      const brandW2 = ctx.measureText(brandText).width;
+      const totalBrandW = logoR * 2 + logoGap + brandW2;
       const brandStartX = (W - totalBrandW) / 2;
 
       // Draw logo circle
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
       ctx.beginPath();
       ctx.arc(brandStartX + logoR, brandY, logoR, 0, Math.PI * 2);
       ctx.fill();
-      // Draw chevron inside
-      ctx.strokeStyle = '#1a1a1a';
-      ctx.lineWidth = 1.2;
+      // Chevron inside
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = 1.5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.moveTo(brandStartX + logoR - 3, brandY - 5);
-      ctx.lineTo(brandStartX + logoR + 4, brandY);
-      ctx.lineTo(brandStartX + logoR - 3, brandY + 5);
+      ctx.moveTo(brandStartX + logoR - 4, brandY - 6);
+      ctx.lineTo(brandStartX + logoR + 5, brandY);
+      ctx.lineTo(brandStartX + logoR - 4, brandY + 6);
       ctx.stroke();
 
-      // Draw text
-      ctx.fillStyle = '#555555';
+      // Brand text
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
       ctx.textAlign = 'left';
       ctx.fillText(brandText, brandStartX + logoR * 2 + logoGap, brandY);
       ctx.textAlign = 'center';
@@ -660,9 +650,10 @@ export default function WorkHealthDashboard() {
                   quote={workHealth.ai.heroMessage.quote}
                   source={workHealth.ai.heroMessage.source}
                   subtitle={workHealth.ai.heroMessage.subtitle}
-                  performance={workHealth.adaptivePerformanceIndex}
-                  resilience={workHealth.cognitiveResilience}
-                  sustainability={workHealth.workRhythmRecovery}
+                  focus={workHealth.adaptivePerformanceIndex}
+                  strain={workHealth.cognitiveResilience}
+                  balance={workHealth.workRhythmRecovery}
+                  mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
                   onMetricClick={(metric) => setActiveTab(metric)}
                 />
                 <div className="mt-4">

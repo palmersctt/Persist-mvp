@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
 import PersistLogo from './PersistLogo'
+import ShareCard from './ShareCard'
+import { detectMood, type Mood } from '../lib/mood'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -15,28 +17,25 @@ export default function LandingPage() {
 
   const cards = [
     {
-      quote: 'I volunteer as tribute.',
-      source: 'The Hunger Games',
-      subtitle: '8 meetings. Zero breaks.\nMay the odds be ever in your favor.',
-      label: 'Survival Mode',
-      labelColor: '#3b82f6',
-      focus: 34, strain: 88, balance: 21,
-    },
-    {
       quote: "I feel the need...\nthe need for speed.",
       source: "Top Gun",
       subtitle: '2 meetings. 4 hours of focus time.\nToday\u2019s your day to ship something.',
-      label: 'Cruise Control',
-      labelColor: '#10b981',
-      focus: 87, strain: 22, balance: 91,
+      focus: 82, strain: 35, balance: 74,
+      mood: 'locked-in' as Mood,
     },
     {
       quote: 'Just keep swimming.',
       source: 'Finding Nemo',
       subtitle: '5 meetings, 1 back-to-back stretch.\nYou\u2019ll survive. Probably.',
-      label: 'Holding Steady',
-      labelColor: '#6b7280',
-      focus: 58, strain: 52, balance: 61,
+      focus: 55, strain: 38, balance: 78,
+      mood: 'coasting' as Mood,
+    },
+    {
+      quote: 'I volunteer as tribute.',
+      source: 'The Hunger Games',
+      subtitle: '1 meeting. 6 hours of deep work.\nThe calendar gods smile upon you.',
+      focus: 91, strain: 18, balance: 85,
+      mood: 'flow' as Mood,
     },
   ]
 
@@ -99,6 +98,7 @@ export default function LandingPage() {
 
             {/* Desktop Login Button */}
             <button
+              type="button"
               onClick={handleGetStarted}
               className="hidden md:block ml-8 px-4 py-2 border border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
             >
@@ -127,7 +127,7 @@ export default function LandingPage() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-white">
+        <div className="md:hidden fixed inset-0 z-40 bg-white pt-20">
           <div className="px-6 py-6 space-y-4">
             <button
               onClick={() => scrollToSection('features')}
@@ -149,6 +149,7 @@ export default function LandingPage() {
             </button>
             <div className="pt-4 border-t border-gray-200">
               <button
+                type="button"
                 onClick={handleGetStarted}
                 className="block w-full px-4 py-3 border border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-center"
               >
@@ -170,10 +171,9 @@ export default function LandingPage() {
           </p>
 
           {/* 3-Card Carousel — pure state, no scroll container */}
-          <div className="max-w-sm mx-auto mb-6 px-4">
+          <div className="max-w-xs mx-auto mb-6 px-4">
             {/* Card display */}
             <div
-              style={{ height: 420 }}
               onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
               onTouchEnd={(e) => {
                 if (touchStartX.current === null) return
@@ -185,53 +185,17 @@ export default function LandingPage() {
               {cards.map((card, i) => (
                 <div
                   key={i}
-                  style={{ display: i === activeCard ? 'flex' : 'none', height: '100%' }}
+                  style={{ display: i === activeCard ? 'block' : 'none' }}
                 >
-                  <div
-                    className="w-full rounded-2xl overflow-hidden flex flex-col"
-                    style={{
-                      background: 'linear-gradient(180deg, #0a0a0a 0%, #141414 50%, #0a0a0a 100%)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      padding: '44px 28px 36px',
-                      height: '100%',
-                    }}
-                  >
-                    <div className="flex-1 flex flex-col justify-center">
-                      <p className="text-2xl md:text-3xl font-light text-white text-center leading-snug mb-5 whitespace-pre-line" style={{ letterSpacing: '-0.02em' }}>
-                        &ldquo;{card.quote}&rdquo;
-                      </p>
-                      <p className="text-sm text-center mb-5">
-                        <span className="text-gray-600 italic">&mdash; </span>
-                        <span className="text-gray-300 font-medium">{card.source}</span>
-                      </p>
-                      <p className="text-sm text-gray-400 text-center font-light leading-relaxed whitespace-pre-line">
-                        {card.subtitle}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-center uppercase tracking-[0.25em] font-semibold mb-5" style={{ color: card.labelColor }}>
-                        {card.label}
-                      </p>
-                      <div className="flex justify-center items-center gap-8 text-sm">
-                        <span style={{ color: '#10b981' }}>
-                          <span className="text-xl font-semibold">{card.focus}</span>{' '}
-                          <span className="text-xs uppercase tracking-wider opacity-70">Focus</span>
-                        </span>
-                        <span style={{ color: '#3b82f6' }}>
-                          <span className="text-xl font-semibold">{card.strain}</span>{' '}
-                          <span className="text-xs uppercase tracking-wider opacity-70">Strain</span>
-                        </span>
-                        <span style={{ color: '#6b7280' }}>
-                          <span className="text-xl font-semibold">{card.balance}</span>{' '}
-                          <span className="text-xs uppercase tracking-wider opacity-70">Balance</span>
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-center gap-1.5 mt-5">
-                        <PersistLogo size={14} variant="light" />
-                        <span className="text-xs tracking-widest uppercase text-gray-600">persistwork.com</span>
-                      </div>
-                    </div>
-                  </div>
+                  <ShareCard
+                    quote={card.quote}
+                    source={card.source}
+                    subtitle={card.subtitle}
+                    focus={card.focus}
+                    strain={card.strain}
+                    balance={card.balance}
+                    mood={card.mood}
+                  />
                 </div>
               ))}
             </div>
@@ -280,6 +244,7 @@ export default function LandingPage() {
           </p>
 
           <button
+            type="button"
             onClick={handleGetStarted}
             className="inline-flex items-center px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
           >
@@ -400,6 +365,7 @@ export default function LandingPage() {
             Connect your Google Calendar and get your first laugh in seconds.
           </p>
           <button
+            type="button"
             onClick={handleGetStarted}
             className="px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
           >

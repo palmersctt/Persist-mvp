@@ -117,7 +117,7 @@ body {
   }
   
   /* Enhanced touch targets */
-  button, [role="button"], .cursor-pointer {
+  button, [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }

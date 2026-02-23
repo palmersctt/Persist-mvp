@@ -1,74 +1,80 @@
+import { type Mood, MOODS } from '../lib/mood'
+import PersistLogo from './PersistLogo'
+
 interface ShareCardProps {
-  quote: string;
-  source: string;
-  subtitle: string;
-  performance: number;
-  resilience: number;
-  sustainability: number;
-  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void;
+  quote: string
+  source: string
+  subtitle: string
+  focus: number
+  strain: number
+  balance: number
+  mood: Mood
+  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
 }
 
 const scores = [
-  { key: 'performance', label: 'FOCUS', color: '#10b981' },
-  { key: 'resilience', label: 'STRAIN', color: '#3b82f6' },
-  { key: 'sustainability', label: 'BALANCE', color: '#6b7280' },
-] as const;
+  { key: 'performance' as const, label: 'FOCUS', prop: 'focus' as const },
+  { key: 'resilience' as const, label: 'STRAIN', prop: 'strain' as const },
+  { key: 'sustainability' as const, label: 'BALANCE', prop: 'balance' as const },
+]
 
-export default function ShareCard({ quote, source, subtitle, performance, resilience, sustainability, onMetricClick }: ShareCardProps) {
-  const values = { performance, resilience, sustainability };
+export default function ShareCard({ quote, source, subtitle, focus, strain, balance, mood, onMetricClick }: ShareCardProps) {
+  const values = { focus, strain, balance }
+  const { gradient, name: moodName } = MOODS[mood]
 
   return (
     <div
-      className="w-full rounded-2xl overflow-hidden"
+      className="w-full rounded-2xl overflow-hidden flex flex-col"
       style={{
-        background: 'linear-gradient(180deg, rgba(10,10,10,0.9) 0%, rgba(17,17,17,0.9) 50%, rgba(10,10,10,0.9) 100%)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        padding: '40px 28px 36px',
+        aspectRatio: '9 / 16',
+        background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
+        padding: '48px 28px 32px',
       }}
     >
-      {/* Quote */}
-      <p className="text-2xl md:text-3xl lg:text-4xl font-light text-center gradient-text leading-tight" style={{ opacity: 0.85 }}>
-        &ldquo;{quote}&rdquo;
+      {/* Mood label */}
+      <p className="text-xs text-center uppercase tracking-[0.25em] font-semibold mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
+        {moodName}
       </p>
 
-      {/* Source */}
-      <p className="text-sm mt-3 mb-4 text-center font-normal italic" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-        &mdash; {source}
-      </p>
-
-      {/* Subtitle */}
-      <p className="text-sm md:text-base text-center font-light leading-relaxed" style={{ color: 'var(--text-secondary)', opacity: 0.7 }}>
-        {subtitle}
-      </p>
-
-      {/* Divider */}
-      <div className="w-16 h-0.5 mx-auto mt-6 mb-7" style={{ backgroundColor: '#25d366', opacity: 0.6 }} />
-
-      {/* Score strip */}
-      <div className="flex justify-center gap-8 md:gap-12">
-        {scores.map((s) => (
-          <div
-            key={s.key}
-            className="text-center cursor-pointer transition-opacity duration-200 hover:opacity-80"
-            onClick={() => onMetricClick?.(s.key)}
-          >
-            <div className="text-3xl md:text-4xl font-semibold" style={{ color: s.color, lineHeight: 1 }}>
-              {values[s.key]}
-            </div>
-            <div className="text-xs sm:text-sm uppercase tracking-wider mt-2" style={{ color: s.color }}>
-              {s.label}
-            </div>
-            <div className="w-20 md:w-24 h-1 rounded-full mt-2.5 overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-              <div className="h-full rounded-full" style={{ width: `${values[s.key]}%`, backgroundColor: s.color }} />
-            </div>
-          </div>
-        ))}
+      {/* Quote area — centered vertically */}
+      <div className="flex-1 flex flex-col justify-center">
+        <p className="text-2xl md:text-3xl font-bold text-white text-center leading-snug mb-4 whitespace-pre-line">
+          &ldquo;{quote}&rdquo;
+        </p>
+        <p className="text-sm text-center italic mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          &mdash; {source}
+        </p>
+        <p className="text-sm text-center font-light leading-relaxed whitespace-pre-line" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          {subtitle}
+        </p>
       </div>
 
-      {/* Branding */}
-      <p className="text-xs text-center mt-7 tracking-widest uppercase" style={{ color: '#666666' }}>
-        persist
-      </p>
+      {/* Score bar */}
+      <div
+        className="rounded-2xl px-6 py-5 mt-4"
+        style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
+      >
+        <div className="flex justify-center gap-8">
+          {scores.map((s) => (
+            <div
+              key={s.key}
+              className={`text-center${onMetricClick ? ' cursor-pointer' : ''}`}
+              onClick={onMetricClick ? () => onMetricClick(s.key) : undefined}
+            >
+              <div className="text-2xl font-bold text-white" style={{ lineHeight: 1 }}>
+                {values[s.prop]}
+              </div>
+              <div className="text-[10px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-center gap-1.5 mt-4">
+          <PersistLogo size={14} variant="light" />
+          <span className="text-[10px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.4)' }}>PERSIST</span>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
