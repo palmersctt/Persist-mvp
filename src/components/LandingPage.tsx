@@ -17,25 +17,25 @@ export default function LandingPage() {
 
   const cards = [
     {
-      quote: 'I volunteer as tribute.',
-      source: 'The Hunger Games',
-      subtitle: '1 meeting. 6 hours of deep work.\nThe calendar gods smile upon you.',
-      focus: 91, strain: 18, balance: 85,
+      quote: "I'm kind of a big deal.",
+      source: 'Anchorman',
+      subtitle: '2 meetings, both optional.\nThe calendar bows to you.',
+      focus: 88, strain: 20, balance: 82,
       mood: 'flow' as Mood,
     },
     {
-      quote: "I feel the need...\nthe need for speed.",
-      source: "Top Gun",
-      subtitle: '2 meetings. 4 hours of focus time.\nToday\u2019s your day to ship something.',
-      focus: 82, strain: 35, balance: 74,
-      mood: 'locked-in' as Mood,
+      quote: 'Houston, we have a problem.',
+      source: 'Apollo 13',
+      subtitle: '7 meetings. Zero breaks.\nGodspeed, astronaut.',
+      focus: 42, strain: 35, balance: 72,
+      mood: 'coasting' as Mood,
     },
     {
-      quote: 'Just keep swimming.',
-      source: 'Finding Nemo',
-      subtitle: '5 meetings, 1 back-to-back stretch.\nYou\u2019ll survive. Probably.',
-      focus: 55, strain: 38, balance: 78,
-      mood: 'coasting' as Mood,
+      quote: "I'll be back.",
+      source: 'Terminator',
+      subtitle: '4 meetings before lunch.\nAfternoon is yours. No mercy.',
+      focus: 78, strain: 40, balance: 70,
+      mood: 'locked-in' as Mood,
     },
   ]
 
