@@ -369,7 +369,14 @@ export default function WorkHealthDashboard() {
   }, [shareState, workHealth]);
 
   if (status === 'loading') {
-    return <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-white">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-white tracking-wide mb-3">PERSIST</div>
+          <div className="text-gray-500 text-sm">Loading...</div>
+        </div>
+      </div>
+    );
   }
 
   if (!session) {
@@ -378,49 +385,49 @@ export default function WorkHealthDashboard() {
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center px-4">
           <div className="max-w-md w-full">
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold mb-2 gradient-text">PERSIST</h1>
-              <p className="text-gray-400">Your Work Health Intelligence Platform</p>
+              <h1 className="text-2xl font-bold mb-2 text-white tracking-wide">PERSIST</h1>
+              <p className="text-gray-500 text-sm">Comic relief for your workday</p>
             </div>
-            
+
             <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700 glass-effect">
-              <h2 className="text-2xl font-bold mb-4 text-center">Work Health Intelligence</h2>
-              <p className="text-gray-300 text-sm mb-6 text-center">Analyze your work patterns to optimize cognitive performance and prevent burnout</p>
-              
-              <div className="space-y-6 mb-8">
+              <h2 className="text-xl font-semibold mb-3 text-center text-white">Here&apos;s what you get</h2>
+              <p className="text-gray-400 text-sm mb-6 text-center">Three scores from your calendar and a movie quote your day deserves</p>
+
+              <div className="space-y-5 mb-8">
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-sm font-bold">📊</span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(16,185,129,0.15)' }}>
+                    <span className="text-sm font-bold" style={{ color: '#10b981' }}>F</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Focus</h3>
-                    <p className="text-gray-400 text-sm">How much deep work time you actually have today — based on meeting load, focus blocks, and schedule flow</p>
+                    <h3 className="font-semibold mb-1 text-white">Focus</h3>
+                    <p className="text-gray-400 text-sm">How close you are to hiding in a conference room with your laptop</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-sm font-bold">🧠</span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(59,130,246,0.15)' }}>
+                    <span className="text-sm font-bold" style={{ color: '#3b82f6' }}>S</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Strain</h3>
-                    <p className="text-gray-400 text-sm">How mentally taxing your schedule is — context switches, back-to-back chains, and decision fatigue</p>
+                    <h3 className="font-semibold mb-1 text-white">Strain</h3>
+                    <p className="text-gray-400 text-sm">How close you are to faking a dentist appointment</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-sm font-bold">♻️</span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(107,114,128,0.15)' }}>
+                    <span className="text-sm font-bold" style={{ color: '#6b7280' }}>B</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Balance</h3>
-                    <p className="text-gray-400 text-sm">Whether your pace is sustainable — enough recovery breaks between demands to avoid burning out</p>
+                    <h3 className="font-semibold mb-1 text-white">Balance</h3>
+                    <p className="text-gray-400 text-sm">How long until your body sends you an out-of-office</p>
                   </div>
                 </div>
               </div>
-              
+
               <button
                 onClick={completeOnboarding}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-xl font-semibold transition-colors smooth-bounce"
+                className="w-full bg-white text-gray-900 py-4 px-6 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
               >
                 Get Started
               </button>
@@ -434,20 +441,19 @@ export default function WorkHealthDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2 gradient-text">PERSIST</h1>
-            <p className="text-gray-400">Your Work Health Intelligence Platform</p>
+            <h1 className="text-2xl font-bold mb-2 text-white tracking-wide">PERSIST</h1>
+            <p className="text-gray-500 text-sm">Comic relief for your workday</p>
           </div>
-          
+
           <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700 glass-effect">
-            <h2 className="text-xl font-bold mb-4">Start Your Work Health Analysis</h2>
-            <p className="text-gray-400 text-sm mb-6">Connect your calendar to receive intelligent insights about your cognitive performance capacity, resilience, and work sustainability patterns.</p>
-            
+            <h2 className="text-lg font-semibold mb-3 text-white">Connect your calendar</h2>
+            <p className="text-gray-400 text-sm mb-6">We read your schedule and find the movie quote your day deserves. Takes 10 seconds.</p>
+
             <button
               onClick={() => signIn('google')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2"
+              className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
             >
-              <span>🧠</span>
-              <span>Analyze Work Patterns</span>
+              <span>Sign in with Google</span>
             </button>
           </div>
         </div>

@@ -14,8 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Persist - Work Health Intelligence",
-  description: "Data-driven work health intelligence platform using calendar analysis",
+  title: "Persist - Comic Relief for Your Workday",
+  description: "Comic relief for your workday. Persist reads your calendar and finds the movie quote your day deserves.",
+  openGraph: {
+    title: "persistwork.com",
+    description: "Comic relief for your workday",
+    siteName: "Persist",
+    type: "website",
+    url: "https://persistwork.com",
+  },
+  twitter: {
+    card: "summary",
+    title: "persistwork.com",
+    description: "Comic relief for your workday",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

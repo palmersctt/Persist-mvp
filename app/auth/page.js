@@ -77,8 +77,8 @@ export default function AuthPage() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-wide mb-2">PERSIST</h1>
-          <p className="text-gray-400">Biometric-driven insights for professional excellence</p>
+          <h1 className="text-2xl font-bold tracking-wide mb-2">PERSIST</h1>
+          <p className="text-gray-500 text-sm">Comic relief for your workday</p>
         </div>
 
         {/* Auth Form */}
@@ -197,10 +197,10 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Demo Note */}
+        {/* Note */}
         <div className="mt-6 text-center">
           <p className="text-gray-500 text-xs">
-            Demo Mode: Your biometric insights await WHOOP integration
+            Free forever. Connect your Google Calendar to get started.
           </p>
         </div>
       </div>

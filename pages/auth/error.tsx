@@ -32,21 +32,18 @@ export default function AuthError() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 gradient-text">PERSIST</h1>
-          <p className="text-gray-400">Authentication Error</p>
+          <h1 className="text-2xl font-bold mb-2 text-white tracking-wide">PERSIST</h1>
+          <p className="text-gray-500 text-sm">Something went wrong</p>
         </div>
-        
+
         <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700">
           <div className="mb-6">
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">⚠️</span>
-            </div>
-            <h2 className="text-xl font-bold mb-4 text-red-400">Authentication Failed</h2>
-            <p className="text-gray-300 text-sm mb-6">
+            <h2 className="text-lg font-semibold mb-3 text-gray-200">Couldn&apos;t sign you in</h2>
+            <p className="text-gray-400 text-sm mb-6">
               {getErrorMessage(error)}
             </p>
           </div>
-          
+
           {error === 'Configuration' && (
             <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <p className="text-yellow-200 text-xs">
@@ -54,10 +51,10 @@ export default function AuthError() {
               </p>
             </div>
           )}
-          
+
           <button
             onClick={handleRetry}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-colors"
+            className="w-full bg-white text-gray-900 py-3 px-6 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
           >
             Try Again
           </button>
