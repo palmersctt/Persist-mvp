@@ -35,7 +35,7 @@ export default function LandingPage() {
       source: 'Terminator — The Terminator',
       subtitle: "Not your best day on paper, but you've handled worse.",
       focus: 78, strain: 40, balance: 70,
-      mood: 'locked-in' as Mood,
+      mood: 'autopilot' as Mood,
     },
   ]
 
