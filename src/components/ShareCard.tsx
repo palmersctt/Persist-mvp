@@ -28,7 +28,7 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       style={{
         aspectRatio: '9 / 16',
         background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-        padding: '48px 28px 32px',
+        padding: '28px 28px 32px',
       }}
     >
       {/* Quote area — centered vertically */}

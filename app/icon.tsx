@@ -18,15 +18,10 @@ export default function Icon() {
           borderRadius: 6,
         }}
       >
-        <div
-          style={{
-            width: 0,
-            height: 0,
-            borderTop: '6px solid transparent',
-            borderBottom: '6px solid transparent',
-            borderLeft: '10px solid #ffffff',
-          }}
-        />
+        <svg width="16" height="16" viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="50" r="48" fill="#ffffff" />
+          <path d="M38 30 L62 50 L38 70" stroke="#1a1a1a" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
       </div>
     ),
     { ...size }

@@ -20,7 +20,7 @@ export default function LandingPage() {
       quote: "I'm kind of a big deal.",
       source: 'Anchorman',
       subtitle: '2 meetings, both optional.\nThe calendar bows to you.',
-      focus: 88, strain: 20, balance: 82,
+      focus: 92, strain: 12, balance: 88,
       mood: 'flow' as Mood,
     },
     {
