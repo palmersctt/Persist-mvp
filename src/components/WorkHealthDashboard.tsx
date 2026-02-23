@@ -227,13 +227,6 @@ export default function WorkHealthDashboard() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
-      // --- Mood label at top ---
-      ctx.font = `600 22px ${fontStack}`;
-      ctx.letterSpacing = '6px';
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, 100);
-      ctx.letterSpacing = '0px';
-
       // --- Quote (centered in upper area) ---
       const quoteFont = `700 64px ${fontStack}`;
       const quoteText = `\u201C${quote}\u201D`;
@@ -277,6 +270,13 @@ export default function WorkHealthDashboard() {
         ctx.fillText(line, W / 2, y);
         y += subLineHeight;
       }
+
+      // --- Mood label above score bar ---
+      ctx.font = `600 22px ${fontStack}`;
+      ctx.letterSpacing = '6px';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, H - 380);
+      ctx.letterSpacing = '0px';
 
       // --- Score bar (bottom area) ---
       const barPadX = 60;
@@ -645,7 +645,7 @@ export default function WorkHealthDashboard() {
           <>
             {/* Share Card as Hero */}
             {!isLoading && !isAILoading && workHealth?.ai?.heroMessage && typeof workHealth.ai.heroMessage === 'object' ? (
-              <section>
+              <section className="max-w-xs mx-auto">
                 <ShareCard
                   quote={workHealth.ai.heroMessage.quote}
                   source={workHealth.ai.heroMessage.source}

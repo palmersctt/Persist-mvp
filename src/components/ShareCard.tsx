@@ -31,11 +31,6 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         padding: '48px 28px 32px',
       }}
     >
-      {/* Mood label */}
-      <p className="text-xs text-center uppercase tracking-[0.25em] font-semibold mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
-        {moodName}
-      </p>
-
       {/* Quote area — centered vertically */}
       <div className="flex-1 flex flex-col justify-center">
         <p className="text-2xl md:text-3xl font-bold text-white text-center leading-snug mb-4 whitespace-pre-line">
@@ -49,9 +44,14 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         </p>
       </div>
 
+      {/* Mood label */}
+      <p className="text-xs text-center uppercase tracking-[0.25em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        {moodName}
+      </p>
+
       {/* Score bar */}
       <div
-        className="rounded-2xl px-6 py-5 mt-4"
+        className="rounded-2xl px-6 py-5"
         style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
       >
         <div className="flex justify-center gap-8">
