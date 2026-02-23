@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
@@ -9,6 +9,39 @@ export default function LandingPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeCard, setActiveCard] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+
+  const cards = [
+    {
+      quote: 'I volunteer as tribute.',
+      source: 'The Hunger Games',
+      subtitle: '8 meetings. Zero breaks.\nMay the odds be ever in your favor.',
+      label: 'Survival Mode',
+      labelColor: '#3b82f6',
+      focus: 34, strain: 88, balance: 21,
+    },
+    {
+      quote: "I feel the need...\nthe need for speed.",
+      source: "Top Gun",
+      subtitle: '2 meetings. 4 hours of focus time.\nToday\u2019s your day to ship something.',
+      label: 'Cruise Control',
+      labelColor: '#10b981',
+      focus: 87, strain: 22, balance: 91,
+    },
+    {
+      quote: 'Just keep swimming.',
+      source: 'Finding Nemo',
+      subtitle: '5 meetings, 1 back-to-back stretch.\nYou\u2019ll survive. Probably.',
+      label: 'Holding Steady',
+      labelColor: '#6b7280',
+      focus: 58, strain: 52, balance: 61,
+    },
+  ]
+
+  function goTo(index: number) {
+    setActiveCard(Math.max(0, Math.min(cards.length - 1, index)))
+  }
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -49,7 +82,7 @@ export default function LandingPage() {
                 What You Get
               </button>
               <button
-                onClick={() => scrollToSection('intelligence')}
+                onClick={() => scrollToSection('how-it-works')}
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
                 How It Works
@@ -61,7 +94,7 @@ export default function LandingPage() {
                 Start Free
               </button>
             </div>
-            
+
             {/* Desktop Login Button */}
             <button
               onClick={handleGetStarted}
@@ -69,7 +102,7 @@ export default function LandingPage() {
             >
               Login
             </button>
-            
+
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -89,7 +122,7 @@ export default function LandingPage() {
           </div>
         </div>
       </nav>
-      
+
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-white">
@@ -101,7 +134,7 @@ export default function LandingPage() {
               What You Get
             </button>
             <button
-              onClick={() => scrollToSection('intelligence')}
+              onClick={() => scrollToSection('how-it-works')}
               className="block w-full text-left px-4 py-3 text-gray-900 font-medium hover:bg-gray-50 rounded-lg transition-colors"
             >
               How It Works
@@ -125,14 +158,119 @@ export default function LandingPage() {
       )}
 
       {/* Hero Section */}
-      <section id="hero" className="py-20 lg:py-32">
+      <section id="hero" className="py-16 lg:py-24">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h1 className="text-5xl lg:text-7xl font-thin text-gray-900 mb-8 leading-tight">
             Your workday has a sense of humor
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
-            Persist finds the movie or TV moment that captures your day — so you can laugh at it and send it to someone who gets it.
+            Some days, all you can do is laugh. Persist reads your calendar and finds the movie moment that says it all.
           </p>
+
+          {/* 3-Card Carousel — pure state, no scroll container */}
+          <div className="max-w-sm mx-auto mb-6 px-4">
+            {/* Card display */}
+            <div
+              style={{ height: 420 }}
+              onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
+              onTouchEnd={(e) => {
+                if (touchStartX.current === null) return
+                const diff = touchStartX.current - e.changedTouches[0].clientX
+                if (Math.abs(diff) > 50) goTo(activeCard + (diff > 0 ? 1 : -1))
+                touchStartX.current = null
+              }}
+            >
+              {cards.map((card, i) => (
+                <div
+                  key={i}
+                  style={{ display: i === activeCard ? 'flex' : 'none', height: '100%' }}
+                >
+                  <div
+                    className="w-full rounded-2xl overflow-hidden flex flex-col"
+                    style={{
+                      background: 'linear-gradient(180deg, #0a0a0a 0%, #141414 50%, #0a0a0a 100%)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      padding: '44px 28px 36px',
+                      height: '100%',
+                    }}
+                  >
+                    <div className="flex-1 flex flex-col justify-center">
+                      <p className="text-2xl md:text-3xl font-light text-white text-center leading-snug mb-5 whitespace-pre-line" style={{ letterSpacing: '-0.02em' }}>
+                        &ldquo;{card.quote}&rdquo;
+                      </p>
+                      <p className="text-sm text-center mb-5">
+                        <span className="text-gray-600 italic">&mdash; </span>
+                        <span className="text-gray-300 font-medium">{card.source}</span>
+                      </p>
+                      <p className="text-sm text-gray-400 text-center font-light leading-relaxed whitespace-pre-line">
+                        {card.subtitle}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-center uppercase tracking-[0.25em] font-semibold mb-5" style={{ color: card.labelColor }}>
+                        {card.label}
+                      </p>
+                      <div className="flex justify-center items-center gap-8 text-sm">
+                        <span style={{ color: '#10b981' }}>
+                          <span className="text-xl font-semibold">{card.focus}</span>{' '}
+                          <span className="text-xs uppercase tracking-wider opacity-70">Focus</span>
+                        </span>
+                        <span style={{ color: '#3b82f6' }}>
+                          <span className="text-xl font-semibold">{card.strain}</span>{' '}
+                          <span className="text-xs uppercase tracking-wider opacity-70">Strain</span>
+                        </span>
+                        <span style={{ color: '#6b7280' }}>
+                          <span className="text-xl font-semibold">{card.balance}</span>{' '}
+                          <span className="text-xs uppercase tracking-wider opacity-70">Balance</span>
+                        </span>
+                      </div>
+                      <p className="text-xs text-center mt-5 tracking-widest uppercase text-gray-600">persistwork.com</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Navigation: arrows + dots */}
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <button
+                type="button"
+                onClick={() => goTo(activeCard - 1)}
+                disabled={activeCard === 0}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30"
+              >
+                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              {cards.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => goTo(i)}
+                  className="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                  style={{
+                    backgroundColor: i === activeCard ? '#374151' : '#d1d5db',
+                    transform: i === activeCard ? 'scale(1.3)' : 'scale(1)',
+                  }}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={() => goTo(activeCard + 1)}
+                disabled={activeCard === cards.length - 1}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30"
+              >
+                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p className="text-sm text-gray-400 mb-10">
+            Every day is different. So is your card.
+          </p>
+
           <button
             onClick={handleGetStarted}
             className="inline-flex items-center px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
@@ -162,7 +300,7 @@ export default function LandingPage() {
                   Focus
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How much room you actually have to think today
+                  How close you are to hiding in a conference room with your laptop
                 </p>
               </div>
             </div>
@@ -174,7 +312,7 @@ export default function LandingPage() {
                   Strain
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  How packed and chaotic things are looking
+                  How close you are to faking a dentist appointment
                 </p>
               </div>
             </div>
@@ -186,7 +324,7 @@ export default function LandingPage() {
                   Balance
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Whether you've got enough breathing room to keep going
+                  Whether tomorrow-you will thank or curse today-you
                 </p>
               </div>
             </div>
@@ -194,15 +332,53 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Intelligence Section */}
-      <section id="intelligence" className="py-20 lg:py-32">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-8">
-            Something worth sending
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 lg:py-32">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8">
+          <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-16 text-center">
+            How it works
           </h2>
-          <p className="text-xl text-gray-600 font-light leading-relaxed">
-            Every morning you get a card with your scores and a perfectly matched movie or TV moment. It's funny because it's true. One tap to share it with someone who needs the laugh too.
-          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-3">Connect your calendar</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Takes 10 seconds. We only read event titles and times.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-3">Get your daily card</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Every morning — your scores and a movie moment that nails your vibe.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-3">Send it to someone</h3>
+              <p className="text-gray-600 leading-relaxed">
+                One tap. Start the kind of conversation that makes work feel human.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -215,16 +391,12 @@ export default function LandingPage() {
           <p className="text-xl text-gray-600 font-light mb-12 leading-relaxed">
             Connect your Google Calendar and get your first card in seconds.
           </p>
-          <div className="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 max-w-md mx-auto">
-            <h3 className="text-2xl font-light text-gray-900 mb-4">Your Daily Card</h3>
-            <p className="text-gray-600 mb-8">A daily dose of comic relief matched to your actual schedule — plus three scores that tell you what kind of day you're in for</p>
-            <button
-              onClick={handleGetStarted}
-              className="w-full px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300"
-            >
-              Try It Free
-            </button>
-          </div>
+          <button
+            onClick={handleGetStarted}
+            className="px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
+          >
+            Try It Free
+          </button>
         </div>
       </section>
 
@@ -246,7 +418,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-xs text-gray-400 mt-6">
-              © 2026 PERSIST. All rights reserved.
+              &copy; 2026 PERSIST. All rights reserved.
             </p>
           </div>
         </div>
