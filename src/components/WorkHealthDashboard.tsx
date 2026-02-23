@@ -368,7 +368,7 @@ export default function WorkHealthDashboard() {
       // Try native share with image (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], url: 'https://persistwork.com' });
+          await navigator.share({ files: [file] });
           setShareState('idle');
           return;
         } catch (err: unknown) {
