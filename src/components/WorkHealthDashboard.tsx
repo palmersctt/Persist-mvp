@@ -286,13 +286,13 @@ export default function WorkHealthDashboard() {
         // Label
         ctx.font = `500 16px ${fontStack}`;
         ctx.letterSpacing = '3px';
-        ctx.fillText(s.label, cx, y + 40);
+        ctx.fillText(s.label, cx, y + 74);
         ctx.letterSpacing = '0px';
 
         // Progress bar track
         const barW = 100, barH = 6;
         const barX = cx - barW / 2;
-        const barY = y + 60;
+        const barY = y + 100;
         ctx.fillStyle = 'rgba(255,255,255,0.1)';
         ctx.beginPath();
         ctx.roundRect(barX, barY, barW, barH, 3);
