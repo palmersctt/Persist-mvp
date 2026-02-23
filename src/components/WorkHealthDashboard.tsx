@@ -225,45 +225,64 @@ export default function WorkHealthDashboard() {
 
       const PAD = 80;
       const contentWidth = W - PAD * 2;
-      let y = 160;
 
-      // --- Quote ---
-      const quoteFont = `300 44px ${fontStack}`;
+      // --- Measure content height first to center vertically ---
+      const quoteFont = `300 52px ${fontStack}`;
       const quoteText = `\u201C${quote}\u201D`;
       const quoteLines = wrapText(quoteText, contentWidth, quoteFont);
-      const quoteLineHeight = 60;
+      const quoteLineHeight = 70;
+      const quoteH = quoteLines.length * quoteLineHeight;
 
-      ctx.font = quoteFont;
-      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      const sourceH = 28;
+      const gapAfterQuote = 28;
+      const gapAfterSource = 12;
+
+      const subFont = `300 26px ${fontStack}`;
+      const subLines = wrapText(subtitle, contentWidth - 40, subFont);
+      const subLineHeight = 38;
+      const subH = subLines.length * subLineHeight;
+
+      const gapToDivider = 48;
+      const dividerH = 3;
+      const gapToScores = 56;
+      const scoresH = 130; // number + label + bar
+      const gapToBrand = 48;
+      const brandH = 18;
+
+      const totalH = quoteH + gapAfterQuote + sourceH + gapAfterSource + subH + gapToDivider + dividerH + gapToScores + scoresH + gapToBrand + brandH;
+      let y = Math.max(80, (H - totalH) / 2);
+
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
+
+      // --- Quote ---
+      ctx.font = quoteFont;
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
       for (const line of quoteLines) {
         ctx.fillText(line, W / 2, y);
         y += quoteLineHeight;
       }
 
       // --- Source ---
-      y += 24;
-      ctx.font = `italic 22px ${fontStack}`;
+      y += gapAfterQuote;
+      ctx.font = `italic 26px ${fontStack}`;
       ctx.fillStyle = 'rgba(255,255,255,0.45)';
       ctx.fillText(`\u2014 ${source}`, W / 2, y);
-      y += 40;
+      y += sourceH + gapAfterSource;
 
       // --- Subtitle ---
-      const subFont = `300 24px ${fontStack}`;
-      const subLines = wrapText(subtitle, contentWidth - 40, subFont);
       ctx.font = subFont;
       ctx.fillStyle = 'rgba(255,255,255,0.45)';
       for (const line of subLines) {
         ctx.fillText(line, W / 2, y);
-        y += 34;
+        y += subLineHeight;
       }
 
       // --- Green divider ---
-      y += 40;
+      y += gapToDivider;
       ctx.fillStyle = 'rgba(37,211,102,0.6)';
-      ctx.fillRect(W / 2 - 40, y, 80, 3);
-      y += 50;
+      ctx.fillRect(W / 2 - 50, y, 100, dividerH);
+      y += dividerH + gapToScores;
 
       // --- Scores ---
       const scores = [
@@ -278,40 +297,38 @@ export default function WorkHealthDashboard() {
         const s = scores[i];
 
         // Number
-        ctx.font = `600 64px ${fontStack}`;
+        ctx.font = `600 80px ${fontStack}`;
         ctx.fillStyle = s.color;
-        ctx.textAlign = 'center';
         ctx.fillText(`${s.value}`, cx, y);
 
         // Label
-        ctx.font = `500 16px ${fontStack}`;
-        ctx.letterSpacing = '3px';
-        ctx.fillText(s.label, cx, y + 74);
+        ctx.font = `500 18px ${fontStack}`;
+        ctx.letterSpacing = '4px';
+        ctx.fillText(s.label, cx, y + 90);
         ctx.letterSpacing = '0px';
 
         // Progress bar track
-        const barW = 100, barH = 6;
+        const barW = 130, barH = 8;
         const barX = cx - barW / 2;
-        const barY = y + 100;
+        const barY = y + 118;
         ctx.fillStyle = 'rgba(255,255,255,0.1)';
         ctx.beginPath();
-        ctx.roundRect(barX, barY, barW, barH, 3);
+        ctx.roundRect(barX, barY, barW, barH, 4);
         ctx.fill();
 
         // Progress bar fill
         const fillW = (s.value / 100) * barW;
         ctx.fillStyle = s.color;
         ctx.beginPath();
-        ctx.roundRect(barX, barY, fillW, barH, 3);
+        ctx.roundRect(barX, barY, fillW, barH, 4);
         ctx.fill();
       }
 
       // --- Branding ---
-      ctx.font = `500 14px ${fontStack}`;
-      ctx.fillStyle = '#666666';
-      ctx.textAlign = 'center';
-      ctx.letterSpacing = '4px';
-      ctx.fillText('PERSIST', W / 2, H - 60);
+      ctx.font = `500 16px ${fontStack}`;
+      ctx.fillStyle = '#555555';
+      ctx.letterSpacing = '6px';
+      ctx.fillText('PERSIST', W / 2, y + scoresH + gapToBrand);
       ctx.letterSpacing = '0px';
 
       // --- Share / Download ---
