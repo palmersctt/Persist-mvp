@@ -9,8 +9,8 @@ export default function Icon() {
     (
       <div
         style={{
-          width: '100%',
-          height: '100%',
+          width: 32,
+          height: 32,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -18,16 +18,15 @@ export default function Icon() {
           borderRadius: 6,
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
-          <path
-            d="M38 30 L62 50 L38 70"
-            stroke="#ffffff"
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        </svg>
+        <div
+          style={{
+            width: 0,
+            height: 0,
+            borderTop: '6px solid transparent',
+            borderBottom: '6px solid transparent',
+            borderLeft: '10px solid #ffffff',
+          }}
+        />
       </div>
     ),
     { ...size }

@@ -14,12 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "persistwork.com",
-  description: "persistwork.com",
-  icons: {
-    icon: "/favicon.svg",
-    apple: "/apple-touch-icon.png",
-  },
+  title: "Persist",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
