@@ -164,7 +164,7 @@ export default function LandingPage() {
             Your workday has a sense of humor
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
-            Some days, all you can do is laugh. Persist reads your calendar and finds the movie moment that says it all.
+            Some days, all you can do is laugh. Persist reads your calendar and finds the movie quote your day deserves.
           </p>
 
           {/* 3-Card Carousel — pure state, no scroll container */}
