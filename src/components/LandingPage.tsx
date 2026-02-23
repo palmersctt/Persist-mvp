@@ -238,6 +238,7 @@ export default function LandingPage() {
                 onClick={() => goTo(activeCard - 1)}
                 disabled={activeCard === 0}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30"
+                style={{ minHeight: 32, minWidth: 32 }}
               >
                 <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -252,6 +253,7 @@ export default function LandingPage() {
                   style={{
                     backgroundColor: i === activeCard ? '#374151' : '#d1d5db',
                     transform: i === activeCard ? 'scale(1.3)' : 'scale(1)',
+                    minHeight: 10, minWidth: 10,
                   }}
                 />
               ))}
@@ -260,6 +262,7 @@ export default function LandingPage() {
                 onClick={() => goTo(activeCard + 1)}
                 disabled={activeCard === cards.length - 1}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30"
+                style={{ minHeight: 32, minWidth: 32 }}
               >
                 <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -324,7 +327,7 @@ export default function LandingPage() {
                   Balance
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Whether tomorrow-you will thank or curse today-you
+                  How long until your body sends you an out-of-office
                 </p>
               </div>
             </div>
@@ -375,7 +378,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-3">Send it to someone</h3>
               <p className="text-gray-600 leading-relaxed">
-                One tap. Start the kind of conversation that makes work feel human.
+                One tap. Share the laugh with someone who gets it.
               </p>
             </div>
           </div>
