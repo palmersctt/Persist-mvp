@@ -16,18 +16,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Persist - Comic Relief for Your Workday",
   description: "Comic relief for your workday. Persist reads your calendar and finds the movie quote your day deserves.",
-  openGraph: {
-    title: "persistwork.com",
-    description: "Comic relief for your workday",
-    siteName: "Persist",
-    type: "website",
-    url: "https://persistwork.com",
-  },
-  twitter: {
-    card: "summary",
-    title: "persistwork.com",
-    description: "Comic relief for your workday",
-  },
   icons: {
     icon: "/favicon.svg",
   },
