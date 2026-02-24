@@ -508,26 +508,43 @@ export default function WorkHealthDashboard() {
               </section>
             ) : (
               <section className="max-w-xs mx-auto">
+                <style>{`
+                  @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                  }
+                  .skeleton-bar {
+                    position: relative;
+                    overflow: hidden;
+                  }
+                  .skeleton-bar::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+                    animation: shimmer 1.8s ease-in-out infinite;
+                  }
+                `}</style>
                 <div
-                  className="w-full rounded-2xl overflow-hidden animate-pulse"
+                  className="w-full rounded-2xl overflow-hidden"
                   style={{
                     background: 'linear-gradient(to bottom, #4b5563, #1f2937)',
                     padding: '32px 24px 20px',
                   }}
                 >
                   {/* Quote skeleton */}
-                  <div className="h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.12)', maxWidth: '85%' }} />
-                  <div className="h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.08)', maxWidth: '60%' }} />
+                  <div className="skeleton-bar h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.10)', maxWidth: '85%' }} />
+                  <div className="skeleton-bar h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.07)', maxWidth: '60%' }} />
 
                   {/* Source skeleton */}
-                  <div className="h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '40%' }} />
+                  <div className="skeleton-bar h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.05)', maxWidth: '40%' }} />
 
                   {/* Subtitle skeleton */}
-                  <div className="h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '55%' }} />
+                  <div className="skeleton-bar h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(255,255,255,0.05)', maxWidth: '55%' }} />
 
                   {/* Score bar skeleton */}
                   <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
-                    <div className="h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.08)', maxWidth: '30%' }} />
+                    <div className="skeleton-bar h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '30%' }} />
                     <div className="flex justify-center gap-8">
                       {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
                         <div key={label} className="text-center">
@@ -538,7 +555,7 @@ export default function WorkHealthDashboard() {
                     </div>
                   </div>
 
-                  {/* Branding skeleton */}
+                  {/* Branding */}
                   <div className="flex items-center justify-center gap-1.5 mt-3">
                     <PersistLogo size={12} variant="light" />
                     <span className="text-[9px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.15)' }}>PERSIST</span>
