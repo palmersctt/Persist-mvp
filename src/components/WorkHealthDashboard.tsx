@@ -238,15 +238,15 @@ export default function WorkHealthDashboard() {
       const sourceH = 30;
       const gapAfterSource = 16;
 
-      const subFont = `300 26px ${fontStack}`;
+      const subFont = `400 28px ${fontStack}`;
       const subLines = wrapText(subtitle, contentWidth - 40, subFont);
-      const subLineHeight = 36;
+      const subLineHeight = 38;
       const subH = subLines.length * subLineHeight;
 
       const textBlockH = quoteH + gapAfterQuote + sourceH + gapAfterSource + subH;
-      const scoreBarTop = H - 280;
-      const availableH = scoreBarTop - 60; // 60px top margin
-      let y = Math.max(60, 60 + (availableH - textBlockH) / 2);
+      const scoreBarTop = H - 270;
+      const availableH = scoreBarTop - 40;
+      let y = Math.max(50, 40 + (availableH - textBlockH) / 2);
 
       // Quote
       ctx.font = quoteFont;
@@ -265,7 +265,7 @@ export default function WorkHealthDashboard() {
 
       // Subtitle
       ctx.font = subFont;
-      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
       for (const line of subLines) {
         ctx.fillText(line, W / 2, y);
         y += subLineHeight;

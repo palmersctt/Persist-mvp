@@ -41,7 +41,7 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       </p>
 
       {/* Subtitle */}
-      <p className="text-xs text-center font-light leading-relaxed whitespace-pre-line mb-6" style={{ color: 'rgba(255,255,255,0.6)' }}>
+      <p className="text-sm text-center font-normal leading-relaxed whitespace-pre-line mb-4" style={{ color: 'rgba(255,255,255,0.75)' }}>
         {subtitle}
       </p>
 
