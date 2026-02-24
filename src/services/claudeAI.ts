@@ -78,6 +78,8 @@ interface PersonalizedInsightsResponse {
   heroMessage?: string | HeroMessage;
   heroMessages?: HeroMessages;
   comicReliefSaying?: string;
+  /** True when quotes came from Claude AI, absent/false when from local fallback */
+  _aiGenerated?: boolean;
 }
 
 class ClaudeAIService {
@@ -671,6 +673,7 @@ You must respond with valid JSON only. Use exactly this format:
         throw new Error('Invalid insights response format');
       }
 
+      parsedResponse._aiGenerated = true;
       return parsedResponse;
 
     } catch (error) {

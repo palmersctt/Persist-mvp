@@ -151,7 +151,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ]);
 
       enhancedResponse.ai = aiInsights;
-      enhancedResponse.aiStatus = 'success';
+      // generatePersonalizedInsights catches errors internally and returns
+      // getDefaultInsights (local quotes). Only tag as 'success' when Claude
+      // AI actually generated the response.
+      enhancedResponse.aiStatus = aiInsights._aiGenerated ? 'success' : 'fallback';
 
     } catch (aiError) {
       const isTimeout = aiError instanceof Error && aiError.message === 'AI_TIMEOUT';
@@ -196,7 +199,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    console.log(`work-health: ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, tz=${userTimezone}`);
+    console.log(`work-health: ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, aiStatus=${enhancedResponse.aiStatus}, tz=${userTimezone}`);
     res.status(200).json(enhancedResponse);
   } catch (error) {
     console.error('Error fetching work health data:', error);
