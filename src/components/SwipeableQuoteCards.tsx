@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion'
 import { type Mood, MOODS } from '../lib/mood'
 import PersistLogo from './PersistLogo'
@@ -26,7 +26,14 @@ const scores = [
 const SWIPE_THRESHOLD = 80
 const SWIPE_VELOCITY = 300
 
-function QuoteCard({
+/**
+ * Each card is a persistent instance (keyed by array index, never unmounted).
+ * It computes its visual state from `stackPos`:
+ *   0 = top card (draggable)
+ *   1,2 = behind cards (scaled down, offset)
+ *   >=3 = hidden
+ */
+function Card({
   quote,
   gradient,
   moodName,
@@ -34,9 +41,8 @@ function QuoteCard({
   strain,
   balance,
   onMetricClick,
-  isTop,
-  stackIndex,
-  onSwipe,
+  stackPos,
+  onSwipeComplete,
   cardRef,
 }: {
   quote: HeroMessage
@@ -46,109 +52,53 @@ function QuoteCard({
   strain: number
   balance: number
   onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
-  isTop: boolean
-  stackIndex: number
-  onSwipe: (dir: 'left' | 'right') => void
+  stackPos: number
+  onSwipeComplete: () => void
   cardRef?: (el: HTMLDivElement | null) => void
 }) {
-  const values = { focus, strain, balance }
+  const isTop = stackPos === 0
+  const prevStackPos = useRef(stackPos)
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
+  const dragOpacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
+  const values = { focus, strain, balance }
+
+  // When card transitions from top (swiped off at x=400) to behind, reset x instantly
+  useEffect(() => {
+    if (prevStackPos.current === 0 && stackPos > 0) {
+      x.set(0)
+    }
+    prevStackPos.current = stackPos
+  }, [stackPos, x])
 
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    const xVal = info.offset.x
-    const vx = info.velocity.x
-
-    if (Math.abs(xVal) > SWIPE_THRESHOLD || Math.abs(vx) > SWIPE_VELOCITY) {
-      const dir = xVal > 0 ? 'right' : 'left'
-      const flyTo = dir === 'right' ? 400 : -400
+    if (Math.abs(info.offset.x) > SWIPE_THRESHOLD || Math.abs(info.velocity.x) > SWIPE_VELOCITY) {
+      const flyTo = info.offset.x > 0 ? 400 : -400
       animate(x, flyTo, {
         type: 'spring',
         stiffness: 300,
         damping: 30,
-        onComplete: () => onSwipe(dir),
+        onComplete: onSwipeComplete,
       })
     } else {
       animate(x, 0, { type: 'spring', stiffness: 500, damping: 30 })
     }
-  }, [x, onSwipe])
+  }, [x, onSwipeComplete])
 
-  // Cards behind the top card: slightly scaled down and offset
-  const behindScale = 1 - stackIndex * 0.04
-  const behindY = stackIndex * 8
-  const behindOpacity = stackIndex === 0 ? 1 : Math.max(0, 1 - stackIndex * 0.2)
-
-  if (!isTop) {
-    return (
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          scale: behindScale,
-          y: behindY,
-          opacity: behindOpacity,
-          zIndex: 10 - stackIndex,
-        }}
-      >
-        <div
-          className="w-full rounded-2xl overflow-hidden"
-          style={{
-            background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-            padding: '32px 24px 20px',
-          }}
-        >
-          <CardContent
-            quote={quote}
-            moodName={moodName}
-            values={values}
-            onMetricClick={onMetricClick}
-          />
-        </div>
-      </motion.div>
-    )
+  // Hidden cards (far back in stack)
+  if (stackPos >= 3) {
+    return null
   }
 
-  return (
-    <motion.div
-      className="absolute inset-0 cursor-grab active:cursor-grabbing"
-      style={{ x, rotate, opacity, zIndex: 20 }}
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.7}
-      onDragEnd={handleDragEnd}
+  const cardInner = (
+    <div
+      ref={isTop ? cardRef : undefined}
+      className="w-full rounded-2xl overflow-hidden"
+      style={{
+        background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
+        padding: '32px 24px 20px',
+      }}
     >
-      <div
-        ref={cardRef}
-        className="w-full rounded-2xl overflow-hidden"
-        style={{
-          background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-          padding: '32px 24px 20px',
-        }}
-      >
-        <CardContent
-          quote={quote}
-          moodName={moodName}
-          values={values}
-          onMetricClick={onMetricClick}
-        />
-      </div>
-    </motion.div>
-  )
-}
-
-function CardContent({
-  quote,
-  moodName,
-  values,
-  onMetricClick,
-}: {
-  quote: HeroMessage
-  moodName: string
-  values: { focus: number; strain: number; balance: number }
-  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
-}) {
-  return (
-    <>
       {/* Quote */}
       <p className="text-xl font-bold text-white text-center leading-snug mb-3 whitespace-pre-line">
         &ldquo;{quote.quote}&rdquo;
@@ -195,7 +145,48 @@ function CardContent({
         <PersistLogo size={12} variant="light" />
         <span className="text-[9px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>PERSIST</span>
       </div>
-    </>
+    </div>
+  )
+
+  // Top card: draggable with motion values
+  if (isTop) {
+    return (
+      <motion.div
+        className="absolute inset-0 cursor-grab active:cursor-grabbing"
+        style={{ x, rotate, opacity: dragOpacity, zIndex: 20 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.7}
+        onDragEnd={handleDragEnd}
+      >
+        {cardInner}
+      </motion.div>
+    )
+  }
+
+  // Behind card: animated stack position, instant x/rotate reset
+  return (
+    <motion.div
+      className="absolute inset-0"
+      animate={{
+        scale: 1 - stackPos * 0.04,
+        y: stackPos * 8,
+        opacity: Math.max(0, 1 - stackPos * 0.2),
+        x: 0,
+        rotate: 0,
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 400,
+        damping: 30,
+        // Instantly reset position/rotation so the swiped card doesn't slide in from offscreen
+        x: { duration: 0 },
+        rotate: { duration: 0 },
+      }}
+      style={{ zIndex: 10 - stackPos }}
+    >
+      {cardInner}
+    </motion.div>
   )
 }
 
@@ -210,67 +201,63 @@ export default function SwipeableQuoteCards({
 }: SwipeableQuoteCardsProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const { gradient, name: moodName } = MOODS[mood]
+  const n = quotes.length
 
-  const handleSwipe = useCallback((_dir: 'left' | 'right') => {
-    setCurrentIndex(prev => {
-      const next = prev + 1
-      // Loop back to start when we've gone through all
-      return next >= quotes.length ? 0 : next
-    })
-  }, [quotes.length])
+  const handleSwipeComplete = useCallback(() => {
+    setCurrentIndex(prev => (prev + 1) % n)
+  }, [n])
 
-  if (!quotes || quotes.length === 0) return null
-
-  // Show up to 3 cards in the stack (current + 2 behind)
-  const visibleCards: { quote: HeroMessage; index: number }[] = []
-  for (let i = 0; i < Math.min(3, quotes.length); i++) {
-    const idx = (currentIndex + i) % quotes.length
-    visibleCards.push({ quote: quotes[idx], index: i })
-  }
+  if (!quotes || n === 0) return null
 
   return (
     <div className="w-full">
-      {/* Card stack */}
+      {/* Card stack — persistent instances, never unmounted */}
       <div className="relative" style={{ minHeight: '320px' }}>
-        {visibleCards.reverse().map(({ quote, index }) => (
-          <QuoteCard
-            key={`${currentIndex}-${index}`}
-            quote={quote}
-            gradient={gradient}
-            moodName={moodName}
-            focus={focus}
-            strain={strain}
-            balance={balance}
-            onMetricClick={onMetricClick}
-            isTop={index === 0}
-            stackIndex={index}
-            onSwipe={handleSwipe}
-            cardRef={index === 0 ? activeCardRef : undefined}
-          />
-        ))}
+        {quotes.map((quote, i) => {
+          // How far back in the stack is this card?
+          const stackPos = ((i - currentIndex) % n + n) % n
+
+          return (
+            <Card
+              key={i}
+              quote={quote}
+              gradient={gradient}
+              moodName={moodName}
+              focus={focus}
+              strain={strain}
+              balance={balance}
+              onMetricClick={onMetricClick}
+              stackPos={stackPos}
+              onSwipeComplete={handleSwipeComplete}
+              cardRef={stackPos === 0 ? activeCardRef : undefined}
+            />
+          )
+        })}
       </div>
 
       {/* Dot indicators + swipe hint */}
-      <div className="flex flex-col items-center mt-4 gap-2">
-        <div className="flex gap-1.5">
-          {quotes.map((_, i) => (
-            <div
-              key={i}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: i === currentIndex % quotes.length ? 16 : 6,
-                height: 6,
-                backgroundColor: i === currentIndex % quotes.length
-                  ? 'rgba(255,255,255,0.6)'
-                  : 'rgba(255,255,255,0.15)',
-              }}
-            />
-          ))}
+      {n > 1 && (
+        <div className="flex flex-col items-center mt-4 gap-2">
+          <div className="flex gap-1.5">
+            {quotes.map((_, i) => (
+              <div
+                key={i}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === currentIndex ? 16 : 6,
+                  height: 6,
+                  backgroundColor: i === currentIndex
+                    ? 'rgba(255,255,255,0.6)'
+                    : 'rgba(255,255,255,0.15)',
+                }}
+              />
+            ))}
+          </div>
+          <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            swipe for more quotes
+          </p>
         </div>
-        <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
-          swipe for more quotes
-        </p>
-      </div>
+      )}
     </div>
   )
 }
