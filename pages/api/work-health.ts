@@ -128,12 +128,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Provide fallback hero message so the UI doesn't show a blank/stuck state
       const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
       const quote = comicReliefGenerator.generateQuote(workHealthData);
+      const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
+      const fallbackHeroMessage = {
+        quote: quote.text,
+        source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
+        subtitle: 'AI insights temporarily unavailable'
+      };
       enhancedResponse.ai = {
-        heroMessage: {
-          quote: quote.text,
-          source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
+        heroMessage: fallbackHeroMessage,
+        heroMessages: fallbackQuotes.map((q: any) => ({
+          quote: q.text,
+          source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
           subtitle: 'AI insights temporarily unavailable'
-        },
+        })),
         insights: [],
         summary: `Current work health status: ${workHealthData.status}.`,
         overallScore: workHealthData.adaptivePerformanceIndex,

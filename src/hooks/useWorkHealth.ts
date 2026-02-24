@@ -30,6 +30,12 @@ interface MetricInsight {
   severity: 'info' | 'warning' | 'critical' | 'success';
 }
 
+interface HeroMessage {
+  quote: string;
+  source: string;
+  subtitle: string;
+}
+
 interface AIPersonalizedInsights {
   // Per-metric structured insights
   overview?: MetricInsight;
@@ -45,7 +51,8 @@ interface AIPersonalizedInsights {
   opportunities: string[];
   predictiveAlerts: string[];
   recommendations?: AIRecommendation[];
-  heroMessage?: string | { quote: string; source: string; subtitle: string };
+  heroMessage?: string | HeroMessage;
+  heroMessages?: HeroMessage[];
 }
 
 interface WorkHealthData {
@@ -330,8 +337,12 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       setLastRefresh(new Date());
       updateHistory(data);
 
-      // Track the AI quote so we don't get repeats
-      if (data.ai?.heroMessage && typeof data.ai.heroMessage === 'object' && data.ai.heroMessage.quote) {
+      // Track the AI quotes so we don't get repeats
+      if (data.ai?.heroMessages && Array.isArray(data.ai.heroMessages)) {
+        data.ai.heroMessages.forEach((msg: HeroMessage) => {
+          if (msg.quote) saveQuoteToHistory(msg.quote);
+        });
+      } else if (data.ai?.heroMessage && typeof data.ai.heroMessage === 'object' && data.ai.heroMessage.quote) {
         saveQuoteToHistory(data.ai.heroMessage.quote);
       }
 
@@ -462,6 +473,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
 export type {
   WorkHealthMetrics,
   MetricInsight,
+  HeroMessage,
   AIInsight,
   AIRecommendation,
   AIPersonalizedInsights,

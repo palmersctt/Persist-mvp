@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
 import ComicReliefSaying from './ComicReliefSaying'
 import ShareCard from './ShareCard'
+import SwipeableQuoteCards from './SwipeableQuoteCards'
 import PersistLogo from './PersistLogo'
 import { detectMood } from '../lib/mood'
 import { toPng } from 'html-to-image'
@@ -477,21 +478,33 @@ export default function WorkHealthDashboard() {
         {/* Overview Tab - All current content */}
         {activeTab === 'overview' && (
           <>
-            {/* Share Card as Hero */}
+            {/* Share Card as Hero — swipeable when multiple quotes available */}
             {!isLoading && !isAILoading && workHealth?.ai?.heroMessage && typeof workHealth.ai.heroMessage === 'object' ? (
               <section className="max-w-xs mx-auto">
-                <div ref={cardRef}>
-                <ShareCard
-                  quote={workHealth.ai.heroMessage.quote}
-                  source={workHealth.ai.heroMessage.source}
-                  subtitle={workHealth.ai.heroMessage.subtitle}
-                  focus={workHealth.adaptivePerformanceIndex}
-                  strain={workHealth.cognitiveResilience}
-                  balance={workHealth.workRhythmRecovery}
-                  mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
-                  onMetricClick={(metric) => setActiveTab(metric)}
-                />
-                </div>
+                {workHealth.ai.heroMessages && workHealth.ai.heroMessages.length > 1 ? (
+                  <SwipeableQuoteCards
+                    quotes={workHealth.ai.heroMessages}
+                    focus={workHealth.adaptivePerformanceIndex}
+                    strain={workHealth.cognitiveResilience}
+                    balance={workHealth.workRhythmRecovery}
+                    mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                    onMetricClick={(metric) => setActiveTab(metric)}
+                    activeCardRef={(el) => { (cardRef as any).current = el; }}
+                  />
+                ) : (
+                  <div ref={cardRef}>
+                    <ShareCard
+                      quote={workHealth.ai.heroMessage.quote}
+                      source={workHealth.ai.heroMessage.source}
+                      subtitle={workHealth.ai.heroMessage.subtitle}
+                      focus={workHealth.adaptivePerformanceIndex}
+                      strain={workHealth.cognitiveResilience}
+                      balance={workHealth.workRhythmRecovery}
+                      mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                      onMetricClick={(metric) => setActiveTab(metric)}
+                    />
+                  </div>
+                )}
                 <div className="mt-4">
                   <button
                     onClick={handleShare}

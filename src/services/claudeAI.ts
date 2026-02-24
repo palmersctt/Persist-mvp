@@ -52,6 +52,8 @@ interface HeroMessage {
   subtitle: string;
 }
 
+type HeroMessages = HeroMessage[];
+
 interface MetricInsight {
   title: string;
   message: string;
@@ -74,6 +76,7 @@ interface PersonalizedInsightsResponse {
   opportunities: string[];
   predictiveAlerts: string[];
   heroMessage?: string | HeroMessage;
+  heroMessages?: HeroMessages;
   comicReliefSaying?: string;
 }
 
@@ -235,11 +238,18 @@ METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
    Action: Name one structural change. (e.g., "Move the Thursday standup to batch with the 10 AM sync — that frees a 90-minute focus block.")
    Do NOT talk about: individual event performance or stress points.
 
-HERO MESSAGE — AI-SELECTED MOVIE OR TV QUOTE:
-Pick a REAL, EXACT, VERBATIM quote from a real movie or TV show. Do NOT invent, paraphrase, or combine quotes.
-The quote must capture this vibe: ${quoteMood}
+HERO MESSAGES — 5 AI-SELECTED MOVIE/TV QUOTES:
+Pick 5 REAL, EXACT, VERBATIM quotes from real movies or TV shows. Do NOT invent, paraphrase, or combine quotes.
+All quotes must capture this vibe: ${quoteMood}
 
-GENRE MATCHING — match the genre to this person's day:
+Each quote should come from a DIFFERENT genre/style so the user gets variety as they swipe:
+1. WORKPLACE — From a workplace comedy or drama (The Office, Succession, Veep, Silicon Valley, The Bear, Mad Men, 30 Rock, Abbott Elementary, Severance, Better Call Saul)
+2. CLASSIC FILM — From a well-known movie, but NOT the obvious AFI top quotes. Deep cuts from recognizable films. (The Big Lebowski, Fargo, Groundhog Day, Office Space, The Devil Wears Prada, Glengarry Glen Ross, Margin Call, The Big Short)
+3. COMEDY — From a comedy movie or sitcom that makes them laugh (Arrested Development, Seinfeld, Parks and Rec, Brooklyn Nine-Nine, Schitt's Creek, It's Always Sunny, Curb Your Enthusiasm, Fleabag, Frasier, Scrubs)
+4. DRAMA/THRILLER — From a drama, thriller, or prestige show that feels epic or intense (Breaking Bad, The Wire, Interstellar, Heat, No Country for Old Men, Gladiator, The Dark Knight, Uncut Gems, Whiplash)
+5. WILDCARD — Surprise them. Animated, sci-fi, horror, musical, reality TV, documentary, anime — anything unexpected that somehow fits perfectly.
+
+GENRE MATCHING — match the mood intensity to this person's day:
 - Brutal meeting-heavy day → survival movies, dark comedies, war films (Apocalypse Now, Full Metal Jacket, The Big Short, Succession)
 - Great focus day with clear schedule → triumph films, feel-good comedies (Rocky, Ferris Bueller, The Shawshank Redemption, Ted Lasso)
 - Mundane repetitive day → shows about absurdity of routine (Office Space, The Office, Seinfeld, Groundhog Day, Parks and Rec)
@@ -247,19 +257,17 @@ GENRE MATCHING — match the genre to this person's day:
 - Day where nothing goes right → slapstick, dark humor, gallows wit (Arrested Development, Veep, Horrible Bosses, The Big Lebowski)
 - Day with one giant stressful event → underdog/boss confrontation (The Devil Wears Prada, 9 to 5, Working Girl, Glengarry Glen Ross)
 
-DRAW FROM TV SHOWS EQUALLY — not just movies. Workplace comedies and dramedies are gold:
-The Office, Parks and Rec, Seinfeld, Succession, Arrested Development, Veep, Silicon Valley, Scrubs, Brooklyn Nine-Nine, 30 Rock, Schitt's Creek, Ted Lasso, Abbott Elementary, Severance, Better Call Saul, Mad Men, Frasier, It's Always Sunny, Curb Your Enthusiasm, Fleabag, The Bear
-
 DEEP CUTS WELCOME — avoid the AFI top-quotes list. Skip "I'll be back", "May the Force be with you", "Here's looking at you kid", "You can't handle the truth", "Life is like a box of chocolates", "To infinity and beyond", "Just keep swimming", "I am Groot", "This is the way". Instead find quotes from well-known movies and shows that people recognize but don't see referenced every day. That sweet spot — "oh I forgot about that line" — is where the delight is.
 
 RULES:
-- It MUST be real and verbatim — do not modify, combine, or invent quotes
-- Include the character name and movie/TV show title
-- The quote should feel like it was written about this person's workday
+- All 5 quotes MUST be real and verbatim — do not modify, combine, or invent quotes
+- Each from a DIFFERENT movie/TV show
+- Include the character name and movie/TV show title for each
+- Each quote should feel like it was written about this person's workday
 - Funny, ironic, or unexpectedly perfect > safe and generic
 ${recentQuotes && recentQuotes.length > 0 ? `- AVOID REPEATS — this user recently saw these quotes. Pick something COMPLETELY DIFFERENT (different movie/show too):\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}` : ''}
 
-Then write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar?
+For EACH quote, write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar? Each subtitle should be DIFFERENT — don't repeat the same framing.
 
 Current date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: userTimezone })}
 Current time: ${new Date().toLocaleTimeString('en-US', { timeZone: userTimezone })}
@@ -267,10 +275,17 @@ Current time: ${new Date().toLocaleTimeString('en-US', { timeZone: userTimezone 
 You must respond with valid JSON only. Use exactly this format:
 {
   "heroMessage": {
-    "quote": "The exact movie/TV quote",
+    "quote": "The exact movie/TV quote (first one — WORKPLACE genre)",
     "source": "Movie or TV Show Title — Character Name",
     "subtitle": "Your witty one-sentence subtitle"
   },
+  "heroMessages": [
+    { "quote": "WORKPLACE quote", "source": "Show — Character", "subtitle": "Subtitle 1" },
+    { "quote": "CLASSIC FILM quote", "source": "Movie — Character", "subtitle": "Subtitle 2" },
+    { "quote": "COMEDY quote", "source": "Show — Character", "subtitle": "Subtitle 3" },
+    { "quote": "DRAMA/THRILLER quote", "source": "Movie — Character", "subtitle": "Subtitle 4" },
+    { "quote": "WILDCARD quote", "source": "Source — Character", "subtitle": "Subtitle 5" }
+  ],
   "overview": {
     "title": "3-5 word title",
     "message": "1-2 sentences about how today will feel. Reference specific events.",
@@ -355,6 +370,33 @@ You must respond with valid JSON only. Use exactly this format:
       source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
       subtitle,
     };
+
+    // Generate 5 varied quotes for swipeable cards
+    const multipleQuotes = comicReliefGenerator.generateMultipleQuotes(workHealth, 5);
+    const subtitleOptions = [
+      subtitle,
+      ...(() => {
+        const all = [
+          "Today's yours — do something worth remembering",
+          "The kind of day where you actually get to think",
+          "A solid day if you play it right",
+          "Enough breathing room to actually be creative",
+          "Not your best day on paper, but you've handled worse",
+          "Survival mode activated — and that's okay",
+          "Today's about getting through, not getting ahead",
+          "Some days you ride the wave, today you hold on",
+          "The kind of day that builds character (unfortunately)",
+          "You've got this — just don't volunteer for anything new",
+        ];
+        // Shuffle and pick 4 different from subtitle
+        return all.filter(s => s !== subtitle).sort(() => Math.random() - 0.5).slice(0, 4);
+      })()
+    ];
+    const heroMessages: HeroMessages = multipleQuotes.map((q, i) => ({
+      quote: q.text,
+      source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
+      subtitle: subtitleOptions[i] || subtitleOptions[0],
+    }));
 
     if (workHealth.adaptivePerformanceIndex < 50) {
       insights.push({
@@ -459,6 +501,7 @@ You must respond with valid JSON only. Use exactly this format:
 
     return {
       heroMessage,
+      heroMessages,
       overview: overviewInsight,
       performance: performanceInsight,
       resilience: resilienceInsight,
@@ -674,7 +717,12 @@ You must respond with valid JSON only. Use exactly this format:
       typeof response.heroMessage === 'string' ||
       (response.heroMessage?.quote && response.heroMessage?.source);
 
-    return isValid && hasValidHero;
+    const hasValidHeroMessages = !response?.heroMessages ||
+      (Array.isArray(response.heroMessages) && response.heroMessages.every(
+        (m: any) => m?.quote && m?.source
+      ));
+
+    return isValid && hasValidHero && hasValidHeroMessages;
   }
 
   async analyzeProductivityPatterns(
@@ -833,6 +881,8 @@ export default ClaudeAIService;
 export type {
   PersonalizedInsight,
   PersonalizedInsightsResponse,
+  HeroMessage,
+  HeroMessages,
   MetricInsight,
   UserContext,
   CalendarAnalysis,
