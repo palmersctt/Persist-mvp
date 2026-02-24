@@ -23,8 +23,9 @@ const scores = [
   { key: 'sustainability' as const, label: 'BALANCE', prop: 'balance' as const },
 ]
 
-const SWIPE_THRESHOLD = 80
+const SWIPE_THRESHOLD = 60
 const SWIPE_VELOCITY = 300
+const SWIPE_COOLDOWN_MS = 500
 
 function CardContent({
   quote,
@@ -107,12 +108,10 @@ function CardContent({
 }
 
 /**
- * Each card computes its visual state from `stackPos`:
- *   0 = top card (draggable, relative — sizes the container)
- *   1,2 = behind cards (scaled down, absolute)
- *   >=3 = hidden
+ * Single draggable card. Keyed by currentIndex so React unmounts/remounts
+ * on each swipe — fresh MotionValues, no stale state from previous cards.
  */
-function Card({
+function DraggableCard({
   quote,
   gradient,
   moodName,
@@ -120,8 +119,8 @@ function Card({
   strain,
   balance,
   onMetricClick,
-  stackPos,
   onSwipeComplete,
+  canSwipe,
   cardRef,
 }: {
   quote: HeroMessage
@@ -131,26 +130,21 @@ function Card({
   strain: number
   balance: number
   onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
-  stackPos: number
   onSwipeComplete: () => void
+  canSwipe: boolean
   cardRef?: (el: HTMLDivElement | null) => void
 }) {
-  const isTop = stackPos === 0
   const x = useMotionValue(0)
-  const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
-  const dragOpacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
-
-  // Reset x when this card becomes the top card (coming from behind)
-  const wasTop = useRef(isTop)
-  useEffect(() => {
-    if (isTop && !wasTop.current) {
-      x.set(0)
-    }
-    wasTop.current = isTop
-  }, [isTop, x])
+  const rotate = useTransform(x, [-200, 0, 200], [-8, 0, 8])
+  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
 
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    if (Math.abs(info.offset.x) > SWIPE_THRESHOLD || Math.abs(info.velocity.x) > SWIPE_VELOCITY) {
+    const shouldSwipe = canSwipe && (
+      Math.abs(info.offset.x) > SWIPE_THRESHOLD ||
+      Math.abs(info.velocity.x) > SWIPE_VELOCITY
+    )
+
+    if (shouldSwipe) {
       const flyTo = info.offset.x > 0 ? 400 : -400
       animate(x, flyTo, {
         type: 'spring',
@@ -161,49 +155,30 @@ function Card({
     } else {
       animate(x, 0, { type: 'spring', stiffness: 500, damping: 30 })
     }
-  }, [x, onSwipeComplete])
+  }, [x, onSwipeComplete, canSwipe])
 
-  const contentProps = { quote, gradient, moodName, focus, strain, balance, onMetricClick }
-
-  // Hidden cards
-  if (stackPos >= 3) {
-    return null
-  }
-
-  // Top card: relative (in flow — sizes the container), draggable
-  if (isTop) {
-    return (
-      <motion.div
-        className="relative cursor-grab active:cursor-grabbing"
-        style={{ x, rotate, opacity: dragOpacity, zIndex: 20 }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.7}
-        onDragEnd={handleDragEnd}
-      >
-        <CardContent {...contentProps} cardRef={cardRef} />
-      </motion.div>
-    )
-  }
-
-  // Behind cards: absolute, scaled down + offset to create stack peek
   return (
     <motion.div
-      className="absolute top-0 left-0 right-0"
-      initial={false}
-      animate={{
-        scale: 1 - stackPos * 0.04,
-        y: stackPos * 8,
-        opacity: Math.max(0, 1 - stackPos * 0.2),
-      }}
-      transition={{
-        type: 'spring',
-        stiffness: 400,
-        damping: 30,
-      }}
-      style={{ zIndex: 10 - stackPos }}
+      style={{ x, rotate, opacity }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.7}
+      onDragEnd={handleDragEnd}
+      className="cursor-grab active:cursor-grabbing"
+      initial={{ scale: 0.97 }}
+      animate={{ scale: 1 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
-      <CardContent {...contentProps} />
+      <CardContent
+        quote={quote}
+        gradient={gradient}
+        moodName={moodName}
+        focus={focus}
+        strain={strain}
+        balance={balance}
+        onMetricClick={onMetricClick}
+        cardRef={cardRef}
+      />
     </motion.div>
   )
 }
@@ -218,43 +193,56 @@ export default function SwipeableQuoteCards({
   activeCardRef,
 }: SwipeableQuoteCardsProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [canSwipe, setCanSwipe] = useState(true)
+  const cooldownRef = useRef<NodeJS.Timeout | null>(null)
   const { gradient, name: moodName } = MOODS[mood]
   const n = quotes.length
 
+  // Clean up cooldown timer
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearTimeout(cooldownRef.current)
+    }
+  }, [])
+
+  // Safety: clamp index if quotes array shrinks (e.g. AI update)
+  useEffect(() => {
+    if (currentIndex >= n && n > 0) {
+      setCurrentIndex(0)
+    }
+  }, [n, currentIndex])
+
   const handleSwipeComplete = useCallback(() => {
     setCurrentIndex(prev => (prev + 1) % n)
+    // Cooldown prevents rapid-fire swiping
+    setCanSwipe(false)
+    cooldownRef.current = setTimeout(() => setCanSwipe(true), SWIPE_COOLDOWN_MS)
   }, [n])
 
   if (!quotes || n === 0) return null
 
   return (
     <div className="w-full">
-      {/* Card stack — overflow-hidden clips swiped cards */}
-      <div className="relative overflow-hidden pb-4">
-        {quotes.map((quote, i) => {
-          const stackPos = ((i - currentIndex) % n + n) % n
-
-          return (
-            <Card
-              key={i}
-              quote={quote}
-              gradient={gradient}
-              moodName={moodName}
-              focus={focus}
-              strain={strain}
-              balance={balance}
-              onMetricClick={onMetricClick}
-              stackPos={stackPos}
-              onSwipeComplete={handleSwipeComplete}
-              cardRef={stackPos === 0 ? activeCardRef : undefined}
-            />
-          )
-        })}
+      {/* Single card at a time — overflow-hidden clips the swipe-off */}
+      <div className="overflow-hidden">
+        <DraggableCard
+          key={currentIndex}
+          quote={quotes[currentIndex]}
+          gradient={gradient}
+          moodName={moodName}
+          focus={focus}
+          strain={strain}
+          balance={balance}
+          onMetricClick={onMetricClick}
+          onSwipeComplete={handleSwipeComplete}
+          canSwipe={canSwipe}
+          cardRef={activeCardRef}
+        />
       </div>
 
       {/* Dot indicators + swipe hint */}
       {n > 1 && (
-        <div className="flex flex-col items-center mt-2 gap-2">
+        <div className="flex flex-col items-center mt-3 gap-2">
           <div className="flex gap-1.5">
             {quotes.map((_, i) => (
               <div
