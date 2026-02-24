@@ -479,7 +479,7 @@ export default function WorkHealthDashboard() {
         {activeTab === 'overview' && (
           <>
             {/* Share Card as Hero — swipeable when multiple quotes available */}
-            {!isLoading && !isAILoading && workHealth?.ai?.heroMessage && typeof workHealth.ai.heroMessage === 'object' ? (
+            {!isLoading && workHealth?.ai?.heroMessage && typeof workHealth.ai.heroMessage === 'object' ? (
               <section className="max-w-xs mx-auto">
                 {workHealth.ai.heroMessages && workHealth.ai.heroMessages.length > 1 ? (
                   <SwipeableQuoteCards

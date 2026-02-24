@@ -319,7 +319,7 @@ You must respond with valid JSON only. Use exactly this format:
 }`;
   }
 
-  private getDefaultInsights(analysis: CalendarAnalysis): PersonalizedInsightsResponse {
+  public getDefaultInsights(analysis: CalendarAnalysis): PersonalizedInsightsResponse {
     const { workHealth } = analysis;
     const insights: PersonalizedInsight[] = [];
 
