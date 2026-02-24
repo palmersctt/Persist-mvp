@@ -187,7 +187,7 @@ export default function WorkHealthDashboard() {
     setShareState('generating');
 
     try {
-      const W = 1080, H = 1920;
+      const W = 1080, H = 1350; // 4:5 standard share size
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
@@ -227,26 +227,26 @@ export default function WorkHealthDashboard() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
 
-      // --- Quote (centered in upper area) ---
-      const quoteFont = `700 64px ${fontStack}`;
+      // --- Measure content to center vertically above score bar ---
+      const quoteFont = `700 56px ${fontStack}`;
       const quoteText = `\u201C${quote}\u201D`;
       const quoteLines = wrapText(quoteText, contentWidth, quoteFont);
-      const quoteLineHeight = 82;
+      const quoteLineHeight = 72;
       const quoteH = quoteLines.length * quoteLineHeight;
 
-      const sourceH = 34;
-      const gapAfterQuote = 36;
-      const gapAfterSource = 20;
+      const gapAfterQuote = 28;
+      const sourceH = 30;
+      const gapAfterSource = 16;
 
-      const subFont = `300 28px ${fontStack}`;
+      const subFont = `300 26px ${fontStack}`;
       const subLines = wrapText(subtitle, contentWidth - 40, subFont);
-      const subLineHeight = 40;
+      const subLineHeight = 36;
       const subH = subLines.length * subLineHeight;
 
-      // Center the text block vertically in the top ~70% of the card
       const textBlockH = quoteH + gapAfterQuote + sourceH + gapAfterSource + subH;
-      const topZone = H * 0.68;
-      let y = Math.max(180, (topZone - textBlockH) / 2 + 80);
+      const scoreBarTop = H - 280;
+      const availableH = scoreBarTop - 60; // 60px top margin
+      let y = Math.max(60, 60 + (availableH - textBlockH) / 2);
 
       // Quote
       ctx.font = quoteFont;
@@ -258,7 +258,7 @@ export default function WorkHealthDashboard() {
 
       // Source
       y += gapAfterQuote;
-      ctx.font = `italic 30px ${fontStack}`;
+      ctx.font = `italic 26px ${fontStack}`;
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.fillText(`\u2014 ${source}`, W / 2, y);
       y += sourceH + gapAfterSource;
@@ -271,12 +271,12 @@ export default function WorkHealthDashboard() {
         y += subLineHeight;
       }
 
-      // --- Score bar (bottom area) with mood label inside ---
+      // --- Score bar with mood label inside ---
       const barPadX = 60;
-      const barY = H - 380;
+      const barY = H - 270;
       const barW = W - barPadX * 2;
-      const barH = 230;
-      const barR = 40;
+      const barH = 200;
+      const barR = 36;
 
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.beginPath();
@@ -284,10 +284,10 @@ export default function WorkHealthDashboard() {
       ctx.fill();
 
       // Mood label inside bar
-      ctx.font = `600 20px ${fontStack}`;
+      ctx.font = `600 18px ${fontStack}`;
       ctx.letterSpacing = '5px';
       ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, barY + 32);
+      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, barY + 26);
       ctx.letterSpacing = '0px';
 
       // Scores inside bar
@@ -302,48 +302,43 @@ export default function WorkHealthDashboard() {
         const cx = barPadX + colWidth * i + colWidth / 2;
         const s = scores[i];
 
-        // Number
-        ctx.font = `700 72px ${fontStack}`;
+        ctx.font = `700 64px ${fontStack}`;
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fillText(`${s.value}`, cx, barY + 75);
+        ctx.fillText(`${s.value}`, cx, barY + 65);
 
-        // Label
-        ctx.font = `500 18px ${fontStack}`;
+        ctx.font = `500 16px ${fontStack}`;
         ctx.letterSpacing = '3px';
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText(s.label, cx, barY + 168);
+        ctx.fillText(s.label, cx, barY + 150);
         ctx.letterSpacing = '0px';
       }
 
-      // --- Branding (logo + text outside bar, at very bottom) ---
-      const brandY = H - 100;
-      const logoR = 14;
-      const logoGap = 8;
-      ctx.font = `500 18px ${fontStack}`;
-      ctx.letterSpacing = '6px';
+      // --- Branding at very bottom ---
+      const brandY = H - 36;
+      const logoR = 12;
+      const logoGap = 6;
+      ctx.font = `500 16px ${fontStack}`;
+      ctx.letterSpacing = '5px';
       const brandText = 'PERSIST';
       const brandW2 = ctx.measureText(brandText).width;
       const totalBrandW = logoR * 2 + logoGap + brandW2;
       const brandStartX = (W - totalBrandW) / 2;
 
-      // Draw logo circle
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.beginPath();
       ctx.arc(brandStartX + logoR, brandY, logoR, 0, Math.PI * 2);
       ctx.fill();
-      // Chevron inside
-      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1.2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.moveTo(brandStartX + logoR - 4, brandY - 6);
-      ctx.lineTo(brandStartX + logoR + 5, brandY);
-      ctx.lineTo(brandStartX + logoR - 4, brandY + 6);
+      ctx.moveTo(brandStartX + logoR - 3, brandY - 5);
+      ctx.lineTo(brandStartX + logoR + 4, brandY);
+      ctx.lineTo(brandStartX + logoR - 3, brandY + 5);
       ctx.stroke();
 
-      // Brand text
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
       ctx.textAlign = 'left';
       ctx.fillText(brandText, brandStartX + logoR * 2 + logoGap, brandY);
       ctx.textAlign = 'center';
