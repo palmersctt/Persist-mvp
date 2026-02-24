@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       aiStatus?: 'success' | 'fallback' | 'unavailable' | 'local';
     }
 
-    let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
+    const enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
 
     // Build calendar analysis (shared by both fast and full paths)
     const meetingTypes = events.reduce((acc, event) => {
