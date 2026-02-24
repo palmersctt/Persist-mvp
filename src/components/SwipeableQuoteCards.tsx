@@ -26,14 +26,7 @@ const scores = [
 const SWIPE_THRESHOLD = 80
 const SWIPE_VELOCITY = 300
 
-/**
- * Each card is a persistent instance (keyed by array index, never unmounted).
- * It computes its visual state from `stackPos`:
- *   0 = top card (draggable)
- *   1,2 = behind cards (scaled down, offset)
- *   >=3 = hidden
- */
-function Card({
+function CardContent({
   quote,
   gradient,
   moodName,
@@ -41,8 +34,6 @@ function Card({
   strain,
   balance,
   onMetricClick,
-  stackPos,
-  onSwipeComplete,
   cardRef,
 }: {
   quote: HeroMessage
@@ -52,47 +43,13 @@ function Card({
   strain: number
   balance: number
   onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
-  stackPos: number
-  onSwipeComplete: () => void
   cardRef?: (el: HTMLDivElement | null) => void
 }) {
-  const isTop = stackPos === 0
-  const prevStackPos = useRef(stackPos)
-  const x = useMotionValue(0)
-  const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
-  const dragOpacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
   const values = { focus, strain, balance }
 
-  // When card transitions from top (swiped off at x=400) to behind, reset x instantly
-  useEffect(() => {
-    if (prevStackPos.current === 0 && stackPos > 0) {
-      x.set(0)
-    }
-    prevStackPos.current = stackPos
-  }, [stackPos, x])
-
-  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    if (Math.abs(info.offset.x) > SWIPE_THRESHOLD || Math.abs(info.velocity.x) > SWIPE_VELOCITY) {
-      const flyTo = info.offset.x > 0 ? 400 : -400
-      animate(x, flyTo, {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        onComplete: onSwipeComplete,
-      })
-    } else {
-      animate(x, 0, { type: 'spring', stiffness: 500, damping: 30 })
-    }
-  }, [x, onSwipeComplete])
-
-  // Hidden cards (far back in stack)
-  if (stackPos >= 3) {
-    return null
-  }
-
-  const cardInner = (
+  return (
     <div
-      ref={isTop ? cardRef : undefined}
+      ref={cardRef}
       className="w-full rounded-2xl overflow-hidden"
       style={{
         background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
@@ -147,45 +104,106 @@ function Card({
       </div>
     </div>
   )
+}
 
-  // Top card: draggable with motion values
+/**
+ * Each card computes its visual state from `stackPos`:
+ *   0 = top card (draggable, relative — sizes the container)
+ *   1,2 = behind cards (scaled down, absolute)
+ *   >=3 = hidden
+ */
+function Card({
+  quote,
+  gradient,
+  moodName,
+  focus,
+  strain,
+  balance,
+  onMetricClick,
+  stackPos,
+  onSwipeComplete,
+  cardRef,
+}: {
+  quote: HeroMessage
+  gradient: [string, string]
+  moodName: string
+  focus: number
+  strain: number
+  balance: number
+  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
+  stackPos: number
+  onSwipeComplete: () => void
+  cardRef?: (el: HTMLDivElement | null) => void
+}) {
+  const isTop = stackPos === 0
+  const x = useMotionValue(0)
+  const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
+  const dragOpacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
+
+  // Reset x when this card becomes the top card (coming from behind)
+  const wasTop = useRef(isTop)
+  useEffect(() => {
+    if (isTop && !wasTop.current) {
+      x.set(0)
+    }
+    wasTop.current = isTop
+  }, [isTop, x])
+
+  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    if (Math.abs(info.offset.x) > SWIPE_THRESHOLD || Math.abs(info.velocity.x) > SWIPE_VELOCITY) {
+      const flyTo = info.offset.x > 0 ? 400 : -400
+      animate(x, flyTo, {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        onComplete: onSwipeComplete,
+      })
+    } else {
+      animate(x, 0, { type: 'spring', stiffness: 500, damping: 30 })
+    }
+  }, [x, onSwipeComplete])
+
+  const contentProps = { quote, gradient, moodName, focus, strain, balance, onMetricClick }
+
+  // Hidden cards
+  if (stackPos >= 3) {
+    return null
+  }
+
+  // Top card: relative (in flow — sizes the container), draggable
   if (isTop) {
     return (
       <motion.div
-        className="absolute inset-0 cursor-grab active:cursor-grabbing"
+        className="relative cursor-grab active:cursor-grabbing"
         style={{ x, rotate, opacity: dragOpacity, zIndex: 20 }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
         onDragEnd={handleDragEnd}
       >
-        {cardInner}
+        <CardContent {...contentProps} cardRef={cardRef} />
       </motion.div>
     )
   }
 
-  // Behind card: animated stack position, instant x/rotate reset
+  // Behind cards: absolute, scaled down + offset to create stack peek
   return (
     <motion.div
-      className="absolute inset-0"
+      className="absolute top-0 left-0 right-0"
+      initial={false}
       animate={{
         scale: 1 - stackPos * 0.04,
         y: stackPos * 8,
         opacity: Math.max(0, 1 - stackPos * 0.2),
-        x: 0,
-        rotate: 0,
       }}
       transition={{
         type: 'spring',
         stiffness: 400,
         damping: 30,
-        // Instantly reset position/rotation so the swiped card doesn't slide in from offscreen
-        x: { duration: 0 },
-        rotate: { duration: 0 },
       }}
       style={{ zIndex: 10 - stackPos }}
     >
-      {cardInner}
+      <CardContent {...contentProps} />
     </motion.div>
   )
 }
@@ -211,10 +229,9 @@ export default function SwipeableQuoteCards({
 
   return (
     <div className="w-full">
-      {/* Card stack — persistent instances, never unmounted */}
-      <div className="relative" style={{ minHeight: '320px' }}>
+      {/* Card stack — overflow-hidden clips swiped cards */}
+      <div className="relative overflow-hidden pb-4">
         {quotes.map((quote, i) => {
-          // How far back in the stack is this card?
           const stackPos = ((i - currentIndex) % n + n) % n
 
           return (
@@ -237,7 +254,7 @@ export default function SwipeableQuoteCards({
 
       {/* Dot indicators + swipe hint */}
       {n > 1 && (
-        <div className="flex flex-col items-center mt-4 gap-2">
+        <div className="flex flex-col items-center mt-2 gap-2">
           <div className="flex gap-1.5">
             {quotes.map((_, i) => (
               <div
