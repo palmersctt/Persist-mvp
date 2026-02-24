@@ -507,75 +507,48 @@ export default function WorkHealthDashboard() {
                 </div>
               </section>
             ) : (
-              <section className="text-center">
-                <div className="w-full rounded-2xl overflow-hidden" style={{
-                  background: 'linear-gradient(180deg, rgba(10,10,10,0.9) 0%, rgba(17,17,17,0.9) 50%, rgba(10,10,10,0.9) 100%)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  padding: '48px 28px',
-                }}>
-                  {/* Animated ring spinner */}
-                  <div className="flex justify-center mb-8">
-                    <svg width="80" height="80" viewBox="0 0 80 80">
-                      <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(16,185,129,0.15)" strokeWidth="5" />
-                      <circle
-                        cx="40" cy="40" r="32" fill="none"
-                        stroke="#10b981" strokeWidth="5" strokeLinecap="round"
-                        strokeDasharray="50 151"
-                        style={{ transformOrigin: 'center', animation: 'persist-spin 1.4s linear infinite' }}
-                      />
-                      <circle cx="40" cy="40" r="22" fill="none" stroke="rgba(59,130,246,0.1)" strokeWidth="4" />
-                      <circle
-                        cx="40" cy="40" r="22" fill="none"
-                        stroke="#3b82f6" strokeWidth="4" strokeLinecap="round"
-                        strokeDasharray="35 103"
-                        style={{ transformOrigin: 'center', animation: 'persist-spin 1.8s linear infinite reverse' }}
-                      />
-                      <circle cx="40" cy="40" r="13" fill="none" stroke="rgba(107,114,128,0.1)" strokeWidth="3" />
-                      <circle
-                        cx="40" cy="40" r="13" fill="none"
-                        stroke="#6b7280" strokeWidth="3" strokeLinecap="round"
-                        strokeDasharray="20 62"
-                        style={{ transformOrigin: 'center', animation: 'persist-spin 2.2s linear infinite' }}
-                      />
-                    </svg>
-                  </div>
-                  <style>{`@keyframes persist-spin { to { transform: rotate(360deg); } }`}</style>
+              <section className="max-w-xs mx-auto">
+                <div
+                  className="w-full rounded-2xl overflow-hidden animate-pulse"
+                  style={{
+                    background: 'linear-gradient(to bottom, #4b5563, #1f2937)',
+                    padding: '32px 24px 20px',
+                  }}
+                >
+                  {/* Quote skeleton */}
+                  <div className="h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.12)', maxWidth: '85%' }} />
+                  <div className="h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.08)', maxWidth: '60%' }} />
 
-                  {/* Loading text */}
-                  <p className="text-sm font-light mb-8" style={{ color: 'var(--text-muted)' }}>
-                    Reading your calendar...
-                  </p>
+                  {/* Source skeleton */}
+                  <div className="h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '40%' }} />
 
-                  {/* Skeleton placeholders */}
-                  <div className="animate-pulse">
-                    <div className="h-6 md:h-8 rounded-lg mx-auto mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.05)', maxWidth: '75%' }} />
-                    <div className="h-3 rounded mx-auto mb-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', maxWidth: '35%' }} />
-                    <div className="h-3 rounded mx-auto" style={{ backgroundColor: 'rgba(255,255,255,0.03)', maxWidth: '50%' }} />
+                  {/* Subtitle skeleton */}
+                  <div className="h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(255,255,255,0.06)', maxWidth: '55%' }} />
+
+                  {/* Score bar skeleton */}
+                  <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
+                    <div className="h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.08)', maxWidth: '30%' }} />
+                    <div className="flex justify-center gap-8">
+                      {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
+                        <div key={label} className="text-center">
+                          <div className="text-xl font-bold" style={{ color: 'rgba(255,255,255,0.15)', lineHeight: 1 }}>--</div>
+                          <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.15)' }}>{label}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="w-16 h-0.5 mx-auto mt-6 mb-7" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }} />
-
-                  {/* Score placeholders with metric colors */}
-                  <div className="flex justify-center gap-8 md:gap-12">
-                    {[
-                      { color: '#10b981', label: 'FOCUS' },
-                      { color: '#3b82f6', label: 'STRAIN' },
-                      { color: '#6b7280', label: 'BALANCE' },
-                    ].map((s) => (
-                      <div key={s.label} className="text-center animate-pulse">
-                        <div className="text-3xl md:text-4xl font-semibold" style={{ color: s.color, lineHeight: 1, opacity: 0.3 }}>
-                          --
-                        </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-wider mt-2" style={{ color: s.color, opacity: 0.3 }}>
-                          {s.label}
-                        </div>
-                        <div className="w-20 md:w-24 h-1 rounded-full mt-2.5 overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                          <div className="h-full rounded-full" style={{ width: '0%', backgroundColor: s.color }} />
-                        </div>
-                      </div>
-                    ))}
+                  {/* Branding skeleton */}
+                  <div className="flex items-center justify-center gap-1.5 mt-3">
+                    <PersistLogo size={12} variant="light" />
+                    <span className="text-[9px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.15)' }}>PERSIST</span>
                   </div>
                 </div>
+
+                {/* Loading text below card */}
+                <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
+                  Reading your calendar...
+                </p>
               </section>
             )}
 
