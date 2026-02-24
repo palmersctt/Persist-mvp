@@ -130,7 +130,7 @@ function DraggableCard({
   strain: number
   balance: number
   onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
-  onSwipeComplete: () => void
+  onSwipeComplete: (direction: number) => void
   canSwipe: boolean
   cardRef?: (el: HTMLDivElement | null) => void
 }) {
@@ -150,7 +150,7 @@ function DraggableCard({
         type: 'spring',
         stiffness: 300,
         damping: 30,
-        onComplete: onSwipeComplete,
+        onComplete: () => onSwipeComplete(info.offset.x > 0 ? -1 : 1),
       })
     } else {
       animate(x, 0, { type: 'spring', stiffness: 500, damping: 30 })
@@ -212,8 +212,9 @@ export default function SwipeableQuoteCards({
     }
   }, [n, currentIndex])
 
-  const handleSwipeComplete = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % n)
+  const handleSwipeComplete = useCallback((direction: number) => {
+    // direction: +1 = next (swiped left), -1 = prev (swiped right)
+    setCurrentIndex(prev => (prev + direction + n) % n)
     // Cooldown prevents rapid-fire swiping
     setCanSwipe(false)
     cooldownRef.current = setTimeout(() => setCanSwipe(true), SWIPE_COOLDOWN_MS)
