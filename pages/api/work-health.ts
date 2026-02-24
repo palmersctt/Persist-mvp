@@ -17,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Extract user timezone from query parameter or header (CLIENT-SIDE DETECTION)
   const userTimezone = (req.query.timezone as string) || req.headers['x-user-timezone'] as string || 'America/Los_Angeles';
+  const skipAI = req.query.skipAI === 'true';
 
   // Extract recent quotes so AI avoids repeats
   let recentQuotes: string[] = [];
@@ -31,77 +32,105 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session || !session.accessToken) {
       return res.status(401).json({ error: 'Unauthorized - Please sign in' });
     }
 
     // Check if token refresh failed and we need re-authentication
     if (session.error === "RefreshAccessTokenError") {
-      return res.status(401).json({ 
-        error: 'Token expired - Please sign out and sign in again', 
-        needsReauth: true 
+      return res.status(401).json({
+        error: 'Token expired - Please sign out and sign in again',
+        needsReauth: true
       });
     }
 
     const calendarService = new GoogleCalendarService();
     await calendarService.initialize(session.accessToken);
-    
+
     // Get calendar events and work health analysis using CLIENT-SIDE detected timezone
     const events = await calendarService.getTodaysEvents(userTimezone);
     const workHealthData = await calendarService.analyzeWorkHealth(userTimezone);
-    
+
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
       ai?: PersonalizedInsightsResponse;
-      aiStatus?: 'success' | 'fallback' | 'unavailable';
+      aiStatus?: 'success' | 'fallback' | 'unavailable' | 'local';
     }
-    
+
     let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
 
-    // Try to get AI insights (NO CACHING - always fresh)
+    // Build calendar analysis (shared by both fast and full paths)
+    const meetingTypes = events.reduce((acc, event) => {
+      acc[event.category || 'COLLABORATIVE'] = (acc[event.category || 'COLLABORATIVE'] || 0) + 1;
+      return acc;
+    }, {} as Record<MeetingCategory, number>);
+
+    const timeDistribution = events.reduce((acc, event) => {
+      const hour = event.start.getHours();
+      const timeSlot = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+      acc[timeSlot] = (acc[timeSlot] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const focusBlocks = [];
+    for (let i = 0; i < events.length - 1; i++) {
+      const currentEnd = events[i].end;
+      const nextStart = events[i + 1].start;
+      const gapMinutes = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60);
+      if (gapMinutes >= 90) {
+        focusBlocks.push({
+          start: currentEnd.getHours() + (currentEnd.getMinutes() / 60),
+          duration: gapMinutes
+        });
+      }
+    }
+
+    const calendarAnalysis: CalendarAnalysis = {
+      workHealth: workHealthData,
+      events,
+      patterns: { meetingTypes, timeDistribution, focusBlocks }
+    };
+
+    // Fast path: return local quotes + metric insights immediately (no AI call)
+    if (skipAI) {
+      try {
+        const claudeService = new ClaudeAIService();
+        enhancedResponse.ai = claudeService.getDefaultInsights(calendarAnalysis);
+        enhancedResponse.aiStatus = 'local';
+      } catch {
+        // If ClaudeAIService can't be instantiated, generate minimal fallback
+        const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
+        const quote = comicReliefGenerator.generateQuote(workHealthData);
+        const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
+        enhancedResponse.ai = {
+          heroMessage: {
+            quote: quote.text,
+            source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
+            subtitle: 'Loading AI insights...'
+          },
+          heroMessages: fallbackQuotes.map((q: any) => ({
+            quote: q.text,
+            source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
+            subtitle: 'Loading AI insights...'
+          })),
+          insights: [],
+          summary: `Current work health status: ${workHealthData.status}.`,
+          overallScore: workHealthData.adaptivePerformanceIndex,
+          riskFactors: [],
+          opportunities: [],
+          predictiveAlerts: []
+        };
+        enhancedResponse.aiStatus = 'local';
+      }
+      console.log(`work-health (fast): ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, tz=${userTimezone}`);
+      return res.status(200).json(enhancedResponse);
+    }
+
+    // Full path: call Claude AI for personalized insights + quotes
     try {
       const claudeService = new ClaudeAIService();
-      
-      // Create meeting patterns analysis
-      const meetingTypes = events.reduce((acc, event) => {
-        acc[event.category || 'COLLABORATIVE'] = (acc[event.category || 'COLLABORATIVE'] || 0) + 1;
-        return acc;
-      }, {} as Record<MeetingCategory, number>);
-      
-      // Create time distribution (simplified for now)
-      const timeDistribution = events.reduce((acc, event) => {
-        const hour = event.start.getHours();
-        const timeSlot = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-        acc[timeSlot] = (acc[timeSlot] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      // Find focus blocks (gaps >= 90 minutes between meetings)
-      const focusBlocks = [];
-      for (let i = 0; i < events.length - 1; i++) {
-        const currentEnd = events[i].end;
-        const nextStart = events[i + 1].start;
-        const gapMinutes = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60);
-        
-        if (gapMinutes >= 90) {
-          focusBlocks.push({
-            start: currentEnd.getHours() + (currentEnd.getMinutes() / 60),
-            duration: gapMinutes
-          });
-        }
-      }
-      
-      const calendarAnalysis: CalendarAnalysis = {
-        workHealth: workHealthData,
-        events,
-        patterns: {
-          meetingTypes,
-          timeDistribution,
-          focusBlocks
-        }
-      };
-      
+
       const userContext: UserContext = {
         userId: session.user?.id || session.user?.email || 'anonymous',
         preferences: {
@@ -110,22 +139,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           meetingPreference: 'balanced'
         }
       };
-      
+
       const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone, recentQuotes);
-      
+
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';
-      
+
     } catch (aiError) {
       console.warn('AI insights generation failed, continuing with calendar data only:', aiError);
       enhancedResponse.aiStatus = 'fallback';
 
-      // Add minimal AI status info for debugging
       if (aiError instanceof Error) {
         console.log('AI Error details:', aiError.message);
       }
 
-      // Provide fallback hero message so the UI doesn't show a blank/stuck state
       const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
       const quote = comicReliefGenerator.generateQuote(workHealthData);
       const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
