@@ -382,8 +382,8 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
         return;
       }
 
-      // Preserve displayed quotes on background updates to avoid mid-read override
-      const shouldPreserveQuotes = quotesLocked.current && (isSilent || workHealth !== null);
+      // Only preserve quotes on background polls — initial fetch should always show fresh AI
+      const shouldPreserveQuotes = isSilent && quotesLocked.current;
       handleFetchSuccess(data, shouldPreserveQuotes);
 
       console.log(`✅ Work health loaded (${data.aiStatus || 'unknown'})`);
@@ -457,10 +457,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
           const data = JSON.parse(cached);
           setWorkHealth(data.metrics);
           setLastRefresh(new Date(data.lastRefresh));
-          // Lock cached quotes so the fetch doesn't override them
-          if (data.metrics?.ai?.heroMessages?.length > 0) {
-            quotesLocked.current = true;
-          }
+          // Don't lock — cache is just a loading placeholder, fresh API should replace it
           console.log('⚡ Showing cached data instantly');
         }
       } catch { /* ignore */ }
