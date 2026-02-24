@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
 import ComicReliefSaying from './ComicReliefSaying'
 import ShareCard from './ShareCard'
 import PersistLogo from './PersistLogo'
-import { detectMood, MOODS } from '../lib/mood'
+import { detectMood } from '../lib/mood'
+import { toPng } from 'html-to-image'
 
 interface SecondaryMetric {
   label: string;
@@ -34,7 +35,8 @@ export default function WorkHealthDashboard() {
   const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
   const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
-  
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, history } = useWorkHealth(activeTab);
 
   // Trend arrow helper
@@ -172,185 +174,23 @@ export default function WorkHealthDashboard() {
   };
 
   const handleShare = useCallback(async () => {
-    if (shareState === 'generating') return;
-
-    const heroMsg = workHealth?.ai?.heroMessage;
-    const quote = heroMsg && typeof heroMsg === 'object' ? heroMsg.quote : '';
-    const source = heroMsg && typeof heroMsg === 'object' ? heroMsg.source : '';
-    const subtitle = heroMsg && typeof heroMsg === 'object' ? heroMsg.subtitle : '';
-    const perf = workHealth?.adaptivePerformanceIndex || 0;
-    const resil = workHealth?.cognitiveResilience || 0;
-    const sust = workHealth?.workRhythmRecovery || 0;
-    const mood = detectMood(perf, resil, sust);
-    const moodConfig = MOODS[mood];
+    if (shareState === 'generating' || !cardRef.current) return;
 
     setShareState('generating');
 
     try {
-      const W = 1080, H = 1350; // 4:5 standard share size
-      const canvas = document.createElement('canvas');
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext('2d')!;
+      // Capture the actual rendered card at 3x resolution for crisp sharing
+      const dataUrl = await toPng(cardRef.current, {
+        pixelRatio: 3,
+        quality: 1,
+      });
 
-      // --- Mood gradient background ---
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, moodConfig.gradient[0]);
-      bg.addColorStop(1, moodConfig.gradient[1]);
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, H);
-
-      // --- Text helpers ---
-      const fontStack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-
-      const wrapText = (text: string, maxWidth: number, font: string): string[] => {
-        ctx.font = font;
-        const words = text.split(' ');
-        const lines: string[] = [];
-        let line = '';
-        for (const word of words) {
-          const test = line ? `${line} ${word}` : word;
-          if (ctx.measureText(test).width > maxWidth && line) {
-            lines.push(line);
-            line = word;
-          } else {
-            line = test;
-          }
-        }
-        if (line) lines.push(line);
-        return lines;
-      };
-
-      const PAD = 80;
-      const contentWidth = W - PAD * 2;
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-
-      // --- Measure content to center vertically above score bar ---
-      const quoteFont = `700 56px ${fontStack}`;
-      const quoteText = `\u201C${quote}\u201D`;
-      const quoteLines = wrapText(quoteText, contentWidth, quoteFont);
-      const quoteLineHeight = 72;
-      const quoteH = quoteLines.length * quoteLineHeight;
-
-      const gapAfterQuote = 28;
-      const sourceH = 30;
-      const gapAfterSource = 16;
-
-      const subFont = `400 28px ${fontStack}`;
-      const subLines = wrapText(subtitle, contentWidth - 40, subFont);
-      const subLineHeight = 38;
-      const subH = subLines.length * subLineHeight;
-
-      const textBlockH = quoteH + gapAfterQuote + sourceH + gapAfterSource + subH;
-      const scoreBarTop = H - 270;
-      const availableH = scoreBarTop - 40;
-      let y = Math.max(50, 40 + (availableH - textBlockH) / 2);
-
-      // Quote
-      ctx.font = quoteFont;
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      for (const line of quoteLines) {
-        ctx.fillText(line, W / 2, y);
-        y += quoteLineHeight;
-      }
-
-      // Source
-      y += gapAfterQuote;
-      ctx.font = `italic 26px ${fontStack}`;
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fillText(`\u2014 ${source}`, W / 2, y);
-      y += sourceH + gapAfterSource;
-
-      // Subtitle
-      ctx.font = subFont;
-      ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      for (const line of subLines) {
-        ctx.fillText(line, W / 2, y);
-        y += subLineHeight;
-      }
-
-      // --- Score bar with mood label inside ---
-      const barPadX = 60;
-      const barY = H - 270;
-      const barW = W - barPadX * 2;
-      const barH = 200;
-      const barR = 36;
-
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath();
-      ctx.roundRect(barPadX, barY, barW, barH, barR);
-      ctx.fill();
-
-      // Mood label inside bar
-      ctx.font = `600 18px ${fontStack}`;
-      ctx.letterSpacing = '5px';
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillText(moodConfig.name.toUpperCase(), W / 2, barY + 26);
-      ctx.letterSpacing = '0px';
-
-      // Scores inside bar
-      const scores = [
-        { value: perf, label: 'FOCUS' },
-        { value: resil, label: 'STRAIN' },
-        { value: sust, label: 'BALANCE' },
-      ];
-      const colWidth = barW / 3;
-
-      for (let i = 0; i < scores.length; i++) {
-        const cx = barPadX + colWidth * i + colWidth / 2;
-        const s = scores[i];
-
-        ctx.font = `700 64px ${fontStack}`;
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fillText(`${s.value}`, cx, barY + 65);
-
-        ctx.font = `500 16px ${fontStack}`;
-        ctx.letterSpacing = '3px';
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText(s.label, cx, barY + 150);
-        ctx.letterSpacing = '0px';
-      }
-
-      // --- Branding at very bottom ---
-      const brandY = H - 36;
-      const logoR = 12;
-      const logoGap = 6;
-      ctx.font = `500 16px ${fontStack}`;
-      ctx.letterSpacing = '5px';
-      const brandText = 'PERSIST';
-      const brandW2 = ctx.measureText(brandText).width;
-      const totalBrandW = logoR * 2 + logoGap + brandW2;
-      const brandStartX = (W - totalBrandW) / 2;
-
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.arc(brandStartX + logoR, brandY, logoR, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-      ctx.lineWidth = 1.2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(brandStartX + logoR - 3, brandY - 5);
-      ctx.lineTo(brandStartX + logoR + 4, brandY);
-      ctx.lineTo(brandStartX + logoR - 3, brandY + 5);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.textAlign = 'left';
-      ctx.fillText(brandText, brandStartX + logoR * 2 + logoGap, brandY);
-      ctx.textAlign = 'center';
-      ctx.letterSpacing = '0px';
-
-      // --- Share / Download ---
-      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
-      if (!blob) throw new Error('Canvas toBlob failed');
-
+      // Convert data URL to blob
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
       const file = new File([blob], 'persist-today.png', { type: 'image/png' });
 
-      // Try native share with image (mobile)
+      // Try native share (mobile)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({ files: [file], text: 'persistwork.com' });
@@ -361,11 +201,10 @@ export default function WorkHealthDashboard() {
             setShareState('idle');
             return;
           }
-          // Fall through to download
         }
       }
 
-      // Fallback: download the image
+      // Fallback: download
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -379,7 +218,7 @@ export default function WorkHealthDashboard() {
     }
 
     setShareState('idle');
-  }, [shareState, workHealth]);
+  }, [shareState]);
 
   if (status === 'loading') {
     return (
@@ -641,6 +480,7 @@ export default function WorkHealthDashboard() {
             {/* Share Card as Hero */}
             {!isLoading && !isAILoading && workHealth?.ai?.heroMessage && typeof workHealth.ai.heroMessage === 'object' ? (
               <section className="max-w-xs mx-auto">
+                <div ref={cardRef}>
                 <ShareCard
                   quote={workHealth.ai.heroMessage.quote}
                   source={workHealth.ai.heroMessage.source}
@@ -651,6 +491,7 @@ export default function WorkHealthDashboard() {
                   mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
                   onMetricClick={(metric) => setActiveTab(metric)}
                 />
+                </div>
                 <div className="mt-4">
                   <button
                     onClick={handleShare}

@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.56.0",
     "dotenv": "^17.2.1",
     "googleapis": "^157.0.0",
+    "html-to-image": "^1.11.13",
     "next": "^15.5.3",
     "next-auth": "^4.24.11",
     "react": "19.1.0",
