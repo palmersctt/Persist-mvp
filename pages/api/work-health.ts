@@ -127,7 +127,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(enhancedResponse);
     }
 
-    // Full path: call Claude AI for personalized insights + quotes
+    // Full path: call Claude AI with server-side timeout
+    // Give AI a fair shot (8s) before falling back to local quotes
+    const AI_TIMEOUT_MS = 8000;
+
     try {
       const claudeService = new ClaudeAIService();
 
@@ -140,41 +143,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       };
 
-      const aiInsights = await claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone, recentQuotes);
+      const aiInsights = await Promise.race([
+        claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone, recentQuotes),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT_MS)
+        ),
+      ]);
 
       enhancedResponse.ai = aiInsights;
       enhancedResponse.aiStatus = 'success';
 
     } catch (aiError) {
-      console.warn('AI insights generation failed, continuing with calendar data only:', aiError);
-      enhancedResponse.aiStatus = 'fallback';
+      const isTimeout = aiError instanceof Error && aiError.message === 'AI_TIMEOUT';
 
-      if (aiError instanceof Error) {
-        console.log('AI Error details:', aiError.message);
+      if (isTimeout) {
+        console.log(`⏱️ AI timed out after ${AI_TIMEOUT_MS}ms, using local insights`);
+      } else {
+        console.warn('AI insights generation failed:', aiError);
+        if (aiError instanceof Error) {
+          console.log('AI Error details:', aiError.message);
+        }
       }
 
-      const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
-      const quote = comicReliefGenerator.generateQuote(workHealthData);
-      const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
-      const fallbackHeroMessage = {
-        quote: quote.text,
-        source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
-        subtitle: 'AI insights temporarily unavailable'
-      };
-      enhancedResponse.ai = {
-        heroMessage: fallbackHeroMessage,
-        heroMessages: fallbackQuotes.map((q: any) => ({
-          quote: q.text,
-          source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
-          subtitle: 'AI insights temporarily unavailable'
-        })),
-        insights: [],
-        summary: `Current work health status: ${workHealthData.status}.`,
-        overallScore: workHealthData.adaptivePerformanceIndex,
-        riskFactors: [],
-        opportunities: [],
-        predictiveAlerts: []
-      };
+      enhancedResponse.aiStatus = isTimeout ? 'local' : 'fallback';
+
+      // Fall back to local insights (getDefaultInsights), then comic relief as last resort
+      try {
+        const claudeService = new ClaudeAIService();
+        enhancedResponse.ai = claudeService.getDefaultInsights(calendarAnalysis);
+      } catch {
+        const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
+        const quote = comicReliefGenerator.generateQuote(workHealthData);
+        const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
+        enhancedResponse.ai = {
+          heroMessage: {
+            quote: quote.text,
+            source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
+            subtitle: isTimeout ? 'Showing offline quotes' : 'AI insights temporarily unavailable'
+          },
+          heroMessages: fallbackQuotes.map((q: any) => ({
+            quote: q.text,
+            source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
+            subtitle: isTimeout ? 'Showing offline quotes' : 'AI insights temporarily unavailable'
+          })),
+          insights: [],
+          summary: `Current work health status: ${workHealthData.status}.`,
+          overallScore: workHealthData.adaptivePerformanceIndex,
+          riskFactors: [],
+          opportunities: [],
+          predictiveAlerts: []
+        };
+      }
     }
 
     console.log(`work-health: ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, tz=${userTimezone}`);

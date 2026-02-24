@@ -266,14 +266,15 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     return `${data.schedule?.meetingCount}-${data.schedule?.backToBackCount}-${data.schedule?.durationHours}-${data.adaptivePerformanceIndex}-${data.cognitiveResilience}-${data.workRhythmRecovery}`;
   };
 
-  // Shared fetch helpers
-  const buildFetchUrl = (skipAI: boolean) => {
+  // Once quotes are displayed, lock them so background updates don't override mid-read
+  const quotesLocked = useRef(false);
+
+  const buildFetchUrl = () => {
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const params = new URLSearchParams({
       _t: String(Date.now()),
       timezone: userTimezone,
     });
-    if (skipAI) params.set('skipAI', 'true');
     return { url: `/api/work-health?${params}`, userTimezone };
   };
 
@@ -289,22 +290,44 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     };
   };
 
-  const handleFetchSuccess = (data: any) => {
+  const handleFetchSuccess = (data: any, preserveQuotes = false) => {
     calendarFingerprint.current = getFingerprint(data);
-    setWorkHealth(data);
+
+    if (preserveQuotes && quotesLocked.current) {
+      // Update metrics + insights but keep the quotes the user is reading
+      setWorkHealth(prev => {
+        if (!prev?.ai?.heroMessages) return data;
+        return {
+          ...data,
+          ai: {
+            ...data.ai,
+            heroMessage: prev.ai.heroMessage,
+            heroMessages: prev.ai.heroMessages,
+          }
+        };
+      });
+    } else {
+      setWorkHealth(data);
+      if (data.ai?.heroMessages?.length > 0) {
+        quotesLocked.current = true;
+      }
+    }
+
     setLastRefresh(new Date());
     updateHistory(data);
 
-    // Track quotes for repeat avoidance
-    if (data.ai?.heroMessages && Array.isArray(data.ai.heroMessages)) {
-      data.ai.heroMessages.forEach((msg: HeroMessage) => {
-        if (msg.quote) saveQuoteToHistory(msg.quote);
-      });
-    } else if (data.ai?.heroMessage && typeof data.ai.heroMessage === 'object' && data.ai.heroMessage.quote) {
-      saveQuoteToHistory(data.ai.heroMessage.quote);
+    // Track NEW quotes for repeat avoidance (skip if preserving)
+    if (!preserveQuotes) {
+      if (data.ai?.heroMessages && Array.isArray(data.ai.heroMessages)) {
+        data.ai.heroMessages.forEach((msg: HeroMessage) => {
+          if (msg.quote) saveQuoteToHistory(msg.quote);
+        });
+      } else if (data.ai?.heroMessage && typeof data.ai.heroMessage === 'object' && data.ai.heroMessage.quote) {
+        saveQuoteToHistory(data.ai.heroMessage.quote);
+      }
     }
 
-    // Save to localStorage as fallback cache
+    // Always save ORIGINAL (unmerged) data to cache — next visit gets fresh quotes
     const generalCacheKey = getCacheKey();
     if (generalCacheKey) {
       localStorage.setItem(generalCacheKey, JSON.stringify({
@@ -333,25 +356,25 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     setError(null);
 
     try {
-      // ── Phase 1: Fast fetch with local quotes (skipAI) ──
-      const { url: fastUrl, userTimezone } = buildFetchUrl(true);
-      console.log(`🔄 Phase 1: fast calendar fetch${isSilent ? ' (background)' : ''}...`);
+      // Single API call — server handles AI timeout + local fallback internally
+      const { url, userTimezone } = buildFetchUrl();
+      console.log(`🔄 Fetching work health${isSilent ? ' (background poll)' : ''}...`);
 
-      const fastResponse = await fetch(fastUrl, {
+      const response = await fetch(url, {
         cache: 'no-cache',
         headers: buildFetchHeaders(userTimezone),
       });
 
-      if (!fastResponse.ok) {
-        const errorData = await fastResponse.json().catch(() => ({}));
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         if (errorData.needsReauth) {
           throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
         }
-        throw new Error(`HTTP error! status: ${fastResponse.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const fastData = await fastResponse.json();
-      const newFingerprint = getFingerprint(fastData);
+      const data = await response.json();
+      const newFingerprint = getFingerprint(data);
 
       // For silent polls, only continue if calendar data changed
       if (isSilent && calendarFingerprint.current === newFingerprint) {
@@ -359,32 +382,11 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
         return;
       }
 
-      // Show local quotes immediately — card renders NOW
-      handleFetchSuccess(fastData);
-      setIsLoading(false);
+      // Preserve displayed quotes on background updates to avoid mid-read override
+      const shouldPreserveQuotes = quotesLocked.current && (isSilent || workHealth !== null);
+      handleFetchSuccess(data, shouldPreserveQuotes);
 
-      // ── Phase 2: AI enhancement (background) ──
-      setIsAILoading(true);
-      console.log('🔄 Phase 2: fetching AI insights...');
-
-      try {
-        const { url: aiUrl, userTimezone: aiTz } = buildFetchUrl(false);
-        const aiResponse = await fetch(aiUrl, {
-          cache: 'no-cache',
-          headers: buildFetchHeaders(aiTz),
-        });
-
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          handleFetchSuccess(aiData);
-          console.log('✅ AI insights loaded');
-        }
-      } catch (aiErr) {
-        // Phase 2 failure is non-fatal — keep Phase 1 data
-        console.warn('AI enhancement failed, keeping local quotes:', aiErr);
-      } finally {
-        setIsAILoading(false);
-      }
+      console.log(`✅ Work health loaded (${data.aiStatus || 'unknown'})`);
 
     } catch (err) {
       console.error('Error fetching work health:', err);
@@ -437,7 +439,10 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
         }
       }
     } finally {
-      setIsLoading(false);
+      if (!isSilent) {
+        setIsLoading(false);
+        setIsAILoading(false);
+      }
     }
   }, [session, status]);
 
@@ -452,6 +457,10 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
           const data = JSON.parse(cached);
           setWorkHealth(data.metrics);
           setLastRefresh(new Date(data.lastRefresh));
+          // Lock cached quotes so the fetch doesn't override them
+          if (data.metrics?.ai?.heroMessages?.length > 0) {
+            quotesLocked.current = true;
+          }
           console.log('⚡ Showing cached data instantly');
         }
       } catch { /* ignore */ }
@@ -490,11 +499,12 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       localStorage.removeItem(generalCacheKey);
     }
 
-    // Reset state and fetch fresh
+    // Reset state and unlock quotes for fresh data
     setWorkHealth(null);
     setError(null);
     setLastRefresh(new Date());
     calendarFingerprint.current = null;
+    quotesLocked.current = false;
 
     console.log('🔄 Manual refresh...');
     fetchWorkHealth(0);
