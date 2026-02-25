@@ -523,17 +523,36 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
     try {
       const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone, recentQuotes);
+      const models = ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001'] as const;
 
-      const response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        temperature: 1.0, // Variation for creative quotes
-        system: this.createSystemPrompt(),
-        messages: [{
-          role: 'user',
-          content: promptContent
-        }]
-      });
+      let response;
+      for (const model of models) {
+        try {
+          response = await this.anthropic.messages.create({
+            model,
+            max_tokens: 1500,
+            temperature: 1.0, // Variation for creative quotes
+            system: this.createSystemPrompt(),
+            messages: [{
+              role: 'user',
+              content: promptContent
+            }]
+          });
+          break; // success, stop trying models
+        } catch (modelError: any) {
+          const isOverloaded = modelError?.status === 529 || modelError?.error?.type === 'overloaded_error';
+          const isLastModel = model === models[models.length - 1];
+          if (isOverloaded && !isLastModel) {
+            console.warn(`${model} overloaded, falling back to next model`);
+            continue;
+          }
+          throw modelError;
+        }
+      }
+
+      if (!response) {
+        throw new Error('No response from any model');
+      }
 
       const textContent = response.content
         .filter(block => block.type === 'text')
