@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile: _profile }) {
       try {
         if (account?.provider === 'google' && user?.email) {
           // Check if user exists in Supabase

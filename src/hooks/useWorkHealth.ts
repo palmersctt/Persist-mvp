@@ -248,6 +248,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     } catch {
       // Ignore storage errors
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const getHistoryKey = () => {
@@ -314,6 +315,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       },
       daysTracked: last7.length,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   // Create a fingerprint from calendar metrics to detect real changes
@@ -503,6 +505,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         setIsAILoading(false);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status]);
 
   // Cache-first: show cached data instantly while fresh data loads
@@ -521,6 +524,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         }
       } catch { /* ignore */ }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status]);
 
   // Initial fetch — only once when authenticated

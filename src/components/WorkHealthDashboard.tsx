@@ -126,6 +126,7 @@ export default function WorkHealthDashboard() {
     }
 
     setShareState('idle');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shareState]);
 
   if (status === 'loading') {
