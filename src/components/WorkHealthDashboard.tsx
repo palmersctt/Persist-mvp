@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
-import ComicReliefSaying from './ComicReliefSaying'
 import ShareCard from './ShareCard'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
 import PersistLogo from './PersistLogo'
@@ -33,18 +32,11 @@ export default function WorkHealthDashboard() {
     }
     return false;
   });
-  const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
   const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, history } = useWorkHealth(activeTab);
-
-  // Trend arrow helper
-  const trendArrow = (trend?: 'up' | 'down' | 'flat') => {
-    if (!trend || trend === 'flat') return '';
-    return trend === 'up' ? ' ↑' : ' ↓';
-  };
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh } = useWorkHealth(activeTab);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -323,9 +315,6 @@ export default function WorkHealthDashboard() {
     );
   }
 
-  const workCapacity = getWorkCapacityStatus();
-  const secondaryMetrics = getSecondaryMetrics();
-
   // Show error state if there's an error and no data
   if (error && !workHealth) {
     return (
@@ -581,46 +570,6 @@ export default function WorkHealthDashboard() {
                 </p>
               </section>
             )}
-
-            {/* Insights Section */}
-        <section>
-          <div className="mb-8 text-center">
-            <h2 className="whoop-section-title">
-              Insights
-            </h2>
-          </div>
-          
-          <div>
-            {(() => {
-              const insight = getMetricInsight('overview');
-              if (!insight) return (
-                <div className="text-center py-8">
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}
-                  </p>
-                </div>
-              );
-              return (
-                <div className={`transition-opacity duration-300 ${isAILoading ? 'opacity-50' : ''}`}>
-                  <p className="text-sm leading-relaxed text-center" style={{ color: 'var(--text-secondary)' }}>
-                    {insight.message}
-                  </p>
-                  {insight.action && (
-                    <div className="mt-4 rounded-xl" style={{
-                      background: 'rgba(16, 185, 129, 0.06)',
-                      border: '1px solid rgba(16, 185, 129, 0.15)',
-                      padding: '16px 20px',
-                    }}>
-                      <p className="text-sm leading-relaxed text-center" style={{ color: '#10b981' }}>
-                        {insight.action}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
-        </section>
 
             {lastRefresh && (
               <div className="text-center pt-8">

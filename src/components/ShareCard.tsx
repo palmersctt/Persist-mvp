@@ -57,8 +57,28 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
           {scores.map((s) => (
             <div
               key={s.key}
-              className={`text-center${onMetricClick ? ' cursor-pointer' : ''}`}
+              className={`text-center select-none${onMetricClick ? ' cursor-pointer' : ''}`}
               onClick={onMetricClick ? () => onMetricClick(s.key) : undefined}
+              style={{
+                transition: 'transform 0.1s ease, opacity 0.1s ease',
+                WebkitTapHighlightColor: 'transparent',
+                ...(onMetricClick ? { padding: '4px 8px', margin: '-4px -8px', borderRadius: '8px' } : {}),
+              }}
+              onPointerDown={onMetricClick ? (e) => {
+                const el = e.currentTarget;
+                el.style.transform = 'scale(0.92)';
+                el.style.opacity = '0.7';
+              } : undefined}
+              onPointerUp={onMetricClick ? (e) => {
+                const el = e.currentTarget;
+                el.style.transform = 'scale(1)';
+                el.style.opacity = '1';
+              } : undefined}
+              onPointerLeave={onMetricClick ? (e) => {
+                const el = e.currentTarget;
+                el.style.transform = 'scale(1)';
+                el.style.opacity = '1';
+              } : undefined}
             >
               <div className="text-xl font-bold text-white" style={{ lineHeight: 1 }}>
                 {values[s.prop]}

@@ -481,146 +481,198 @@ class GoogleCalendarService {
   }
 
   private calculateAdaptivePerformanceIndex(events: CalendarEvent[]): number {
-    // Filter events for performance calculation
-    const actualMeetings = events.filter(event => 
-      event.category !== 'BENEFICIAL' && 
-      event.category !== 'NEUTRAL' && 
+    // Filter events by type
+    const actualMeetings = events.filter(event =>
+      event.category !== 'BENEFICIAL' &&
+      event.category !== 'NEUTRAL' &&
       event.category !== 'FOCUS_WORK'
     );
     const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
     const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
-    
+
+    // No meetings: day off or clear calendar — positive, not punitive.
+    // Intentional structure (focus blocks) earns a higher score.
     if (actualMeetings.length === 0) {
-      return 98; // Near-perfect with no actual meetings
+      const hasFocusBlocks = focusWorkEvents.length > 0;
+      return hasFocusBlocks ? 88 : 75;
     }
-    
-    const meetingCount = actualMeetings.length;
+
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
-    const focusTime = this.calculateFocusTime(events, this.userTimezone); // Use all events for focus time calculation
+    const focusTime = this.calculateFocusTime(events, this.userTimezone);
     const focusHours = focusTime / 60;
-    
-    // Calculate meeting density impact with more nuanced scoring
+
+    // Weighted meeting load — a board presentation ≠ a standup
+    let weightedMeetingLoad = 0;
+    actualMeetings.forEach(event => {
+      const durationHours = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+      const durationWeight = durationHours >= 1.5 ? 1.5 : durationHours >= 1 ? 1.2 : durationHours >= 0.5 ? 1.0 : 0.6;
+      const categoryWeight = event.category === 'HEAVY_MEETINGS' ? 1.6
+        : event.category === 'COLLABORATIVE' ? 1.1
+        : event.category === 'LIGHT_MEETINGS' ? 0.6
+        : 1.0;
+      const attendeeWeight = (event.attendees && event.attendees >= 10) ? 1.3
+        : (event.attendees && event.attendees >= 5) ? 1.1
+        : 1.0;
+      weightedMeetingLoad += durationWeight * categoryWeight * attendeeWeight;
+    });
+
+    // Density score uses weighted load instead of raw count
     let densityScore = 100;
-    if (meetingCount >= 8) densityScore = 25;
-    else if (meetingCount >= 7) densityScore = 35;
-    else if (meetingCount >= 6) densityScore = 45;
-    else if (meetingCount >= 5) densityScore = 60;
-    else if (meetingCount >= 4) densityScore = 70;
-    else if (meetingCount >= 3) densityScore = 80;
-    else if (meetingCount >= 2) densityScore = 88;
-    else if (meetingCount === 1) densityScore = 95;
-    
-    // Fragmentation penalty - heavily weighted for low focus time
-    let fragmentationScore = 100;
-    if (focusHours < 1) fragmentationScore = 20; // Severe fragmentation
-    else if (focusHours < 2) fragmentationScore = 40;
-    else if (focusHours < 3) fragmentationScore = 65;
-    else if (focusHours < 4) fragmentationScore = 80;
-    else if (focusHours >= 4) fragmentationScore = 90;
-    else if (focusHours >= 5) fragmentationScore = 100;
-    
-    // Back-to-back meeting cognitive overhead
+    if (weightedMeetingLoad >= 12) densityScore = 5;
+    else if (weightedMeetingLoad >= 9) densityScore = 15;
+    else if (weightedMeetingLoad >= 7) densityScore = 25;
+    else if (weightedMeetingLoad >= 5.5) densityScore = 38;
+    else if (weightedMeetingLoad >= 4) densityScore = 55;
+    else if (weightedMeetingLoad >= 3) densityScore = 70;
+    else if (weightedMeetingLoad >= 1.5) densityScore = 82;
+    else densityScore = 92;
+
+    // Fragmentation — tighter thresholds, even lots of "focus time" doesn't
+    // mean much if it's 3hrs before 9am. Cap at 85 so nobody hits 100 trivially.
+    let fragmentationScore = 85;
+    if (focusHours < 0.5) fragmentationScore = 5;
+    else if (focusHours < 1) fragmentationScore = 12;
+    else if (focusHours < 2) fragmentationScore = 25;
+    else if (focusHours < 3) fragmentationScore = 40;
+    else if (focusHours < 4) fragmentationScore = 58;
+    else if (focusHours < 5) fragmentationScore = 72;
+
+    // Back-to-back transitions — each one stacks painfully
     let transitionScore = 100;
-    if (backToBackCount >= 4) transitionScore = 40;
-    else if (backToBackCount === 3) transitionScore = 60;
-    else if (backToBackCount === 2) transitionScore = 75;
-    else if (backToBackCount === 1) transitionScore = 88;
-    
-    // Time-of-day alignment (afternoon meetings more taxing) - only actual meetings
-    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
+    if (backToBackCount >= 5) transitionScore = 5;
+    else if (backToBackCount >= 4) transitionScore = 15;
+    else if (backToBackCount === 3) transitionScore = 30;
+    else if (backToBackCount === 2) transitionScore = 55;
+    else if (backToBackCount === 1) transitionScore = 78;
+
+    // Afternoon-heavy days are draining (1pm+ counts as afternoon)
+    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 13).length;
     const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
     let timingScore = 100;
-    if (afternoonMeetings > morningMeetings * 1.5) timingScore = 70;
-    else if (afternoonMeetings > morningMeetings) timingScore = 85;
-    
-    // Recovery buffer analysis - only count actual meetings
+    if (afternoonMeetings >= 4) timingScore = 40;
+    else if (afternoonMeetings > morningMeetings * 1.5) timingScore = 55;
+    else if (afternoonMeetings > morningMeetings) timingScore = 75;
+
+    // Meeting-to-work ratio — total hours in meetings vs. workday
     let recoveryScore = 100;
-    const totalMeetingHours = actualMeetings.reduce((sum, event) => 
+    const totalMeetingHours = actualMeetings.reduce((sum, event) =>
       sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60), 0);
     const workHours = 8;
     const meetingRatio = totalMeetingHours / workHours;
-    if (meetingRatio > 0.75) recoveryScore = 30;
-    else if (meetingRatio > 0.6) recoveryScore = 50;
-    else if (meetingRatio > 0.5) recoveryScore = 70;
-    else if (meetingRatio > 0.4) recoveryScore = 85;
-    
-    // Add bonuses for beneficial activities
+    if (meetingRatio > 0.75) recoveryScore = 8;
+    else if (meetingRatio > 0.6) recoveryScore = 25;
+    else if (meetingRatio > 0.5) recoveryScore = 45;
+    else if (meetingRatio > 0.4) recoveryScore = 65;
+    else if (meetingRatio > 0.25) recoveryScore = 85;
+
+    // Intentional activities improve your day (capped modestly)
     let bonusPoints = 0;
-    bonusPoints += focusWorkEvents.length * 5; // Bonus for focus work blocks
-    bonusPoints += beneficialEvents.length * 3; // Bonus for self-care activities
-    
-    // Weighted calculation emphasizing cognitive health
+    bonusPoints += Math.min(focusWorkEvents.length, 2) * 3;
+    bonusPoints += Math.min(beneficialEvents.length, 2) * 2;
+
+    // Weighted calculation
     const adaptiveIndex = (
       densityScore * 0.25 +
-      fragmentationScore * 0.30 + // Heavy weight on fragmentation
+      fragmentationScore * 0.30 +
       transitionScore * 0.20 +
       timingScore * 0.10 +
       recoveryScore * 0.15
     ) + bonusPoints;
-    
+
     const finalScore = Math.round(Math.min(100, Math.max(0, adaptiveIndex)));
     return finalScore;
   }
   
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
     if (events.length === 0) {
-      return 90; // High resilience with no meetings
+      return 78; // No meetings = low strain, good thing. Day off or clear calendar.
     }
-    
-    // Context switching load
-    const uniqueContexts = new Set(events.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
-    const contextSwitchingLoad = Math.min(100, uniqueContexts * 15);
-    
-    // Decision fatigue accumulation
+
+    // Separate by type
+    const actualMeetings = events.filter(event =>
+      event.category !== 'BENEFICIAL' &&
+      event.category !== 'NEUTRAL' &&
+      event.category !== 'FOCUS_WORK'
+    );
+    const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
+
+    // Context switching — unique topics drain mental bandwidth
+    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
+    const contextSwitchingLoad = Math.min(100, uniqueContexts * 18);
+
+    // Decision fatigue — weighted by type, time of day, attendees, and duration
     let decisionFatigue = 0;
-    events.forEach((event, index) => {
+    actualMeetings.forEach((event) => {
       const hourOfDay = this.getTimezoneAwareHours(event.start, this.userTimezone);
-      const timeFactor = hourOfDay >= 14 ? 1.5 : 1; // Afternoon decisions more taxing
-      const attendeeFactor = (event.attendees && event.attendees > 5) ? 1.3 : 1;
-      decisionFatigue += (10 * timeFactor * attendeeFactor);
+      const durationHours = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+      const timeFactor = hourOfDay >= 15 ? 1.8 : hourOfDay >= 13 ? 1.4 : 1;
+      const attendeeFactor = (event.attendees && event.attendees >= 10) ? 1.6
+        : (event.attendees && event.attendees >= 5) ? 1.3
+        : (event.attendees && event.attendees >= 3) ? 1.1
+        : 1;
+      const categoryFactor = event.category === 'HEAVY_MEETINGS' ? 1.8
+        : event.category === 'COLLABORATIVE' ? 1.2
+        : event.category === 'LIGHT_MEETINGS' ? 0.7
+        : 1.0;
+      // Long meetings are exponentially more draining — a 6hr workshop isn't 4x a 1.5hr meeting
+      const durationFactor = durationHours >= 4 ? 4.0 : durationHours >= 3 ? 3.0 : durationHours >= 2 ? 2.2 : durationHours >= 1.5 ? 1.6 : durationHours >= 1 ? 1.2 : 1.0;
+      decisionFatigue += (10 * timeFactor * attendeeFactor * categoryFactor * durationFactor);
     });
-    decisionFatigue = Math.min(80, decisionFatigue);
-    
-    // Cognitive reserve calculation
+    decisionFatigue = Math.min(100, decisionFatigue);
+
+    // Cognitive reserve from focus time
     const focusTime = this.calculateFocusTime(events, this.userTimezone);
     const focusHours = focusTime / 60;
     let cognitiveReserve = 0;
-    if (focusHours >= 4) cognitiveReserve = 80;
-    else if (focusHours >= 3) cognitiveReserve = 60;
-    else if (focusHours >= 2) cognitiveReserve = 40;
-    else if (focusHours >= 1) cognitiveReserve = 20;
-    else cognitiveReserve = 10;
-    
-    // Mental energy patterns
-    const consecutiveMeetings = this.findLongestConsecutiveStretch(events);
-    let energyDepletion = consecutiveMeetings * 20;
-    energyDepletion = Math.min(60, energyDepletion);
-    
+    if (focusHours >= 5) cognitiveReserve = 90;
+    else if (focusHours >= 4) cognitiveReserve = 70;
+    else if (focusHours >= 3) cognitiveReserve = 50;
+    else if (focusHours >= 2) cognitiveReserve = 30;
+    else if (focusHours >= 1) cognitiveReserve = 12;
+    else cognitiveReserve = 0;
+
+    // Consecutive meeting chains drain energy hard
+    const consecutiveMeetings = this.findLongestConsecutiveStretch(actualMeetings);
+    let energyDepletion = 0;
+    if (consecutiveMeetings >= 5) energyDepletion = 90;
+    else if (consecutiveMeetings >= 4) energyDepletion = 70;
+    else if (consecutiveMeetings >= 3) energyDepletion = 50;
+    else if (consecutiveMeetings >= 2) energyDepletion = 30;
+    else energyDepletion = consecutiveMeetings * 12;
+
+    // Beneficial events restore resilience (walks, breaks, exercise)
+    const recoveryBoost = Math.min(beneficialEvents.length, 3) * 5;
+
     // Calculate resilience score
-    const resilienceScore = Math.max(0, 
-      100 - contextSwitchingLoad * 0.25 
-      - decisionFatigue * 0.35 
-      + cognitiveReserve * 0.25 
+    const resilienceScore = Math.max(0,
+      100 - contextSwitchingLoad * 0.30
+      - decisionFatigue * 0.35
+      + cognitiveReserve * 0.20
       - energyDepletion * 0.15
-    );
-    
+    ) + recoveryBoost;
+
     const finalScore = Math.round(Math.min(100, Math.max(0, resilienceScore)));
     return finalScore;
   }
   
   private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
-    // Filter out beneficial, neutral, and focus work events
-    const actualMeetings = events.filter(event => 
-      event.category !== 'BENEFICIAL' && 
-      event.category !== 'NEUTRAL' && 
+    // Separate by type
+    const actualMeetings = events.filter(event =>
+      event.category !== 'BENEFICIAL' &&
+      event.category !== 'NEUTRAL' &&
       event.category !== 'FOCUS_WORK'
     );
-    
+    const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
+    const focusWorkEvents = events.filter(e => e.category === 'FOCUS_WORK');
+
     if (actualMeetings.length === 0) {
-      return 98; // Excellent rhythm with no actual meetings
+      // No meetings — day off or clear calendar. Positive baseline.
+      // Intentional structure (walks, focus blocks) earns more.
+      const hasStructure = beneficialEvents.length > 0 || focusWorkEvents.length > 0;
+      return hasStructure ? 85 : 75;
     }
-    
-    // Work rhythm analysis - only consider actual meetings (expanded 6 AM - 6 PM window)
+
+    // Work rhythm balance — lopsided days feel worse
     const morningBlock = actualMeetings.filter(e => {
       const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
       return hour >= 6 && hour < 12;
@@ -630,40 +682,54 @@ class GoogleCalendarService {
       return hour >= 12 && hour < 18;
     }).length;
     const rhythmBalance = Math.abs(morningBlock - afternoonBlock);
-    let rhythmScore = 100 - (rhythmBalance * 15);
-    rhythmScore = Math.max(40, rhythmScore);
-    
-    // Recovery adequacy - use all events for gap calculation (includes beneficial breaks)
-    const gaps = this.calculateGapsBetweenMeetings(events);
-    const adequateBreaks = gaps.filter(g => g >= 30).length; // 30+ minute breaks
+    let rhythmScore = 100 - (rhythmBalance * 20);
+    rhythmScore = Math.max(10, rhythmScore);
+
+    // Recovery adequacy — beneficial events count as real breaks
+    const gaps = this.calculateGapsBetweenMeetings(actualMeetings);
+    const adequateBreaks = gaps.filter(g => g >= 30).length;
     const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
-    let recoveryScore = (adequateBreaks * 20) + (shortBreaks * 10);
+    // Walks, exercise, lunch etc. are actual recovery
+    const beneficialBreaks = beneficialEvents.length;
+    let recoveryScore = 0;
+    if (adequateBreaks === 0 && shortBreaks === 0 && beneficialBreaks === 0) recoveryScore = 5;
+    else {
+      recoveryScore = (adequateBreaks * 18) + (shortBreaks * 8) + (beneficialBreaks * 15);
+    }
     recoveryScore = Math.min(100, recoveryScore);
-    
-    // Intensity sustainability - only count actual meeting hours
-    const totalMeetingHours = actualMeetings.reduce((sum, event) => 
-      sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60), 0);
+
+    // Intensity sustainability — weighted by meeting type, not just raw hours
+    let weightedIntensityHours = 0;
+    actualMeetings.forEach(event => {
+      const durationHours = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+      const typeWeight = event.category === 'HEAVY_MEETINGS' ? 1.5
+        : event.category === 'COLLABORATIVE' ? 1.1
+        : event.category === 'LIGHT_MEETINGS' ? 0.7
+        : 1.0;
+      weightedIntensityHours += durationHours * typeWeight;
+    });
     let sustainabilityScore = 100;
-    if (totalMeetingHours > 7) sustainabilityScore = 20;
-    else if (totalMeetingHours > 6) sustainabilityScore = 40;
-    else if (totalMeetingHours > 5) sustainabilityScore = 60;
-    else if (totalMeetingHours > 4) sustainabilityScore = 80;
-    else sustainabilityScore = 95;
-    
-    // Natural energy alignment - only consider actual meetings (expanded window)
-    const earlyMorningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 7).length; // Before 7 AM
-    const lateMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 17).length; // After 5 PM
-    let alignmentScore = 100 - (earlyMorningMeetings * 20) - (lateMeetings * 15);
-    alignmentScore = Math.max(30, alignmentScore);
-    
-    // Combined work rhythm & recovery score
+    if (weightedIntensityHours > 8) sustainabilityScore = 5;
+    else if (weightedIntensityHours > 6.5) sustainabilityScore = 20;
+    else if (weightedIntensityHours > 5) sustainabilityScore = 40;
+    else if (weightedIntensityHours > 4) sustainabilityScore = 60;
+    else if (weightedIntensityHours > 3) sustainabilityScore = 78;
+    else sustainabilityScore = 92;
+
+    // Boundary violations — early/late meetings hurt, no floor
+    const earlyMorningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 7).length;
+    const lateMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 17).length;
+    let alignmentScore = 100 - (earlyMorningMeetings * 30) - (lateMeetings * 25);
+    alignmentScore = Math.max(0, alignmentScore);
+
+    // Combined score
     const combinedScore = (
-      rhythmScore * 0.25 +
-      recoveryScore * 0.35 +
-      sustainabilityScore * 0.25 +
-      alignmentScore * 0.15
+      rhythmScore * 0.20 +
+      recoveryScore * 0.30 +
+      sustainabilityScore * 0.30 +
+      alignmentScore * 0.20
     );
-    
+
     const finalScore = Math.round(Math.min(100, Math.max(0, combinedScore)));
     return finalScore;
   }
