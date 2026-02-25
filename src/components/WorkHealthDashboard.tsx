@@ -23,30 +23,44 @@ export default function WorkHealthDashboard() {
 
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus } = useWorkHealth(activeTab);
 
-  const [loadingVerb, setLoadingVerb] = useState('Analyzing');
-  const [verbFade, setVerbFade] = useState(true);
+  const [loadingVerb, setLoadingVerb] = useState('Judging');
+  const [dotCount, setDotCount] = useState(1);
+  const [verbVisible, setVerbVisible] = useState(true);
+  const verbIndexRef = useRef(0);
+  const shuffledRef = useRef<string[]>([]);
 
   useEffect(() => {
-    if (!isLoading) { setLoadingVerb('Analyzing'); setVerbFade(true); return; }
+    if (!isLoading) return;
     const verbs = [
-      'Analyzing', 'Reading', 'Scanning', 'Processing',
-      'Judging', 'Questioning', 'Scrutinizing', 'Investigating',
-      'Scratching', 'Squinting', 'Poking', 'Shaking',
-      'Smelling', 'Sniffing', 'Whispering', 'Marinating',
-      'Laughing', 'Gasping', 'Manifesting', 'Bargaining',
+      'Judging', 'Snooping', 'Squinting', 'Overthinking',
+      'Spiraling', 'Procrastinating', 'Panicking', 'Manifesting',
+      'Bargaining', 'Regretting', 'Stress-eating', 'Dissociating',
+      'Catastrophizing', 'Vibing', 'Coping', 'Gasping',
+      'Whispering', 'Stalling', 'Pacing', 'Doom-scrolling',
     ];
-    // Shuffle so it's different every time
-    const shuffled = [...verbs].sort(() => Math.random() - 0.5);
-    let i = 0;
-    const id = setInterval(() => {
-      setVerbFade(false); // fade out
+    shuffledRef.current = [...verbs].sort(() => Math.random() - 0.5);
+    verbIndexRef.current = 0;
+    setLoadingVerb(shuffledRef.current[0]);
+    setDotCount(1);
+    setVerbVisible(true);
+
+    // Animate dots: cycle 1 → 2 → 3 every 400ms
+    const dotId = setInterval(() => {
+      setDotCount(d => (d % 3) + 1);
+    }, 400);
+
+    // Swap verb every 2s with fade
+    const verbId = setInterval(() => {
+      setVerbVisible(false);
       setTimeout(() => {
-        i = (i + 1) % shuffled.length;
-        setLoadingVerb(shuffled[i]);
-        setVerbFade(true); // fade in
-      }, 250);
-    }, 1500);
-    return () => clearInterval(id);
+        verbIndexRef.current = (verbIndexRef.current + 1) % shuffledRef.current.length;
+        setLoadingVerb(shuffledRef.current[verbIndexRef.current]);
+        setDotCount(1);
+        setVerbVisible(true);
+      }, 300);
+    }, 2000);
+
+    return () => { clearInterval(dotId); clearInterval(verbId); };
   }, [isLoading]);
 
   const completeOnboarding = () => {
@@ -514,11 +528,11 @@ export default function WorkHealthDashboard() {
                   className="text-sm font-medium text-center mt-5 tracking-wide"
                   style={{
                     color: 'rgba(255,255,255,0.5)',
-                    opacity: verbFade ? 1 : 0,
-                    transition: 'opacity 0.25s ease-in-out',
+                    opacity: verbVisible ? 1 : 0,
+                    transition: 'opacity 0.3s ease-in-out',
                   }}
                 >
-                  {loadingVerb}...
+                  {loadingVerb}{'.'.repeat(dotCount)}
                 </p>
               </section>
             )}
