@@ -582,46 +582,6 @@ export default function WorkHealthDashboard() {
               </section>
             )}
 
-            {/* Insights Section */}
-        <section>
-          <div className="mb-8 text-center">
-            <h2 className="whoop-section-title">
-              Insights
-            </h2>
-          </div>
-          
-          <div>
-            {(() => {
-              const insight = getMetricInsight('overview');
-              if (!insight) return (
-                <div className="text-center py-8">
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    {error ? `Error loading insights: ${error}` : 'Loading insights from your calendar...'}
-                  </p>
-                </div>
-              );
-              return (
-                <div className={`transition-opacity duration-300 ${isAILoading ? 'opacity-50' : ''}`}>
-                  <p className="text-sm leading-relaxed text-center" style={{ color: 'var(--text-secondary)' }}>
-                    {insight.message}
-                  </p>
-                  {insight.action && (
-                    <div className="mt-4 rounded-xl" style={{
-                      background: 'rgba(16, 185, 129, 0.06)',
-                      border: '1px solid rgba(16, 185, 129, 0.15)',
-                      padding: '16px 20px',
-                    }}>
-                      <p className="text-sm leading-relaxed text-center" style={{ color: '#10b981' }}>
-                        {insight.action}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
-        </section>
-
             {lastRefresh && (
               <div className="text-center pt-8">
                 <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
