@@ -94,7 +94,7 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       {/* Branding */}
       <div className="flex items-center justify-center gap-1.5 mt-3">
         <PersistLogo size={12} variant="light" />
-        <span className="text-[9px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>PERSIST</span>
+        <span className="text-[9px] tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>Persistwork</span>
       </div>
     </div>
   )

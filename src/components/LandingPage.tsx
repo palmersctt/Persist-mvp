@@ -167,7 +167,7 @@ export default function LandingPage() {
             Your workday has a sense of humor
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
-            Some days, all you can do is laugh. Persist reads your calendar and finds the movie quote your day deserves.
+            Persist analyzes your workday and gives you the laugh your day deserves.
           </p>
 
           {/* 3-Card Carousel — pure state, no scroll container */}
@@ -335,7 +335,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-3">Get your daily card</h3>
               <p className="text-gray-600 leading-relaxed">
-                Every morning — your scores and a movie moment that nails your vibe.
+                Every morning — your scores and a laugh that nails your vibe.
               </p>
             </div>
 
