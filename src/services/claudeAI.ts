@@ -135,202 +135,67 @@ class ClaudeAIService {
   }
 
   private createSystemPrompt(): string {
-    return `You are a smart colleague who knows this person's work patterns and can predict how their day will actually feel and go.
-
-WRITE INSIGHTS THAT SOUND LIKE YOU'RE TALKING TO THEM:
-- "You'll probably feel energized this morning, but that 3-hour meeting might drain you by evening"
-- "Your brain typically hits its stride around 10 AM - perfect timing for that presentation" 
-- "Back-to-back meetings until lunch might leave you feeling scattered for the afternoon work"
-- "This feels like one of those productive days where everything just clicks"
-- "Your afternoon looks packed - you might feel rushed between those client calls"
-
-FOCUS ON THEIR ACTUAL EXPERIENCE:
-- How they'll likely feel during different parts of the day
-- What their energy levels will be like hour by hour
-- Whether they're set up for a good day or a stressful one
-- How their workload will affect their mood and performance
-- What they should realistically expect from today
-
-AVOID technical language, clinical analysis, formal recommendations, or confidence percentages.
-
-Write like you're having a conversation with them using "you'll feel", "your energy will", "this should be".`;
+    return `You are a sharp, funny colleague glancing at someone's calendar and telling them how their day will actually feel. Be conversational ("you'll feel", "your energy will"). No clinical language, no confidence percentages. Reference their actual meetings by name.`;
   }
 
   private createAllInsightsPrompt(analysis: CalendarAnalysis, userContext: UserContext, providedUserTimezone?: string, recentQuotes?: string[]): string {
-    const { workHealth, events, patterns } = analysis;
+    const { workHealth, events } = analysis;
     const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
 
-    const interpretScore = (score: number): string => {
-      if (score >= 85) return 'excellent';
-      if (score >= 75) return 'good';
-      if (score >= 65) return 'moderate — room for improvement';
-      if (score >= 55) return 'concerning — needs attention';
-      if (score >= 40) return 'poor — significant issues';
-      return 'critical — immediate action needed';
-    };
-
-    // Determine the mood/tone the quote should match based on metrics
+    // Mood for quote selection
     let quoteMood: string;
     if (workHealth.adaptivePerformanceIndex >= 85 && workHealth.cognitiveResilience >= 75) {
-      quoteMood = 'confident, powerful, triumphant — this person is crushing it today';
+      quoteMood = 'triumphant, crushing it';
     } else if (workHealth.adaptivePerformanceIndex >= 75) {
-      quoteMood = 'cool, assured, smooth — things are going well';
+      quoteMood = 'cool, assured';
     } else if (workHealth.adaptivePerformanceIndex >= 50) {
-      quoteMood = 'dry, wry, understated — an okay day, nothing spectacular';
+      quoteMood = 'wry, understated';
     } else if (workHealth.adaptivePerformanceIndex >= 25) {
-      quoteMood = 'sarcastic, self-deprecating, or darkly funny — things are rough';
+      quoteMood = 'sarcastic, darkly funny';
     } else {
-      quoteMood = 'defeated, dramatic, over-the-top despair — comically bad day';
+      quoteMood = 'dramatically defeated';
     }
 
-    if (workHealth.schedule.meetingCount > 5 || (workHealth.schedule?.backToBackCount && workHealth.schedule.backToBackCount > 3)) {
-      quoteMood += '. Also factor in: this person is drowning in meetings today';
-    }
-    if (workHealth.focusTime < 120) {
-      quoteMood += '. Also factor in: very little focus time, constant interruptions';
-    }
+    return `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: userTimezone })} (${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: userTimezone })}).
 
-    return `Analyze this person's calendar and write FOUR distinct insights — one for each metric below. Each insight MUST reference SPECIFIC events from their calendar by name and time. Do NOT repeat the same observation across metrics. Do NOT just restate a metric number — tell them what it MEANS for their actual day.
+METRICS: Focus ${workHealth.adaptivePerformanceIndex}%, Strain ${workHealth.cognitiveResilience}%, Balance ${workHealth.workRhythmRecovery}% | ${workHealth.schedule.meetingCount} meetings (${workHealth.schedule.backToBackCount} back-to-back), ${this.formatDuration(workHealth.focusTime)} focus time
 
-WORK HEALTH METRICS:
-- Focus: ${workHealth.adaptivePerformanceIndex}% (${interpretScore(workHealth.adaptivePerformanceIndex)})
-- Strain: ${workHealth.cognitiveResilience}% (${interpretScore(workHealth.cognitiveResilience)})
-- Balance: ${workHealth.workRhythmRecovery}% (${interpretScore(workHealth.workRhythmRecovery)})
-- Status: ${workHealth.status}
-- Meeting Count: ${workHealth.schedule.meetingCount}
-- Back-to-back Count: ${workHealth.schedule.backToBackCount}
-- Focus Time: ${this.formatDuration(workHealth.focusTime)}
-- Fragmentation Score: ${workHealth.schedule.fragmentationScore}
-
-SCORE INTERPRETATION (calibrate your tone to the actual score):
-- 85%+ = excellent, genuinely great day
-- 75-84% = good, solid and positive
-- 65-74% = moderate, okay but not great — be honest about areas to watch
-- 55-64% = concerning, flag real issues
-- Below 55% = problematic, be direct about challenges
-IMPORTANT: Do NOT sugarcoat moderate or low scores. Match your tone to the actual numbers.
-
-CALENDAR EVENTS (${events.length} total):
+CALENDAR:
 ${events.map(event =>
-  `- ${event.summary} (${this.formatTime12Hour(event.start, userTimezone)}-${this.formatTime12Hour(event.end, userTimezone)}, ${event.category}, ${event.attendees} attendees)`
+  `- ${event.summary} (${this.formatTime12Hour(event.start, userTimezone)}-${this.formatTime12Hour(event.end, userTimezone)}, ${event.attendees} attendees)`
 ).join('\n')}
 
-MEETING PATTERNS:
-${Object.entries(patterns.meetingTypes).map(([type, count]) => `- ${type}: ${count}`).join('\n')}
+Write 4 insights and pick 5 quotes. Respond with JSON only.
 
-USER CONTEXT:
-- Work Hours: ${userContext.preferences?.workStartTime || 9}:00 - ${userContext.preferences?.workEndTime || 17}:00
+INSIGHTS — each covers a different lens, referencing specific events by name:
+1. overview: How will today feel? Energy arc, hardest/easiest parts. Action: one thing to improve the day.
+2. performance: When to do deep work? Name the windows and blockers. Action: when to tackle hard problems.
+3. resilience: What will stress them? Back-to-backs, context switches. Action: a buffer to add.
+4. sustainability: Is this pace repeatable? Action: one structural change.
 
-METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
+Match tone to scores honestly — 85%+=great, 65-84%=solid, <65%=flag real problems.
 
-1. OVERVIEW — "How will today actually feel?"
-   Predict their emotional arc through the day. Reference the hardest and easiest parts by event name.
-   Focus: Energy flow hour by hour, overall vibe, when they'll feel sharp vs drained.
-   Action: The single most impactful thing they can do to improve their day — name a specific meeting to shorten, a gap to protect, etc.
-   Do NOT talk about: productivity tips, stress management, or burnout.
+QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
+Each from a DIFFERENT category: 1) TV/film 2) standup comedy 3) famous person 4) book/song lyric 5) wildcard (games, anime, sports, internet culture)
+Go obscure — deep cuts, not the usual suspects. Funny/ironic/unexpectedly perfect > safe/generic.
+Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
+${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recentQuotes.map(q => `"${q}"`).join(', ')}` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 
-2. PERFORMANCE — "When will you do your best thinking?"
-   Identify peak cognitive windows and what threatens them. Name the events that block or enable deep work.
-   Focus: Which focus blocks are usable vs fragmented. Which meeting demands the most brainpower. When to tackle hard problems vs routine tasks.
-   Action: Tell them exactly WHEN to do their hardest work and what to protect. (e.g., "Do your deep work before the 11 AM design review — after that you're in meetings until 3.")
-   Do NOT talk about: feelings, stress, or sustainability.
-
-3. RESILIENCE — "What will test your patience today?"
-   Find the pressure points — specific events, transitions, or clusters that will stress them. Name them.
-   Focus: Back-to-back sequences with no recovery, high-stakes meetings, context switches between unrelated topics, the moment stress peaks.
-   Action: Name a specific buffer to add or a meeting where they should lower expectations for output afterward. (e.g., "Block 15 minutes after the 2 PM all-hands — you'll need a mental reset.")
-   Do NOT talk about: productivity, deep work, or long-term patterns.
-
-4. SUSTAINABILITY — "Can you keep this up?"
-   Zoom out from today. Is this pace repeatable? Look at total meeting hours, recovery ratio, and late-day commitments.
-   Focus: Whether today depletes or energizes them for tomorrow. Meeting-to-recovery ratio. Real downtime vs fragmented gaps. End-of-day energy level.
-   Action: Name one structural change. (e.g., "Move the Thursday standup to batch with the 10 AM sync — that frees a 90-minute focus block.")
-   Do NOT talk about: individual event performance or stress points.
-
-HERO MESSAGES — 5 QUOTES FROM ACROSS ALL OF CULTURE:
-Pick 5 REAL, EXACT, VERBATIM quotes. These can come from ANYWHERE in culture — not just movies. The goal is VARIETY and SURPRISE. Never the same source twice across sessions.
-All quotes must capture this vibe: ${quoteMood}
-
-Each quote MUST come from a DIFFERENT world so the user gets genuine variety as they swipe:
-1. SCREEN (TV/FILM) — A line from a movie or TV show. But NOT the usual suspects. Dig into: Severance, The Bear, Fleabag, What We Do in the Shadows, Reservation Dogs, Atlanta, Barry, Beef, Better Call Saul, Hacks, Abbott Elementary, Shrinking, Poker Face, The White Lotus, Slow Horses, Andor, Succession, The Rehearsal, I Think You Should Leave, Detroiters, Joe Pera, Nathan for You, Documentary Now!, Toast of London, Peep Show, Black Books, The IT Crowd, Spaced, Garth Marenghi's Darkplace, Letterkenny, Trailer Park Boys, Kim's Convenience, Schitt's Creek deep cuts, Mythic Quest, Corporate, Better Off Ted, Party Down, Happy Endings, Pen15, Ramy, Dave, Louie, Master of None, Russian Doll, Undone, Forever, Upload, Devs, Station Eleven, Maniac, Tales from the Loop, Counterpart, Mr. Robot, Patriot, Lodge 49, Perpetual Grace LTD, Terriers, Deadwood, Justified, Banshee, Warrior, The Knick, Mindhunter, Ozark, Narcos, Gomorrah, ZeroZeroZero, Top Boy, McMafia, Billions, Industry, Bad Sisters, The Outsider, Mare of Easttown, Under the Banner of Heaven, We Own This City, The Staircase, Candy, The Dropout, WeCrashed, Super Pumped, Dopesick, Inventing Anna
-2. STANDUP/COMEDY SPECIAL — A real punchline or bit from a standup special or comedy album. John Mulaney, Nate Bargatze, Ali Wong, Hasan Minhaj, Taylor Tomlinson, Sam Morril, Mark Normand, Shane Gillis, Theo Von, Stavros Halkias, Michelle Wolf, Nikki Glaser, Roy Wood Jr., Deon Cole, Gary Gulman, Mike Birbiglia, Maria Bamford, Tig Notaro, Bo Burnham, Jerrod Carmichael, Neal Brennan, Chris Distefano, Andrew Schulz, Matt Rife, Sebastian Maniscalco, Tom Segura, Bert Kreischer, Bill Burr, Dave Chappelle deep cuts, Mitch Hedberg, Steven Wright, Demetri Martin, Hannibal Buress, Kyle Kinane, Rory Scovel, Chad Daniels, Nate Craig, Fortune Feimster, Wanda Sykes, Cedric the Entertainer, Sinbad, Kathleen Madigan, Brian Regan, Jim Gaffigan, Patton Oswalt, Eddie Izzard, James Acaster, Daniel Sloss, Romesh Ranganathan, Jimmy Carr, Lee Mack, Tim Vine, Stewart Lee, Dylan Moran, Tommy Tiernan, Dave Allen, Billy Connolly
-3. FAMOUS PERSON / HISTORICAL — A real quote from a real person. Athletes, founders, scientists, writers, coaches, musicians, politicians, philosophers. NOT the overused inspirational poster quotes. Think: weird interviews, press conferences, memoir passages, commencement speeches, podcast moments. Mike Tyson, Shaq, Charles Barkley, Yogi Berra, Bill Murray, Anthony Bourdain, Werner Herzog, David Lynch, Dolly Parton, Nora Ephron, Tina Fey, Mindy Kaling, Steve Martin, Larry David, Kurt Vonnegut, Douglas Adams, Terry Pratchett, Oscar Wilde, Mark Twain, Dorothy Parker, Groucho Marx, Winston Churchill (actual quotes), Teddy Roosevelt, Hunter S. Thompson, Joan Didion, James Baldwin, Maya Angelou deep cuts, Ursula K. Le Guin
-4. BOOK/LITERATURE/SONG LYRIC — A memorable line from a novel, poem, essay, or song. NOT the cliché quotes. Dig into: Catch-22, Slaughterhouse-Five, A Confederacy of Dunces, Hitchhiker's Guide, Discworld, Good Omens, Bridget Jones, Where'd You Go Bernadette, Severance (the novel), Then We Came to the End, Joshua Ferris, Ed Park, Halle Butler, Ottessa Moshfegh, George Saunders, David Sedaris, Jenny Offill, Patricia Lockwood, Carmen Maria Machado, Phoebe Waller-Bridge essays. Song lyrics from: Talking Heads, LCD Soundsystem, Radiohead, Kendrick Lamar, OutKast, Dolly Parton, Willie Nelson, Johnny Cash, Townes Van Zandt, Leonard Cohen, Tom Waits, Joni Mitchell, Fiona Apple, Courtney Barnett, Phoebe Bridgers, Japanese Breakfast, Mitski, Tyler the Creator, Frank Ocean, Beyoncé, Lizzo, Janelle Monáe, Cardi B, Megan Thee Stallion, Doja Cat
-5. WILDCARD — Anything unexpected that somehow fits PERFECTLY. Video games (Portal, Hades, Disco Elysium, Baldur's Gate 3, Stardew Valley, Undertale, Celeste, Hollow Knight). Anime (Cowboy Bebop, Mob Psycho 100, One Punch Man, Spy x Family, Bocchi the Rock, Chainsaw Man). Podcasts. TikTok/internet culture. Reality TV confessionals. Sports commentary. Nature documentaries. Pro wrestling promos. Cooking competition judges. Kids' show characters being accidentally profound. Fortune cookies. Old internet forums. Reddit comments that became legendary.
-
-MOOD × SOURCE MATCHING:
-- Brutal day → dark standup bits, gallows humor literature, survival movie quotes, athlete post-loss interviews
-- Great day → victory speeches, feel-good comedy specials, triumphant song lyrics, characters celebrating
-- Mundane day → absurdist comedy, Mitch Hedberg one-liners, Seinfeld observations, Office Space, Catch-22
-- High-pressure → heist/thriller quotes, coach pep talks, athlete clutch moments, war room scenes
-- Nothing going right → self-deprecating standup, A Confederacy of Dunces, Arrested Development, Curb
-- One big stressful event → underdog moments, Devil Wears Prada, press conference meltdowns, boss confrontation scenes
-
-ABSOLUTE BLACKLIST — NEVER use these quotes (user has seen them too many times):
-"I'll be back", "May the Force be with you", "Here's looking at you kid", "You can't handle the truth", "Life is like a box of chocolates", "To infinity and beyond", "Just keep swimming", "I am Groot", "This is the way", "Do or do not there is no try", "I see dead people", "Houston we have a problem", "Show me the money", "You had me at hello", "I'm king of the world", "Frankly my dear I don't give a damn", "Why so serious", "I'm Batman", "Hakuna Matata", "Everything is awesome", "I have spoken", "That's what she said", "Bears beets Battlestar Galactica", "Not great not terrible", "This is fine"
-
-RULES:
-- All 5 quotes MUST be real and verbatim — do not modify, combine, or invent quotes
-- Each from a COMPLETELY DIFFERENT source (different show/movie/person/book/etc)
-- Include the person/character name AND the source for each
-- Each quote should feel like it was written about this person's workday
-- Funny, ironic, or unexpectedly perfect > safe and generic
-- PRIORITIZE quotes the user has NEVER seen before. Go obscure. Deep cuts. The "oh I forgot about that line" feeling is the goal.
-- For standup: use actual punchlines from real specials, not paraphrased bits
-- For famous people: use real documented quotes, not misattributed internet quotes
-${recentQuotes && recentQuotes.length > 0 ? `- CRITICAL REPEAT AVOIDANCE — this user recently saw these quotes. Pick something COMPLETELY DIFFERENT (different source/person/show too, not just a different quote from the same source):\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}` : ''}
-${analysis.engagement ? `
-USER TASTE PROFILE (learn from this):
-${analysis.engagement.favoriteGenres && analysis.engagement.favoriteGenres.length > 0 ? `- They tend to engage most with: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}
-${analysis.engagement.sharedQuotes && analysis.engagement.sharedQuotes.length > 0 ? `- They SHARED these quotes (this is gold — they loved these enough to show others):\n${analysis.engagement.sharedQuotes.map((q: string) => `  * "${q}"`).join('\n')}` : ''}
-${analysis.engagement.dwellFavorites && analysis.engagement.dwellFavorites.length > 0 ? `- They lingered longest on these (read them multiple times or sat with them):\n${analysis.engagement.dwellFavorites.map((q: string) => `  * "${q}"`).join('\n')}` : ''}
-Use this to calibrate: if they share sarcastic standup bits, lean into that energy. If they dwell on literary quotes, go deeper there. Match their taste while still surprising them.` : ''}
-
-For EACH quote, write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar? Each subtitle should be DIFFERENT — don't repeat the same framing.
-
-Current date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: userTimezone })}
-Current time: ${new Date().toLocaleTimeString('en-US', { timeZone: userTimezone })}
-
-You must respond with valid JSON only. Use exactly this format:
 {
-  "heroMessage": {
-    "quote": "The exact movie/TV quote (first one — WORKPLACE genre)",
-    "source": "Movie or TV Show Title — Character Name",
-    "subtitle": "Your witty one-sentence subtitle"
-  },
+  "heroMessage": { "quote": "", "source": "Source — Character", "subtitle": "" },
   "heroMessages": [
-    { "quote": "SCREEN (TV/Film) quote", "source": "Show/Movie — Character", "subtitle": "Subtitle 1" },
-    { "quote": "STANDUP/COMEDY SPECIAL quote", "source": "Special Name — Comedian", "subtitle": "Subtitle 2" },
-    { "quote": "FAMOUS PERSON / HISTORICAL quote", "source": "Context — Person", "subtitle": "Subtitle 3" },
-    { "quote": "BOOK/LITERATURE/SONG LYRIC quote", "source": "Book/Song — Author/Artist", "subtitle": "Subtitle 4" },
-    { "quote": "WILDCARD quote", "source": "Source — Character/Person", "subtitle": "Subtitle 5" }
+    { "quote": "", "source": "", "subtitle": "" },
+    { "quote": "", "source": "", "subtitle": "" },
+    { "quote": "", "source": "", "subtitle": "" },
+    { "quote": "", "source": "", "subtitle": "" },
+    { "quote": "", "source": "", "subtitle": "" }
   ],
-  "overview": {
-    "title": "3-5 word title",
-    "message": "1-2 sentences about how today will feel. Reference specific events.",
-    "action": "One specific action referencing a calendar event or time.",
-    "severity": "info"
-  },
-  "performance": {
-    "title": "3-5 word title",
-    "message": "1-2 sentences about peak cognitive windows. Name events.",
-    "action": "When exactly to do hard work and what to protect.",
-    "severity": "info"
-  },
-  "resilience": {
-    "title": "3-5 word title",
-    "message": "1-2 sentences about pressure points. Name the culprit events.",
-    "action": "A specific buffer or adjustment.",
-    "severity": "info"
-  },
-  "sustainability": {
-    "title": "3-5 word title",
-    "message": "1-2 sentences about whether this pace is sustainable.",
-    "action": "One structural change.",
-    "severity": "info"
-  },
+  "overview": { "title": "", "message": "", "action": "", "severity": "info" },
+  "performance": { "title": "", "message": "", "action": "", "severity": "info" },
+  "resilience": { "title": "", "message": "", "action": "", "severity": "info" },
+  "sustainability": { "title": "", "message": "", "action": "", "severity": "info" },
   "insights": [],
-  "summary": "One-sentence day summary",
+  "summary": "",
   "overallScore": ${workHealth.adaptivePerformanceIndex},
   "riskFactors": [],
   "opportunities": [],
@@ -661,8 +526,8 @@ You must respond with valid JSON only. Use exactly this format:
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        temperature: 1.0, // Maximum variation for creative quotes and subtitles
+        max_tokens: 2000,
+        temperature: 1.0, // Variation for creative quotes
         system: this.createSystemPrompt(),
         messages: [{
           role: 'user',
