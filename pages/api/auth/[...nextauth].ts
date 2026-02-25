@@ -7,6 +7,7 @@ import { supabase } from '../../../lib/supabase'
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function refreshAccessToken(token: any) {
   try {
     const url = 'https://oauth2.googleapis.com/token'

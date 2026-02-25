@@ -6,11 +6,11 @@ import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
 import PersistLogo from './PersistLogo'
 import ShareCard from './ShareCard'
-import { detectMood, type Mood } from '../lib/mood'
+import { type Mood } from '../lib/mood'
 
 export default function LandingPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeCard, setActiveCard] = useState(0)
   const touchStartX = useRef<number | null>(null)
@@ -258,7 +258,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-6">
-              It actually knows what kind of day you're having
+              It actually knows what kind of day you&apos;re having
             </h2>
             <p className="text-xl text-gray-600 font-light max-w-3xl mx-auto">
               We read your calendar and turn it into three simple scores

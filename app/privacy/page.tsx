@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">Our Privacy Commitment</h2>
             <p className="text-lg">
-              PERSIST is built with privacy-first principles. We analyze your work patterns without storing 
+              PERSIST is built with privacy-first principles. We analyze your work patterns without storing
               your personal data. Your calendar information is processed in real-time and never saved to our servers.
             </p>
           </section>
@@ -46,8 +46,8 @@ export default function PrivacyPolicy() {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="font-medium text-green-900">🔒 Key Privacy Feature: No Permanent Storage</p>
               <p className="text-green-800 mt-2">
-                We do not maintain a database of user information. Your data exists only in encrypted 
-                session memory while you're logged in and is completely cleared when you sign out.
+                We do not maintain a database of user information. Your data exists only in encrypted
+                session memory while you&apos;re logged in and is completely cleared when you sign out.
               </p>
             </div>
             <p>Our security measures include:</p>
@@ -103,13 +103,13 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 mt-3 space-y-2">
               <li><strong>During Session:</strong> Data exists only in encrypted memory</li>
               <li><strong>After Logout:</strong> All data is immediately cleared</li>
-              <li><strong>No Historical Storage:</strong> We don't keep any user data between sessions</li>
-              <li><strong>Browser Storage:</strong> Only stores non-personal preferences (like "onboarding seen")</li>
+              <li><strong>No Historical Storage:</strong> We don&apos;t keep any user data between sessions</li>
+              <li><strong>Browser Storage:</strong> Only stores non-personal preferences (like &ldquo;onboarding seen&rdquo;)</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-light text-gray-900 mb-4">8. Children's Privacy</h2>
+            <h2 className="text-2xl font-light text-gray-900 mb-4">8. Children&apos;s Privacy</h2>
             <p>
               PERSIST is not intended for users under 18 years of age. We do not knowingly collect 
               information from children. The service is designed for professional work analysis.
@@ -124,7 +124,7 @@ export default function PrivacyPolicy() {
               <li><strong>Vercel:</strong> For application hosting (they do not have access to your data)</li>
             </ul>
             <p className="mt-3">
-              These services have their own privacy policies. We recommend reviewing Google's privacy 
+              These services have their own privacy policies. We recommend reviewing Google&apos;s privacy
               policy for information about how they handle your data.
             </p>
           </section>
@@ -132,8 +132,8 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">10. Changes to Privacy Policy</h2>
             <p>
-              We may update this Privacy Policy to reflect changes in our practices or for legal reasons. 
-              We will notify users of material changes by updating the "Effective Date" and, when appropriate, 
+              We may update this Privacy Policy to reflect changes in our practices or for legal reasons.
+              We will notify users of material changes by updating the &ldquo;Effective Date&rdquo; and, when appropriate,
               through in-app notifications.
             </p>
           </section>
@@ -175,7 +175,7 @@ export default function PrivacyPolicy() {
         
         <div className="mt-12 pt-8 border-t border-gray-200">
           <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
-            ← Back to Home
+            &larr; Back to Home
           </Link>
         </div>
       </div>
