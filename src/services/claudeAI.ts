@@ -176,8 +176,10 @@ INSIGHTS — each covers a different lens, referencing specific events by name:
 Match tone to scores honestly — 85%+=great, 65-84%=solid, <65%=flag real problems.
 
 QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
-Each from a DIFFERENT category: 1) TV/film 2) standup comedy 3) famous person 4) book/song lyric 5) wildcard (games, anime, sports, internet culture)
-NEVER use Friends, The Office, Parks and Rec, Seinfeld, or any top-10 most quoted show. Dig deeper — Severance, Barry, Succession, Fleabag, Better Call Saul, The Bear, Abbott Elementary, etc.
+ONLY use these categories: movies, TV shows, and stand-up comedians. No books, songs, games, anime, or famous-person quotes.
+Mix it up — some from film, some from TV, some from comedians. All 5 should be different sources.
+Any movie, TV show, or comedian is fair game — classics and deep cuts alike. Mix well-known (The Office, Seinfeld, Friends) with underrated (Severance, Barry, Succession, Fleabag, The Bear, Veep, Arrested Development, 30 Rock, etc.).
+For comedians: Mitch Hedberg, John Mulaney, Nate Bargatze, Ali Wong, Anthony Jeselnik, Hannibal Buress, Dave Chappelle, Rodney Dangerfield, etc.
 Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
 ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recentQuotes.map(q => `"${q}"`).join(', ')}` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 
