@@ -490,10 +490,11 @@ class GoogleCalendarService {
     const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
     const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
 
-    // No meetings: only rewarded if you have intentional focus blocks
+    // No meetings: day off or clear calendar — positive, not punitive.
+    // Intentional structure (focus blocks) earns a higher score.
     if (actualMeetings.length === 0) {
       const hasFocusBlocks = focusWorkEvents.length > 0;
-      return hasFocusBlocks ? 85 : 60;
+      return hasFocusBlocks ? 88 : 75;
     }
 
     const meetingCount = actualMeetings.length;
@@ -585,7 +586,7 @@ class GoogleCalendarService {
   
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
     if (events.length === 0) {
-      return 65; // No meetings = decent resilience, but not remarkable
+      return 78; // No meetings = low strain, good thing. Day off or clear calendar.
     }
 
     // Separate by type
@@ -665,9 +666,10 @@ class GoogleCalendarService {
     const focusWorkEvents = events.filter(e => e.category === 'FOCUS_WORK');
 
     if (actualMeetings.length === 0) {
-      // No meetings — reward intentional structure
+      // No meetings — day off or clear calendar. Positive baseline.
+      // Intentional structure (walks, focus blocks) earns more.
       const hasStructure = beneficialEvents.length > 0 || focusWorkEvents.length > 0;
-      return hasStructure ? 80 : 55;
+      return hasStructure ? 85 : 75;
     }
 
     // Work rhythm balance — lopsided days feel worse
