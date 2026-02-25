@@ -489,6 +489,7 @@ export default function WorkHealthDashboard() {
                     balance={workHealth.workRhythmRecovery}
                     mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
                     aiGenerated={aiStatus === 'success'}
+                    aiError={workHealth._aiError}
                     onMetricClick={(metric) => setActiveTab(metric)}
                     activeCardRef={(el) => { (cardRef as any).current = el; }}
                     onEngagement={trackEngagement}

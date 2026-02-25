@@ -13,6 +13,7 @@ interface SwipeableQuoteCardsProps {
   balance: number
   mood: Mood
   aiGenerated?: boolean
+  aiError?: string
   onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
   /** Ref callback for the currently visible card (for screenshot/share) */
   activeCardRef?: (el: HTMLDivElement | null) => void
@@ -213,6 +214,7 @@ export default function SwipeableQuoteCards({
   balance,
   mood,
   aiGenerated,
+  aiError,
   onMetricClick,
   activeCardRef,
   onEngagement,
@@ -303,6 +305,7 @@ export default function SwipeableQuoteCards({
             {aiGenerated !== undefined && (
               <span
                 className="text-[9px] font-medium px-1.5 py-0.5 rounded-full"
+                title={!aiGenerated && aiError ? `AI error: ${aiError}` : undefined}
                 style={{
                   backgroundColor: aiGenerated ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)',
                   color: aiGenerated ? 'rgba(16,185,129,0.7)' : 'rgba(255,255,255,0.2)',

@@ -18,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Extract user timezone from query parameter or header (CLIENT-SIDE DETECTION)
   const userTimezone = (req.query.timezone as string) || req.headers['x-user-timezone'] as string || 'America/Los_Angeles';
   const skipAI = req.query.skipAI === 'true';
+  const debugAI = req.query.debugAI === 'true';
 
   // Extract recent quotes so AI avoids repeats
   let recentQuotes: string[] = [];
@@ -67,6 +68,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
       ai?: PersonalizedInsightsResponse;
       aiStatus?: 'success' | 'fallback' | 'unavailable' | 'local';
+      _aiError?: string;
+      _aiDebug?: {
+        hasApiKey: boolean;
+        apiKeyPrefix?: string;
+        constructorOk: boolean;
+        error?: string;
+        errorType?: string;
+        timeoutMs?: number;
+      };
     }
 
     const enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
@@ -143,50 +153,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Give AI a fair shot (12s) before falling back to local quotes
     const AI_TIMEOUT_MS = 12000;
 
+    // Step 1: Try to construct the service (tests API key existence)
+    let claudeService: ClaudeAIService | null = null;
+    let constructorError: string | null = null;
     try {
-      const claudeService = new ClaudeAIService();
+      claudeService = new ClaudeAIService();
+    } catch (err) {
+      constructorError = err instanceof Error ? err.message : 'Unknown constructor error';
+      console.error('❌ ClaudeAIService constructor failed:', constructorError);
+    }
 
-      const userContext: UserContext = {
-        userId: session.user?.id || session.user?.email || 'anonymous',
-        preferences: {
-          workStartTime: 9,
-          workEndTime: 17,
-          meetingPreference: 'balanced'
-        }
-      };
+    // Debug info (always collected, only returned if debugAI=true)
+    const aiDebug = {
+      hasApiKey: !!process.env.ANTHROPIC_API_KEY,
+      apiKeyPrefix: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.substring(0, 10) + '...' : 'NOT_SET',
+      constructorOk: !!claudeService,
+      error: constructorError || undefined,
+      errorType: undefined as string | undefined,
+      timeoutMs: AI_TIMEOUT_MS,
+    };
 
-      const aiInsights = await Promise.race([
-        claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone, recentQuotes),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT_MS)
-        ),
-      ]);
+    if (!claudeService) {
+      // API key is missing or invalid — can't even try AI
+      enhancedResponse._aiError = constructorError || 'API key not configured';
+      enhancedResponse.aiStatus = 'unavailable';
+      if (debugAI) enhancedResponse._aiDebug = aiDebug;
 
-      enhancedResponse.ai = aiInsights;
-      // generatePersonalizedInsights catches errors internally and returns
-      // getDefaultInsights (local quotes). Only tag as 'success' when Claude
-      // AI actually generated the response.
-      enhancedResponse.aiStatus = aiInsights._aiGenerated ? 'success' : 'fallback';
-
-    } catch (aiError) {
-      const isTimeout = aiError instanceof Error && aiError.message === 'AI_TIMEOUT';
-
-      if (isTimeout) {
-        console.log(`⏱️ AI timed out after ${AI_TIMEOUT_MS}ms, using local insights`);
-      } else {
-        console.warn('AI insights generation failed:', aiError);
-        if (aiError instanceof Error) {
-          console.log('AI Error details:', aiError.message);
-        }
-      }
-
-      enhancedResponse.aiStatus = isTimeout ? 'local' : 'fallback';
-
-      // Fall back to local insights (getDefaultInsights), then comic relief as last resort
+      // Fall back to offline quotes
       try {
-        const claudeService = new ClaudeAIService();
-        enhancedResponse.ai = claudeService.getDefaultInsights(calendarAnalysis);
-      } catch {
+        // getDefaultInsights needs a ClaudeAIService instance for metric insights generation
+        // Since constructor failed, go straight to comicReliefGenerator
         const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
         const quote = comicReliefGenerator.generateQuote(workHealthData);
         const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
@@ -194,12 +190,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           heroMessage: {
             quote: quote.text,
             source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
-            subtitle: isTimeout ? 'Showing offline quotes' : 'AI insights temporarily unavailable'
+            subtitle: 'AI unavailable — showing offline quotes'
           },
           heroMessages: fallbackQuotes.map((q: any) => ({
             quote: q.text,
             source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
-            subtitle: isTimeout ? 'Showing offline quotes' : 'AI insights temporarily unavailable'
+            subtitle: 'AI unavailable — showing offline quotes'
           })),
           insights: [],
           summary: `Current work health status: ${workHealthData.status}.`,
@@ -208,7 +204,62 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           opportunities: [],
           predictiveAlerts: []
         };
+      } catch {
+        // Last resort — shouldn't happen
       }
+    } else {
+      // Step 2: Constructor succeeded, try the actual AI call
+      try {
+        const userContext: UserContext = {
+          userId: session.user?.id || session.user?.email || 'anonymous',
+          preferences: {
+            workStartTime: 9,
+            workEndTime: 17,
+            meetingPreference: 'balanced'
+          }
+        };
+
+        const aiInsights = await Promise.race([
+          claudeService.generatePersonalizedInsights(calendarAnalysis, userContext, undefined, userTimezone, recentQuotes),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT_MS)
+          ),
+        ]);
+
+        enhancedResponse.ai = aiInsights;
+
+        if (aiInsights._aiGenerated) {
+          enhancedResponse.aiStatus = 'success';
+        } else {
+          // generatePersonalizedInsights caught an error internally and returned fallback
+          enhancedResponse.aiStatus = 'fallback';
+          enhancedResponse._aiError = (aiInsights as any)._aiError || 'AI call failed internally (check server logs)';
+          aiDebug.errorType = 'internal_fallback';
+          aiDebug.error = enhancedResponse._aiError;
+        }
+
+      } catch (aiError) {
+        const isTimeout = aiError instanceof Error && aiError.message === 'AI_TIMEOUT';
+        const errorMsg = aiError instanceof Error ? aiError.message : 'Unknown AI error';
+
+        if (isTimeout) {
+          console.log(`⏱️ AI timed out after ${AI_TIMEOUT_MS}ms, using local insights`);
+          enhancedResponse._aiError = `AI timed out after ${AI_TIMEOUT_MS}ms`;
+          aiDebug.errorType = 'timeout';
+        } else {
+          console.warn('AI insights generation failed:', aiError);
+          enhancedResponse._aiError = errorMsg;
+          aiDebug.errorType = 'exception';
+          aiDebug.error = errorMsg;
+        }
+
+        enhancedResponse.aiStatus = isTimeout ? 'local' : 'fallback';
+
+        // Fall back to local insights
+        enhancedResponse.ai = claudeService.getDefaultInsights(calendarAnalysis);
+      }
+
+      if (debugAI) enhancedResponse._aiDebug = aiDebug;
     }
 
     console.log(`work-health: ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, aiStatus=${enhancedResponse.aiStatus}, tz=${userTimezone}`);

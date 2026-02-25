@@ -694,27 +694,27 @@ You must respond with valid JSON only. Use exactly this format:
       return parsedResponse;
 
     } catch (error) {
-      console.error('Error generating AI insights:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        name: error instanceof Error ? error.name : 'Unknown',
-        stack: error instanceof Error ? error.stack : 'No stack trace',
-        environment: process.env.NODE_ENV
-      });
-      
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errName = error instanceof Error ? error.name : 'Unknown';
+      console.error('Error generating AI insights:', errMsg);
+      console.error('Error details:', { message: errMsg, name: errName, environment: process.env.NODE_ENV });
+
       if (error instanceof Error) {
         if (error.message.includes('rate_limit')) {
           console.warn('Rate limit hit, using fallback insights');
-        } else if (error.message.includes('invalid_api_key')) {
-          console.error('Invalid Anthropic API key - check environment variables in production');
+        } else if (error.message.includes('invalid_api_key') || error.message.includes('authentication_error')) {
+          console.error('❌ Invalid Anthropic API key - check environment variables in production');
         } else if (error.message.includes('timeout')) {
           console.warn('Request timeout, using fallback insights');
-        } else if (error.message.includes('network')) {
+        } else if (error.message.includes('network') || error.message.includes('ECONNREFUSED')) {
           console.warn('Network error, using fallback insights');
         }
       }
-      
-      return this.getDefaultInsights(analysis);
+
+      // Return fallback but tag it with the error so callers can see WHY
+      const fallback = this.getDefaultInsights(analysis);
+      (fallback as any)._aiError = errMsg;
+      return fallback;
     }
   }
 
