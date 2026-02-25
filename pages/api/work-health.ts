@@ -266,9 +266,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json(enhancedResponse);
   } catch (error) {
     console.error('Error fetching work health data:', error);
-    res.status(500).json({ 
-      error: 'Failed to analyze work health', 
-      details: error instanceof Error ? error.message : 'Unknown error' 
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    // Google API often returns 403/404 on first use before token fully propagates
+    const isGoogleApiError = message.includes('Google') || message.includes('calendar') || message.includes('403') || message.includes('404');
+    res.status(isGoogleApiError ? 503 : 500).json({
+      error: isGoogleApiError ? 'Calendar not ready yet — please retry' : 'Failed to analyze work health',
+      details: message,
+      retryable: isGoogleApiError,
     });
   }
 }

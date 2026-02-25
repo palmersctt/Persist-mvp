@@ -483,11 +483,13 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       }
 
       if (!usedCache) {
-        if (retryCount === 0 && err instanceof Error && err.message.includes('HTTP error')) {
-          console.log('First attempt failed, retrying...');
+        // Retry up to 3 times with increasing delay (helps new users whose token isn't propagated yet)
+        if (retryCount < 3 && err instanceof Error && err.message.includes('HTTP error')) {
+          const delay = (retryCount + 1) * 2000; // 2s, 4s, 6s
+          console.log(`Attempt ${retryCount + 1} failed, retrying in ${delay / 1000}s...`);
           setTimeout(() => {
-            fetchWorkHealth(1);
-          }, 2000);
+            fetchWorkHealth(retryCount + 1);
+          }, delay);
           return;
         }
 
@@ -528,11 +530,20 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   }, [session, status]);
 
   // Initial fetch — only once when authenticated
+  // New users (no cache) get a short delay to let Google token propagate
   useEffect(() => {
     if (status === 'authenticated' && session && !hasFetched.current) {
       hasFetched.current = true;
-      console.log('🔄 Initial data load');
-      fetchWorkHealth(0);
+      const cacheKey = getCacheKey();
+      const hasCache = cacheKey ? !!localStorage.getItem(cacheKey) : false;
+
+      if (hasCache) {
+        console.log('🔄 Initial data load (returning user)');
+        fetchWorkHealth(0);
+      } else {
+        console.log('🔄 Initial data load (new user, waiting for token propagation)');
+        setTimeout(() => fetchWorkHealth(0), 1500);
+      }
     }
   }, [session, status, fetchWorkHealth]);
 
