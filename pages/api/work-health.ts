@@ -30,6 +30,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Ignore malformed header
   }
 
+  // Extract user engagement data for personalization
+  let userEngagement: { sharedQuotes?: string[]; dwellFavorites?: string[]; favoriteGenres?: string[] } | undefined;
+  try {
+    const engagementHeader = req.headers['x-user-engagement'] as string;
+    if (engagementHeader) {
+      userEngagement = JSON.parse(decodeURIComponent(engagementHeader));
+    }
+  } catch {
+    // Ignore malformed header
+  }
+
   try {
     const session = await getServerSession(req, res, authOptions);
 
@@ -89,7 +100,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const calendarAnalysis: CalendarAnalysis = {
       workHealth: workHealthData,
       events,
-      patterns: { meetingTypes, timeDistribution, focusBlocks }
+      patterns: { meetingTypes, timeDistribution, focusBlocks },
+      ...(userEngagement && { engagement: userEngagement }),
     };
 
     // Fast path: return local quotes + metric insights immediately (no AI call)
@@ -128,8 +140,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Full path: call Claude AI with server-side timeout
-    // Give AI a fair shot (8s) before falling back to local quotes
-    const AI_TIMEOUT_MS = 8000;
+    // Give AI a fair shot (12s) before falling back to local quotes
+    const AI_TIMEOUT_MS = 12000;
 
     try {
       const claudeService = new ClaudeAIService();

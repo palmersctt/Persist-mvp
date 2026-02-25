@@ -36,7 +36,7 @@ export default function WorkHealthDashboard() {
   const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh } = useWorkHealth(activeTab);
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus } = useWorkHealth(activeTab);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -168,6 +168,17 @@ export default function WorkHealthDashboard() {
 
   const handleShare = useCallback(async () => {
     if (shareState === 'generating' || !cardRef.current) return;
+
+    // Track the shared quote for personalization
+    if (workHealth?.ai?.heroMessages && trackEngagement) {
+      // We don't know exact card index from here, but the current visible card is what they're sharing
+      const heroMsgs = workHealth.ai.heroMessages;
+      if (heroMsgs.length > 0) {
+        // The card ref points to whatever's currently visible
+        const firstQuote = heroMsgs[0];
+        trackEngagement(firstQuote.quote, firstQuote.source, 'share');
+      }
+    }
 
     setShareState('generating');
 
@@ -477,8 +488,10 @@ export default function WorkHealthDashboard() {
                     strain={workHealth.cognitiveResilience}
                     balance={workHealth.workRhythmRecovery}
                     mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                    aiGenerated={aiStatus === 'success'}
                     onMetricClick={(metric) => setActiveTab(metric)}
                     activeCardRef={(el) => { (cardRef as any).current = el; }}
+                    onEngagement={trackEngagement}
                   />
                 ) : (
                   <div ref={cardRef}>

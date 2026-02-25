@@ -36,6 +36,12 @@ interface TabContext {
   focusArea?: string;
 }
 
+interface UserEngagement {
+  sharedQuotes?: string[];
+  dwellFavorites?: string[];
+  favoriteGenres?: string[];
+}
+
 interface CalendarAnalysis {
   workHealth: WorkHealthMetrics;
   events: CalendarEvent[];
@@ -44,6 +50,7 @@ interface CalendarAnalysis {
     timeDistribution: Record<string, number>;
     focusBlocks: { start: number; duration: number }[];
   };
+  engagement?: UserEngagement;
 }
 
 interface HeroMessage {
@@ -240,34 +247,44 @@ METRIC INSTRUCTIONS — each insight covers a DIFFERENT lens. Do NOT overlap:
    Action: Name one structural change. (e.g., "Move the Thursday standup to batch with the 10 AM sync — that frees a 90-minute focus block.")
    Do NOT talk about: individual event performance or stress points.
 
-HERO MESSAGES — 5 AI-SELECTED MOVIE/TV QUOTES:
-Pick 5 REAL, EXACT, VERBATIM quotes from real movies or TV shows. Do NOT invent, paraphrase, or combine quotes.
+HERO MESSAGES — 5 QUOTES FROM ACROSS ALL OF CULTURE:
+Pick 5 REAL, EXACT, VERBATIM quotes. These can come from ANYWHERE in culture — not just movies. The goal is VARIETY and SURPRISE. Never the same source twice across sessions.
 All quotes must capture this vibe: ${quoteMood}
 
-Each quote should come from a DIFFERENT genre/style so the user gets variety as they swipe:
-1. WORKPLACE — From a workplace comedy or drama (The Office, Succession, Veep, Silicon Valley, The Bear, Mad Men, 30 Rock, Abbott Elementary, Severance, Better Call Saul)
-2. CLASSIC FILM — From a well-known movie, but NOT the obvious AFI top quotes. Deep cuts from recognizable films. (The Big Lebowski, Fargo, Groundhog Day, Office Space, The Devil Wears Prada, Glengarry Glen Ross, Margin Call, The Big Short)
-3. COMEDY — From a comedy movie or sitcom that makes them laugh (Arrested Development, Seinfeld, Parks and Rec, Brooklyn Nine-Nine, Schitt's Creek, It's Always Sunny, Curb Your Enthusiasm, Fleabag, Frasier, Scrubs)
-4. DRAMA/THRILLER — From a drama, thriller, or prestige show that feels epic or intense (Breaking Bad, The Wire, Interstellar, Heat, No Country for Old Men, Gladiator, The Dark Knight, Uncut Gems, Whiplash)
-5. WILDCARD — Surprise them. Animated, sci-fi, horror, musical, reality TV, documentary, anime — anything unexpected that somehow fits perfectly.
+Each quote MUST come from a DIFFERENT world so the user gets genuine variety as they swipe:
+1. SCREEN (TV/FILM) — A line from a movie or TV show. But NOT the usual suspects. Dig into: Severance, The Bear, Fleabag, What We Do in the Shadows, Reservation Dogs, Atlanta, Barry, Beef, Better Call Saul, Hacks, Abbott Elementary, Shrinking, Poker Face, The White Lotus, Slow Horses, Andor, Succession, The Rehearsal, I Think You Should Leave, Detroiters, Joe Pera, Nathan for You, Documentary Now!, Toast of London, Peep Show, Black Books, The IT Crowd, Spaced, Garth Marenghi's Darkplace, Letterkenny, Trailer Park Boys, Kim's Convenience, Schitt's Creek deep cuts, Mythic Quest, Corporate, Better Off Ted, Party Down, Happy Endings, Pen15, Ramy, Dave, Louie, Master of None, Russian Doll, Undone, Forever, Upload, Devs, Station Eleven, Maniac, Tales from the Loop, Counterpart, Mr. Robot, Patriot, Lodge 49, Perpetual Grace LTD, Terriers, Deadwood, Justified, Banshee, Warrior, The Knick, Mindhunter, Ozark, Narcos, Gomorrah, ZeroZeroZero, Top Boy, McMafia, Billions, Industry, Bad Sisters, The Outsider, Mare of Easttown, Under the Banner of Heaven, We Own This City, The Staircase, Candy, The Dropout, WeCrashed, Super Pumped, Dopesick, Inventing Anna
+2. STANDUP/COMEDY SPECIAL — A real punchline or bit from a standup special or comedy album. John Mulaney, Nate Bargatze, Ali Wong, Hasan Minhaj, Taylor Tomlinson, Sam Morril, Mark Normand, Shane Gillis, Theo Von, Stavros Halkias, Michelle Wolf, Nikki Glaser, Roy Wood Jr., Deon Cole, Gary Gulman, Mike Birbiglia, Maria Bamford, Tig Notaro, Bo Burnham, Jerrod Carmichael, Neal Brennan, Chris Distefano, Andrew Schulz, Matt Rife, Sebastian Maniscalco, Tom Segura, Bert Kreischer, Bill Burr, Dave Chappelle deep cuts, Mitch Hedberg, Steven Wright, Demetri Martin, Hannibal Buress, Kyle Kinane, Rory Scovel, Chad Daniels, Nate Craig, Fortune Feimster, Wanda Sykes, Cedric the Entertainer, Sinbad, Kathleen Madigan, Brian Regan, Jim Gaffigan, Patton Oswalt, Eddie Izzard, James Acaster, Daniel Sloss, Romesh Ranganathan, Jimmy Carr, Lee Mack, Tim Vine, Stewart Lee, Dylan Moran, Tommy Tiernan, Dave Allen, Billy Connolly
+3. FAMOUS PERSON / HISTORICAL — A real quote from a real person. Athletes, founders, scientists, writers, coaches, musicians, politicians, philosophers. NOT the overused inspirational poster quotes. Think: weird interviews, press conferences, memoir passages, commencement speeches, podcast moments. Mike Tyson, Shaq, Charles Barkley, Yogi Berra, Bill Murray, Anthony Bourdain, Werner Herzog, David Lynch, Dolly Parton, Nora Ephron, Tina Fey, Mindy Kaling, Steve Martin, Larry David, Kurt Vonnegut, Douglas Adams, Terry Pratchett, Oscar Wilde, Mark Twain, Dorothy Parker, Groucho Marx, Winston Churchill (actual quotes), Teddy Roosevelt, Hunter S. Thompson, Joan Didion, James Baldwin, Maya Angelou deep cuts, Ursula K. Le Guin
+4. BOOK/LITERATURE/SONG LYRIC — A memorable line from a novel, poem, essay, or song. NOT the cliché quotes. Dig into: Catch-22, Slaughterhouse-Five, A Confederacy of Dunces, Hitchhiker's Guide, Discworld, Good Omens, Bridget Jones, Where'd You Go Bernadette, Severance (the novel), Then We Came to the End, Joshua Ferris, Ed Park, Halle Butler, Ottessa Moshfegh, George Saunders, David Sedaris, Jenny Offill, Patricia Lockwood, Carmen Maria Machado, Phoebe Waller-Bridge essays. Song lyrics from: Talking Heads, LCD Soundsystem, Radiohead, Kendrick Lamar, OutKast, Dolly Parton, Willie Nelson, Johnny Cash, Townes Van Zandt, Leonard Cohen, Tom Waits, Joni Mitchell, Fiona Apple, Courtney Barnett, Phoebe Bridgers, Japanese Breakfast, Mitski, Tyler the Creator, Frank Ocean, Beyoncé, Lizzo, Janelle Monáe, Cardi B, Megan Thee Stallion, Doja Cat
+5. WILDCARD — Anything unexpected that somehow fits PERFECTLY. Video games (Portal, Hades, Disco Elysium, Baldur's Gate 3, Stardew Valley, Undertale, Celeste, Hollow Knight). Anime (Cowboy Bebop, Mob Psycho 100, One Punch Man, Spy x Family, Bocchi the Rock, Chainsaw Man). Podcasts. TikTok/internet culture. Reality TV confessionals. Sports commentary. Nature documentaries. Pro wrestling promos. Cooking competition judges. Kids' show characters being accidentally profound. Fortune cookies. Old internet forums. Reddit comments that became legendary.
 
-GENRE MATCHING — match the mood intensity to this person's day:
-- Brutal meeting-heavy day → survival movies, dark comedies, war films (Apocalypse Now, Full Metal Jacket, The Big Short, Succession)
-- Great focus day with clear schedule → triumph films, feel-good comedies (Rocky, Ferris Bueller, The Shawshank Redemption, Ted Lasso)
-- Mundane repetitive day → shows about absurdity of routine (Office Space, The Office, Seinfeld, Groundhog Day, Parks and Rec)
-- High-pressure deadline day → heist/thriller energy (Ocean's Eleven, Mission Impossible, Margin Call, Uncut Gems)
-- Day where nothing goes right → slapstick, dark humor, gallows wit (Arrested Development, Veep, Horrible Bosses, The Big Lebowski)
-- Day with one giant stressful event → underdog/boss confrontation (The Devil Wears Prada, 9 to 5, Working Girl, Glengarry Glen Ross)
+MOOD × SOURCE MATCHING:
+- Brutal day → dark standup bits, gallows humor literature, survival movie quotes, athlete post-loss interviews
+- Great day → victory speeches, feel-good comedy specials, triumphant song lyrics, characters celebrating
+- Mundane day → absurdist comedy, Mitch Hedberg one-liners, Seinfeld observations, Office Space, Catch-22
+- High-pressure → heist/thriller quotes, coach pep talks, athlete clutch moments, war room scenes
+- Nothing going right → self-deprecating standup, A Confederacy of Dunces, Arrested Development, Curb
+- One big stressful event → underdog moments, Devil Wears Prada, press conference meltdowns, boss confrontation scenes
 
-DEEP CUTS WELCOME — avoid the AFI top-quotes list. Skip "I'll be back", "May the Force be with you", "Here's looking at you kid", "You can't handle the truth", "Life is like a box of chocolates", "To infinity and beyond", "Just keep swimming", "I am Groot", "This is the way". Instead find quotes from well-known movies and shows that people recognize but don't see referenced every day. That sweet spot — "oh I forgot about that line" — is where the delight is.
+ABSOLUTE BLACKLIST — NEVER use these quotes (user has seen them too many times):
+"I'll be back", "May the Force be with you", "Here's looking at you kid", "You can't handle the truth", "Life is like a box of chocolates", "To infinity and beyond", "Just keep swimming", "I am Groot", "This is the way", "Do or do not there is no try", "I see dead people", "Houston we have a problem", "Show me the money", "You had me at hello", "I'm king of the world", "Frankly my dear I don't give a damn", "Why so serious", "I'm Batman", "Hakuna Matata", "Everything is awesome", "I have spoken", "That's what she said", "Bears beets Battlestar Galactica", "Not great not terrible", "This is fine"
 
 RULES:
 - All 5 quotes MUST be real and verbatim — do not modify, combine, or invent quotes
-- Each from a DIFFERENT movie/TV show
-- Include the character name and movie/TV show title for each
+- Each from a COMPLETELY DIFFERENT source (different show/movie/person/book/etc)
+- Include the person/character name AND the source for each
 - Each quote should feel like it was written about this person's workday
 - Funny, ironic, or unexpectedly perfect > safe and generic
-${recentQuotes && recentQuotes.length > 0 ? `- AVOID REPEATS — this user recently saw these quotes. Pick something COMPLETELY DIFFERENT (different movie/show too):\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}` : ''}
+- PRIORITIZE quotes the user has NEVER seen before. Go obscure. Deep cuts. The "oh I forgot about that line" feeling is the goal.
+- For standup: use actual punchlines from real specials, not paraphrased bits
+- For famous people: use real documented quotes, not misattributed internet quotes
+${recentQuotes && recentQuotes.length > 0 ? `- CRITICAL REPEAT AVOIDANCE — this user recently saw these quotes. Pick something COMPLETELY DIFFERENT (different source/person/show too, not just a different quote from the same source):\n${recentQuotes.map(q => `  * "${q}"`).join('\n')}` : ''}
+${analysis.engagement ? `
+USER TASTE PROFILE (learn from this):
+${analysis.engagement.favoriteGenres && analysis.engagement.favoriteGenres.length > 0 ? `- They tend to engage most with: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}
+${analysis.engagement.sharedQuotes && analysis.engagement.sharedQuotes.length > 0 ? `- They SHARED these quotes (this is gold — they loved these enough to show others):\n${analysis.engagement.sharedQuotes.map((q: string) => `  * "${q}"`).join('\n')}` : ''}
+${analysis.engagement.dwellFavorites && analysis.engagement.dwellFavorites.length > 0 ? `- They lingered longest on these (read them multiple times or sat with them):\n${analysis.engagement.dwellFavorites.map((q: string) => `  * "${q}"`).join('\n')}` : ''}
+Use this to calibrate: if they share sarcastic standup bits, lean into that energy. If they dwell on literary quotes, go deeper there. Match their taste while still surprising them.` : ''}
 
 For EACH quote, write a SHORT subtitle (one sentence) that acts as the punchline — connecting the quote's mood to how this person's day will FEEL. Be witty, warm, or ironic. Talk about the emotional vibe of the day, not the calendar data. Do NOT list meetings, counts, or hours. Do NOT recap the schedule. Think: how would a funny friend describe your day after glancing at your calendar? Each subtitle should be DIFFERENT — don't repeat the same framing.
 
@@ -282,11 +299,11 @@ You must respond with valid JSON only. Use exactly this format:
     "subtitle": "Your witty one-sentence subtitle"
   },
   "heroMessages": [
-    { "quote": "WORKPLACE quote", "source": "Show — Character", "subtitle": "Subtitle 1" },
-    { "quote": "CLASSIC FILM quote", "source": "Movie — Character", "subtitle": "Subtitle 2" },
-    { "quote": "COMEDY quote", "source": "Show — Character", "subtitle": "Subtitle 3" },
-    { "quote": "DRAMA/THRILLER quote", "source": "Movie — Character", "subtitle": "Subtitle 4" },
-    { "quote": "WILDCARD quote", "source": "Source — Character", "subtitle": "Subtitle 5" }
+    { "quote": "SCREEN (TV/Film) quote", "source": "Show/Movie — Character", "subtitle": "Subtitle 1" },
+    { "quote": "STANDUP/COMEDY SPECIAL quote", "source": "Special Name — Comedian", "subtitle": "Subtitle 2" },
+    { "quote": "FAMOUS PERSON / HISTORICAL quote", "source": "Context — Person", "subtitle": "Subtitle 3" },
+    { "quote": "BOOK/LITERATURE/SONG LYRIC quote", "source": "Book/Song — Author/Artist", "subtitle": "Subtitle 4" },
+    { "quote": "WILDCARD quote", "source": "Source — Character/Person", "subtitle": "Subtitle 5" }
   ],
   "overview": {
     "title": "3-5 word title",
