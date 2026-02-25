@@ -23,20 +23,29 @@ export default function WorkHealthDashboard() {
 
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus } = useWorkHealth(activeTab);
 
-  const loadingVerbs = [
-    'Analyzing', 'Reading', 'Scanning', 'Processing',
-    'Judging', 'Questioning', 'Scrutinizing', 'Investigating',
-    'Scratching', 'Squinting', 'Poking', 'Shaking',
-    'Smelling', 'Sniffing', 'Whispering', 'Marinating',
-    'Laughing', 'Gasping', 'Manifesting', 'Bargaining',
-  ];
-  const [loadingVerbIndex, setLoadingVerbIndex] = useState(0);
+  const [loadingVerb, setLoadingVerb] = useState('Analyzing');
+  const [verbFade, setVerbFade] = useState(true);
 
   useEffect(() => {
-    if (!isLoading) { setLoadingVerbIndex(0); return; }
+    if (!isLoading) { setLoadingVerb('Analyzing'); setVerbFade(true); return; }
+    const verbs = [
+      'Analyzing', 'Reading', 'Scanning', 'Processing',
+      'Judging', 'Questioning', 'Scrutinizing', 'Investigating',
+      'Scratching', 'Squinting', 'Poking', 'Shaking',
+      'Smelling', 'Sniffing', 'Whispering', 'Marinating',
+      'Laughing', 'Gasping', 'Manifesting', 'Bargaining',
+    ];
+    // Shuffle so it's different every time
+    const shuffled = [...verbs].sort(() => Math.random() - 0.5);
+    let i = 0;
     const id = setInterval(() => {
-      setLoadingVerbIndex(i => (i + 1) % loadingVerbs.length);
-    }, 800);
+      setVerbFade(false); // fade out
+      setTimeout(() => {
+        i = (i + 1) % shuffled.length;
+        setLoadingVerb(shuffled[i]);
+        setVerbFade(true); // fade in
+      }, 250);
+    }, 1500);
     return () => clearInterval(id);
   }, [isLoading]);
 
@@ -501,8 +510,15 @@ export default function WorkHealthDashboard() {
                 </div>
 
                 {/* Loading verb */}
-                <p className="text-xs text-center mt-4 transition-opacity duration-200" style={{ color: 'var(--text-muted)' }}>
-                  {loadingVerbs[loadingVerbIndex]}...
+                <p
+                  className="text-sm font-medium text-center mt-5 tracking-wide"
+                  style={{
+                    color: 'rgba(255,255,255,0.5)',
+                    opacity: verbFade ? 1 : 0,
+                    transition: 'opacity 0.25s ease-in-out',
+                  }}
+                >
+                  {loadingVerb}...
                 </p>
               </section>
             )}
