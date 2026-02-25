@@ -527,14 +527,15 @@ class GoogleCalendarService {
     else if (weightedMeetingLoad >= 1.5) densityScore = 82;
     else densityScore = 92;
 
-    // Fragmentation — no floor, sub-1hr focus time is brutal
-    let fragmentationScore = 100;
+    // Fragmentation — tighter thresholds, even lots of "focus time" doesn't
+    // mean much if it's 3hrs before 9am. Cap at 85 so nobody hits 100 trivially.
+    let fragmentationScore = 85;
     if (focusHours < 0.5) fragmentationScore = 5;
-    else if (focusHours < 1) fragmentationScore = 15;
-    else if (focusHours < 2) fragmentationScore = 30;
-    else if (focusHours < 3) fragmentationScore = 55;
-    else if (focusHours < 4) fragmentationScore = 75;
-    else fragmentationScore = 90;
+    else if (focusHours < 1) fragmentationScore = 12;
+    else if (focusHours < 2) fragmentationScore = 25;
+    else if (focusHours < 3) fragmentationScore = 40;
+    else if (focusHours < 4) fragmentationScore = 58;
+    else if (focusHours < 5) fragmentationScore = 72;
 
     // Back-to-back transitions — each one stacks painfully
     let transitionScore = 100;
@@ -544,8 +545,8 @@ class GoogleCalendarService {
     else if (backToBackCount === 2) transitionScore = 55;
     else if (backToBackCount === 1) transitionScore = 78;
 
-    // Afternoon-heavy days are draining
-    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
+    // Afternoon-heavy days are draining (1pm+ counts as afternoon)
+    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 13).length;
     const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
     let timingScore = 100;
     if (afternoonMeetings >= 4) timingScore = 40;
