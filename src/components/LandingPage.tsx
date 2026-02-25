@@ -239,9 +239,7 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
-          <p className="text-sm text-gray-400 mb-10">
-            Every day is different. So is your card.
-          </p>
+          <div className="mb-10" />
 
           <button
             type="button"
@@ -258,10 +256,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-6">
-              It actually knows what kind of day you&apos;re having
+              We actually know what kind of day you&apos;re having
             </h2>
             <p className="text-xl text-gray-600 font-light max-w-3xl mx-auto">
-              We read your calendar and turn it into three simple scores
+              We read your calendar, score your day, and find the laugh that fits
             </p>
           </div>
 
