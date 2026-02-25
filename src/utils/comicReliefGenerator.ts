@@ -111,7 +111,7 @@ export class ComicReliefGenerator {
 
     // BACK-TO-BACK MEETINGS (high back-to-back count)
     {
-      condition: (m) => (m.schedule?.backToBackCount && m.schedule.backToBackCount > 3),
+      condition: (m) => (m.schedule?.backToBackCount != null && m.schedule.backToBackCount > 3),
       quotes: [
         { text: "I volunteer as tribute.", source: "The Hunger Games", character: "Katniss Everdeen", category: 'meetings', tone: 'defeated' },
         { text: "You shall not pass!", source: "The Lord of the Rings", character: "Gandalf", category: 'meetings', tone: 'defeated' },
@@ -125,7 +125,7 @@ export class ComicReliefGenerator {
 
     // FRAGMENTED SCHEDULE (high fragmentation score)
     {
-      condition: (m) => (m.schedule?.fragmentationScore && m.schedule.fragmentationScore > 0.7),
+      condition: (m) => (m.schedule?.fragmentationScore != null && m.schedule.fragmentationScore > 0.7),
       quotes: [
         { text: "Chaos isn't a pit. Chaos is a ladder.", source: "Game of Thrones", character: "Littlefinger", category: 'balance', tone: 'sarcastic' },
         { text: "I am serious. And don't call me Shirley.", source: "Airplane!", character: "Dr. Rumack", category: 'balance', tone: 'dry' },
@@ -166,7 +166,7 @@ export class ComicReliefGenerator {
 
     // MEETING OVERLOAD (high meeting density OR many meetings)
     {
-      condition: (m) => m.meetingDensity > 0.6 || (m.schedule?.meetingCount && m.schedule.meetingCount > 5),
+      condition: (m) => m.meetingDensity > 0.6 || (m.schedule?.meetingCount != null && m.schedule.meetingCount > 5),
       quotes: [
         { text: "I have a very particular set of skills.", source: "Taken", character: "Bryan Mills", category: 'meetings', tone: 'dry' },
         { text: "Nobody puts Baby in a corner.", source: "Dirty Dancing", character: "Johnny", category: 'meetings', tone: 'sarcastic' },

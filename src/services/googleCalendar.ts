@@ -208,18 +208,15 @@ class GoogleCalendarService {
         timeZone: userTimezone,
         singleEvents: true,
         orderBy: 'startTime',
-        // Force fresh data by including timestamp in request
         maxResults: 2500,
         showDeleted: false,
-        // Add cache-busting parameter
-        'X-Cache-Control': 'no-cache',
       });
 
       const events = response.data.items || [];
 
       return events
-        .filter(event => event.start?.dateTime && event.end?.dateTime)
-        .map((event, index) => {
+        .filter((event: calendar_v3.Schema$Event) => event.start?.dateTime && event.end?.dateTime)
+        .map((event: calendar_v3.Schema$Event, index: number) => {
           const summary = event.summary || 'No title';
           const startDate = this.parseCalendarDateTime(event.start!.dateTime!, userTimezone);
           const endDate = this.parseCalendarDateTime(event.end!.dateTime!, userTimezone);
