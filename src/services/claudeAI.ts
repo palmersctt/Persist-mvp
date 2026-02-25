@@ -102,6 +102,7 @@ class ClaudeAIService {
     
     this.anthropic = new Anthropic({
       apiKey: this.apiKey,
+      maxRetries: 0, // No SDK retries — we handle model fallback ourselves
     });
   }
 
@@ -167,13 +168,12 @@ ${events.map(event =>
 
 Write 4 insights and pick 5 quotes. Respond with JSON only.
 
-INSIGHTS — each covers a different lens, referencing specific events by name:
-1. overview: How will today feel? Energy arc, hardest/easiest parts. Action: one thing to improve the day.
-2. performance: When to do deep work? Name the windows and blockers. Action: when to tackle hard problems.
-3. resilience: What will stress them? Back-to-backs, context switches. Action: a buffer to add.
-4. sustainability: Is this pace repeatable? Action: one structural change.
-
-Match tone to scores honestly — 85%+=great, 65-84%=solid, <65%=flag real problems.
+INSIGHTS — 1-2 sentences each, be brief:
+1. overview: How will today feel? One action to improve it.
+2. performance: Best window for deep work?
+3. resilience: What will stress them? One buffer to add.
+4. sustainability: Is this pace repeatable?
+Keep messages SHORT (max 20 words each). Match tone to scores — 85%+=great, 65-84%=solid, <65%=flag problems.
 
 QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
 ONLY use these categories: movies, TV shows, and stand-up comedians. No books, songs, games, anime, or famous-person quotes.
@@ -525,15 +525,15 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
     try {
       const promptContent = this.createAllInsightsPrompt(analysis, userContext, providedUserTimezone, recentQuotes);
-      const models = ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001'] as const;
+      const models = ['claude-haiku-4-5-20251001', 'claude-sonnet-4-20250514'] as const;
 
       let response;
       for (const model of models) {
         try {
           response = await this.anthropic.messages.create({
             model,
-            max_tokens: 1500,
-            temperature: 1.0, // Variation for creative quotes
+            max_tokens: 2048,
+            temperature: 0.9,
             system: this.createSystemPrompt(),
             messages: [{
               role: 'user',
