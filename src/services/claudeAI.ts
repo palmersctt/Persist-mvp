@@ -177,8 +177,9 @@ Keep messages SHORT (max 20 words each). Match tone to scores — 85%+=great, 65
 
 QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
 ONLY from: movies, TV shows, and stand-up comedians. No books, songs, games, anime, or famous-person quotes.
-Mix it up — some from film, some from TV, some from comedians. All 5 must be different sources.
-Go deep and obscure. Surprise me. Pick quotes most people wouldn't think of.
+MUST include at least 2 stand-up comedian quotes (from specials or bits). The rest from movies/TV.
+Comedians to draw from: Mitch Hedberg, John Mulaney, Nate Bargatze, Ali Wong, Anthony Jeselnik, Hannibal Buress, Dave Chappelle, Rodney Dangerfield, Demetri Martin, Steven Wright, Hasan Minhaj, Taylor Tomlinson, Mike Birbiglia, Bo Burnham, Gary Gulman, etc.
+All 5 must be different sources. Go deep — surprise me.
 Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
 ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these recently shown quotes:\n${recentQuotes.map(q => `- "${q}"`).join('\n')}\n` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 

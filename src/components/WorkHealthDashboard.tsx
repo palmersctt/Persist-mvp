@@ -49,7 +49,7 @@ export default function WorkHealthDashboard() {
       setDotCount(d => (d % 3) + 1);
     }, 400);
 
-    // Swap verb every 2s with fade
+    // Swap verb every 2.8s with fade
     const verbId = setInterval(() => {
       setVerbVisible(false);
       setTimeout(() => {
@@ -58,7 +58,7 @@ export default function WorkHealthDashboard() {
         setDotCount(1);
         setVerbVisible(true);
       }, 300);
-    }, 2000);
+    }, 2800);
 
     return () => { clearInterval(dotId); clearInterval(verbId); };
   }, [isLoading]);
