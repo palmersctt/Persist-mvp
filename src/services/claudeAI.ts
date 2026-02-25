@@ -176,12 +176,11 @@ INSIGHTS — 1-2 sentences each, be brief:
 Keep messages SHORT (max 20 words each). Match tone to scores — 85%+=great, 65-84%=solid, <65%=flag problems.
 
 QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
-ONLY use these categories: movies, TV shows, and stand-up comedians. No books, songs, games, anime, or famous-person quotes.
-Mix it up — some from film, some from TV, some from comedians. All 5 should be different sources.
-Any movie, TV show, or comedian is fair game — classics and deep cuts alike. Mix well-known (The Office, Seinfeld, Friends) with underrated (Severance, Barry, Succession, Fleabag, The Bear, Veep, Arrested Development, 30 Rock, etc.).
-For comedians: Mitch Hedberg, John Mulaney, Nate Bargatze, Ali Wong, Anthony Jeselnik, Hannibal Buress, Dave Chappelle, Rodney Dangerfield, etc.
+ONLY from: movies, TV shows, and stand-up comedians. No books, songs, games, anime, or famous-person quotes.
+Mix it up — some from film, some from TV, some from comedians. All 5 must be different sources.
+Go deep and obscure. Surprise me. Pick quotes most people wouldn't think of.
 Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
-${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recentQuotes.map(q => `"${q}"`).join(', ')}` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
+${recentQuotes && recentQuotes.length > 0 ? `\nBANNED QUOTES — do NOT use any of these, they were already shown:\n${recentQuotes.map(q => `- "${q}"`).join('\n')}\nAlso do NOT use any quote from the same SOURCE as the banned quotes above. Pick completely different movies/shows/comedians.\n` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 
 {
   "heroMessage": { "quote": "", "source": "Source — Character", "subtitle": "" },
