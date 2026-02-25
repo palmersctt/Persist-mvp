@@ -11,7 +11,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using PERSIST ("Service"), you agree to be bound by these Terms of Service. 
+              By accessing and using PERSIST (&ldquo;Service&rdquo;), you agree to be bound by these Terms of Service.
               If you do not agree to these terms, please do not use our Service.
             </p>
           </section>
@@ -98,7 +98,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">8. Disclaimers</h2>
             <p>
-              THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. We specifically disclaim:
+              THE SERVICE IS PROVIDED &ldquo;AS IS&rdquo; WITHOUT WARRANTIES OF ANY KIND. We specifically disclaim:
             </p>
             <ul className="list-disc pl-6 mt-3 space-y-2">
               <li>Any warranties of merchantability or fitness for a particular purpose</li>
@@ -123,7 +123,7 @@ export default function TermsOfService() {
             <h2 className="text-2xl font-light text-gray-900 mb-4">10. Changes to Terms</h2>
             <p>
               We reserve the right to update these Terms at any time. We will notify users of any material 
-              changes by updating the "Effective Date" at the top of this page. Continued use of the Service 
+              changes by updating the &ldquo;Effective Date&rdquo; at the top of this page. Continued use of the Service 
               after changes constitutes acceptance of the new terms.
             </p>
           </section>
@@ -138,7 +138,7 @@ export default function TermsOfService() {
         
         <div className="mt-12 pt-8 border-t border-gray-200">
           <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
-            ← Back to Home
+            &larr; Back to Home
           </Link>
         </div>
       </div>

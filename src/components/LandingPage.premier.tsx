@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 export default function LandingPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect to dashboard if already logged in
@@ -225,7 +225,7 @@ export default function LandingPage() {
             Simple Pricing
           </h2>
           <p className="text-xl text-gray-600 font-light mb-12 leading-relaxed">
-            Start with our free analysis and upgrade when you're ready for advanced insights.
+            Start with our free analysis and upgrade when you&apos;re ready for advanced insights.
           </p>
           <div className="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 max-w-md mx-auto">
             <h3 className="text-2xl font-light text-gray-900 mb-4">Free Analysis</h3>

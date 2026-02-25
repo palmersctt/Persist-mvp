@@ -13,7 +13,7 @@ function simpleHash(str: string): string {
 }
 
 interface CachedAIInsights {
-  insights: any;
+  insights: unknown;
   timestamp: string;
   cacheKey: string;
   calendarDataHash: string;
@@ -30,7 +30,8 @@ export class AIInsightsCache {
   }
 
   // Generate a hash of calendar data to detect changes
-  public generateCalendarDataHash(workHealthData: any, events: any[]): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public generateCalendarDataHash(workHealthData: Record<string, any>, events: Record<string, unknown>[]): string {
     const relevantData = {
       // Core metrics that affect AI insights
       adaptivePerformanceIndex: workHealthData.adaptivePerformanceIndex,
@@ -56,7 +57,7 @@ export class AIInsightsCache {
   }
 
   // Check if we have cached insights for this data + tab combination
-  public getCachedInsights(userId: string, tabType: string, calendarDataHash: string): any | null {
+  public getCachedInsights(userId: string, tabType: string, calendarDataHash: string): unknown | null {
     if (typeof window === 'undefined') return null;
     
     try {
@@ -93,7 +94,7 @@ export class AIInsightsCache {
   }
 
   // Store AI insights with calendar data hash
-  public setCachedInsights(userId: string, tabType: string, insights: any, calendarDataHash: string): void {
+  public setCachedInsights(userId: string, tabType: string, insights: unknown, calendarDataHash: string): void {
     if (typeof window === 'undefined') return;
     
     try {
