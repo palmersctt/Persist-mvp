@@ -177,7 +177,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // API key is missing or invalid — can't even try AI
       enhancedResponse._aiError = constructorError || 'API key not configured';
       enhancedResponse.aiStatus = 'unavailable';
-      enhancedResponse._aiDebug = aiDebug;
+      if (debugAI) enhancedResponse._aiDebug = aiDebug;
 
       // Fall back to offline quotes
       try {
@@ -259,7 +259,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         enhancedResponse.ai = claudeService.getDefaultInsights(calendarAnalysis);
       }
 
-      enhancedResponse._aiDebug = aiDebug;
+      if (debugAI) enhancedResponse._aiDebug = aiDebug;
     }
 
     console.log(`work-health: ${events.length} events, API=${enhancedResponse.adaptivePerformanceIndex}, aiStatus=${enhancedResponse.aiStatus}, tz=${userTimezone}`);
