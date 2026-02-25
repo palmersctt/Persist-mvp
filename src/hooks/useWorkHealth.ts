@@ -160,7 +160,12 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     return `persist-quote-history-${session.user.email}`;
   };
 
-  // Get recent quotes from localStorage (last 20, within 7 days)
+  const getEngagementKey = () => {
+    if (!session?.user?.email) return null;
+    return `persist-engagement-${session.user.email}`;
+  };
+
+  // Get recent quotes from localStorage (last 50, within 14 days)
   const getRecentQuotes = (): string[] => {
     const key = getQuoteHistoryKey();
     if (!key) return [];
@@ -168,7 +173,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       const raw = localStorage.getItem(key);
       if (!raw) return [];
       const entries: { quote: string; timestamp: string }[] = JSON.parse(raw);
-      const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
       return entries
         .filter(e => new Date(e.timestamp).getTime() > cutoff)
         .map(e => e.quote);
@@ -187,13 +192,77 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
       // Deduplicate
       entries = entries.filter(e => e.quote !== quote);
       entries.push({ quote, timestamp: new Date().toISOString() });
-      // Keep last 20
-      if (entries.length > 20) entries = entries.slice(-20);
+      // Keep last 50
+      if (entries.length > 50) entries = entries.slice(-50);
       localStorage.setItem(key, JSON.stringify(entries));
     } catch {
       // Ignore storage errors
     }
   };
+
+  // --- Engagement tracking ---
+  interface EngagementEntry {
+    quote: string;
+    source: string;
+    action: 'share' | 'dwell';
+    dwellMs?: number;
+    timestamp: string;
+  }
+
+  const getEngagementData = (): { sharedQuotes: string[]; dwellFavorites: string[]; favoriteGenres: string[] } => {
+    const key = getEngagementKey();
+    if (!key) return { sharedQuotes: [], dwellFavorites: [], favoriteGenres: [] };
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return { sharedQuotes: [], dwellFavorites: [], favoriteGenres: [] };
+      const entries: EngagementEntry[] = JSON.parse(raw);
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
+      const recent = entries.filter(e => new Date(e.timestamp).getTime() > cutoff);
+
+      const sharedQuotes = [...new Set(recent.filter(e => e.action === 'share').map(e => e.quote))].slice(-10);
+      // Dwell favorites: quotes user spent 8+ seconds on (read them carefully)
+      const dwellFavorites = [...new Set(
+        recent
+          .filter(e => e.action === 'dwell' && (e.dwellMs || 0) >= 8000)
+          .sort((a, b) => (b.dwellMs || 0) - (a.dwellMs || 0))
+          .map(e => e.quote)
+      )].slice(-10);
+
+      // Infer genre preferences from sources they engaged with
+      const genreHints: Record<string, number> = {};
+      for (const e of recent) {
+        const src = (e.source || '').toLowerCase();
+        if (src.includes('standup') || src.includes('special') || src.includes('comedy')) genreHints['standup'] = (genreHints['standup'] || 0) + 1;
+        if (src.includes('office') || src.includes('succession') || src.includes('bear') || src.includes('severance')) genreHints['workplace TV'] = (genreHints['workplace TV'] || 0) + 1;
+        if (/\b(book|novel|poem|song|lyric)\b/.test(src)) genreHints['literature/music'] = (genreHints['literature/music'] || 0) + 1;
+        // Generic film/TV
+        if (!Object.values(genreHints).length) genreHints['film/TV'] = (genreHints['film/TV'] || 0) + 1;
+      }
+      const favoriteGenres = Object.entries(genreHints)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([genre]) => genre);
+
+      return { sharedQuotes, dwellFavorites, favoriteGenres };
+    } catch {
+      return { sharedQuotes: [], dwellFavorites: [], favoriteGenres: [] };
+    }
+  };
+
+  const trackEngagement = useCallback((quote: string, source: string, action: 'share' | 'dwell', dwellMs?: number) => {
+    const key = getEngagementKey();
+    if (!key || !quote) return;
+    try {
+      const raw = localStorage.getItem(key);
+      let entries: EngagementEntry[] = raw ? JSON.parse(raw) : [];
+      entries.push({ quote, source, action, dwellMs, timestamp: new Date().toISOString() });
+      // Keep last 200 entries
+      if (entries.length > 200) entries = entries.slice(-200);
+      localStorage.setItem(key, JSON.stringify(entries));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [session]);
 
   const getHistoryKey = () => {
     if (!session?.user?.email) return null;
@@ -280,12 +349,16 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
 
   const buildFetchHeaders = (userTimezone: string) => {
     const recentQuotes = getRecentQuotes();
+    const engagement = getEngagementData();
     return {
       'Cache-Control': 'no-cache',
       'Pragma': 'no-cache',
       'X-User-Timezone': userTimezone,
       ...(recentQuotes.length > 0 && {
         'X-Recent-Quotes': encodeURIComponent(JSON.stringify(recentQuotes))
+      }),
+      ...((engagement.sharedQuotes.length > 0 || engagement.dwellFavorites.length > 0 || engagement.favoriteGenres.length > 0) && {
+        'X-User-Engagement': encodeURIComponent(JSON.stringify(engagement))
       })
     };
   };
@@ -515,6 +588,7 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     lastRefresh,
     refresh,
     history,
+    trackEngagement,
     isAuthenticated: status === 'authenticated',
     hasAIInsights: !!workHealth?.ai && workHealth.aiStatus === 'success',
     aiInsights: workHealth?.ai,

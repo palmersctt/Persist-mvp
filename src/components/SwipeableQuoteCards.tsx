@@ -12,9 +12,12 @@ interface SwipeableQuoteCardsProps {
   strain: number
   balance: number
   mood: Mood
+  aiGenerated?: boolean
   onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void
   /** Ref callback for the currently visible card (for screenshot/share) */
   activeCardRef?: (el: HTMLDivElement | null) => void
+  /** Called when user dwells on or shares a quote */
+  onEngagement?: (quote: string, source: string, action: 'share' | 'dwell', dwellMs?: number) => void
 }
 
 const scores = [
@@ -209,12 +212,15 @@ export default function SwipeableQuoteCards({
   strain,
   balance,
   mood,
+  aiGenerated,
   onMetricClick,
   activeCardRef,
+  onEngagement,
 }: SwipeableQuoteCardsProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [canSwipe, setCanSwipe] = useState(true)
   const cooldownRef = useRef<NodeJS.Timeout | null>(null)
+  const dwellStartRef = useRef<number>(Date.now())
   const { gradient, name: moodName } = MOODS[mood]
   const n = quotes.length
 
@@ -225,6 +231,11 @@ export default function SwipeableQuoteCards({
     }
   }, [])
 
+  // Track dwell time: reset timer whenever card changes
+  useEffect(() => {
+    dwellStartRef.current = Date.now()
+  }, [currentIndex])
+
   // Safety: clamp index if quotes array shrinks (e.g. AI update)
   useEffect(() => {
     if (currentIndex >= n && n > 0) {
@@ -233,12 +244,18 @@ export default function SwipeableQuoteCards({
   }, [n, currentIndex])
 
   const handleSwipeComplete = useCallback((direction: number) => {
+    // Report dwell time for the card being swiped away
+    if (onEngagement && quotes[currentIndex]) {
+      const dwellMs = Date.now() - dwellStartRef.current
+      const q = quotes[currentIndex]
+      onEngagement(q.quote, q.source, 'dwell', dwellMs)
+    }
     // direction: +1 = next (swiped left), -1 = prev (swiped right)
     setCurrentIndex(prev => (prev + direction + n) % n)
     // Cooldown prevents rapid-fire swiping
     setCanSwipe(false)
     cooldownRef.current = setTimeout(() => setCanSwipe(true), SWIPE_COOLDOWN_MS)
-  }, [n])
+  }, [n, currentIndex, quotes, onEngagement])
 
   if (!quotes || n === 0) return null
 
@@ -261,7 +278,7 @@ export default function SwipeableQuoteCards({
         />
       </div>
 
-      {/* Dot indicators + swipe hint */}
+      {/* Dot indicators + swipe hint + AI badge */}
       {n > 1 && (
         <div className="flex flex-col items-center mt-3 gap-2">
           <div className="flex gap-1.5">
@@ -279,9 +296,22 @@ export default function SwipeableQuoteCards({
               />
             ))}
           </div>
-          <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
-            swipe for more quotes
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              swipe for more quotes
+            </p>
+            {aiGenerated !== undefined && (
+              <span
+                className="text-[9px] font-medium px-1.5 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: aiGenerated ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)',
+                  color: aiGenerated ? 'rgba(16,185,129,0.7)' : 'rgba(255,255,255,0.2)',
+                }}
+              >
+                {aiGenerated ? 'AI' : 'offline'}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -2,8 +2,8 @@ import { WorkHealthMetrics } from '../hooks/useWorkHealth';
 
 interface MovieQuote {
   text: string;
-  source: string; // Movie or TV show name
-  character?: string; // Character who said it
+  source: string; // Movie, TV show, book, standup special, or person
+  character?: string; // Character, comedian, or person who said it
   category: 'performance' | 'meetings' | 'focus' | 'resilience' | 'balance';
   tone: 'sarcastic' | 'dry' | 'motivational' | 'defeated' | 'confident';
 }
@@ -317,30 +317,164 @@ export class ComicReliefGenerator {
     }
   ];
 
+  // Standup/comedy special quotes — for variety beyond film/TV
+  private standupQuotes: MetricBasedQuote[] = [
+    // Great days
+    {
+      condition: (m) => m.adaptivePerformanceIndex >= 75,
+      quotes: [
+        { text: "In terms of instant gratification, a microwave is pretty slow.", source: "Standup", character: "Mitch Hedberg", category: 'performance', tone: 'dry' },
+        { text: "I used to do drugs. I still do, but I used to, too.", source: "Standup", character: "Mitch Hedberg", category: 'performance', tone: 'dry' },
+        { text: "My fake plants died because I did not pretend to water them.", source: "Standup", character: "Mitch Hedberg", category: 'performance', tone: 'dry' },
+        { text: "I haven't slept for ten days, because that would be too long.", source: "Standup", character: "Mitch Hedberg", category: 'performance', tone: 'dry' },
+        { text: "I'm not weird, I'm limited edition.", source: "Standup", character: "Steven Wright", category: 'performance', tone: 'confident' },
+        { text: "I intend to live forever. So far, so good.", source: "Standup", character: "Steven Wright", category: 'performance', tone: 'confident' },
+        { text: "Everywhere is walking distance if you have the time.", source: "Standup", character: "Steven Wright", category: 'performance', tone: 'dry' },
+        { text: "I'm at the age where food has replaced sex in my life. In fact, I've just had a mirror put over my kitchen table.", source: "Standup", character: "Rodney Dangerfield", category: 'performance', tone: 'dry' },
+        { text: "I told my psychiatrist that everyone hates me. He said I was being ridiculous — everyone hasn't met me yet.", source: "Standup", character: "Rodney Dangerfield", category: 'performance', tone: 'sarcastic' },
+        { text: "Before you judge a man, walk a mile in his shoes. After that who cares? He's a mile away and you've got his shoes.", source: "Standup", character: "Billy Connolly", category: 'performance', tone: 'confident' },
+      ]
+    },
+    // Rough days
+    {
+      condition: (m) => m.adaptivePerformanceIndex < 50,
+      quotes: [
+        { text: "I want to be the reason you look down at your phone and smile. Then walk into a pole.", source: "Standup", character: "Ali Wong", category: 'performance', tone: 'sarcastic' },
+        { text: "The first time I see a jogger smiling, I'll consider it.", source: "Standup", character: "Joan Rivers", category: 'performance', tone: 'sarcastic' },
+        { text: "I'm not afraid of death; I just don't want to be there when it happens.", source: "Without Feathers", character: "Woody Allen", category: 'performance', tone: 'defeated' },
+        { text: "Why do they call it rush hour when nothing moves?", source: "Standup", character: "Robin Williams", category: 'performance', tone: 'sarcastic' },
+        { text: "I have a lot of growing up to do. I realized that the other day inside my fort.", source: "Standup", character: "Zach Galifianakis", category: 'performance', tone: 'defeated' },
+        { text: "My therapist says I have a preoccupation with vengeance. We'll see about that.", source: "Standup", character: "Stewart Francis", category: 'performance', tone: 'sarcastic' },
+        { text: "I'm writing a book. I've got the page numbers done.", source: "Standup", character: "Steven Wright", category: 'performance', tone: 'defeated' },
+        { text: "I like Kit-Kats, unless I'm with four or more people.", source: "Standup", character: "Mitch Hedberg", category: 'performance', tone: 'dry' },
+      ]
+    },
+    // Meeting-heavy days
+    {
+      condition: (m) => (m.schedule?.meetingCount != null && m.schedule.meetingCount > 4),
+      quotes: [
+        { text: "A committee is a group of people who individually can do nothing, but as a group decide that nothing can be done.", source: "Quote", character: "Fred Allen", category: 'meetings', tone: 'sarcastic' },
+        { text: "People say nothing is impossible, but I do nothing every day.", source: "Standup", character: "Brian Regan", category: 'meetings', tone: 'dry' },
+        { text: "I'm not arguing, I'm just explaining why I'm right.", source: "Standup", character: "John Mulaney", category: 'meetings', tone: 'sarcastic' },
+        { text: "In my house I'm the boss, my wife is just the decision maker.", source: "Standup", character: "Woody Allen", category: 'meetings', tone: 'defeated' },
+        { text: "I love deadlines. I love the whooshing noise they make as they go by.", source: "Quote", character: "Douglas Adams", category: 'meetings', tone: 'dry' },
+      ]
+    },
+  ];
+
+  // Famous people / historical quotes
+  private famousQuotes: MetricBasedQuote[] = [
+    // Confident/triumphant
+    {
+      condition: (m) => m.adaptivePerformanceIndex >= 70,
+      quotes: [
+        { text: "It is not the critic who counts; not the man who points out how the strong man stumbles. The credit belongs to the man who is actually in the arena.", source: "Speech, 1910", character: "Theodore Roosevelt", category: 'performance', tone: 'motivational' },
+        { text: "I'm not the greatest; I'm the double greatest.", source: "Interview", character: "Muhammad Ali", category: 'performance', tone: 'confident' },
+        { text: "Do I not destroy my enemies when I make them my friends?", source: "Quote", character: "Abraham Lincoln", category: 'performance', tone: 'confident' },
+        { text: "In the middle of difficulty lies opportunity.", source: "Quote", character: "Albert Einstein", category: 'performance', tone: 'motivational' },
+        { text: "Be yourself; everyone else is already taken.", source: "Quote", character: "Oscar Wilde", category: 'performance', tone: 'confident' },
+        { text: "I have not failed. I've just found 10,000 ways that won't work.", source: "Quote", character: "Thomas Edison", category: 'performance', tone: 'confident' },
+        { text: "If you're going through hell, keep going.", source: "Quote", character: "Winston Churchill", category: 'resilience', tone: 'motivational' },
+        { text: "The best way out is always through.", source: "A Servant to Servants", character: "Robert Frost", category: 'resilience', tone: 'motivational' },
+        { text: "I've missed more than 9,000 shots in my career. I've lost almost 300 games. Twenty-six times I've been trusted to take the game-winning shot and missed. I've failed over and over and over again in my life. And that is why I succeed.", source: "Quote", character: "Michael Jordan", category: 'performance', tone: 'motivational' },
+        { text: "It costs $0.00 to be a nice person.", source: "Quote", character: "Anthony Bourdain", category: 'balance', tone: 'dry' },
+      ]
+    },
+    // Struggling/defeated
+    {
+      condition: (m) => m.adaptivePerformanceIndex < 50,
+      quotes: [
+        { text: "I can resist everything except temptation.", source: "Lady Windermere's Fan", character: "Oscar Wilde", category: 'performance', tone: 'dry' },
+        { text: "The reports of my death are greatly exaggerated.", source: "Quote", character: "Mark Twain", category: 'resilience', tone: 'sarcastic' },
+        { text: "Go to Heaven for the climate, Hell for the company.", source: "Quote", character: "Mark Twain", category: 'performance', tone: 'sarcastic' },
+        { text: "I am so clever that sometimes I don't understand a single word of what I am saying.", source: "Quote", character: "Oscar Wilde", category: 'performance', tone: 'sarcastic' },
+        { text: "If you want to tell people the truth, make them laugh, otherwise they'll kill you.", source: "Quote", character: "George Bernard Shaw", category: 'performance', tone: 'sarcastic' },
+        { text: "The problem with the world is that the intelligent people are full of doubts, while the stupid ones are full of confidence.", source: "Quote", character: "Charles Bukowski", category: 'performance', tone: 'defeated' },
+        { text: "I have the simplest tastes. I am always satisfied with the best.", source: "Quote", character: "Oscar Wilde", category: 'balance', tone: 'dry' },
+        { text: "Everybody has a plan until they get punched in the mouth.", source: "Interview", character: "Mike Tyson", category: 'resilience', tone: 'defeated' },
+      ]
+    },
+    // Low resilience
+    {
+      condition: (m) => m.cognitiveResilience < 45,
+      quotes: [
+        { text: "I don't want to belong to any club that would accept me as a member.", source: "Quote", character: "Groucho Marx", category: 'resilience', tone: 'sarcastic' },
+        { text: "Outside of a dog, a book is man's best friend. Inside of a dog it's too dark to read.", source: "Quote", character: "Groucho Marx", category: 'resilience', tone: 'dry' },
+        { text: "The trouble with having an open mind, of course, is that people will insist on coming along and trying to put things in it.", source: "Quote", character: "Terry Pratchett", category: 'resilience', tone: 'dry' },
+        { text: "I find that a duck's opinion of me is very much influenced by whether or not I have bread.", source: "Standup", character: "Mitch Hedberg", category: 'resilience', tone: 'dry' },
+      ]
+    },
+  ];
+
+  // Book/literature quotes
+  private literaryQuotes: MetricBasedQuote[] = [
+    {
+      condition: (m) => m.adaptivePerformanceIndex >= 65,
+      quotes: [
+        { text: "So it goes.", source: "Slaughterhouse-Five", character: "Kurt Vonnegut", category: 'performance', tone: 'dry' },
+        { text: "Don't Panic.", source: "The Hitchhiker's Guide to the Galaxy", character: "Douglas Adams", category: 'resilience', tone: 'dry' },
+        { text: "The answer to the ultimate question of life, the universe, and everything is 42.", source: "The Hitchhiker's Guide to the Galaxy", character: "Douglas Adams", category: 'performance', tone: 'dry' },
+        { text: "It does not do to dwell on dreams and forget to live.", source: "Harry Potter and the Philosopher's Stone", character: "Albus Dumbledore", category: 'balance', tone: 'motivational' },
+        { text: "In the beginning the Universe was created. This has made a lot of people very angry and been widely regarded as a bad move.", source: "The Restaurant at the End of the Universe", character: "Douglas Adams", category: 'performance', tone: 'dry' },
+        { text: "A person is smart. People are dumb, panicky, dangerous animals and you know it.", source: "Men in Black (novel)", character: "Kay", category: 'performance', tone: 'dry' },
+        { text: "Not all those who wander are lost.", source: "The Fellowship of the Ring", character: "J.R.R. Tolkien", category: 'balance', tone: 'motivational' },
+        { text: "I took the one less traveled by, and that has made all the difference.", source: "The Road Not Taken", character: "Robert Frost", category: 'performance', tone: 'confident' },
+      ]
+    },
+    {
+      condition: (m) => m.adaptivePerformanceIndex < 50,
+      quotes: [
+        { text: "It was the best of times, it was the worst of times.", source: "A Tale of Two Cities", character: "Charles Dickens", category: 'performance', tone: 'defeated' },
+        { text: "I took a deep breath and listened to the old brag of my heart: I am, I am, I am.", source: "The Bell Jar", character: "Sylvia Plath", category: 'resilience', tone: 'defeated' },
+        { text: "There is nothing either good or bad, but thinking makes it so.", source: "Hamlet", character: "William Shakespeare", category: 'performance', tone: 'dry' },
+        { text: "The only thing worse than being talked about is not being talked about.", source: "The Picture of Dorian Gray", character: "Oscar Wilde", category: 'performance', tone: 'sarcastic' },
+        { text: "I think, therefore I have a headache.", source: "A Confederacy of Dunces", character: "Ignatius J. Reilly", category: 'focus', tone: 'defeated' },
+        { text: "There was only one catch and that was Catch-22.", source: "Catch-22", character: "Joseph Heller", category: 'performance', tone: 'defeated' },
+        { text: "Who controls the past controls the future. Who controls the present controls the past.", source: "1984", character: "George Orwell", category: 'performance', tone: 'defeated' },
+      ]
+    },
+  ];
+
   private fallbackQuotes: MovieQuote[] = [
-    { text: "Here's looking at you, kid.", source: "Casablanca", character: "Rick Blaine", category: 'performance', tone: 'dry' },
-    { text: "I'm not superstitious, but I am a little stitious.", source: "The Office", character: "Michael Scott", category: 'balance', tone: 'dry' },
-    { text: "That's what she said.", source: "The Office", character: "Michael Scott", category: 'balance', tone: 'sarcastic' },
-    { text: "Bears. Beets. Battlestar Galactica.", source: "The Office", character: "Jim Halpert", category: 'performance', tone: 'dry' },
-    { text: "Why so serious?", source: "The Dark Knight", character: "The Joker", category: 'performance', tone: 'sarcastic' },
-    { text: "I have spoken.", source: "The Mandalorian", character: "Kuiil", category: 'performance', tone: 'confident' },
+    // Film/TV classics
     { text: "As you wish.", source: "The Princess Bride", character: "Westley", category: 'balance', tone: 'dry' },
     { text: "Inconceivable!", source: "The Princess Bride", character: "Vizzini", category: 'performance', tone: 'sarcastic' },
-    { text: "Hello there.", source: "Star Wars: Revenge of the Sith", character: "Obi-Wan Kenobi", category: 'performance', tone: 'dry' },
-    { text: "This is the way.", source: "The Mandalorian", character: "Din Djarin", category: 'performance', tone: 'confident' },
     { text: "Moving right along.", source: "The Muppet Movie", character: "Kermit", category: 'performance', tone: 'dry' },
-    { text: "And so it goes.", source: "Slaughterhouse-Five", character: "Billy Pilgrim", category: 'performance', tone: 'dry' },
-    { text: "Keep calm and carry on.", source: "British WWII Poster", character: "UK Ministry of Information", category: 'resilience', tone: 'motivational' },
     { text: "I'll have what she's having.", source: "When Harry Met Sally", character: "Older Woman in Deli", category: 'balance', tone: 'dry' },
-    { text: "You had me at hello.", source: "Jerry Maguire", character: "Dorothy Boyd", category: 'balance', tone: 'dry' },
-    { text: "Nobody puts Baby in a corner.", source: "Dirty Dancing", character: "Johnny Castle", category: 'performance', tone: 'confident' },
     { text: "May the odds be ever in your favor.", source: "The Hunger Games", character: "Effie Trinket", category: 'performance', tone: 'sarcastic' },
-    { text: "I am Groot.", source: "Guardians of the Galaxy", character: "Groot", category: 'balance', tone: 'dry' },
+    { text: "Cool. Cool cool cool.", source: "Community", character: "Abed Nadir", category: 'performance', tone: 'dry' },
+    { text: "I've heard it both ways.", source: "Psych", character: "Shawn Spencer", category: 'performance', tone: 'dry' },
+    { text: "Title of your sex tape.", source: "Brooklyn Nine-Nine", character: "Jake Peralta", category: 'performance', tone: 'sarcastic' },
+    { text: "Ew, David!", source: "Schitt's Creek", character: "Alexis Rose", category: 'balance', tone: 'sarcastic' },
+    { text: "I'm not superstitious, but I am a little stitious.", source: "The Office", character: "Michael Scott", category: 'balance', tone: 'dry' },
+    // Standup
+    { text: "I used to think the brain was the most important organ. Then I thought, look what's telling me that.", source: "Standup", character: "Emo Philips", category: 'focus', tone: 'dry' },
+    { text: "An escalator can never break. It can only become stairs.", source: "Standup", character: "Mitch Hedberg", category: 'resilience', tone: 'dry' },
+    { text: "People who think they know everything are a great annoyance to those of us who do.", source: "Quote", character: "Isaac Asimov", category: 'performance', tone: 'sarcastic' },
+    { text: "I'm sick of following my dreams. I'm just going to ask them where they're going and hook up with them later.", source: "Standup", character: "Mitch Hedberg", category: 'balance', tone: 'dry' },
+    { text: "My grandmother started walking five miles a day when she was sixty. She's ninety-seven now, and we don't know where the heck she is.", source: "Standup", character: "Ellen DeGeneres", category: 'balance', tone: 'dry' },
+    // Literature/Famous
+    { text: "And so it goes.", source: "Slaughterhouse-Five", character: "Kurt Vonnegut", category: 'performance', tone: 'dry' },
+    { text: "Don't Panic.", source: "The Hitchhiker's Guide to the Galaxy", character: "Douglas Adams", category: 'resilience', tone: 'dry' },
+    { text: "I love deadlines. I love the whooshing noise they make as they go by.", source: "Quote", character: "Douglas Adams", category: 'focus', tone: 'dry' },
+    { text: "Be yourself; everyone else is already taken.", source: "Quote", character: "Oscar Wilde", category: 'performance', tone: 'confident' },
+    { text: "Not all those who wander are lost.", source: "The Fellowship of the Ring", character: "J.R.R. Tolkien", category: 'balance', tone: 'motivational' },
+    { text: "In the beginning the Universe was created. This has made a lot of people very angry and been widely regarded as a bad move.", source: "The Restaurant at the End of the Universe", character: "Douglas Adams", category: 'performance', tone: 'dry' },
+    { text: "If you're going through hell, keep going.", source: "Quote", character: "Winston Churchill", category: 'resilience', tone: 'motivational' },
+    { text: "Everybody has a plan until they get punched in the mouth.", source: "Interview", character: "Mike Tyson", category: 'resilience', tone: 'defeated' },
+    { text: "The reports of my death are greatly exaggerated.", source: "Quote", character: "Mark Twain", category: 'resilience', tone: 'sarcastic' },
   ];
 
   generateQuote(metrics: WorkHealthMetrics): MovieQuote {
-    // Find all applicable conditions and collect their quotes
-    const applicableQuotes = this.metricBasedQuotes
+    // Collect from ALL pools — movie/TV, standup, famous people, literary
+    const allPools = [
+      ...this.metricBasedQuotes,
+      ...this.standupQuotes,
+      ...this.famousQuotes,
+      ...this.literaryQuotes,
+    ];
+
+    const applicableQuotes = allPools
       .filter(rule => rule.condition(metrics))
       .flatMap(rule => rule.quotes);
 
@@ -371,7 +505,14 @@ export class ComicReliefGenerator {
   }
 
   generateCategoryQuote(metrics: WorkHealthMetrics, category: MovieQuote['category']): MovieQuote {
-    const categoryQuotes = this.metricBasedQuotes
+    const allPools = [
+      ...this.metricBasedQuotes,
+      ...this.standupQuotes,
+      ...this.famousQuotes,
+      ...this.literaryQuotes,
+    ];
+
+    const categoryQuotes = allPools
       .filter(rule => rule.condition(metrics))
       .flatMap(rule => rule.quotes)
       .filter(quote => quote.category === category);
@@ -382,7 +523,7 @@ export class ComicReliefGenerator {
     }
 
     const generalCategoryQuotes = [
-      ...this.metricBasedQuotes.flatMap(rule => rule.quotes),
+      ...allPools.flatMap(rule => rule.quotes),
       ...this.fallbackQuotes
     ].filter(quote => quote.category === category);
 
@@ -403,7 +544,13 @@ export class ComicReliefGenerator {
   }
 
   getTotalQuoteCount(): number {
-    const metricQuotes = this.metricBasedQuotes.reduce((total, rule) => total + rule.quotes.length, 0);
+    const allPools = [
+      ...this.metricBasedQuotes,
+      ...this.standupQuotes,
+      ...this.famousQuotes,
+      ...this.literaryQuotes,
+    ];
+    const metricQuotes = allPools.reduce((total, rule) => total + rule.quotes.length, 0);
     return metricQuotes + this.fallbackQuotes.length;
   }
 }
