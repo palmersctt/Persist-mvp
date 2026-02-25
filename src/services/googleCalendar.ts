@@ -497,7 +497,6 @@ class GoogleCalendarService {
       return hasFocusBlocks ? 88 : 75;
     }
 
-    const meetingCount = actualMeetings.length;
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
     const focusTime = this.calculateFocusTime(events, this.userTimezone);
     const focusHours = focusTime / 60;
@@ -765,7 +764,7 @@ class GoogleCalendarService {
 
   private calculatePerformanceIndex(cognitiveAvailability: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
     // New tiered performance assessment
-    let baseScore = 50;
+    const baseScore = 50;
     
     // Meeting density scoring - much more generous for low counts
     let meetingScore = 0;

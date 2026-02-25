@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
-import ComicReliefSaying from './ComicReliefSaying'
 import ShareCard from './ShareCard'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
 import PersistLogo from './PersistLogo'
@@ -33,18 +32,11 @@ export default function WorkHealthDashboard() {
     }
     return false;
   });
-  const [activeExplanation, setActiveExplanation] = useState<'performance' | 'resilience' | 'sustainability' | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
   const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, history } = useWorkHealth(activeTab);
-
-  // Trend arrow helper
-  const trendArrow = (trend?: 'up' | 'down' | 'flat') => {
-    if (!trend || trend === 'flat') return '';
-    return trend === 'up' ? ' ↑' : ' ↓';
-  };
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh } = useWorkHealth(activeTab);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -322,9 +314,6 @@ export default function WorkHealthDashboard() {
       </div>
     );
   }
-
-  const workCapacity = getWorkCapacityStatus();
-  const secondaryMetrics = getSecondaryMetrics();
 
   // Show error state if there's an error and no data
   if (error && !workHealth) {
