@@ -302,16 +302,16 @@ export default function SwipeableQuoteCards({
             <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
               swipe for more quotes
             </p>
-            {aiGenerated !== undefined && (
+            {aiGenerated === false && (
               <span
                 className="text-[9px] font-medium px-1.5 py-0.5 rounded-full"
-                title={!aiGenerated && aiError ? `AI error: ${aiError}` : undefined}
+                title={aiError ? `AI error: ${aiError}` : undefined}
                 style={{
-                  backgroundColor: aiGenerated ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)',
-                  color: aiGenerated ? 'rgba(16,185,129,0.7)' : 'rgba(255,255,255,0.2)',
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.2)',
                 }}
               >
-                {aiGenerated ? 'AI' : 'offline'}
+                offline
               </span>
             )}
           </div>
