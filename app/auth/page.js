@@ -33,11 +33,11 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         // Login
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
-        
+
         if (error) throw error
         
         setMessage('Login successful! Redirecting...')

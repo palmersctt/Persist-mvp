@@ -1,6 +1,5 @@
 import { google, calendar_v3 } from 'googleapis';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../pages/api/auth/[...nextauth]';
+// getServerSession and authOptions available if needed for server-side auth
 
 export interface CalendarEvent {
   id: string;
@@ -117,7 +116,7 @@ class GoogleCalendarService {
   }
 
   // Simplified helper method - NO additional timezone conversion
-  private parseCalendarDateTime(dateTimeString: string, userTimezone: string): Date {
+  private parseCalendarDateTime(dateTimeString: string, _userTimezone: string): Date {
     // Google Calendar API returns ISO 8601 strings with timezone info
     // e.g., "2025-09-15T16:00:00-07:00" or "2025-09-15T23:00:00Z"
     
@@ -216,7 +215,7 @@ class GoogleCalendarService {
 
       return events
         .filter((event: calendar_v3.Schema$Event) => event.start?.dateTime && event.end?.dateTime)
-        .map((event: calendar_v3.Schema$Event, index: number) => {
+        .map((event: calendar_v3.Schema$Event, _index: number) => {
           const summary = event.summary || 'No title';
           const startDate = this.parseCalendarDateTime(event.start!.dateTime!, userTimezone);
           const endDate = this.parseCalendarDateTime(event.end!.dateTime!, userTimezone);
