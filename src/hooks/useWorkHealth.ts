@@ -55,21 +55,6 @@ interface AIPersonalizedInsights {
   heroMessages?: HeroMessage[];
 }
 
-interface WorkHealthData {
-  // New intelligent metrics
-  adaptivePerformanceIndex: number;
-  cognitiveResilience: number;
-  workRhythmRecovery: number;
-
-  status: string;
-
-  // Legacy fields for backward compatibility
-  readiness: number;
-  cognitiveAvailability: number;
-  focusTime: number;
-  meetingDensity: number;
-}
-
 interface ScheduleAnalysis {
   meetingCount: number;
   backToBackCount: number;
@@ -134,7 +119,7 @@ interface HistoricalContext {
   daysTracked: number;
 }
 
-export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
+export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
   const { data: session, status } = useSession();
   const [workHealth, setWorkHealth] = useState<WorkHealthMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -364,13 +349,13 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
     };
   };
 
-  const handleFetchSuccess = (data: any, preserveQuotes = false) => {
+  const handleFetchSuccess = (data: WorkHealthMetrics, preserveQuotes = false) => {
     calendarFingerprint.current = getFingerprint(data);
 
     if (preserveQuotes && quotesLocked.current) {
       // Update metrics + insights but keep the quotes the user is reading
       setWorkHealth(prev => {
-        if (!prev?.ai?.heroMessages) return data;
+        if (!prev?.ai?.heroMessages || !data.ai) return data;
         return {
           ...data,
           ai: {
@@ -378,11 +363,11 @@ export const useWorkHealth = (tabType?: 'overview' | 'performance' | 'resilience
             heroMessage: prev.ai.heroMessage,
             heroMessages: prev.ai.heroMessages,
           }
-        };
+        } as WorkHealthMetrics;
       });
     } else {
       setWorkHealth(data);
-      if (data.ai?.heroMessages?.length > 0) {
+      if ((data.ai?.heroMessages?.length ?? 0) > 0) {
         quotesLocked.current = true;
       }
     }

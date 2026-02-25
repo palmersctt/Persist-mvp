@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
-import GoogleCalendarService, { WorkHealthMetrics, CalendarEvent, MeetingCategory } from '../../src/services/googleCalendar';
+import GoogleCalendarService, { WorkHealthMetrics, MeetingCategory } from '../../src/services/googleCalendar';
 import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext } from '../../src/services/claudeAI';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     }
 
-    let enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
+    const enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
 
     // Build calendar analysis (shared by both fast and full paths)
     const meetingTypes = events.reduce((acc, event) => {
@@ -122,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         enhancedResponse.aiStatus = 'local';
       } catch {
         // If ClaudeAIService can't be instantiated, generate minimal fallback
-        const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
+        const { comicReliefGenerator } = await import('../../src/utils/comicReliefGenerator');
         const quote = comicReliefGenerator.generateQuote(workHealthData);
         const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
         enhancedResponse.ai = {
@@ -131,7 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
             subtitle: 'Loading AI insights...'
           },
-          heroMessages: fallbackQuotes.map((q: any) => ({
+          heroMessages: fallbackQuotes.map((q: { text: string; source: string; character?: string }) => ({
             quote: q.text,
             source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
             subtitle: 'Loading AI insights...'
@@ -183,16 +183,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         // getDefaultInsights needs a ClaudeAIService instance for metric insights generation
         // Since constructor failed, go straight to comicReliefGenerator
-        const { comicReliefGenerator } = require('../../src/utils/comicReliefGenerator');
-        const quote = comicReliefGenerator.generateQuote(workHealthData);
-        const fallbackQuotes = comicReliefGenerator.generateMultipleQuotes(workHealthData, 5);
+        const { comicReliefGenerator: fallbackGen } = await import('../../src/utils/comicReliefGenerator');
+        const quote = fallbackGen.generateQuote(workHealthData);
+        const fallbackQuotes = fallbackGen.generateMultipleQuotes(workHealthData, 5);
         enhancedResponse.ai = {
           heroMessage: {
             quote: quote.text,
             source: `${quote.source}${quote.character ? ` — ${quote.character}` : ''}`,
             subtitle: 'AI unavailable — showing offline quotes'
           },
-          heroMessages: fallbackQuotes.map((q: any) => ({
+          heroMessages: fallbackQuotes.map((q: { text: string; source: string; character?: string }) => ({
             quote: q.text,
             source: `${q.source}${q.character ? ` — ${q.character}` : ''}`,
             subtitle: 'AI unavailable — showing offline quotes'
@@ -233,7 +233,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
           // generatePersonalizedInsights caught an error internally and returned fallback
           enhancedResponse.aiStatus = 'fallback';
-          enhancedResponse._aiError = (aiInsights as any)._aiError || 'AI call failed internally (check server logs)';
+          enhancedResponse._aiError = (aiInsights as PersonalizedInsightsResponse & { _aiError?: string })._aiError || 'AI call failed internally (check server logs)';
           aiDebug.errorType = 'internal_fallback';
           aiDebug.error = enhancedResponse._aiError;
         }

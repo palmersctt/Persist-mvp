@@ -9,21 +9,6 @@ import PersistLogo from './PersistLogo'
 import { detectMood } from '../lib/mood'
 import { toPng } from 'html-to-image'
 
-interface SecondaryMetric {
-  label: string;
-  value: string | number;
-  unit?: string;
-  status: 'good' | 'average' | 'needs_attention';
-  icon: string;
-}
-
-interface WorkCapacityStatus {
-  level: 'optimal' | 'excellent' | 'good' | 'moderate' | 'attention' | 'estimated';
-  message: string;
-  color: string;
-  description: string;
-}
-
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -66,87 +51,6 @@ export default function WorkHealthDashboard() {
       minutes: Math.round(safeFocusTime % 60),
       isRealistic
     };
-  };
-
-  const getWorkCapacityStatus = (): WorkCapacityStatus => {
-    if (!workHealth) {
-      return {
-        level: 'estimated',
-        message: 'LOADING...',
-        color: '#6b7280',
-        description: 'Loading your work health analysis...'
-      };
-    }
-
-    const adaptiveIndex = workHealth.adaptivePerformanceIndex;
-    const isCached = workHealth.status === 'CACHED';
-    const cached = isCached ? ' (CACHED)' : '';
-
-    // 5-tier hierarchy aligned with googleCalendar.ts thresholds
-    if (adaptiveIndex >= 85) {
-      return {
-        level: 'optimal',
-        message: `OPTIMAL WORK HEALTH${cached}`,
-        color: '#00ff88',
-        description: 'You have the capacity for your hardest work today. Great day for strategic thinking, complex problems, and big decisions.'
-      };
-    } else if (adaptiveIndex >= 75) {
-      return {
-        level: 'excellent',
-        message: `EXCELLENT WORK HEALTH${cached}`,
-        color: '#25d366',
-        description: 'Strong capacity with a sustainable schedule. Good day for challenging projects and creative work.'
-      };
-    } else if (adaptiveIndex >= 65) {
-      return {
-        level: 'good',
-        message: `GOOD WORK HEALTH${cached}`,
-        color: '#ffb347',
-        description: 'Solid foundation with a balanced schedule. You can handle routine work and moderate complexity comfortably.'
-      };
-    } else if (adaptiveIndex >= 50) {
-      return {
-        level: 'moderate',
-        message: `MODERATE WORK HEALTH${cached}`,
-        color: '#ff9500',
-        description: 'Your schedule is putting some strain on your capacity. Consider spacing out meetings or protecting a focus block.'
-      };
-    } else {
-      return {
-        level: 'attention',
-        message: `NEEDS ATTENTION${cached}`,
-        color: '#ff7744',
-        description: 'Heavy schedule today. Focus on what matters most and try to create some breathing room between commitments.'
-      };
-    }
-  };
-
-  const getSecondaryMetrics = (): SecondaryMetric[] => {
-    if (!workHealth) {
-      return [
-        { label: 'Strain', value: '—', status: 'average', icon: '🧠' },
-        { label: 'Balance', value: '—', status: 'average', icon: '♻️' }
-      ];
-    }
-
-    return [
-      {
-        label: 'Strain',
-        value: workHealth.cognitiveResilience,
-        unit: '%',
-        status: workHealth.cognitiveResilience <= 40 ? 'needs_attention' :
-                workHealth.cognitiveResilience <= 75 ? 'average' : 'good',
-        icon: '🧠'
-      },
-      {
-        label: 'Balance',
-        value: workHealth.workRhythmRecovery,
-        unit: '%',
-        status: workHealth.workRhythmRecovery <= 45 ? 'needs_attention' : 
-                workHealth.workRhythmRecovery <= 70 ? 'average' : 'good',
-        icon: '♻️'
-      }
-    ];
   };
 
   // Get per-metric insight directly from AI response
@@ -491,7 +395,7 @@ export default function WorkHealthDashboard() {
                     aiGenerated={aiStatus === 'success'}
                     aiError={workHealth._aiError}
                     onMetricClick={(metric) => setActiveTab(metric)}
-                    activeCardRef={(el) => { (cardRef as any).current = el; }}
+                    activeCardRef={(el) => { (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
                     onEngagement={trackEngagement}
                   />
                 ) : (

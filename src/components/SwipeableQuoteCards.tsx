@@ -162,7 +162,7 @@ function DraggableCard({
   const rotate = useTransform(x, [-200, 0, 200], [-8, 0, 8])
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5])
 
-  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+  const handleDragEnd = useCallback((_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const shouldSwipe = canSwipe && (
       Math.abs(info.offset.x) > SWIPE_THRESHOLD ||
       Math.abs(info.velocity.x) > SWIPE_VELOCITY

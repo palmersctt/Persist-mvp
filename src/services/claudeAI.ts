@@ -400,7 +400,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
   }
 
   // Intelligent caching methods
-  private generateCacheKey(analysis: CalendarAnalysis, userContext: UserContext, tabContext?: TabContext): string {
+  private generateCacheKey(analysis: CalendarAnalysis, userContext: UserContext, _tabContext?: TabContext): string {
     // Create a deterministic hash based on the actual calendar data that affects insights
     const cacheData = {
       // Core calendar data that affects AI insights
@@ -586,11 +586,12 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
       // Return fallback but tag it with the error so callers can see WHY
       const fallback = this.getDefaultInsights(analysis);
-      (fallback as any)._aiError = errMsg;
+      (fallback as PersonalizedInsightsResponse & { _aiError?: string })._aiError = errMsg;
       return fallback;
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private validateInsightsResponse(response: any): response is PersonalizedInsightsResponse {
     const hasPerMetricFormat = response?.overview && response?.performance && response?.resilience && response?.sustainability;
     const hasLegacyFormat = Array.isArray(response?.insights);
@@ -607,7 +608,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
     const hasValidHeroMessages = !response?.heroMessages ||
       (Array.isArray(response.heroMessages) && response.heroMessages.every(
-        (m: any) => m?.quote && m?.source
+        (m: { quote?: string; source?: string }) => m?.quote && m?.source
       ));
 
     return isValid && hasValidHero && hasValidHeroMessages;
@@ -615,7 +616,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
   async analyzeProductivityPatterns(
     historicalData: CalendarAnalysis[],
-    userContext: UserContext = {}
+    _userContext: UserContext = {}
   ): Promise<{ patterns: string[]; recommendations: string[] }> {
     if (!this.validateApiKey() || historicalData.length === 0) {
       return {
@@ -697,9 +698,8 @@ Return JSON with 'patterns' and 'recommendations' arrays.`;
   async generateComicReliefSaying(workHealth: WorkHealthMetrics): Promise<string> {
     if (!this.validateApiKey()) {
       // Fallback to local movie quotes when API is not available
-      const fallbackGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
-      const quote = fallbackGenerator.generateQuote(workHealth);
-      return fallbackGenerator.formatQuote(quote);
+      const quote = comicReliefGenerator.generateQuote(workHealth);
+      return comicReliefGenerator.formatQuote(quote);
     }
 
     try {
@@ -758,9 +758,8 @@ Generate ONE quote now.`;
       console.error('Error generating comic relief saying:', error);
 
       // Fallback to local movie quote generator
-      const fallbackGenerator = require('../utils/comicReliefGenerator').comicReliefGenerator;
-      const quote = fallbackGenerator.generateQuote(workHealth);
-      return fallbackGenerator.formatQuote(quote);
+      const quote = comicReliefGenerator.generateQuote(workHealth);
+      return comicReliefGenerator.formatQuote(quote);
     }
   }
 }
