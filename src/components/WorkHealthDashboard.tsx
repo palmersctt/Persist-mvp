@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
 import ShareCard from './ShareCard'
@@ -22,6 +22,23 @@ export default function WorkHealthDashboard() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus } = useWorkHealth(activeTab);
+
+  const loadingVerbs = [
+    'Analyzing', 'Reading', 'Scanning', 'Processing',
+    'Judging', 'Questioning', 'Scrutinizing', 'Investigating',
+    'Scratching', 'Squinting', 'Poking', 'Shaking',
+    'Smelling', 'Sniffing', 'Whispering', 'Marinating',
+    'Laughing', 'Gasping', 'Manifesting', 'Bargaining',
+  ];
+  const [loadingVerbIndex, setLoadingVerbIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isLoading) { setLoadingVerbIndex(0); return; }
+    const id = setInterval(() => {
+      setLoadingVerbIndex(i => (i + 1) % loadingVerbs.length);
+    }, 800);
+    return () => clearInterval(id);
+  }, [isLoading]);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -483,9 +500,9 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
 
-                {/* Loading text below card */}
-                <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-                  Reading your calendar...
+                {/* Loading verb */}
+                <p className="text-xs text-center mt-4 transition-opacity duration-200" style={{ color: 'var(--text-muted)' }}>
+                  {loadingVerbs[loadingVerbIndex]}...
                 </p>
               </section>
             )}
