@@ -567,12 +567,20 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
       const jsonMatch = textContent.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('No JSON in response. Raw text:', textContent.substring(0, 500));
         throw new Error('No JSON found in Claude response');
       }
 
-      const parsedResponse = JSON.parse(jsonMatch[0]);
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(jsonMatch[0]);
+      } catch (parseErr) {
+        console.error('JSON parse failed. Extracted:', jsonMatch[0].substring(0, 500));
+        throw new Error('JSON parse failed: ' + (parseErr instanceof Error ? parseErr.message : 'unknown'));
+      }
 
       if (!this.validateInsightsResponse(parsedResponse)) {
+        console.error('Validation failed. Keys:', Object.keys(parsedResponse), 'heroMessage:', !!parsedResponse?.heroMessage, 'overview:', !!parsedResponse?.overview);
         throw new Error('Invalid insights response format');
       }
 
