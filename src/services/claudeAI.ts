@@ -177,7 +177,7 @@ Match tone to scores honestly — 85%+=great, 65-84%=solid, <65%=flag real probl
 
 QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
 Each from a DIFFERENT category: 1) TV/film 2) standup comedy 3) famous person 4) book/song lyric 5) wildcard (games, anime, sports, internet culture)
-Go obscure — deep cuts, not the usual suspects. Funny/ironic/unexpectedly perfect > safe/generic.
+NEVER use Friends, The Office, Parks and Rec, Seinfeld, or any top-10 most quoted show. Dig deeper — Severance, Barry, Succession, Fleabag, Better Call Saul, The Bear, Abbott Elementary, etc.
 Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
 ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recentQuotes.map(q => `"${q}"`).join(', ')}` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 
@@ -526,7 +526,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
 
       const response = await this.anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 1500,
         temperature: 1.0, // Variation for creative quotes
         system: this.createSystemPrompt(),
         messages: [{
@@ -554,6 +554,14 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
       if (!this.validateInsightsResponse(parsedResponse)) {
         throw new Error('Invalid insights response format');
       }
+
+      // Fill defaults for optional fields the model may omit
+      parsedResponse.overallScore = parsedResponse.overallScore ?? analysis.workHealth.adaptivePerformanceIndex;
+      parsedResponse.summary = parsedResponse.summary || `Work health: ${analysis.workHealth.status}`;
+      parsedResponse.insights = parsedResponse.insights || [];
+      parsedResponse.riskFactors = parsedResponse.riskFactors || [];
+      parsedResponse.opportunities = parsedResponse.opportunities || [];
+      parsedResponse.predictiveAlerts = parsedResponse.predictiveAlerts || [];
 
       parsedResponse._aiGenerated = true;
       return parsedResponse;
@@ -590,12 +598,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `AVOID these recently seen: ${recent
     const isValid = (
       response &&
       typeof response === 'object' &&
-      (hasPerMetricFormat || hasLegacyFormat) &&
-      typeof response.summary === 'string' &&
-      typeof response.overallScore === 'number' &&
-      Array.isArray(response.riskFactors) &&
-      Array.isArray(response.opportunities) &&
-      Array.isArray(response.predictiveAlerts)
+      (hasPerMetricFormat || hasLegacyFormat)
     );
 
     const hasValidHero = !response?.heroMessage ||
