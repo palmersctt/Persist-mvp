@@ -151,7 +151,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Full path: call Claude AI with server-side timeout
     // Give AI a fair shot (12s) before falling back to local quotes
-    const AI_TIMEOUT_MS = 12000;
+    const AI_TIMEOUT_MS = 25000;
 
     // Step 1: Try to construct the service (tests API key existence)
     let claudeService: ClaudeAIService | null = null;
