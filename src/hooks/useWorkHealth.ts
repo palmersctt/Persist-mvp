@@ -111,6 +111,7 @@ interface WorkHealthMetrics {
   // Intelligent insights (optional)
   ai?: AIPersonalizedInsights;
   aiStatus?: 'success' | 'fallback' | 'unavailable' | 'local';
+  _aiError?: string;
 }
 
 // How often to poll for calendar changes (5 minutes)
