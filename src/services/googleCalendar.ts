@@ -698,7 +698,7 @@ class GoogleCalendarService {
 
   private calculatePerformanceIndex(cognitiveAvailability: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
     // New tiered performance assessment
-    let baseScore = 50;
+    const baseScore = 50;
     
     // Meeting density scoring - much more generous for low counts
     let meetingScore = 0;
