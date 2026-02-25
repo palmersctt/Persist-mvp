@@ -180,7 +180,7 @@ ONLY from: movies, TV shows, and stand-up comedians. No books, songs, games, ani
 Mix it up — some from film, some from TV, some from comedians. All 5 must be different sources.
 Go deep and obscure. Surprise me. Pick quotes most people wouldn't think of.
 Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
-${recentQuotes && recentQuotes.length > 0 ? `\nBANNED QUOTES — do NOT use any of these, they were already shown:\n${recentQuotes.map(q => `- "${q}"`).join('\n')}\nAlso do NOT use any quote from the same SOURCE as the banned quotes above. Pick completely different movies/shows/comedians.\n` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
+${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these recently shown quotes:\n${recentQuotes.map(q => `- "${q}"`).join('\n')}\n` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 
 {
   "heroMessage": { "quote": "", "source": "Source — Character", "subtitle": "" },

@@ -151,7 +151,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     return `persist-engagement-${session.user.email}`;
   };
 
-  // Get recent quotes from localStorage (last 50, within 14 days)
+  // Get recent quotes from localStorage (last 20, within 3 days)
   const getRecentQuotes = (): string[] => {
     const key = getQuoteHistoryKey();
     if (!key) return [];
@@ -159,7 +159,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       const raw = localStorage.getItem(key);
       if (!raw) return [];
       const entries: { quote: string; timestamp: string }[] = JSON.parse(raw);
-      const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
       return entries
         .filter(e => new Date(e.timestamp).getTime() > cutoff)
         .map(e => e.quote);
@@ -178,8 +178,8 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       // Deduplicate
       entries = entries.filter(e => e.quote !== quote);
       entries.push({ quote, timestamp: new Date().toISOString() });
-      // Keep last 50
-      if (entries.length > 50) entries = entries.slice(-50);
+      // Keep last 20
+      if (entries.length > 20) entries = entries.slice(-20);
       localStorage.setItem(key, JSON.stringify(entries));
     } catch {
       // Ignore storage errors
