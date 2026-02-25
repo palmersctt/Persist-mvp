@@ -26,14 +26,15 @@ export const MOODS: Record<Mood, MoodConfig> = {
 
 /** Priority-ordered mood detection. First matching rule wins. */
 export function detectMood(focus: number, strain: number, balance: number): Mood {
-  // Most extreme first
+  // Extremes first
   if (focus >= 85 && strain <= 30 && balance >= 80) return 'victory'
   if (focus >= 80 && balance >= 70)                  return 'flow'
   if (strain >= 80 && focus <= 40)                   return 'survival'
-  if (strain >= 70)                                  return 'grinding'
-  if (focus <= 40 && balance <= 40)                  return 'scattered'
+  if (focus <= 40 && balance <= 50)                  return 'scattered'
+  if (strain >= 70 && focus <= 65)                   return 'grinding'
   if (focus >= 70 && strain <= 50)                   return 'locked-in'
-  if (balance >= 70 && strain <= 40)                 return 'coasting'
+  if (balance >= 70 && strain <= 50)                 return 'coasting'
+  if (focus >= 70 && balance >= 60)                  return 'coasting'
   if (focus >= 40 && focus <= 60 && strain >= 40 && strain <= 60) return 'autopilot'
 
   return 'autopilot'

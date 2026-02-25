@@ -615,7 +615,8 @@ class GoogleCalendarService {
         : event.category === 'COLLABORATIVE' ? 1.2
         : event.category === 'LIGHT_MEETINGS' ? 0.7
         : 1.0;
-      const durationFactor = durationHours >= 1.5 ? 1.5 : durationHours >= 1 ? 1.2 : 1.0;
+      // Long meetings are exponentially more draining — a 6hr workshop isn't 4x a 1.5hr meeting
+      const durationFactor = durationHours >= 4 ? 4.0 : durationHours >= 3 ? 3.0 : durationHours >= 2 ? 2.2 : durationHours >= 1.5 ? 1.6 : durationHours >= 1 ? 1.2 : 1.0;
       decisionFatigue += (10 * timeFactor * attendeeFactor * categoryFactor * durationFactor);
     });
     decisionFatigue = Math.min(100, decisionFatigue);
