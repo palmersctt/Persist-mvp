@@ -164,9 +164,9 @@ export class ComicReliefGenerator {
       ]
     },
 
-    // MEETING OVERLOAD (high meeting density OR many meetings)
+    // MEETING OVERLOAD (high meeting ratio OR many meetings)
     {
-      condition: (m) => m.meetingDensity > 0.6 || (m.schedule?.meetingCount != null && m.schedule.meetingCount > 5),
+      condition: (m) => (m.schedule?.meetingRatio != null && m.schedule.meetingRatio > 0.5) || (m.schedule?.meetingCount != null && m.schedule.meetingCount > 5),
       quotes: [
         { text: "I have a very particular set of skills.", source: "Taken", character: "Bryan Mills", category: 'meetings', tone: 'dry' },
         { text: "Nobody puts Baby in a corner.", source: "Dirty Dancing", character: "Johnny", category: 'meetings', tone: 'sarcastic' },
@@ -262,9 +262,9 @@ export class ComicReliefGenerator {
       ]
     },
 
-    // GREAT FOCUS TIME (4+ hours)
+    // GREAT FOCUS TIME (4+ hours) — only if the day is actually decent (not Meeting Hell with pre-9am "focus")
     {
-      condition: (m) => m.focusTime >= 240,
+      condition: (m) => m.focusTime >= 240 && m.adaptivePerformanceIndex >= 60,
       quotes: [
         { text: "The Force is strong with this one.", source: "Star Wars", character: "Darth Vader", category: 'focus', tone: 'confident' },
         { text: "Wax on, wax off.", source: "The Karate Kid", character: "Mr. Miyagi", category: 'focus', tone: 'motivational' },
