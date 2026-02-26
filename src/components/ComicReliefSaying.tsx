@@ -57,11 +57,12 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
         <div
           style={{
             color: '#FFD700',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            fontFamily: '"Courier New", monospace',
-            letterSpacing: '0.5px',
-            lineHeight: '1.4',
+            fontSize: '17px',
+            fontWeight: '500',
+            fontFamily: 'var(--font-lora), Georgia, serif',
+            fontStyle: 'italic',
+            letterSpacing: '0.01em',
+            lineHeight: '1.5',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
           }}
         >
@@ -116,10 +117,12 @@ export function ComicReliefSayingCompact({ saying }: ComicReliefSayingProps) {
       <div
         style={{
           color: '#FFD700',
-          fontSize: '14px',
-          fontWeight: '600',
-          fontFamily: '"Courier New", monospace',
-          letterSpacing: '0.3px',
+          fontSize: '15px',
+          fontWeight: '500',
+          fontFamily: 'var(--font-lora), Georgia, serif',
+          fontStyle: 'italic',
+          letterSpacing: '0.01em',
+          lineHeight: '1.5',
         }}
       >
         {saying}

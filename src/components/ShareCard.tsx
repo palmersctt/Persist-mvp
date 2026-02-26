@@ -31,12 +31,15 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       }}
     >
       {/* Quote */}
-      <p className="text-xl font-bold text-white text-center leading-snug mb-3 whitespace-pre-line">
+      <p
+        className="text-[1.25rem] font-medium text-white text-center leading-relaxed mb-3 whitespace-pre-line"
+        style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontStyle: 'italic' }}
+      >
         &ldquo;{quote}&rdquo;
       </p>
 
       {/* Source */}
-      <p className="text-xs text-center italic mb-3" style={{ color: 'rgba(255,255,255,0.55)' }}>
+      <p className="text-xs text-center font-medium tracking-wide mb-3" style={{ color: 'rgba(255,255,255,0.7)' }}>
         &mdash; {source}
       </p>
 
@@ -50,7 +53,7 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         className="rounded-2xl px-5 py-4"
         style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
       >
-        <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="text-[11px] text-center uppercase tracking-[0.18em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
           {moodName}
         </p>
         <div className="flex justify-center gap-8">
@@ -80,10 +83,10 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
                 el.style.opacity = '1';
               } : undefined}
             >
-              <div className="text-xl font-bold text-white" style={{ lineHeight: 1 }}>
+              <div className="text-xl font-bold text-white" style={{ lineHeight: 1, fontFeatureSettings: "'tnum'" }}>
                 {values[s.prop]}
               </div>
-              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 {s.label}
               </div>
             </div>
