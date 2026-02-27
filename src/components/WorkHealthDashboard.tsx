@@ -7,6 +7,7 @@ import ShareCard from './ShareCard'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
 import PersistLogo from './PersistLogo'
 import { detectMood } from '../lib/mood'
+import { trackEvent } from '../lib/trackEvent'
 import { toPng } from 'html-to-image'
 
 export default function WorkHealthDashboard() {
@@ -121,6 +122,7 @@ export default function WorkHealthDashboard() {
         // The card ref points to whatever's currently visible
         const firstQuote = heroMsgs[0];
         trackEngagement(firstQuote.quote, firstQuote.source, 'share');
+        trackEvent('card_share', { quote: firstQuote.quote, source: firstQuote.source });
       }
     }
 
@@ -435,7 +437,7 @@ export default function WorkHealthDashboard() {
                     mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
                     aiGenerated={aiStatus === 'success'}
                     aiError={workHealth._aiError}
-                    onMetricClick={(metric) => setActiveTab(metric)}
+                    onMetricClick={(metric) => { setActiveTab(metric); trackEvent('metric_click', { metric }); }}
                     activeCardRef={(el) => { (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
                     onEngagement={trackEngagement}
                   />
@@ -449,7 +451,7 @@ export default function WorkHealthDashboard() {
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
                       mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
-                      onMetricClick={(metric) => setActiveTab(metric)}
+                      onMetricClick={(metric) => { setActiveTab(metric); trackEvent('metric_click', { metric }); }}
                     />
                   </div>
                 )}

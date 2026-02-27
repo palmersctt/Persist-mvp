@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion'
 import { type Mood, MOODS } from '../lib/mood'
+import { trackEvent } from '../lib/trackEvent'
 import PersistLogo from './PersistLogo'
 import type { HeroMessage } from '../hooks/useWorkHealth'
 
@@ -251,6 +252,7 @@ export default function SwipeableQuoteCards({
       const dwellMs = Date.now() - dwellStartRef.current
       const q = quotes[currentIndex]
       onEngagement(q.quote, q.source, 'dwell', dwellMs)
+      trackEvent('card_swipe', { quote: q.quote, source: q.source, direction, dwellMs })
     }
     // direction: +1 = next (swiped left), -1 = prev (swiped right)
     setCurrentIndex(prev => (prev + direction + n) % n)

@@ -31,3 +31,30 @@ CREATE POLICY "Allow user creation" ON users
 -- Create policy to allow updates (for login tracking)
 CREATE POLICY "Allow user updates" ON users
   FOR UPDATE USING (true);
+
+-- ============================================================
+-- Events table for user engagement tracking
+-- ============================================================
+CREATE TABLE IF NOT EXISTS events (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_email text NOT NULL,
+  event_type text NOT NULL CHECK (event_type IN ('card_swipe', 'metric_click', 'card_share')),
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Indexes for analytics queries
+CREATE INDEX IF NOT EXISTS events_user_email_idx ON events(user_email);
+CREATE INDEX IF NOT EXISTS events_event_type_idx ON events(event_type);
+CREATE INDEX IF NOT EXISTS events_created_at_idx ON events(created_at);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+-- Allow reading events (for analytics dashboard)
+CREATE POLICY "Allow reading events" ON events
+  FOR SELECT USING (true);
+
+-- Allow inserting events (for tracking)
+CREATE POLICY "Allow inserting events" ON events
+  FOR INSERT WITH CHECK (true);
