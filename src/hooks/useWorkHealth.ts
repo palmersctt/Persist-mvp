@@ -136,10 +136,10 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   const pollTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Helper function to get cache key for current user
-  const getCacheKey = () => {
+  const getCacheKey = useCallback(() => {
     if (!session?.user?.email) return null;
     return `persist-work-health-${session.user.email}`;
-  };
+  }, [session?.user?.email]);
 
   const getQuoteHistoryKey = () => {
     if (!session?.user?.email) return null;
@@ -545,7 +545,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         setTimeout(() => fetchWorkHealth(0), 1500);
       }
     }
-  }, [session, status, fetchWorkHealth]);
+  }, [session, status, fetchWorkHealth, getCacheKey]);
 
   // Poll for calendar changes every 5 minutes
   useEffect(() => {

@@ -541,8 +541,9 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
             }]
           });
           break; // success, stop trying models
-        } catch (modelError: any) {
-          const isOverloaded = modelError?.status === 529 || modelError?.error?.type === 'overloaded_error';
+        } catch (modelError: unknown) {
+          const err = modelError as { status?: number; error?: { type?: string } };
+          const isOverloaded = err?.status === 529 || err?.error?.type === 'overloaded_error';
           const isLastModel = model === models[models.length - 1];
           if (isOverloaded && !isLastModel) {
             console.warn(`${model} overloaded, falling back to next model`);
