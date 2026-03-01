@@ -72,7 +72,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center gap-2">
               <PersistLogo size={28} variant="dark" />
-              <span className="font-semibold text-xl text-gray-900" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+              <span className="font-semibold text-xl text-gray-900" style={{ letterSpacing: '1.5px' }}>Persistwork.com</span>
             </div>
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -378,7 +378,7 @@ export default function LandingPage() {
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <PersistLogo size={22} variant="dark" />
-              <span className="font-semibold text-lg text-gray-900" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+              <span className="font-semibold text-lg text-gray-900" style={{ letterSpacing: '1.5px' }}>Persistwork.com</span>
             </div>
             <p className="text-gray-600 text-sm mb-6">
               Comic relief for your workday
@@ -393,7 +393,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-xs text-gray-400 mt-6">
-              &copy; 2026 PERSIST. All rights reserved.
+              &copy; 2026 Persistwork.com. All rights reserved.
             </p>
           </div>
         </div>

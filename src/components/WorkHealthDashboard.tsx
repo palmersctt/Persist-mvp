@@ -521,7 +521,7 @@ export default function WorkHealthDashboard() {
                   {/* Branding */}
                   <div className="flex items-center justify-center gap-1.5 mt-3">
                     <PersistLogo size={12} variant="light" />
-                    <span className="text-[9px] tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.15)' }}>PERSIST</span>
+                    <span className="text-[9px] tracking-widest" style={{ color: 'rgba(255,255,255,0.15)' }}>Persistwork.com</span>
                   </div>
                 </div>
 
