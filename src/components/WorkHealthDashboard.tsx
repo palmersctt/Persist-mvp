@@ -177,7 +177,7 @@ export default function WorkHealthDashboard() {
         <div className="text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-3">
             <PersistLogo size={28} variant="light" />
-            <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+            <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
           </div>
           <div className="text-gray-500 text-sm">Loading...</div>
         </div>
@@ -193,7 +193,7 @@ export default function WorkHealthDashboard() {
             <div className="text-center mb-8 flex flex-col items-center">
               <div className="flex items-center gap-2 mb-2">
                 <PersistLogo size={28} variant="light" />
-                <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+                <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
               </div>
               <p className="text-gray-500 text-sm">Comic relief for your workday</p>
             </div>
@@ -252,7 +252,7 @@ export default function WorkHealthDashboard() {
           <div className="mb-8 flex flex-col items-center">
             <div className="flex items-center gap-2 mb-2">
               <PersistLogo size={28} variant="light" />
-              <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST</span>
+              <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
             </div>
             <p className="text-gray-500 text-sm">Comic relief for your workday</p>
           </div>
@@ -281,7 +281,7 @@ export default function WorkHealthDashboard() {
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
               <PersistLogo size={24} variant="light" />
-              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST</span>
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>Persistwork</span>
             </div>
             <button
               onClick={() => signOut()}
@@ -364,7 +364,7 @@ export default function WorkHealthDashboard() {
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <PersistLogo size={24} variant="light" />
-            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST</span>
+            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>Persistwork</span>
           </div>
           <div className="flex items-center space-x-4">
             <button

@@ -38,7 +38,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="font-bold text-2xl text-gray-900 tracking-tight">
-              PERSIST
+              Persistwork
             </div>
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -244,7 +244,7 @@ export default function LandingPage() {
       <footer className="py-12 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center">
-            <div className="font-bold text-xl text-gray-900 mb-4">PERSIST</div>
+            <div className="font-bold text-xl text-gray-900 mb-4">Persistwork</div>
             <p className="text-gray-600 text-sm mb-6">
               Work Health Intelligence Platform
             </p>
@@ -258,7 +258,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-xs text-gray-400 mt-6">
-              © 2025 PERSIST. All rights reserved.
+              © 2025 Persistwork. All rights reserved.
             </p>
           </div>
         </div>
