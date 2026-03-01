@@ -137,9 +137,9 @@ export class ComicReliefGenerator {
       ]
     },
 
-    // VERY HIGH Performance AND High Resilience (showing off)
+    // VERY HIGH Performance AND Low Strain (showing off)
     {
-      condition: (m) => m.adaptivePerformanceIndex >= 85 && m.cognitiveResilience >= 75,
+      condition: (m) => m.adaptivePerformanceIndex >= 85 && m.cognitiveResilience <= 25,
       quotes: [
         { text: "Bring it on!", source: "Bring It On", character: "Torrance", category: 'performance', tone: 'confident' },
         { text: "Challenge accepted.", source: "How I Met Your Mother", character: "Barney Stinson", category: 'performance', tone: 'confident' },
@@ -150,9 +150,9 @@ export class ComicReliefGenerator {
       ]
     },
 
-    // LOW Performance AND Low Resilience (double trouble)
+    // LOW Performance AND High Strain (double trouble)
     {
-      condition: (m) => m.adaptivePerformanceIndex < 40 && m.cognitiveResilience < 40,
+      condition: (m) => m.adaptivePerformanceIndex < 40 && m.cognitiveResilience > 60,
       quotes: [
         { text: "Rosebud.", source: "Citizen Kane", character: "Charles Foster Kane", category: 'performance', tone: 'defeated' },
         { text: "I coulda been a contender.", source: "On the Waterfront", character: "Terry Malloy", category: 'performance', tone: 'defeated' },
@@ -203,9 +203,9 @@ export class ComicReliefGenerator {
       ]
     },
 
-    // HIGH RESILIENCE (80+ cognitive resilience)
+    // LOW STRAIN (strain ≤ 20 = high resilience)
     {
-      condition: (m) => m.cognitiveResilience >= 80,
+      condition: (m) => m.cognitiveResilience <= 20,
       quotes: [
         { text: "I can do this all day.", source: "Captain America: The First Avenger", character: "Steve Rogers", category: 'resilience', tone: 'confident' },
         { text: "What we do in life echoes in eternity.", source: "Gladiator", character: "Maximus", category: 'resilience', tone: 'motivational' },
@@ -218,9 +218,9 @@ export class ComicReliefGenerator {
       ]
     },
 
-    // LOW RESILIENCE (below 40 cognitive resilience)
+    // HIGH STRAIN (strain > 60 = low resilience)
     {
-      condition: (m) => m.cognitiveResilience < 40,
+      condition: (m) => m.cognitiveResilience > 60,
       quotes: [
         { text: "I'm melting! Melting!", source: "The Wizard of Oz", character: "Wicked Witch", category: 'resilience', tone: 'defeated' },
         { text: "I'm mad as hell, and I'm not going to take this anymore!", source: "Network", character: "Howard Beale", category: 'resilience', tone: 'defeated' },
@@ -391,7 +391,7 @@ export class ComicReliefGenerator {
       ]
     },
     {
-      condition: (m) => m.cognitiveResilience < 45,
+      condition: (m) => m.cognitiveResilience > 55,
       quotes: [
         { text: "I don't want to be an 'us.' I don't even want to be a 'me.' I just want to be nothing.", source: "Fleabag", character: "Fleabag", category: 'resilience', tone: 'defeated' },
         { text: "I find that a duck's opinion of me is very much influenced by whether or not I have bread.", source: "Standup", character: "Mitch Hedberg", category: 'resilience', tone: 'dry' },
