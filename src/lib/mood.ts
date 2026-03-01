@@ -28,7 +28,7 @@ export const MOODS: Record<Mood, MoodConfig> = {
 export function detectMood(focus: number, strain: number, balance: number): Mood {
   // Extremes first
   if (focus >= 85 && strain <= 30 && balance >= 80) return 'victory'
-  if (focus >= 90 && strain >= 80)                   return 'flow'    // Elite focus + resilience = flow even with lower balance
+  if (focus >= 90 && strain <= 20)                   return 'flow'    // Elite focus + low strain = flow even with lower balance
   if (focus >= 80 && balance >= 70)                  return 'flow'
   if (strain >= 80 && focus <= 40)                   return 'survival'
   if (focus <= 40 && balance <= 50)                  return 'scattered'

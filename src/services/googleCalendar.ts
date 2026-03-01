@@ -584,7 +584,7 @@ class GoogleCalendarService {
   
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
     if (events.length === 0) {
-      return 78; // No meetings = low strain, good thing. Day off or clear calendar.
+      return 5; // No meetings = minimal strain. Day off or clear calendar.
     }
 
     // Separate by type
@@ -596,7 +596,7 @@ class GoogleCalendarService {
     const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
 
     // Context switching — unique topics drain mental bandwidth
-    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
+    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
     const contextSwitchingLoad = Math.min(100, uniqueContexts * 18);
 
     // Decision fatigue — weighted by type, time of day, attendees, and duration
@@ -642,7 +642,7 @@ class GoogleCalendarService {
     // Beneficial events restore resilience (walks, breaks, exercise)
     const recoveryBoost = Math.min(beneficialEvents.length, 3) * 5;
 
-    // Calculate resilience score
+    // Calculate resilience score (internal: higher = more resilient)
     const resilienceScore = Math.max(0,
       100 - contextSwitchingLoad * 0.30
       - decisionFatigue * 0.35
@@ -650,8 +650,9 @@ class GoogleCalendarService {
       - energyDepletion * 0.15
     ) + recoveryBoost;
 
-    const finalScore = Math.round(Math.min(100, Math.max(0, resilienceScore)));
-    return finalScore;
+    // Convert resilience → strain (higher = more cognitive load on the day)
+    const strainScore = 100 - Math.min(100, Math.max(0, resilienceScore));
+    return Math.round(Math.max(0, strainScore));
   }
   
   private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
@@ -849,7 +850,7 @@ class GoogleCalendarService {
     // Generate insights based on new metrics
     const contributors = [
       `Focus: ${adaptivePerformanceIndex}%${adaptivePerformanceIndex >= 85 ? ' (Optimal)' : adaptivePerformanceIndex >= 75 ? ' (Excellent)' : adaptivePerformanceIndex >= 65 ? ' (Good)' : adaptivePerformanceIndex >= 50 ? ' (Moderate)' : ' (Needs Attention)'}`,
-      `Strain: ${cognitiveResilience}%${cognitiveResilience >= 80 ? ' (Strong)' : cognitiveResilience >= 60 ? ' (Good)' : cognitiveResilience >= 40 ? ' (Moderate)' : ' (Limited)'}`,
+      `Strain: ${cognitiveResilience}%${cognitiveResilience <= 20 ? ' (Low)' : cognitiveResilience <= 40 ? ' (Moderate)' : cognitiveResilience <= 60 ? ' (High)' : ' (Very High)'}`,
       `Balance: ${workRhythmRecovery}%${workRhythmRecovery >= 80 ? ' (Excellent)' : workRhythmRecovery >= 60 ? ' (Good)' : workRhythmRecovery >= 40 ? ' (Moderate)' : ' (Needs Attention)'}`
     ];
 
@@ -864,8 +865,8 @@ class GoogleCalendarService {
       primaryFactors.push('Good work health balance with light meeting schedule and adequate focus periods');
     } else if (adaptivePerformanceIndex >= 85) {
       primaryFactors.push('Optimal cognitive resources and work capacity available');
-    } else if (cognitiveResilience <= 40) {
-      primaryFactors.push('Limited cognitive resilience due to high context switching and decision fatigue');
+    } else if (cognitiveResilience >= 60) {
+      primaryFactors.push('High cognitive strain due to context switching and decision fatigue');
     } else if (focusTime < 90) {
       primaryFactors.push('Limited deep work opportunities due to schedule fragmentation');
     } else {
@@ -887,9 +888,9 @@ class GoogleCalendarService {
     const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
     const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
     const meetingRatio = totalDuration / 8;
-    const uniqueContexts = new Set(events.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
-    const longestStretch = this.findLongestConsecutiveStretch(events);
-    const gaps = this.calculateGapsBetweenMeetings(events);
+    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
+    const longestStretch = this.findLongestConsecutiveStretch(actualMeetings);
+    const gaps = this.calculateGapsBetweenMeetings(actualMeetings);
     const adequateBreaks = gaps.filter(g => g >= 30).length;
     const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
     const earlyLateMeetings = actualMeetings.filter(e => {

@@ -145,7 +145,7 @@ class ClaudeAIService {
 
     // Mood for quote selection
     let quoteMood: string;
-    if (workHealth.adaptivePerformanceIndex >= 85 && workHealth.cognitiveResilience >= 75) {
+    if (workHealth.adaptivePerformanceIndex >= 85 && workHealth.cognitiveResilience <= 25) {
       quoteMood = 'triumphant, crushing it';
     } else if (workHealth.adaptivePerformanceIndex >= 75) {
       quoteMood = 'cool, assured';
@@ -296,11 +296,11 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
       });
     }
 
-    if (workHealth.cognitiveResilience < 40) {
+    if (workHealth.cognitiveResilience > 60) {
       insights.push({
         category: 'wellness',
         title: 'Cognitive Overload Risk',
-        message: 'Your cognitive resilience is low, indicating high mental switching costs and decision fatigue.',
+        message: 'Your cognitive strain is high, indicating heavy mental switching costs and decision fatigue.',
         severity: 'critical',
         actionable: true,
         recommendation: 'Take regular breaks between meetings and batch similar tasks together.',
@@ -360,7 +360,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
     };
 
     const resilienceInsight: MetricInsight = {
-      title: backToBack >= 3 ? 'Back-to-Back Pressure' : workHealth.cognitiveResilience >= 70 ? 'Good Recovery Room' : 'Watch the Transitions',
+      title: backToBack >= 3 ? 'Back-to-Back Pressure' : workHealth.cognitiveResilience <= 30 ? 'Good Recovery Room' : 'Watch the Transitions',
       message: backToBack >= 3
         ? `${backToBack} back-to-back meetings will pile up context-switching fatigue — your patience may thin out by the last one.`
         : backToBack >= 1
@@ -395,7 +395,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
       insights,
       summary: `Current work health status: ${workHealth.status}.`,
       overallScore: workHealth.adaptivePerformanceIndex,
-      riskFactors: workHealth.cognitiveResilience < 40 ? ['High cognitive load', 'Decision fatigue'] : [],
+      riskFactors: workHealth.cognitiveResilience > 60 ? ['High cognitive load', 'Decision fatigue'] : [],
       opportunities: workHealth.focusTime >= 180 ? ['Deep work opportunities'] : ['Schedule optimization'],
       predictiveAlerts: workHealth.schedule.backToBackCount >= 4 ? ['Burnout risk from meeting overload'] : []
     };
