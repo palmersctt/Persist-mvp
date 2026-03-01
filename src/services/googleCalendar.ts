@@ -596,7 +596,7 @@ class GoogleCalendarService {
     const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
 
     // Context switching — unique topics drain mental bandwidth
-    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
+    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
     const contextSwitchingLoad = Math.min(100, uniqueContexts * 18);
 
     // Decision fatigue — weighted by type, time of day, attendees, and duration
@@ -888,9 +888,9 @@ class GoogleCalendarService {
     const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
     const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
     const meetingRatio = totalDuration / 8;
-    const uniqueContexts = new Set(events.map(e => e.summary?.toLowerCase().split(' ')[0])).size;
-    const longestStretch = this.findLongestConsecutiveStretch(events);
-    const gaps = this.calculateGapsBetweenMeetings(events);
+    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
+    const longestStretch = this.findLongestConsecutiveStretch(actualMeetings);
+    const gaps = this.calculateGapsBetweenMeetings(actualMeetings);
     const adequateBreaks = gaps.filter(g => g >= 30).length;
     const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
     const earlyLateMeetings = actualMeetings.filter(e => {
