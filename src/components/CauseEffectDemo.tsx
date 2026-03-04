@@ -11,9 +11,9 @@ const MOODS: Record<string, { name: string; gradient: [string, string] }> = {
   scattered:   { name: 'Scattered',     gradient: ['#e85d4a', '#7c2d12'] },
   autopilot:   { name: 'Autopilot',     gradient: ['#64748b', '#1e293b'] },
   coasting:    { name: 'Coasting',      gradient: ['#3b82f6', '#1e3a5f'] },
-  'locked-in': { name: 'Locked In',     gradient: ['#8b5cf6', '#4c1d95'] },
+  'locked-in': { name: 'Locked In',     gradient: ['#3b82f6', '#1e3a5f'] },
   flow:        { name: 'Flow State',    gradient: ['#10b981', '#064e3b'] },
-  victory:     { name: 'Victory Lap',   gradient: ['#ec4899', '#581c87'] },
+  victory:     { name: 'Victory Lap',   gradient: ['#059669', '#022c22'] },
 }
 
 /*
