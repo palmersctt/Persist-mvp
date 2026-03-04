@@ -30,29 +30,16 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
         padding: '32px 24px 20px',
       }}
     >
-      {/* Quote */}
-      <p className="text-xl font-bold text-white text-center leading-snug mb-3 whitespace-pre-line">
-        &ldquo;{quote}&rdquo;
+      {/* Mood label */}
+      <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        {moodName}
       </p>
 
-      {/* Source */}
-      <p className="text-xs text-center italic mb-3" style={{ color: 'rgba(255,255,255,0.55)' }}>
-        &mdash; {source}
-      </p>
-
-      {/* Subtitle */}
-      <p className="text-sm text-center font-normal leading-relaxed whitespace-pre-line mb-4" style={{ color: 'rgba(255,255,255,0.75)' }}>
-        {subtitle}
-      </p>
-
-      {/* Score bar with mood label inside */}
+      {/* Score pills */}
       <div
-        className="rounded-2xl px-5 py-4"
-        style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+        className="rounded-2xl px-5 py-4 mb-5"
+        style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
       >
-        <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          {moodName}
-        </p>
         <div className="flex justify-center gap-8">
           {scores.map((s) => (
             <div
@@ -90,6 +77,21 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
           ))}
         </div>
       </div>
+
+      {/* Quote */}
+      <p className="text-xl font-bold text-white text-center leading-snug mb-2 whitespace-pre-line">
+        &ldquo;{quote}&rdquo;
+      </p>
+
+      {/* Source */}
+      <p className="text-xs text-center italic mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        &mdash; {source}
+      </p>
+
+      {/* Subtitle */}
+      <p className="text-sm text-center font-normal leading-relaxed whitespace-pre-line" style={{ color: 'rgba(255,255,255,0.65)' }}>
+        {subtitle}
+      </p>
 
       {/* Branding */}
       <div className="flex items-center justify-center gap-1.5 mt-3">

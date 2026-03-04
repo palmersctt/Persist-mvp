@@ -14,14 +14,14 @@ export interface MoodConfig {
 }
 
 export const MOODS: Record<Mood, MoodConfig> = {
-  survival:   { name: 'Survival Mode', gradient: ['#dc2626', '#7f1d1d'] },
-  grinding:   { name: 'Grinding',      gradient: ['#ea580c', '#7c2d12'] },
-  scattered:  { name: 'Scattered',     gradient: ['#d97706', '#78350f'] },
-  autopilot:  { name: 'Autopilot',     gradient: ['#4b5563', '#1f2937'] },
-  coasting:   { name: 'Coasting',      gradient: ['#2563eb', '#1e3a5f'] },
-  'locked-in':{ name: 'Locked In',     gradient: ['#7c3aed', '#3b0764'] },
-  flow:       { name: 'Flow State',    gradient: ['#059669', '#064e3b'] },
-  victory:    { name: 'Victory Lap',   gradient: ['#e11d48', '#4a044e'] },
+  survival:   { name: 'Survival Mode', gradient: ['#ef4444', '#991b1b'] },
+  grinding:   { name: 'Grinding',      gradient: ['#f97316', '#9a3412'] },
+  scattered:  { name: 'Scattered',     gradient: ['#e85d4a', '#7c2d12'] },
+  autopilot:  { name: 'Autopilot',     gradient: ['#64748b', '#1e293b'] },
+  coasting:   { name: 'Coasting',      gradient: ['#3b82f6', '#1e3a5f'] },
+  'locked-in':{ name: 'Locked In',     gradient: ['#8b5cf6', '#4c1d95'] },
+  flow:       { name: 'Flow State',    gradient: ['#10b981', '#064e3b'] },
+  victory:    { name: 'Victory Lap',   gradient: ['#ec4899', '#581c87'] },
 }
 
 /** Priority-ordered mood detection. First matching rule wins. */
