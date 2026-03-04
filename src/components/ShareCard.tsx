@@ -31,14 +31,14 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       }}
     >
       {/* Mood label */}
-      <p className="text-[10px] text-center uppercase tracking-[0.2em] font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+      <p className="text-center uppercase font-semibold" style={{ fontSize: 9, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 14 }}>
         {moodName}
       </p>
 
       {/* Score pills */}
       <div
-        className="rounded-2xl px-5 py-4 mb-5"
-        style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+        className="px-4 py-3"
+        style={{ backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 14, marginBottom: 18 }}
       >
         <div className="flex justify-center gap-8">
           {scores.map((s) => (
@@ -67,10 +67,10 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
                 el.style.opacity = '1';
               } : undefined}
             >
-              <div className="text-xl font-bold text-white" style={{ lineHeight: 1 }}>
+              <div className="text-white" style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>
                 {values[s.prop]}
               </div>
-              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <div className="uppercase font-bold" style={{ fontSize: 9, letterSpacing: '0.15em', marginTop: 5, color: 'rgba(255,255,255,0.5)' }}>
                 {s.label}
               </div>
             </div>
@@ -79,17 +79,17 @@ export default function ShareCard({ quote, source, subtitle, focus, strain, bala
       </div>
 
       {/* Quote */}
-      <p className="text-xl font-bold text-white text-center leading-snug mb-2 whitespace-pre-line">
+      <p className="text-white text-center whitespace-pre-line" style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.3, marginBottom: 8 }}>
         &ldquo;{quote}&rdquo;
       </p>
 
       {/* Source */}
-      <p className="text-xs text-center italic mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+      <p className="text-center italic" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>
         &mdash; {source}
       </p>
 
       {/* Subtitle */}
-      <p className="text-sm text-center font-normal leading-relaxed whitespace-pre-line" style={{ color: 'rgba(255,255,255,0.65)' }}>
+      <p className="text-center font-normal whitespace-pre-line" style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
         {subtitle}
       </p>
 
