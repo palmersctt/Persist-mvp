@@ -596,16 +596,44 @@ export default function WorkHealthDashboard() {
               
               
               {/* Performance Breakdown - Always visible */}
-              <div 
+              <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
-                style={{ 
+                style={{
                   backgroundColor: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
-                <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  How much capacity you have today for deep, uninterrupted work — based on meeting load, available focus blocks, and schedule flow.
-                </p>
+                {/* Focus Insights */}
+                <div className="mb-6 pb-4 border-b border-gray-700 text-center">
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Focus Insights
+                  </h4>
+                  {isAILoading && activeTab === 'performance' ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Loading insights...
+                        </span>
+                      </div>
+                    </div>
+                  ) : (() => {
+                    const insight = getMetricInsight('performance');
+                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    return (
+                      <div className="text-center">
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {insight.message}
+                        </p>
+                        {insight.action && (
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                            {insight.action}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
 
                 {/* Focus Components — unique to this metric's calculation */}
                 <div className="space-y-5 mb-6">
@@ -706,38 +734,10 @@ export default function WorkHealthDashboard() {
                     </div>
                   </div>
                 </div>
-                
-                {/* Focus Insights */}
-                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Focus Insights
-                  </h4>
-                  {isAILoading && activeTab === 'performance' ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Loading insights...
-                        </span>
-                      </div>
-                    </div>
-                  ) : (() => {
-                    const insight = getMetricInsight('performance');
-                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
-                    return (
-                      <div className="text-center">
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {insight.message}
-                        </p>
-                        {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
-                            {insight.action}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+
+                <p className="text-xs mt-4 pt-4 border-t border-gray-700" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  How much capacity you have today for deep, uninterrupted work — based on meeting load, available focus blocks, and schedule flow.
+                </p>
               </div>
             </section>
           </div>
@@ -797,9 +797,37 @@ export default function WorkHealthDashboard() {
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
-                <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  How much cognitive load your schedule is putting on you today — context switches, back-to-back meetings, and decision fatigue.
-                </p>
+                {/* Strain Insights */}
+                <div className="mb-6 pb-4 border-b border-gray-700 text-center">
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Strain Insights
+                  </h4>
+                  {isAILoading && activeTab === 'resilience' ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Loading insights...
+                        </span>
+                      </div>
+                    </div>
+                  ) : (() => {
+                    const insight = getMetricInsight('resilience');
+                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    return (
+                      <div className="text-center">
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {insight.message}
+                        </p>
+                        {insight.action && (
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                            {insight.action}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
 
                 {/* Strain Components — unique to this metric */}
                 <div className="space-y-5 mb-6">
@@ -900,38 +928,10 @@ export default function WorkHealthDashboard() {
                     </div>
                   </div>
                 </div>
-                
-                {/* Strain Insights */}
-                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Strain Insights
-                  </h4>
-                  {isAILoading && activeTab === 'resilience' ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Loading insights...
-                        </span>
-                      </div>
-                    </div>
-                  ) : (() => {
-                    const insight = getMetricInsight('resilience');
-                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
-                    return (
-                      <div className="text-center">
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {insight.message}
-                        </p>
-                        {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
-                            {insight.action}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+
+                <p className="text-xs mt-4 pt-4 border-t border-gray-700" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  How much cognitive load your schedule is putting on you today — context switches, back-to-back meetings, and decision fatigue.
+                </p>
               </div>
             </section>
           </div>
@@ -991,9 +991,37 @@ export default function WorkHealthDashboard() {
                   border: '1px solid rgba(255,255,255,0.08)'
                 }}
               >
-                <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Can you keep this pace up? Measures whether your schedule has enough recovery time and healthy boundaries to avoid burnout.
-                </p>
+                {/* Balance Insights */}
+                <div className="mb-6 pb-4 border-b border-gray-700 text-center">
+                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                    Balance Insights
+                  </h4>
+                  {isAILoading && activeTab === 'sustainability' ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          Loading insights...
+                        </span>
+                      </div>
+                    </div>
+                  ) : (() => {
+                    const insight = getMetricInsight('sustainability');
+                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
+                    return (
+                      <div className="text-center">
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {insight.message}
+                        </p>
+                        {insight.action && (
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
+                            {insight.action}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
 
                 {/* Balance Components — unique to this metric */}
                 <div className="space-y-5 mb-6">
@@ -1095,38 +1123,10 @@ export default function WorkHealthDashboard() {
                     </div>
                   </div>
                 </div>
-                
-                {/* Balance Insights */}
-                <div className="mt-6 pt-4 border-t border-gray-700 text-center">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                    Balance Insights
-                  </h4>
-                  {isAILoading && activeTab === 'sustainability' ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Loading insights...
-                        </span>
-                      </div>
-                    </div>
-                  ) : (() => {
-                    const insight = getMetricInsight('sustainability');
-                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
-                    return (
-                      <div className="text-center">
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {insight.message}
-                        </p>
-                        {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#10b981', opacity: 0.85 }}>
-                            {insight.action}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
+
+                <p className="text-xs mt-4 pt-4 border-t border-gray-700" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  Can you keep this pace up? Measures whether your schedule has enough recovery time and healthy boundaries to avoid burnout.
+                </p>
               </div>
             </section>
 
