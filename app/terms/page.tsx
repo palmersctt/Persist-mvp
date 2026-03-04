@@ -11,7 +11,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using PERSIST (&ldquo;Service&rdquo;), you agree to be bound by these Terms of Service.
+              By accessing and using PERSISTWORK (&ldquo;Service&rdquo;), you agree to be bound by these Terms of Service.
               If you do not agree to these terms, please do not use our Service.
             </p>
           </section>
@@ -19,13 +19,15 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">2. Service Description</h2>
             <p>
-              PERSIST is a work health intelligence platform that analyzes your Google Calendar data to provide 
-              insights about your cognitive performance, work patterns, and schedule sustainability. The Service:
+              PERSISTWORK reads your Google Calendar and scores your day across three dimensions: Focus (how much
+              deep work your schedule allows), Strain (the cognitive load from meetings, context switches, and
+              back-to-backs), and Balance (how sustainable and well-paced your day is). Based on these scores,
+              the Service detects your daily mood and pairs it with a quote that fits. The Service:
             </p>
             <ul className="list-disc pl-6 mt-3 space-y-2">
-              <li>Provides real-time analysis of your calendar patterns</li>
-              <li>Calculates performance metrics based on meeting density and schedule</li>
-              <li>Offers recommendations for sustainable work practices</li>
+              <li>Provides real-time Focus, Strain, and Balance scores based on your calendar</li>
+              <li>Detects your daily mood — from Flow State to Survival Mode</li>
+              <li>Generates a shareable daily card with humor that matches your vibe</li>
               <li>Does not store your calendar data permanently</li>
             </ul>
           </section>
@@ -33,7 +35,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">3. User Accounts and Authentication</h2>
             <p>
-              To use PERSIST, you must authenticate using your Google account. By doing so, you:
+              To use PERSISTWORK, you must authenticate using your Google account. By doing so, you:
             </p>
             <ul className="list-disc pl-6 mt-3 space-y-2">
               <li>Authorize us to access your Google Calendar data on a read-only basis</li>
@@ -89,9 +91,9 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">7. Intellectual Property</h2>
             <p>
-              All content, features, and functionality of PERSIST are owned by us and are protected by 
-              intellectual property laws. The performance algorithms, analysis methods, and user interface 
-              are proprietary.
+              All content, features, and functionality of PERSISTWORK are owned by us and are protected by
+              intellectual property laws. The scoring algorithms (Focus, Strain, Balance), mood detection system,
+              analysis methods, and user interface are proprietary.
             </p>
           </section>
 

@@ -11,14 +11,14 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">Our Privacy Commitment</h2>
             <p className="text-lg">
-              PERSIST is built with privacy-first principles. We analyze your work patterns without storing
+              PERSISTWORK is built with privacy-first principles. We analyze your work patterns without storing
               your personal data. Your calendar information is processed in real-time and never saved to our servers.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">1. Information We Access</h2>
-            <p>When you use PERSIST, we access:</p>
+            <p>When you use PERSISTWORK, we access:</p>
             <ul className="list-disc pl-6 mt-3 space-y-2">
               <li><strong>Google Account Information:</strong> Your name, email address, and profile picture</li>
               <li><strong>Calendar Data:</strong> Event titles, times, durations, and attendee counts from your Google Calendar</li>
@@ -30,10 +30,11 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-light text-gray-900 mb-4">2. How We Use Your Information</h2>
             <p>We use your information exclusively to:</p>
             <ul className="list-disc pl-6 mt-3 space-y-2">
-              <li>Calculate your Adaptive Performance Index</li>
-              <li>Measure your Cognitive Resilience score</li>
-              <li>Assess your Sustainability Index</li>
-              <li>Generate personalized work health insights</li>
+              <li>Calculate your Focus score — how much uninterrupted deep work your day allows</li>
+              <li>Measure your Strain score — the cognitive load from meetings, context switches, and back-to-backs</li>
+              <li>Assess your Balance score — how sustainable and well-paced your day is</li>
+              <li>Detect your daily mood — from Flow State to Survival Mode — based on your scores</li>
+              <li>Generate a personalized daily card with humor that matches your vibe</li>
               <li>Display your profile information in the application</li>
             </ul>
             <p className="mt-3 font-medium">
@@ -111,7 +112,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">8. Children&apos;s Privacy</h2>
             <p>
-              PERSIST is not intended for users under 18 years of age. We do not knowingly collect 
+              PERSISTWORK is not intended for users under 18 years of age. We do not knowingly collect 
               information from children. The service is designed for professional work analysis.
             </p>
           </section>

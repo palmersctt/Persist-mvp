@@ -1,47 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
 import PersistLogo from './PersistLogo'
-import ShareCard from './ShareCard'
-import { type Mood } from '../lib/mood'
+import CauseEffectDemo from './CauseEffectDemo'
 
 export default function LandingPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeCard, setActiveCard] = useState(0)
-  const touchStartX = useRef<number | null>(null)
-
-  const cards = [
-    {
-      quote: "I'm kind of a big deal.",
-      source: 'Anchorman — Ron Burgundy',
-      subtitle: 'The kind of day where you actually get to think.',
-      focus: 84, strain: 32, balance: 76,
-      mood: 'flow' as Mood,
-    },
-    {
-      quote: 'Houston, we have a problem.',
-      source: 'Apollo 13 — Jim Lovell',
-      subtitle: "Your calendar wrote checks your brain can't cash.",
-      focus: 44, strain: 38, balance: 72,
-      mood: 'coasting' as Mood,
-    },
-    {
-      quote: "I'll be back.",
-      source: 'Terminator — The Terminator',
-      subtitle: "Not your best day on paper, but you've handled worse.",
-      focus: 52, strain: 48, balance: 55,
-      mood: 'autopilot' as Mood,
-    },
-  ]
-
-  function goTo(index: number) {
-    setActiveCard(Math.max(0, Math.min(cards.length - 1, index)))
-  }
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -164,90 +133,13 @@ export default function LandingPage() {
       <section id="hero" className="py-16 lg:py-24">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <h1 className="text-5xl lg:text-7xl font-thin text-gray-900 mb-8 leading-tight">
-            Your workday has a sense of humor
+            We know what kind of day you&apos;re having
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
-            Persist analyzes your workday and gives you the laugh your day deserves.
+            Persist reads your calendar, scores your day, and finds a laugh that fits.
           </p>
 
-          {/* 3-Card Carousel — pure state, no scroll container */}
-          <div className="max-w-xs mx-auto mb-6 px-4">
-            {/* Card display */}
-            <div
-              onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
-              onTouchEnd={(e) => {
-                if (touchStartX.current === null) return
-                const diff = touchStartX.current - e.changedTouches[0].clientX
-                if (Math.abs(diff) > 50) goTo(activeCard + (diff > 0 ? 1 : -1))
-                touchStartX.current = null
-              }}
-            >
-              {cards.map((card, i) => (
-                <div
-                  key={i}
-                  style={{ display: i === activeCard ? 'block' : 'none' }}
-                >
-                  <ShareCard
-                    quote={card.quote}
-                    source={card.source}
-                    subtitle={card.subtitle}
-                    focus={card.focus}
-                    strain={card.strain}
-                    balance={card.balance}
-                    mood={card.mood}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Navigation: arrows + dots */}
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <button
-                type="button"
-                onClick={() => goTo(activeCard - 1)}
-                disabled={activeCard === 0}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30"
-                style={{ minHeight: 32, minWidth: 32 }}
-              >
-                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              {cards.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  className="w-2.5 h-2.5 rounded-full transition-all duration-300"
-                  style={{
-                    backgroundColor: i === activeCard ? '#374151' : '#d1d5db',
-                    transform: i === activeCard ? 'scale(1.3)' : 'scale(1)',
-                    minHeight: 10, minWidth: 10,
-                  }}
-                />
-              ))}
-              <button
-                type="button"
-                onClick={() => goTo(activeCard + 1)}
-                disabled={activeCard === cards.length - 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30"
-                style={{ minHeight: 32, minWidth: 32 }}
-              >
-                <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div className="mb-10" />
-
-          <button
-            type="button"
-            onClick={handleGetStarted}
-            className="inline-flex items-center px-8 py-4 border-2 border-gray-900 text-gray-900 font-medium rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-300 text-lg"
-          >
-            Try It Free
-          </button>
+          <CauseEffectDemo onGetStarted={handleGetStarted} />
         </div>
       </section>
 
@@ -256,10 +148,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-thin text-gray-900 mb-6">
-              We actually know what kind of day you&apos;re having
+              Three scores. One vibe check.
             </h2>
             <p className="text-xl text-gray-600 font-light max-w-3xl mx-auto">
-              We read your calendar, score your day, and find the laugh that fits
+              Every day you get a Focus, Strain, and Balance score based on your actual calendar
             </p>
           </div>
 
@@ -380,9 +272,6 @@ export default function LandingPage() {
               <PersistLogo size={22} variant="dark" />
               <span className="font-semibold text-lg text-gray-900" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
             </div>
-            <p className="text-gray-600 text-sm mb-6">
-              Comic relief for your workday
-            </p>
             <div className="flex justify-center space-x-6 text-sm">
               <Link href="/privacy" className="text-gray-500 hover:text-gray-900 transition-colors">
                 Privacy Policy
