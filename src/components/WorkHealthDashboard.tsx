@@ -20,7 +20,9 @@ export default function WorkHealthDashboard() {
   });
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
   const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
+  const [showProfile, setShowProfile] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus } = useWorkHealth(activeTab);
 
@@ -29,6 +31,18 @@ export default function WorkHealthDashboard() {
   const [verbVisible, setVerbVisible] = useState(true);
   const verbIndexRef = useRef(0);
   const shuffledRef = useRef<string[]>([]);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    if (!showProfile) return;
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showProfile]);
 
   useEffect(() => {
     if (!isLoading) return;
@@ -390,28 +404,67 @@ export default function WorkHealthDashboard() {
             >
               {isLoading ? 'Updating...' : 'Refresh'}
             </button>
-            <button
-              onClick={() => signOut()}
-              className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
-              }}
-              style={{ 
-                color: 'var(--text-secondary)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                backgroundColor: 'transparent',
-                cursor: 'pointer'
-              }}
-            >
-              Sign Out
-            </button>
+            <div ref={profileRef} className="relative">
+              <button
+                onClick={() => setShowProfile(!showProfile)}
+                className="w-8 h-8 rounded-full overflow-hidden border-2 transition-all duration-200 hover:scale-105"
+                style={{ borderColor: showProfile ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)' }}
+              >
+                {session?.user?.image ? (
+                  <img src={session.user.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}>
+                    {session?.user?.name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </button>
+              {showProfile && (
+                <div
+                  className="absolute right-0 mt-2 w-72 rounded-xl overflow-hidden shadow-2xl z-50"
+                  style={{ backgroundColor: '#1a1f2e', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  <div className="p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <div className="flex items-center gap-3">
+                      {session?.user?.image && (
+                        <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session?.user?.name}</p>
+                        <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{session?.user?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>Permissions</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 text-xs">&#10003;</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Email address</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 text-xs">&#10003;</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Profile info (name, photo)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 text-xs">&#10003;</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Google Calendar (read-only)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <button
+                      onClick={() => signOut()}
+                      className="w-full text-xs font-medium py-2 rounded-lg transition-colors"
+                      style={{ color: 'var(--text-secondary)', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)' }}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
