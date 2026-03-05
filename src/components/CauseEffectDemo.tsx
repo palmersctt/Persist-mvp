@@ -20,11 +20,11 @@ const MOODS: Record<string, { name: string; gradient: [string, string] }> = {
   EVENT CATEGORIES
 */
 const CAT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  heavy:   { bg: 'rgba(232,93,74,0.18)',  border: '#e85d4a', text: '#fca5a5' },
-  collab:  { bg: 'rgba(139,92,246,0.16)', border: '#8b5cf6', text: '#c4b5fd' },
-  light:   { bg: 'rgba(59,130,246,0.16)', border: '#3b82f6', text: '#93c5fd' },
-  focus:   { bg: 'rgba(16,185,129,0.14)', border: '#10b981', text: '#6ee7b7' },
-  benefit: { bg: 'rgba(236,72,153,0.14)', border: '#ec4899', text: '#f9a8d4' },
+  heavy:   { bg: 'rgba(248,180,160,0.10)', border: 'rgba(248,180,160,0.45)', text: 'rgba(248,190,170,0.75)' },
+  collab:  { bg: 'rgba(180,190,220,0.10)', border: 'rgba(180,190,220,0.40)', text: 'rgba(190,200,225,0.75)' },
+  light:   { bg: 'rgba(160,195,230,0.10)', border: 'rgba(160,195,230,0.40)', text: 'rgba(170,205,235,0.75)' },
+  focus:   { bg: 'rgba(150,215,190,0.10)', border: 'rgba(150,215,190,0.40)', text: 'rgba(160,220,195,0.75)' },
+  benefit: { bg: 'rgba(200,185,220,0.10)', border: 'rgba(200,185,220,0.40)', text: 'rgba(210,195,225,0.75)' },
 }
 
 interface CalEvent {
@@ -353,7 +353,7 @@ export default function CauseEffectDemo({ onGetStarted }: { onGetStarted?: () =>
           <div style={{ marginTop: 14, padding: '0 4px' }}>
             {s.insights.map((ins, i) => {
               const label = ins.metric === 'focus' ? 'FOCUS' : ins.metric === 'strain' ? 'STRAIN' : 'BALANCE'
-              const labelColor = ins.metric === 'focus' ? 'rgba(96,165,250,0.8)' : ins.metric === 'strain' ? 'rgba(251,191,36,0.8)' : 'rgba(52,211,153,0.8)'
+              const labelColor = ins.metric === 'focus' ? 'rgba(160,195,230,0.65)' : ins.metric === 'strain' ? 'rgba(230,200,160,0.65)' : 'rgba(160,210,190,0.65)'
               return (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0',

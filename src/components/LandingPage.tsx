@@ -136,7 +136,7 @@ export default function LandingPage() {
             We know what kind of day you&apos;re having
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
-            Persist reads your calendar, scores your day, and finds a laugh that fits.
+            Persist reads your calendar, scores your day, and tells you what your schedule won&apos;t.
           </p>
 
           <CauseEffectDemo onGetStarted={handleGetStarted} />
@@ -225,7 +225,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-3">Get your daily card</h3>
               <p className="text-gray-600 leading-relaxed">
-                Every morning — your scores and a laugh that nails your vibe.
+                Every morning — your scores and a quote that nails your vibe.
               </p>
             </div>
 
@@ -238,7 +238,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-3">Send it to someone</h3>
               <p className="text-gray-600 leading-relaxed">
-                One tap. Share the laugh with someone who gets it.
+                One tap. Share the vibe with someone who gets it.
               </p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export default function LandingPage() {
             Get Started Today
           </h2>
           <p className="text-xl text-gray-600 font-light mb-12 leading-relaxed">
-            Connect your Google Calendar and get your first laugh in seconds.
+            Connect your Google Calendar and see your first daily score in seconds.
           </p>
           <button
             type="button"
