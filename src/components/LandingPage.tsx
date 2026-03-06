@@ -359,32 +359,79 @@ export default function LandingPage() {
           margin: 0 auto;
         }
 
-        /* QUOTE CARD */
+        /* QUOTE CARD (matches real app ShareCard) */
         .lp-quote-card {
-          background: var(--ink);
+          background: linear-gradient(to bottom, #ef4444, #991b1b);
           color: white;
-          border-radius: 12px;
-          padding: 16px 18px;
+          border-radius: 16px;
+          padding: 32px 24px 20px;
+          overflow: hidden;
         }
-        .lp-qc-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 1px;
+        .lp-qc-mood {
+          text-align: center;
           text-transform: uppercase;
-          color: var(--amber);
-          margin-bottom: 8px;
+          font-weight: 600;
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          color: rgba(255,255,255,0.3);
+          margin-bottom: 14px;
+        }
+        .lp-qc-scores {
+          background: rgba(0,0,0,0.2);
+          border-radius: 14px;
+          padding: 12px 16px;
+          margin-bottom: 18px;
+          display: flex;
+          justify-content: center;
+          gap: 32px;
+        }
+        .lp-qc-score { text-align: center; }
+        .lp-qc-score-num {
+          font-size: 26px;
+          font-weight: 800;
+          line-height: 1;
+          color: white;
+        }
+        .lp-qc-score-lbl {
+          text-transform: uppercase;
+          font-weight: 700;
+          font-size: 9px;
+          letter-spacing: 0.15em;
+          margin-top: 5px;
+          color: rgba(255,255,255,0.5);
         }
         .lp-qc-text {
-          font-family: 'Lora', serif;
-          font-style: italic;
-          font-size: 15px;
-          line-height: 1.55;
-          color: #F5EFE8;
+          text-align: center;
+          font-size: 20px;
+          font-weight: 700;
+          line-height: 1.3;
+          color: white;
+          margin-bottom: 8px;
         }
         .lp-qc-source {
-          font-size: 12px;
-          color: #A8A29E;
-          margin-top: 8px;
+          text-align: center;
+          font-style: italic;
+          font-size: 11px;
+          color: rgba(255,255,255,0.45);
+          margin-bottom: 10px;
+        }
+        .lp-qc-subtitle {
+          text-align: center;
+          font-size: 13px;
+          color: rgba(255,255,255,0.65);
+          line-height: 1.5;
+        }
+        .lp-qc-brand {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          margin-top: 12px;
+        }
+        .lp-qc-brand span {
+          font-size: 9px;
+          letter-spacing: 0.15em;
+          color: rgba(255,255,255,0.25);
         }
 
         /* HOW IT WORKS */
@@ -691,9 +738,19 @@ export default function LandingPage() {
             <div className="lp-demo-arrow">&darr;</div>
             <div className="lp-demo-result">
               <div className="lp-quote-card">
-                <div className="lp-qc-label">&#10022; Today&apos;s line</div>
+                <div className="lp-qc-mood">Survival Mode</div>
+                <div className="lp-qc-scores">
+                  <div className="lp-qc-score"><div className="lp-qc-score-num">28</div><div className="lp-qc-score-lbl">Focus</div></div>
+                  <div className="lp-qc-score"><div className="lp-qc-score-num">81</div><div className="lp-qc-score-lbl">Strain</div></div>
+                  <div className="lp-qc-score"><div className="lp-qc-score-num">34</div><div className="lp-qc-score-lbl">Balance</div></div>
+                </div>
                 <div className="lp-qc-text">&ldquo;I&apos;ve made a huge mistake.&rdquo;</div>
                 <div className="lp-qc-source">&mdash; Arrested Development / Gob Bluth</div>
+                <div className="lp-qc-subtitle">8 meetings. 1 break. Your calendar isn&apos;t busy &mdash; it&apos;s hostile.</div>
+                <div className="lp-qc-brand">
+                  <svg width="12" height="12" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#ffffff" /><path d="M38 30 L62 50 L38 70" stroke="#1a1a1a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                  <span>Persistwork.com</span>
+                </div>
               </div>
             </div>
           </div>
