@@ -6,14 +6,14 @@ import { useState, useEffect, useRef, useCallback } from 'react'
   MOODS — exact from lib/mood.ts
 */
 const MOODS: Record<string, { name: string; gradient: [string, string] }> = {
-  survival:    { name: 'Survival Mode', gradient: ['#1C1917', '#57534E'] },
-  grinding:    { name: 'Grinding',      gradient: ['#57534E', '#1C1917'] },
-  scattered:   { name: 'Scattered',     gradient: ['#A8A29E', '#57534E'] },
-  autopilot:   { name: 'Autopilot',     gradient: ['#57534E', '#1C1917'] },
-  coasting:    { name: 'Coasting',      gradient: ['#E7E0D8', '#A8A29E'] },
-  'locked-in': { name: 'Locked In',     gradient: ['#E87D3A', '#57534E'] },
-  flow:        { name: 'Flow State',    gradient: ['#FDF0E6', '#FBF7F2'] },
-  victory:     { name: 'Victory Lap',   gradient: ['#E87D3A', '#1C1917'] },
+  survival:    { name: 'Survival Mode', gradient: ['#0E0C0B', '#1C1917'] },
+  grinding:    { name: 'Grinding',      gradient: ['#1C1917', '#0E0C0B'] },
+  scattered:   { name: 'Scattered',     gradient: ['#2E2B29', '#1C1917'] },
+  autopilot:   { name: 'Autopilot',     gradient: ['#4A4542', '#2E2B29'] },
+  coasting:    { name: 'Coasting',      gradient: ['#4A4542', '#2E2B29'] },
+  'locked-in': { name: 'Locked In',     gradient: ['#FFFFFF', '#FDF4EC'] },
+  flow:        { name: 'Flow State',    gradient: ['#FFFFFF', '#FDF4EC'] },
+  victory:     { name: 'Victory Lap',   gradient: ['#FEF6EE', '#F5EDE1'] },
 }
 
 /*

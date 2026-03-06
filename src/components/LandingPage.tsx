@@ -359,13 +359,14 @@ export default function LandingPage() {
           margin: 0 auto;
         }
 
-        /* QUOTE CARD (matches real app ShareCard — bad tier, dark ink) */
+        /* QUOTE CARD v4 (bad tier — deepened dark ink) */
         .lp-quote-card {
-          background: linear-gradient(to bottom, #1C1917, #57534E);
+          background: linear-gradient(160deg, #0E0C0B, #1C1917);
           border-radius: 16px;
           padding: 28px 24px 24px;
           overflow: hidden;
           position: relative;
+          border: 1px solid rgba(255,255,255,0.07);
         }
         .lp-qc-glow {
           position: absolute;
@@ -375,7 +376,7 @@ export default function LandingPage() {
           width: 280px;
           height: 280px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(232,125,58,0.035) 0%, transparent 50%);
+          background: radial-gradient(circle, rgba(232,125,58,0.07) 0%, transparent 50%);
           pointer-events: none;
         }
         .lp-qc-mood {
@@ -389,15 +390,15 @@ export default function LandingPage() {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: rgba(232,125,58,0.4);
-          box-shadow: 0 0 10px rgba(232,125,58,0.15);
+          background: rgba(232,125,58,0.7);
+          box-shadow: 0 0 12px rgba(232,125,58,0.3);
         }
         .lp-qc-mood-label {
           text-transform: uppercase;
           font-weight: 700;
           font-size: 9px;
           letter-spacing: 0.2em;
-          color: rgba(232,125,58,0.38);
+          color: rgba(232,125,58,0.7);
           margin: 0;
         }
         .lp-qc-scores {
@@ -407,37 +408,36 @@ export default function LandingPage() {
           position: relative;
         }
         .lp-qc-score-num {
+          font-size: 32px;
           font-weight: 800;
           letter-spacing: -0.04em;
           line-height: 1;
           font-variant-numeric: tabular-nums;
         }
-        .lp-qc-score-num.lp-qc-emp {
-          font-size: 36px;
-          color: rgba(232,125,58,0.6);
+        .lp-qc-score-num.lp-qc-pop {
+          color: rgba(232,125,58,0.9);
         }
-        .lp-qc-score-num.lp-qc-demp {
-          font-size: 26px;
-          color: rgba(255,255,255,0.08);
+        .lp-qc-score-num.lp-qc-ghost {
+          color: rgba(255,255,255,0.22);
         }
         .lp-qc-score-lbl {
           text-transform: uppercase;
           font-weight: 700;
-          font-size: 7px;
-          letter-spacing: 0.16em;
-          margin-top: 5px;
+          font-size: 8px;
+          letter-spacing: 0.14em;
+          margin-top: 4px;
         }
-        .lp-qc-score-lbl.lp-qc-emp-lbl {
-          color: rgba(232,125,58,0.18);
+        .lp-qc-score-lbl.lp-qc-pop-lbl {
+          color: rgba(232,125,58,0.55);
         }
-        .lp-qc-score-lbl.lp-qc-demp-lbl {
-          color: rgba(255,255,255,0.03);
+        .lp-qc-score-lbl.lp-qc-ghost-lbl {
+          color: rgba(255,255,255,0.18);
         }
         .lp-qc-text {
           font-size: 22px;
           font-weight: 700;
           line-height: 1.3;
-          color: rgba(255,255,255,0.85);
+          color: rgba(255,255,255,0.92);
           margin-bottom: 10px;
           letter-spacing: -0.01em;
           font-style: italic;
@@ -445,14 +445,14 @@ export default function LandingPage() {
         }
         .lp-qc-source {
           font-size: 11px;
-          color: rgba(255,255,255,0.14);
-          margin-bottom: 24px;
+          color: rgba(255,255,255,0.45);
+          margin-bottom: 20px;
           font-weight: 500;
           position: relative;
         }
         .lp-qc-subtitle {
           font-size: 12px;
-          color: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.38);
           line-height: 1.5;
           font-weight: 400;
           margin-bottom: 22px;
@@ -468,10 +468,10 @@ export default function LandingPage() {
           font-size: 8px;
           font-weight: 700;
           letter-spacing: 0.12em;
-          color: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.22);
         }
         .lp-qc-brand .lp-qc-acc {
-          color: rgba(232,125,58,0.2);
+          color: rgba(232,125,58,0.55);
         }
         .lp-qc-brand .lp-qc-dotcom {
           font-weight: 500;
@@ -787,15 +787,15 @@ export default function LandingPage() {
                   <p className="lp-qc-mood-label">Survival Mode</p>
                 </div>
                 <div className="lp-qc-scores">
-                  <div><div className="lp-qc-score-num lp-qc-demp">28</div><div className="lp-qc-score-lbl lp-qc-demp-lbl">Focus</div></div>
-                  <div><div className="lp-qc-score-num lp-qc-emp">81</div><div className="lp-qc-score-lbl lp-qc-emp-lbl">Strain</div></div>
-                  <div><div className="lp-qc-score-num lp-qc-demp">34</div><div className="lp-qc-score-lbl lp-qc-demp-lbl">Balance</div></div>
+                  <div><div className="lp-qc-score-num lp-qc-ghost">28</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Focus</div></div>
+                  <div><div className="lp-qc-score-num lp-qc-pop">81</div><div className="lp-qc-score-lbl lp-qc-pop-lbl">Strain</div></div>
+                  <div><div className="lp-qc-score-num lp-qc-ghost">34</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Balance</div></div>
                 </div>
                 <div className="lp-qc-text">&ldquo;I&apos;ve made a huge mistake.&rdquo;</div>
                 <div className="lp-qc-source">&mdash; Arrested Development / Gob Bluth</div>
                 <div className="lp-qc-subtitle">8 meetings. 1 break. Your calendar isn&apos;t busy &mdash; it&apos;s hostile.</div>
                 <div className="lp-qc-brand">
-                  <svg width="13" height="13" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.05)" /><path d="M38 30 L62 50 L38 70" stroke="rgba(255,255,255,0.12)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                  <svg width="13" height="13" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.07)" /><path d="M38 30 L62 50 L38 70" stroke="rgba(255,255,255,0.3)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
                   <span>PERSIST<span className="lp-qc-acc">WORK</span><span className="lp-qc-dotcom">.com</span></span>
                 </div>
               </div>
