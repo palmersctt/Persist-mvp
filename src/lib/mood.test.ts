@@ -1,60 +1,69 @@
 import { describe, it, expect } from 'vitest'
-import { detectMood, MOODS, type Mood } from './mood'
+import { detectMood, MOODS, MOOD_TIERS, type Mood } from './mood'
 
-describe('detectMood', () => {
-  it('returns victory when focus high, strain low, balance high', () => {
-    expect(detectMood(90, 20, 85)).toBe('victory')
+describe('detectMood – tier classification', () => {
+  it('returns a good-day mood when focus high, strain low, balance high', () => {
+    expect(MOOD_TIERS.good).toContain(detectMood(90, 20, 85))
   })
 
-  it('returns flow when focus high and balance high', () => {
-    expect(detectMood(82, 50, 75)).toBe('flow')
+  it('returns a good-day mood when focus high and balance high', () => {
+    expect(MOOD_TIERS.good).toContain(detectMood(82, 50, 75))
   })
 
-  it('returns survival when strain very high and focus low', () => {
-    expect(detectMood(30, 85, 50)).toBe('survival')
+  it('returns a bad-day mood when strain very high and focus low', () => {
+    expect(MOOD_TIERS.bad).toContain(detectMood(30, 85, 50))
   })
 
-  it('returns grinding when strain high (but focus not low enough for survival)', () => {
-    expect(detectMood(50, 75, 50)).toBe('grinding')
+  it('returns a bad-day mood when strain high but focus moderate', () => {
+    expect(MOOD_TIERS.bad).toContain(detectMood(50, 75, 50))
   })
 
-  it('returns scattered when focus and balance both low', () => {
-    expect(detectMood(30, 50, 30)).toBe('scattered')
+  it('returns a bad-day mood when focus and balance both low', () => {
+    expect(MOOD_TIERS.bad).toContain(detectMood(30, 50, 30))
   })
 
-  it('returns locked-in when focus high and strain moderate', () => {
-    expect(detectMood(75, 40, 50)).toBe('locked-in')
+  it('returns a good-day mood when focus high and strain moderate', () => {
+    expect(MOOD_TIERS.good).toContain(detectMood(75, 40, 50))
   })
 
-  it('returns coasting when balance high and strain low', () => {
-    expect(detectMood(50, 30, 75)).toBe('coasting')
+  it('returns an ok-day mood for middle-of-the-road values', () => {
+    expect(MOOD_TIERS.ok).toContain(detectMood(50, 50, 50))
   })
 
-  it('returns autopilot for middle-of-the-road values', () => {
-    expect(detectMood(50, 50, 50)).toBe('autopilot')
+  it('returns an ok-day mood when no strong signals', () => {
+    expect(MOOD_TIERS.ok).toContain(detectMood(60, 60, 60))
   })
 
-  it('defaults to autopilot when no rule matches', () => {
-    // Values that slip through all specific rules
-    expect(detectMood(60, 60, 60)).toBe('autopilot')
+  it('good tier takes priority for top scores', () => {
+    expect(MOOD_TIERS.good).toContain(detectMood(90, 25, 85))
   })
 
-  // Priority ordering: victory should beat flow
-  it('victory takes priority over flow when all conditions met', () => {
-    expect(detectMood(90, 25, 85)).toBe('victory')
+  it('handles zero values as bad day', () => {
+    expect(MOOD_TIERS.bad).toContain(detectMood(0, 0, 0))
   })
 
-  // Boundary tests
-  it('handles exact boundary for victory (focus=85, strain=30, balance=80)', () => {
-    expect(detectMood(85, 30, 80)).toBe('victory')
+  it('handles max values as good day', () => {
+    expect(MOOD_TIERS.good).toContain(detectMood(100, 100, 100))
+  })
+})
+
+describe('detectMood – stability', () => {
+  it('returns the same mood for identical inputs within a single run', () => {
+    const a = detectMood(70, 40, 60)
+    const b = detectMood(70, 40, 60)
+    expect(a).toBe(b)
   })
 
-  it('handles zero values', () => {
-    expect(detectMood(0, 0, 0)).toBe('scattered')
-  })
-
-  it('handles max values (flow wins because focus>=80 & balance>=70 checked before strain>=70)', () => {
-    expect(detectMood(100, 100, 100)).toBe('flow')
+  it('always returns a valid Mood', () => {
+    const allMoods = Object.keys(MOODS) as Mood[]
+    // Spot-check a variety of inputs
+    const inputs: [number, number, number][] = [
+      [0, 0, 0], [50, 50, 50], [100, 100, 100],
+      [90, 10, 90], [10, 90, 10], [50, 20, 80],
+    ]
+    for (const [f, s, b] of inputs) {
+      expect(allMoods).toContain(detectMood(f, s, b))
+    }
   })
 })
 
@@ -77,5 +86,19 @@ describe('MOODS', () => {
         expect(color).toMatch(/^#[0-9a-fA-F]{6}$/)
       }
     }
+  })
+})
+
+describe('MOOD_TIERS', () => {
+  it('covers all moods exactly once', () => {
+    const allTiered = [...MOOD_TIERS.bad, ...MOOD_TIERS.ok, ...MOOD_TIERS.good]
+    const allMoods = Object.keys(MOODS) as Mood[]
+    expect(allTiered.sort()).toEqual(allMoods.sort())
+  })
+
+  it('bad tier has 3, ok has 2, good has 3 moods', () => {
+    expect(MOOD_TIERS.bad).toHaveLength(3)
+    expect(MOOD_TIERS.ok).toHaveLength(2)
+    expect(MOOD_TIERS.good).toHaveLength(3)
   })
 })
