@@ -346,13 +346,25 @@ export default function LandingPage() {
           margin-top: 1px;
         }
 
+        /* DEMO RESULT (card below grid) */
+        .lp-demo-arrow {
+          text-align: center;
+          font-size: 20px;
+          color: var(--ink-faint);
+          margin: 20px 0 4px;
+          line-height: 1;
+        }
+        .lp-demo-result {
+          max-width: 380px;
+          margin: 0 auto;
+        }
+
         /* QUOTE CARD */
         .lp-quote-card {
           background: var(--ink);
           color: white;
           border-radius: 12px;
           padding: 16px 18px;
-          margin-top: 12px;
         }
         .lp-qc-label {
           font-size: 11px;
@@ -673,11 +685,15 @@ export default function LandingPage() {
                   <div className="lp-score-pill"><div className="lp-score-num lp-sage">34</div><div className="lp-score-lbl">Balance</div></div>
                 </div>
 
-                <div className="lp-quote-card">
-                  <div className="lp-qc-label">&#10022; Today&apos;s line</div>
-                  <div className="lp-qc-text">&ldquo;I&apos;ve made a huge mistake.&rdquo;</div>
-                  <div className="lp-qc-source">&mdash; Arrested Development / Gob Bluth</div>
-                </div>
+              </div>
+            </div>
+
+            <div className="lp-demo-arrow">&darr;</div>
+            <div className="lp-demo-result">
+              <div className="lp-quote-card">
+                <div className="lp-qc-label">&#10022; Today&apos;s line</div>
+                <div className="lp-qc-text">&ldquo;I&apos;ve made a huge mistake.&rdquo;</div>
+                <div className="lp-qc-source">&mdash; Arrested Development / Gob Bluth</div>
               </div>
             </div>
           </div>
