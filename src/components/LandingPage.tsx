@@ -770,9 +770,9 @@ export default function LandingPage() {
                 </div>
 
                 <div className="lp-score-row">
-                  <div className="lp-score-pill"><div className="lp-score-num lp-amber">28</div><div className="lp-score-lbl">Focus</div></div>
-                  <div className="lp-score-pill"><div className="lp-score-num lp-rose">81</div><div className="lp-score-lbl">Strain</div></div>
-                  <div className="lp-score-pill"><div className="lp-score-num lp-sage">34</div><div className="lp-score-lbl">Balance</div></div>
+                  <div className="lp-score-pill"><div className="lp-score-num lp-amber">14</div><div className="lp-score-lbl">Focus</div></div>
+                  <div className="lp-score-pill"><div className="lp-score-num lp-rose">88</div><div className="lp-score-lbl">Strain</div></div>
+                  <div className="lp-score-pill"><div className="lp-score-num lp-sage">31</div><div className="lp-score-lbl">Balance</div></div>
                 </div>
 
               </div>
@@ -787,13 +787,13 @@ export default function LandingPage() {
                   <p className="lp-qc-mood-label">Survival Mode</p>
                 </div>
                 <div className="lp-qc-scores">
-                  <div><div className="lp-qc-score-num lp-qc-ghost">28</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Focus</div></div>
-                  <div><div className="lp-qc-score-num lp-qc-pop">81</div><div className="lp-qc-score-lbl lp-qc-pop-lbl">Strain</div></div>
-                  <div><div className="lp-qc-score-num lp-qc-ghost">34</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Balance</div></div>
+                  <div><div className="lp-qc-score-num lp-qc-ghost">14</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Focus</div></div>
+                  <div><div className="lp-qc-score-num lp-qc-pop">88</div><div className="lp-qc-score-lbl lp-qc-pop-lbl">Strain</div></div>
+                  <div><div className="lp-qc-score-num lp-qc-ghost">31</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Balance</div></div>
                 </div>
-                <div className="lp-qc-text">&ldquo;I&apos;ve made a huge mistake.&rdquo;</div>
-                <div className="lp-qc-source">&mdash; Arrested Development / Gob Bluth</div>
-                <div className="lp-qc-subtitle">8 meetings. 1 break. Your calendar isn&apos;t busy &mdash; it&apos;s hostile.</div>
+                <div className="lp-qc-text">&ldquo;I&apos;m melting! Melting!&rdquo;</div>
+                <div className="lp-qc-source">&mdash; The Wizard of Oz &middot; Wicked Witch</div>
+                <div className="lp-qc-subtitle">Back-to-backs from 9 to 5. You didn&apos;t have a day, you had a schedule.</div>
                 <div className="lp-qc-brand">
                   <svg width="13" height="13" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.07)" /><path d="M38 30 L62 50 L38 70" stroke="rgba(255,255,255,0.3)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
                   <span>PERSIST<span className="lp-qc-acc">WORK</span><span className="lp-qc-dotcom">.com</span></span>
