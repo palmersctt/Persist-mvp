@@ -699,8 +699,7 @@ export default function LandingPage() {
         {/* HERO */}
         <section className="lp-section" style={{ padding: '80px 24px 64px' }}>
           <div className="lp-hero" style={{ padding: 0, textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
-            <div className="lp-eyebrow">&#128197; For people buried in meetings</div>
-            <h1>Your calendar has a<br /><em>lot</em> to say about you.</h1>
+<h1>Your calendar has a<br /><em>lot</em> to say about you.</h1>
             <p className="lp-hero-sub">
               Persistwork reads your day, surfaces what&apos;s actually draining you, and finds a laugh that fits &mdash; because the least your calendar owes you is a joke.
             </p>
