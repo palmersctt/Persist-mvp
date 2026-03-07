@@ -209,7 +209,7 @@ export default function WorkHealthDashboard() {
                 <PersistLogo size={28} variant="light" />
                 <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
               </div>
-              <p className="text-gray-500 text-sm">Comic relief for your workday</p>
+              <p className="text-gray-500 text-sm">Your calendar has a lot to say about you</p>
             </div>
 
             <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700 glass-effect">
@@ -268,7 +268,7 @@ export default function WorkHealthDashboard() {
               <PersistLogo size={28} variant="light" />
               <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
             </div>
-            <p className="text-gray-500 text-sm">Comic relief for your workday</p>
+            <p className="text-gray-500 text-sm">Your calendar has a lot to say about you</p>
           </div>
 
           <div className="bg-gray-800/50 backdrop-blur rounded-2xl p-8 border border-gray-700 glass-effect">

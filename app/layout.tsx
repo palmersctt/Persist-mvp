@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Persistwork — Comic relief for your workday",
-  description: "Persist analyzes your workday and gives you the laugh your day deserves.",
+  title: "Persistwork — Your calendar has a lot to say about you",
+  description: "Persistwork reads your calendar, scores your day, and finds the quote that fits. Three numbers, one laugh, zero judgment.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
