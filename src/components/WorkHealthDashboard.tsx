@@ -508,7 +508,10 @@ export default function WorkHealthDashboard() {
                     />
                   </div>
                 )}
-                <div className="mt-4">
+                <p className="text-center text-xs font-medium mt-3 mb-1" style={{ color: 'var(--text-secondary)' }}>
+                  Tap a metric to see details
+                </p>
+                <div className="mt-2">
                   <button
                     onClick={handleShare}
                     disabled={shareState === 'generating'}
