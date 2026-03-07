@@ -212,6 +212,7 @@ export default function LandingPage() {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 24px;
+          align-items: stretch;
           align-items: start;
         }
 
@@ -276,6 +277,7 @@ export default function LandingPage() {
           display: flex;
           flex-direction: column;
           gap: 12px;
+          justify-content: space-between;
         }
         .lp-insight-card {
           background: var(--cream);
@@ -330,7 +332,10 @@ export default function LandingPage() {
           border-radius: 10px;
           padding: 10px 12px;
           text-align: center;
+          transition: transform 0.15s;
+          cursor: default;
         }
+        .lp-score-pill:hover { transform: translateY(-2px); }
         .lp-score-num {
           font-size: 22px;
           font-weight: 900;
@@ -743,8 +748,8 @@ export default function LandingPage() {
               </div>
 
               {/* INSIGHTS SIDE */}
-              <div>
-                <div className="lp-insights">
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="lp-insights" style={{ flex: 1 }}>
                   <div className="lp-insight-card">
                     <div className="lp-ic-icon lp-ic-amber">&#129521;</div>
                     <div>
