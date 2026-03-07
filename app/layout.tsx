@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "PERSISTWORK reads your calendar, scores your day, and finds the quote that fits. Three numbers, one laugh, zero judgment.",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "PERSISTWORK"
   }
 };
@@ -28,7 +28,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#000000"
+  themeColor: "#FBF7F2"
 };
 
 export default function RootLayout({

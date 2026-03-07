@@ -73,22 +73,22 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#FBF7F2', color: '#1C1917' }}>
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-wide mb-2">PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></h1>
-          <p className="text-gray-500 text-sm">Your calendar has a lot to say about you</p>
+          <h1 className="text-2xl font-bold tracking-wide mb-2" style={{ color: '#1C1917' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></h1>
+          <p className="text-sm" style={{ color: '#A8A29E' }}>Your calendar has a lot to say about you</p>
         </div>
 
         {/* Auth Form */}
-        <div className="bg-gray-900 rounded-lg p-8 border border-gray-800">
+        <div className="rounded-lg p-8" style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}>
           <div className="flex justify-center mb-6">
-            <div className="bg-gray-800 rounded-lg p-1 flex">
+            <div className="rounded-lg p-1 flex" style={{ backgroundColor: '#E7E0D8' }}>
               <button
                 onClick={() => setIsLogin(true)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  isLogin ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                  isLogin ? 'bg-[#1C1917] text-[#FBF7F2]' : 'text-[#57534E] hover:text-[#1C1917]'
                 }`}
               >
                 Login
@@ -96,7 +96,7 @@ export default function AuthPage() {
               <button
                 onClick={() => setIsLogin(false)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  !isLogin ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                  !isLogin ? 'bg-[#1C1917] text-[#FBF7F2]' : 'text-[#57534E] hover:text-[#1C1917]'
                 }`}
               >
                 Sign Up
@@ -108,57 +108,61 @@ export default function AuthPage() {
             {!isLogin && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#57534E' }}>
                     First Name
                   </label>
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E87D3A] focus:border-transparent"
+                    style={{ backgroundColor: '#FBF7F2', border: '1px solid #E7E0D8', color: '#1C1917' }}
                     placeholder="Enter your first name"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#57534E' }}>
                     Last Name
                   </label>
                   <input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E87D3A] focus:border-transparent"
+                    style={{ backgroundColor: '#FBF7F2', border: '1px solid #E7E0D8', color: '#1C1917' }}
                     placeholder="Enter your last name"
                     required
                   />
                 </div>
               </>
             )}
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#57534E' }}>
                 Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E87D3A] focus:border-transparent"
+                style={{ backgroundColor: '#FBF7F2', border: '1px solid #E7E0D8', color: '#1C1917' }}
                 placeholder="Enter your email"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#57534E' }}>
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E87D3A] focus:border-transparent"
+                style={{ backgroundColor: '#FBF7F2', border: '1px solid #E7E0D8', color: '#1C1917' }}
                 placeholder="Enter your password"
                 minLength={6}
                 required
@@ -167,10 +171,14 @@ export default function AuthPage() {
 
             {message && (
               <div className={`p-3 rounded-lg text-sm ${
-                message.includes('error') || message.includes('Error') 
-                  ? 'bg-red-900 text-red-300 border border-red-800' 
-                  : 'bg-green-900 text-green-300 border border-green-800'
-              }`}>
+                message.includes('error') || message.includes('Error')
+                  ? 'border'
+                  : 'border'
+              }`} style={{
+                backgroundColor: message.includes('error') || message.includes('Error') ? 'rgba(192,84,74,0.08)' : 'rgba(90,122,92,0.08)',
+                color: message.includes('error') || message.includes('Error') ? '#C0544A' : '#5A7A5C',
+                borderColor: message.includes('error') || message.includes('Error') ? 'rgba(192,84,74,0.2)' : 'rgba(90,122,92,0.2)'
+              }}>
                 {message}
               </div>
             )}
@@ -178,18 +186,20 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black py-3 px-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#1C1917', color: '#FBF7F2' }}
             >
               {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
+            <p className="text-sm" style={{ color: '#57534E' }}>
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-white hover:underline font-medium"
+                className="hover:underline font-medium"
+                style={{ color: '#1C1917' }}
               >
                 {isLogin ? 'Sign up here' : 'Sign in here'}
               </button>
@@ -199,7 +209,7 @@ export default function AuthPage() {
 
         {/* Note */}
         <div className="mt-6 text-center">
-          <p className="text-gray-500 text-xs">
+          <p className="text-xs" style={{ color: '#A8A29E' }}>
             Free forever. Connect your Google Calendar to get started.
           </p>
         </div>

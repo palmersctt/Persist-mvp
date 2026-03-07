@@ -24,13 +24,13 @@ export default function Home() {
 
   // Show loading state while redirecting
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FBF7F2' }}>
       <div className="text-center flex flex-col items-center">
         <div className="flex items-center gap-2 mb-3">
-          <PersistLogo size={28} variant="light" />
-          <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+          <PersistLogo size={28} variant="dark" />
+          <span className="text-2xl font-semibold text-[#1C1917]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
         </div>
-        <div className="text-gray-500 text-sm">Loading...</div>
+        <div className="text-[#A8A29E] text-sm">Loading...</div>
       </div>
     </div>
   )

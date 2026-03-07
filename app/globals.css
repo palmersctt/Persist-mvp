@@ -1,18 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ffffff;
-  --whoop-green: #25d366;
-  --whoop-green-dark: #1db854;
-  --whoop-red: #ff4444;
+  --background: #FBF7F2;
+  --foreground: #1C1917;
+  --whoop-green: #E87D3A;
+  --whoop-green-dark: #D06B2E;
+  --whoop-red: #C0544A;
   --whoop-yellow: #ffb347;
-  --card-bg: #1a1a1a;
-  --card-border: #2a2a2a;
-  --text-primary: #ffffff;
-  --text-secondary: #b3b3b3;
-  --text-muted: #666666;
-  --premium-green: #00ff41;
+  --card-bg: #FEFCF9;
+  --card-border: #E7E0D8;
+  --text-primary: #1C1917;
+  --text-secondary: #57534E;
+  --text-muted: #A8A29E;
 }
 
 @theme inline {
@@ -24,8 +23,8 @@
 
 /* Clean Whoop-style components */
 .whoop-card {
-  background: rgba(26, 26, 26, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(254, 252, 249, 0.8);
+  border: 1px solid #E7E0D8;
   border-radius: 12px;
   backdrop-filter: blur(10px);
 }
@@ -38,8 +37,8 @@
 }
 
 .whoop-status-pill {
-  background: rgba(37, 211, 102, 0.15);
-  border: 1px solid rgba(37, 211, 102, 0.3);
+  background: rgba(232, 125, 58, 0.12);
+  border: 1px solid rgba(232, 125, 58, 0.25);
   border-radius: 16px;
   font-weight: 500;
   font-size: 0.75rem;
@@ -145,14 +144,14 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #10b981, #3b82f6);
+  background: linear-gradient(135deg, #E87D3A, #D06B2E);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .shadow-glow {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 20px rgba(232, 125, 58, 0.15);
 }
 
 .pulse-ring {
@@ -162,17 +161,17 @@ body {
 @keyframes pulse-ring {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 0 0 rgba(232, 125, 58, 0.7);
   }
-  
+
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 10px rgba(232, 125, 58, 0);
   }
-  
+
   100% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 rgba(232, 125, 58, 0);
   }
 }
 
@@ -220,7 +219,7 @@ body {
 
 .whoop-clean-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #E7E0D8;
   border: none;
   margin: 0;
 }
@@ -228,7 +227,7 @@ body {
 /* Subtle visual indicators */
 .whoop-thin-progress {
   height: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(28, 25, 23, 0.08);
   border-radius: 1px;
   overflow: hidden;
 }
@@ -243,7 +242,7 @@ body {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(28, 25, 23, 0.15);
 }
 
 .whoop-dot-active {
@@ -254,17 +253,17 @@ body {
   width: 8px;
   height: 4px;
   border-radius: 1px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(28, 25, 23, 0.1);
 }
 
 .whoop-time-block-used {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(28, 25, 23, 0.3);
 }
 
 .whoop-gap-indicator {
   width: 2px;
   height: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(28, 25, 23, 0.08);
   border-radius: 1px;
 }
 
@@ -293,10 +292,10 @@ body {
 
 @keyframes ringGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 8px rgba(37, 211, 102, 0.3));
+    filter: drop-shadow(0 0 8px rgba(232, 125, 58, 0.2));
   }
   50% {
-    filter: drop-shadow(0 0 16px rgba(37, 211, 102, 0.5));
+    filter: drop-shadow(0 0 16px rgba(232, 125, 58, 0.35));
   }
 }
 
@@ -324,10 +323,10 @@ body {
 
 @keyframes pulseGreen {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+    box-shadow: 0 0 0 0 rgba(232, 125, 58, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(37, 211, 102, 0);
+    box-shadow: 0 0 0 8px rgba(232, 125, 58, 0);
   }
 }
 
@@ -375,8 +374,8 @@ body {
 
 .whoop-card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-  border-color: rgba(37, 211, 102, 0.3);
+  box-shadow: 0 16px 48px rgba(28, 25, 23, 0.08);
+  border-color: rgba(232, 125, 58, 0.3);
 }
 
 /* Hide scrollbar but keep scroll functionality */
