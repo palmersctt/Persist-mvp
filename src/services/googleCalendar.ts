@@ -583,10 +583,6 @@ class GoogleCalendarService {
   }
   
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
-    if (events.length === 0) {
-      return 5; // No meetings = minimal strain. Day off or clear calendar.
-    }
-
     // Separate by type
     const actualMeetings = events.filter(event =>
       event.category !== 'BENEFICIAL' &&
