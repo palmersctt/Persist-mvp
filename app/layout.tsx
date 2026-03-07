@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Persistwork — Your calendar has a lot to say about you",
-  description: "Persistwork reads your calendar, scores your day, and finds the quote that fits. Three numbers, one laugh, zero judgment.",
+  title: "PERSISTWORK — Your calendar has a lot to say about you",
+  description: "PERSISTWORK reads your calendar, scores your day, and finds the quote that fits. Three numbers, one laugh, zero judgment.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Persist"
+    title: "PERSISTWORK"
   }
 };
 

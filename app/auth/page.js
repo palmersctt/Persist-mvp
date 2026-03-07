@@ -77,7 +77,7 @@ export default function AuthPage() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-wide mb-2">PERSIST</h1>
+          <h1 className="text-2xl font-bold tracking-wide mb-2">PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></h1>
           <p className="text-gray-500 text-sm">Your calendar has a lot to say about you</p>
         </div>
 

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useWorkHealth } from '../hooks/useWorkHealth'
-import ShareCard from './ShareCard'
+import CardContent from './CardContent'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
 import PersistLogo from './PersistLogo'
 import { detectMood } from '../lib/mood'
@@ -191,7 +191,7 @@ export default function WorkHealthDashboard() {
         <div className="text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-3">
             <PersistLogo size={28} variant="light" />
-            <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
+            <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
           </div>
           <div className="text-gray-500 text-sm">Loading...</div>
         </div>
@@ -207,7 +207,7 @@ export default function WorkHealthDashboard() {
             <div className="text-center mb-8 flex flex-col items-center">
               <div className="flex items-center gap-2 mb-2">
                 <PersistLogo size={28} variant="light" />
-                <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
+                <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
               </div>
               <p className="text-gray-500 text-sm">Your calendar has a lot to say about you</p>
             </div>
@@ -266,7 +266,7 @@ export default function WorkHealthDashboard() {
           <div className="mb-8 flex flex-col items-center">
             <div className="flex items-center gap-2 mb-2">
               <PersistLogo size={28} variant="light" />
-              <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
+              <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
             </div>
             <p className="text-gray-500 text-sm">Your calendar has a lot to say about you</p>
           </div>
@@ -295,7 +295,7 @@ export default function WorkHealthDashboard() {
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-2">
               <PersistLogo size={24} variant="light" />
-              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>Persistwork</span>
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
             </div>
             <button
               onClick={() => signOut()}
@@ -378,7 +378,7 @@ export default function WorkHealthDashboard() {
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <PersistLogo size={24} variant="light" />
-            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>Persistwork</span>
+            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
           </div>
           <div className="flex items-center space-x-4">
             <button
@@ -496,7 +496,7 @@ export default function WorkHealthDashboard() {
                   />
                 ) : (
                   <div ref={cardRef}>
-                    <ShareCard
+                    <CardContent
                       quote={workHealth.ai.heroMessage.quote}
                       source={workHealth.ai.heroMessage.source}
                       subtitle={workHealth.ai.heroMessage.subtitle}
@@ -574,7 +574,7 @@ export default function WorkHealthDashboard() {
                   {/* Branding */}
                   <div className="flex items-center justify-center gap-1.5 mt-3">
                     <PersistLogo size={12} variant="light" />
-                    <span className="text-[9px] tracking-widest" style={{ color: 'rgba(255,255,255,0.15)' }}>Persistwork.com</span>
+                    <span className="text-[9px] tracking-widest" style={{ color: 'rgba(255,255,255,0.15)' }}>PERSIST<span style={{ color: 'rgba(232,125,58,0.3)' }}>WORK</span>.com</span>
                   </div>
                 </div>
 

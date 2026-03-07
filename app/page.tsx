@@ -28,7 +28,7 @@ export default function Home() {
       <div className="text-center flex flex-col items-center">
         <div className="flex items-center gap-2 mb-3">
           <PersistLogo size={28} variant="light" />
-          <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>Persistwork</span>
+          <span className="text-2xl font-semibold text-white" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
         </div>
         <div className="text-gray-500 text-sm">Loading...</div>
       </div>

@@ -663,7 +663,7 @@ export default function LandingPage() {
       <div className="lp-wrap">
         {/* NAV */}
         <nav className="lp-nav">
-          <div className="lp-logo">persist<span>work</span></div>
+          <div className="lp-logo">PERSIST<span>WORK</span></div>
           <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={() => scrollToSection('why-it-matters')}>Why it matters</button>
@@ -701,7 +701,7 @@ export default function LandingPage() {
           <div className="lp-hero" style={{ padding: 0, textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
 <h1>Your calendar has a<br /><em>lot</em> to say about you.</h1>
             <p className="lp-hero-sub">
-              Persistwork reads your day, surfaces what&apos;s actually draining you, and finds a laugh that fits &mdash; because the least your calendar owes you is a joke.
+              PERSISTWORK reads your day, surfaces what&apos;s actually draining you, and finds a laugh that fits &mdash; because the least your calendar owes you is a joke.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -722,7 +722,7 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
               <h2>A day in the life of <em>your</em> calendar</h2>
-              <p>This is a real kind of Tuesday. Eight meetings, one break, zero flow. Persistwork reads between the lines and tells you what&apos;s actually going on.</p>
+              <p>This is a real kind of Tuesday. Eight meetings, one break, zero flow. PERSISTWORK reads between the lines and tells you what&apos;s actually going on.</p>
             </div>
 
             <div className="lp-demo-wrap">
@@ -834,7 +834,7 @@ export default function LandingPage() {
               <div className="lp-why-copy">
                 <div className="lp-section-label">Why it matters</div>
                 <h2>The exhaustion is real.<br />Now it&apos;s <em>visible</em>.</h2>
-                <p>Most calendar apps just show you <strong>what</strong> is happening. Persistwork tells you <strong>why you feel the way you do</strong> &mdash; the fragmentation, the back-to-backs, the meetings that eat your thinking time.</p>
+                <p>Most calendar apps just show you <strong>what</strong> is happening. PERSISTWORK tells you <strong>why you feel the way you do</strong> &mdash; the fragmentation, the back-to-backs, the meetings that eat your thinking time.</p>
                 <p>We&apos;re not here to fix your calendar (that&apos;s a different problem). We&apos;re here to name it, score it, and help you laugh instead of spiral.</p>
               </div>
               <div className="lp-why-stats">
@@ -875,7 +875,7 @@ export default function LandingPage() {
 
         {/* FOOTER */}
         <footer className="lp-footer">
-          <span>&copy; 2026 Persistwork</span>
+          <span>&copy; 2026 PERSISTWORK</span>
           <div className="lp-footer-links">
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>

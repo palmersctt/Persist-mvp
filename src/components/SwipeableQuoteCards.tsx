@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion'
-import { type Mood, MOODS } from '../lib/mood'
+import { type Mood } from '../lib/mood'
 import { trackEvent } from '../lib/trackEvent'
 import CardContent from './CardContent'
 import type { HeroMessage } from '../hooks/useWorkHealth'

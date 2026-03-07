@@ -1,56 +1,31 @@
-# Persist MVP - Dashboard-Only Architecture
+# Persist MVP
 
 ## Overview
-Persist MVP has been refactored to focus on a clean dashboard interface with mock meeting data while preserving the Google Calendar API infrastructure for future activation.
+Persist MVP is a work-health dashboard that analyzes meeting patterns and provides daily insights through a card-based interface.
 
-## Current Architecture
+## Architecture
 
-### Dashboard Features
-- **Today's Meetings**: List of meetings with real-time status (upcoming/active/completed)
-- **Performance Metrics**: Mock performance scores and engagement levels
-- **Learning Correlations**: AI-generated insights about meeting patterns
-- **Weekly Trends**: Visual representation of weekly performance
-- **Meeting Details**: Click any meeting for expanded view with key points and action items
-- **Feedback System**: Post-meeting feedback collection interface
+### Surfaces
+- **Landing page** (`app/page.tsx`) — marketing site with demo card
+- **Dashboard** (`app/dashboard/page.tsx`) — authenticated work-health dashboard
 
-### Data Architecture
+### Key Directories
 ```
-lib/
-├── mockData.js         # Mock meeting data generator
-├── dataService.js      # Data service with feature flag
-├── googleCalendar.js   # Google Calendar API (preserved)
-└── supabase.js        # Database connection (preserved)
-```
-
-## Switching to Real Calendar Data
-
-To enable real Google Calendar data, simply change the feature flag in `lib/dataService.js`:
-
-```javascript
-// Change this line
-const USE_MOCK_DATA = true  // Current setting
-
-// To this
-const USE_MOCK_DATA = false // Enable real calendar data
+app/                  # Next.js App Router pages
+src/
+├── components/       # React components
+├── hooks/            # Custom React hooks
+├── lib/              # Core logic (mood system, tracking)
+├── services/         # External service integrations
+└── utils/            # Utility functions
+lib/                  # Data services (calendar, Supabase)
 ```
 
-## Mock Data Structure
-
-The mock data service provides realistic meeting patterns including:
-- 6 daily meetings with varying types (Standup, 1:1, Review, Strategic, etc.)
-- Dynamic status based on current time
-- Performance scores (75-92%)
-- Engagement levels (High/Medium/Low)
-- Key discussion points and action items
-- Learning correlations with confidence scores
-
-## Key Benefits of This Architecture
-
-1. **Clean MVP Focus**: Single dashboard view without navigation complexity
-2. **Realistic Data**: Mock data follows real meeting patterns
-3. **Easy Migration**: One-line change to switch to real calendar data
-4. **Preserved Infrastructure**: OAuth, API routes, and calendar integration ready
-5. **Performance**: Fast loading with mock data, no API delays during development
+### Card System
+- `src/components/CardContent.tsx` — single card renderer used everywhere
+- `src/lib/mood.ts` — mood types, tier classification, gradient definitions
+- Three tiers: bad (dark), ok (warm gray), good (white/cream)
+- See `BRAND.md` for color tokens and card design tokens
 
 ## Running the Application
 
@@ -60,22 +35,8 @@ npm run build   # Build for production
 npm run start   # Start production server
 ```
 
-## Environment Variables Required (for future calendar integration)
+## Testing
 
-```env
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_secret
+```bash
+npx vitest run  # Run unit tests
 ```
-
-## Future Enhancements
-
-When ready to activate real calendar data:
-1. Set up Google OAuth credentials
-2. Configure environment variables
-3. Change `USE_MOCK_DATA` to `false`
-4. Add user authentication flow
-5. Implement data persistence with Supabase
-
-The architecture is designed to make this transition seamless without requiring code restructuring.
