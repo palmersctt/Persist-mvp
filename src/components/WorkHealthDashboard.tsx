@@ -9,6 +9,7 @@ import PersistLogo from './PersistLogo'
 import { detectMood } from '../lib/mood'
 import { trackEvent } from '../lib/trackEvent'
 import { toPng } from 'html-to-image'
+import WhyMood from './WhyMood'
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -492,7 +493,6 @@ export default function WorkHealthDashboard() {
                     mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
                     aiGenerated={aiStatus === 'success'}
                     aiError={workHealth._aiError}
-                    onMetricClick={(metric) => { setActiveTab(metric); trackEvent('metric_click', { metric }); }}
                     activeCardRef={(el) => { (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
                     onEngagement={trackEngagement}
                   />
@@ -506,14 +506,10 @@ export default function WorkHealthDashboard() {
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
                       mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
-                      onMetricClick={(metric) => { setActiveTab(metric); trackEvent('metric_click', { metric }); }}
                     />
                   </div>
                 )}
-                <p className="text-center text-xs font-medium mt-3 mb-1" style={{ color: 'var(--text-secondary)' }}>
-                  Tap a metric to see details
-                </p>
-                <div className="mt-2">
+                <div className="mt-3">
                   <button
                     onClick={handleShare}
                     disabled={shareState === 'generating'}
@@ -526,6 +522,21 @@ export default function WorkHealthDashboard() {
                     {shareState === 'generating' ? 'Generating image\u2026' : 'Share today\u2019s quote \u2192'}
                   </button>
                 </div>
+                <WhyMood
+                  mood={detectMood(
+                    workHealth.adaptivePerformanceIndex,
+                    workHealth.cognitiveResilience,
+                    workHealth.workRhythmRecovery
+                  )}
+                  narrative={workHealth.ai.whyNarrative ?? ''}
+                  focus={workHealth.adaptivePerformanceIndex}
+                  strain={workHealth.cognitiveResilience}
+                  balance={workHealth.workRhythmRecovery}
+                  onMetricClick={(metric) => {
+                    setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
+                    trackEvent('metric_click', { metric, source: 'why_mood' })
+                  }}
+                />
               </section>
             ) : (
               <section className="max-w-xs mx-auto">

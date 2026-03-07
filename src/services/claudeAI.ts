@@ -84,6 +84,7 @@ interface PersonalizedInsightsResponse {
   predictiveAlerts: string[];
   heroMessage?: string | HeroMessage;
   heroMessages?: HeroMessages;
+  whyNarrative?: string;
   comicReliefSaying?: string;
   /** True when quotes came from Claude AI, absent/false when from local fallback */
   _aiGenerated?: boolean;
@@ -181,6 +182,8 @@ MUST include at least 2 stand-up comedian quotes (from specials or bits). The re
 Comedians to draw from: Mitch Hedberg, John Mulaney, Nate Bargatze, Ali Wong, Anthony Jeselnik, Hannibal Buress, Dave Chappelle, Rodney Dangerfield, Demetri Martin, Steven Wright, Hasan Minhaj, Taylor Tomlinson, Mike Birbiglia, Bo Burnham, Gary Gulman, etc.
 All 5 must be different sources. Go deep — surprise me.
 Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
+
+WHY NARRATIVE — 2-3 sentences in the same dry, observational voice as the quotes. Explain what the calendar data actually showed today — what happened, why the mood label fits. No metric names, no numbers, no calendar jargon. Plain language, like you're telling a friend.
 ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these recently shown quotes:\n${recentQuotes.map(q => `- "${q}"`).join('\n')}\n` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
 
 {
@@ -192,6 +195,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
     { "quote": "", "source": "", "subtitle": "" },
     { "quote": "", "source": "", "subtitle": "" }
   ],
+  "whyNarrative": "",
   "overview": { "title": "", "message": "", "action": "", "severity": "info" },
   "performance": { "title": "", "message": "", "action": "", "severity": "info" },
   "resilience": { "title": "", "message": "", "action": "", "severity": "info" },
@@ -592,6 +596,7 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
       parsedResponse.riskFactors = parsedResponse.riskFactors || [];
       parsedResponse.opportunities = parsedResponse.opportunities || [];
       parsedResponse.predictiveAlerts = parsedResponse.predictiveAlerts || [];
+      parsedResponse.whyNarrative = parsedResponse.whyNarrative || '';
 
       parsedResponse._aiGenerated = true;
       return parsedResponse;

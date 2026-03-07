@@ -53,6 +53,7 @@ interface AIPersonalizedInsights {
   recommendations?: AIRecommendation[];
   heroMessage?: string | HeroMessage;
   heroMessages?: HeroMessage[];
+  whyNarrative?: string;
 }
 
 interface ScheduleAnalysis {

@@ -1,0 +1,85 @@
+'use client'
+
+import { useState } from 'react'
+
+interface Props {
+  mood: string
+  narrative: string
+  focus: number
+  strain: number
+  balance: number
+  onMetricClick: (metric: string) => void
+}
+
+export default function WhyMood({ mood, narrative, focus, strain, balance, onMetricClick }: Props) {
+  const [open, setOpen] = useState(false)
+
+  const metrics = [
+    { key: 'performance',    label: 'Focus',   val: focus },
+    { key: 'resilience',     label: 'Strain',  val: strain },
+    { key: 'sustainability', label: 'Balance', val: balance },
+  ]
+
+  return (
+    <div className="max-w-xs mx-auto w-full mt-2 mb-6">
+
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex justify-between items-center py-2 bg-transparent border-none cursor-pointer"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        <span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          Why {mood}?
+        </span>
+        <span style={{
+          fontSize: '0.7rem',
+          display: 'inline-block',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.3s',
+          color: 'var(--text-muted)'
+        }}>↓</span>
+      </button>
+
+      {open && (
+        <p style={{
+          fontSize: '0.78rem',
+          color: 'var(--text-secondary)',
+          lineHeight: 1.7,
+          marginBottom: '1rem',
+          paddingBottom: '0.75rem',
+          borderBottom: '1px solid #E7E0D8'
+        }}>
+          {narrative}
+        </p>
+      )}
+
+      <div style={{ borderTop: '1px solid #E7E0D8' }}>
+        {metrics.map(({ key, label, val }) => (
+          <button
+            key={key}
+            onClick={() => onMetricClick(key)}
+            className="w-full flex items-center bg-transparent border-none cursor-pointer"
+            style={{ padding: '14px 0', borderBottom: '1px solid #E7E0D8', gap: '12px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: '90px' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.02em' }}>
+                {label}
+              </span>
+              <span style={{
+                fontSize: '1.25rem', fontWeight: 300, color: 'var(--text-primary)',
+                fontFeatureSettings: '"tnum"', letterSpacing: '-0.03em'
+              }}>
+                {val}
+              </span>
+            </div>
+            <div style={{ flex: 1, height: '3px', background: 'rgba(28,25,23,0.08)', borderRadius: '2px' }}>
+              <div style={{ height: '3px', width: `${val}%`, background: '#E87D3A', borderRadius: '2px', transition: 'width 0.6s ease' }} />
+            </div>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>›</span>
+          </button>
+        ))}
+      </div>
+
+    </div>
+  )
+}
