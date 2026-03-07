@@ -15,8 +15,8 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
       <div
         className="comic-relief-saying"
         style={{
-          background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.05))',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
+          background: 'linear-gradient(135deg, rgba(232, 125, 58, 0.1), rgba(232, 125, 58, 0.05))',
+          border: '2px solid rgba(232, 125, 58, 0.3)',
           borderRadius: '16px',
           padding: '16px 24px',
           margin: '16px auto',
@@ -24,7 +24,7 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(255, 215, 0, 0.1)',
+          boxShadow: '0 8px 32px rgba(232, 125, 58, 0.1)',
         }}
       >
         {/* Decorative elements */}
@@ -35,7 +35,7 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
             left: '12px',
             width: '6px',
             height: '6px',
-            backgroundColor: '#FFD700',
+            backgroundColor: '#E87D3A',
             borderRadius: '50%',
             opacity: 0.6,
           }}
@@ -47,7 +47,7 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
             right: '12px',
             width: '6px',
             height: '6px',
-            backgroundColor: '#FFD700',
+            backgroundColor: '#E87D3A',
             borderRadius: '50%',
             opacity: 0.6,
           }}
@@ -56,10 +56,11 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
         {/* Main saying text */}
         <div
           style={{
-            color: '#FFD700',
+            color: '#E87D3A',
             fontSize: '16px',
             fontWeight: 'bold',
-            fontFamily: '"Courier New", monospace',
+            fontFamily: "'Lora', serif",
+            fontStyle: 'italic',
             letterSpacing: '0.5px',
             lineHeight: '1.4',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
@@ -78,7 +79,7 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
             letterSpacing: '0.3px',
           }}
         >
-          🎬 Movie Quote of the Day
+          Movie Quote of the Day
         </div>
 
         {/* Bottom decorative line */}
@@ -89,7 +90,7 @@ export default function ComicReliefSaying({ saying, className = '' }: ComicRelie
             left: '20%',
             right: '20%',
             height: '2px',
-            background: 'linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(232, 125, 58, 0.5), transparent)',
           }}
         />
       </div>
@@ -105,8 +106,8 @@ export function ComicReliefSayingCompact({ saying }: ComicReliefSayingProps) {
     <div
       className="comic-relief-compact"
       style={{
-        backgroundColor: 'rgba(255, 215, 0, 0.08)',
-        border: '1px solid rgba(255, 215, 0, 0.2)',
+        backgroundColor: 'rgba(232, 125, 58, 0.08)',
+        border: '1px solid rgba(232, 125, 58, 0.2)',
         borderRadius: '12px',
         padding: '12px 16px',
         margin: '8px 0',
@@ -115,10 +116,11 @@ export function ComicReliefSayingCompact({ saying }: ComicReliefSayingProps) {
     >
       <div
         style={{
-          color: '#FFD700',
+          color: '#E87D3A',
           fontSize: '14px',
           fontWeight: '600',
-          fontFamily: '"Courier New", monospace',
+          fontFamily: "'Lora', serif",
+          fontStyle: 'italic',
           letterSpacing: '0.3px',
         }}
       >

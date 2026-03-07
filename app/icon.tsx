@@ -14,13 +14,13 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#1C1917',
           borderRadius: 6,
         }}
       >
         <svg width="16" height="16" viewBox="0 0 100 100" fill="none">
           <circle cx="50" cy="50" r="48" fill="#ffffff" />
-          <path d="M38 30 L62 50 L38 70" stroke="#1a1a1a" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M38 30 L62 50 L38 70" stroke="#1C1917" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       </div>
     ),

@@ -102,13 +102,23 @@ Amber (`#E87D3A`) is the only accent color. It appears in:
 - Brand wordmark highlight ("PERSIST**WORK**")
 - Section labels and eyebrow tags
 
-## Semantic Colors (landing page only)
+## Semantic Colors
 
-Used for insight cards and calendar events, not in the card system:
+Used for insight cards, calendar events, and dashboard metrics:
 
-| Token      | Hex       | Purpose              |
-|------------|-----------|----------------------|
-| `--sage`   | `#5A7A5C` | Balance / green      |
-| `--rose`   | `#C0544A` | Strain / red         |
+| Token          | Hex       | Purpose                        |
+|----------------|-----------|--------------------------------|
+| `--sage`       | `#5A7A5C` | Focus / green                  |
+| `--sage-light` | `#EBF2EB` | Light sage background          |
+| `--rose`       | `#C0544A` | Strain / red                   |
+| `--rose-light` | `#FAEAE9` | Light rose background          |
 
 These do NOT appear on share cards. Cards use only the tier palette above.
+
+## Dashboard Metric Mapping
+
+| Metric   | Color Token | Hex       |
+|----------|-------------|-----------|
+| Focus    | `--sage`    | `#5A7A5C` |
+| Strain   | `--rose`    | `#C0544A` |
+| Balance  | `--amber`   | `#E87D3A` |

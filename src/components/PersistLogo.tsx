@@ -5,8 +5,8 @@ interface PersistLogoProps {
 }
 
 export default function PersistLogo({ size = 28, variant = 'dark', className }: PersistLogoProps) {
-  const circleFill = variant === 'dark' ? '#1a1a1a' : '#ffffff'
-  const chevronStroke = variant === 'dark' ? '#ffffff' : '#1a1a1a'
+  const circleFill = variant === 'dark' ? '#1C1917' : '#ffffff'
+  const chevronStroke = variant === 'dark' ? '#ffffff' : '#1C1917'
 
   return (
     <svg

@@ -20,11 +20,11 @@ const MOODS: Record<string, { name: string; gradient: [string, string] }> = {
   EVENT CATEGORIES
 */
 const CAT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  heavy:   { bg: 'rgba(232,93,74,0.18)',  border: '#e85d4a', text: '#fca5a5' },
-  collab:  { bg: 'rgba(139,92,246,0.16)', border: '#8b5cf6', text: '#c4b5fd' },
-  light:   { bg: 'rgba(59,130,246,0.16)', border: '#3b82f6', text: '#93c5fd' },
-  focus:   { bg: 'rgba(16,185,129,0.14)', border: '#10b981', text: '#6ee7b7' },
-  benefit: { bg: 'rgba(236,72,153,0.14)', border: '#ec4899', text: '#f9a8d4' },
+  heavy:   { bg: 'rgba(192,84,74,0.18)',  border: '#C0544A', text: '#FAEAE9' },
+  collab:  { bg: 'rgba(232,125,58,0.16)', border: '#E87D3A', text: '#FDF0E6' },
+  light:   { bg: 'rgba(168,162,158,0.16)', border: '#A8A29E', text: '#E7E0D8' },
+  focus:   { bg: 'rgba(90,122,92,0.14)',  border: '#5A7A5C', text: '#EBF2EB' },
+  benefit: { bg: 'rgba(90,122,92,0.12)',  border: '#5A7A5C', text: '#EBF2EB' },
 }
 
 interface CalEvent {
@@ -227,7 +227,7 @@ export default function CauseEffectDemo({ onGetStarted }: { onGetStarted?: () =>
   const hours = ['9am','10','11','12pm','1','2','3','4','5pm']
 
   return (
-    <div style={{ maxWidth: 380, margin: '0 auto', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ maxWidth: 380, margin: '0 auto', fontFamily: "'Inter', sans-serif" }}>
 
       {/* Toggle */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, justifyContent: 'center' }}>
@@ -245,7 +245,7 @@ export default function CauseEffectDemo({ onGetStarted }: { onGetStarted?: () =>
 
       {/* Container */}
       <div style={{
-        background: 'linear-gradient(155deg, #111827, #0a0f1a)',
+        background: 'linear-gradient(155deg, #1C1917, #0E0C0B)',
         borderRadius: 20, padding: 20, minHeight: 480,
         position: 'relative', overflow: 'hidden',
         border: '1px solid rgba(255,255,255,0.06)',
@@ -353,7 +353,7 @@ export default function CauseEffectDemo({ onGetStarted }: { onGetStarted?: () =>
           <div style={{ marginTop: 14, padding: '0 4px' }}>
             {s.insights.map((ins, i) => {
               const label = ins.metric === 'focus' ? 'FOCUS' : ins.metric === 'strain' ? 'STRAIN' : 'BALANCE'
-              const labelColor = ins.metric === 'focus' ? 'rgba(96,165,250,0.8)' : ins.metric === 'strain' ? 'rgba(251,191,36,0.8)' : 'rgba(52,211,153,0.8)'
+              const labelColor = ins.metric === 'focus' ? 'rgba(90,122,92,0.9)' : ins.metric === 'strain' ? 'rgba(192,84,74,0.9)' : 'rgba(232,125,58,0.9)'
               return (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0',
@@ -384,12 +384,12 @@ export default function CauseEffectDemo({ onGetStarted }: { onGetStarted?: () =>
         <button
           onClick={onGetStarted}
           style={{
-            padding: '14px 32px', border: '2px solid #111827', borderRadius: 10,
-            background: 'transparent', color: '#111827', fontSize: 16, fontWeight: 600,
+            padding: '14px 32px', border: '2px solid #1C1917', borderRadius: 10,
+            background: 'transparent', color: '#1C1917', fontSize: 16, fontWeight: 600,
             cursor: 'pointer', transition: 'all 0.3s ease',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#111827'; e.currentTarget.style.color = '#fff' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#111827' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#1C1917'; e.currentTarget.style.color = '#fff' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#1C1917' }}
         >
           See What Your Day Gets
         </button>
