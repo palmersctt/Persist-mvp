@@ -5,8 +5,8 @@ export default function TermsOfService() {
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-light text-gray-900 mb-8">Terms of Service</h1>
-        <p className="text-sm text-gray-600 mb-8">Effective Date: January 5, 2025</p>
-        
+        <p className="text-sm text-gray-600 mb-8">Effective Date: March 7, 2026</p>
+
         <div className="space-y-8 text-gray-700 leading-relaxed">
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">1. Acceptance of Terms</h2>
@@ -28,6 +28,8 @@ export default function TermsOfService() {
               <li>Provides real-time Focus, Strain, and Balance scores based on your calendar</li>
               <li>Detects your daily mood — from Flow State to Survival Mode</li>
               <li>Generates a shareable daily card with humor that matches your vibe</li>
+              <li>Stores a minimal account profile to support your experience across sessions</li>
+              <li>Records anonymized in-app usage events to improve the product</li>
               <li>Does not store your calendar data permanently</li>
             </ul>
           </section>
@@ -41,22 +43,27 @@ export default function TermsOfService() {
               <li>Authorize us to access your Google Calendar data on a read-only basis</li>
               <li>Confirm you have the right to grant such access</li>
               <li>Understand that we use OAuth 2.0 for secure authentication</li>
-              <li>Can revoke access at any time through your Google account settings</li>
+              <li>Agree that we may store your name, email address, profile image, and login timestamps to maintain your account</li>
+              <li>Can revoke calendar access at any time through your Google account settings</li>
+              <li>Can request full account and data deletion by contacting us at <a href="mailto:Persistwork1@gmail.com" className="text-blue-600 hover:underline">Persistwork1@gmail.com</a></li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-light text-gray-900 mb-4">4. Data Usage and Privacy</h2>
+            <h2 className="text-2xl font-light text-gray-900 mb-4">4. Data Collection and Privacy</h2>
             <p>
               Your privacy is important to us. Our data practices include:
             </p>
             <ul className="list-disc pl-6 mt-3 space-y-2">
-              <li>No permanent storage of your calendar data</li>
-              <li>Real-time analysis with session-based temporary storage only</li>
-              <li>No sharing of your data with third parties</li>
+              <li>No permanent storage of your calendar data — it is processed in real-time only</li>
+              <li>Storage of a minimal account profile (name, email, image, login timestamps) to support your account</li>
+              <li>Storage of anonymized usage events (card swipes, metric clicks, card shares) linked to your email to improve the product</li>
+              <li>No sharing or selling of your data with third parties</li>
               <li>No use of your data for advertising or marketing</li>
-              <li>Automatic data clearing when you sign out</li>
             </ul>
+            <p className="mt-3">
+              For full details, please review our <Link href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
+            </p>
           </section>
 
           <section>
@@ -108,7 +115,7 @@ export default function TermsOfService() {
               <li>That the Service will meet your specific requirements</li>
             </ul>
             <p className="mt-3 font-medium">
-              The insights provided are for informational purposes only and should not be considered medical, 
+              The insights provided are for informational purposes only and should not be considered medical,
               psychological, or professional advice.
             </p>
           </section>
@@ -116,7 +123,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">9. Limitation of Liability</h2>
             <p>
-              To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, 
+              To the maximum extent permitted by law, we shall not be liable for any indirect, incidental,
               special, consequential, or punitive damages resulting from your use or inability to use the Service.
             </p>
           </section>
@@ -124,8 +131,8 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">10. Changes to Terms</h2>
             <p>
-              We reserve the right to update these Terms at any time. We will notify users of any material 
-              changes by updating the &ldquo;Effective Date&rdquo; at the top of this page. Continued use of the Service 
+              We reserve the right to update these Terms at any time. We will notify users of any material
+              changes by updating the &ldquo;Effective Date&rdquo; at the top of this page. Continued use of the Service
               after changes constitutes acceptance of the new terms.
             </p>
           </section>
@@ -133,11 +140,15 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-light text-gray-900 mb-4">11. Contact Information</h2>
             <p>
-              For questions about these Terms of Service, please contact us through the application.
+              For questions about these Terms of Service, data deletion requests, or any other inquiries,
+              please contact us at{' '}
+              <a href="mailto:Persistwork1@gmail.com" className="text-blue-600 hover:underline">
+                Persistwork1@gmail.com
+              </a>.
             </p>
           </section>
         </div>
-        
+
         <div className="mt-12 pt-8 border-t border-gray-200">
           <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
             &larr; Back to Home
