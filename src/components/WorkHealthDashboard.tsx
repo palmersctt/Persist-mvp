@@ -650,7 +650,7 @@ export default function WorkHealthDashboard() {
                         workHealth.cognitiveResilience,
                         workHealth.workRhythmRecovery
                       )}
-                      narrative={workHealth.ai.whyNarrative ?? ''}
+                      narrative={workHealth.ai?.whyNarrative ?? ''}
                       focus={workHealth.adaptivePerformanceIndex}
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
