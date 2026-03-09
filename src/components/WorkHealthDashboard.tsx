@@ -25,7 +25,23 @@ export default function WorkHealthDashboard() {
   const cardRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus } = useWorkHealth(activeTab);
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus, isNewUser, connectionStartTime } = useWorkHealth(activeTab);
+
+  const [connectionExpired, setConnectionExpired] = useState(false);
+
+  // Timer to transition from "connecting" state to error state after timeout
+  useEffect(() => {
+    if (isNewUser && connectionStartTime && error && !workHealth) {
+      const elapsed = Date.now() - connectionStartTime;
+      const remaining = 25000 - elapsed;
+      if (remaining > 0) {
+        const timer = setTimeout(() => setConnectionExpired(true), remaining);
+        return () => clearTimeout(timer);
+      } else {
+        setConnectionExpired(true);
+      }
+    }
+  }, [isNewUser, connectionStartTime, error, workHealth]);
 
   const [loadingVerb, setLoadingVerb] = useState('Judging');
   const [dotCount, setDotCount] = useState(1);
@@ -284,6 +300,39 @@ export default function WorkHealthDashboard() {
             >
               <span>Sign in with Google</span>
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // For new users, show a "connecting" state instead of the error screen while retries are in progress
+  const isStillConnecting = !workHealth && isNewUser && !connectionExpired && (error || isLoading);
+
+  if (isStillConnecting) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+        <header className="px-6 py-6 sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm">
+          <div className="max-w-5xl mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <PersistLogo size={24} variant="dark" />
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-md mx-auto px-6 py-24 text-center">
+          <div className="mb-8">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
+                 style={{ backgroundColor: 'rgba(232,125,58,0.1)', border: '2px solid rgba(232,125,58,0.3)' }}>
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: '#E87D3A' }} />
+            </div>
+            <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              Setting up your workspace
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Connecting to your Google Calendar... This may take a moment for first-time setup.
+            </p>
           </div>
         </div>
       </div>

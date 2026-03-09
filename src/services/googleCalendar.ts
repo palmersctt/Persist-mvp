@@ -803,8 +803,8 @@ class GoogleCalendarService {
     return Math.min(100, Math.max(15, Math.round(performanceIndex)));
   }
 
-  async analyzeWorkHealth(userTimezone?: string): Promise<WorkHealthMetrics> {
-    const events = await this.getTodaysEvents(userTimezone);
+  async analyzeWorkHealth(userTimezone?: string, preloadedEvents?: CalendarEvent[]): Promise<WorkHealthMetrics> {
+    const events = preloadedEvents || await this.getTodaysEvents(userTimezone);
     
     // Separate different types of events for analysis
     const actualMeetings = events.filter(event => 
