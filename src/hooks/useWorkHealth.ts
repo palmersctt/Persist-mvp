@@ -126,6 +126,8 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   const [isLoading, setIsLoading] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const connectionStartTime = useRef<number | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [history, setHistory] = useState<HistoricalContext | null>(null);
 
@@ -484,10 +486,16 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       }
 
       if (!usedCache) {
-        // Retry up to 3 times with increasing delay (helps new users whose token isn't propagated yet)
-        if (retryCount < 3 && err instanceof Error && err.message.includes('HTTP error')) {
-          const delay = (retryCount + 1) * 2000; // 2s, 4s, 6s
-          console.log(`Attempt ${retryCount + 1} failed, retrying in ${delay / 1000}s...`);
+        // Retry with increasing delay — more retries for new users whose token may need time to propagate
+        const maxRetries = isNewUser ? 5 : 3;
+        const isRetryableError = err instanceof Error &&
+          (err.message.includes('HTTP error') || err.message.includes('sign out and sign back in'));
+
+        if (retryCount < maxRetries && isRetryableError) {
+          const delay = isNewUser
+            ? Math.min(3000 + retryCount * 2000, 7000) // 3s, 5s, 7s, 7s, 7s for new users
+            : (retryCount + 1) * 2000; // 2s, 4s, 6s for returning users
+          console.log(`Attempt ${retryCount + 1}/${maxRetries} failed, retrying in ${delay / 1000}s...`);
           setTimeout(() => {
             fetchWorkHealth(retryCount + 1);
           }, delay);
@@ -531,7 +539,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   }, [session, status]);
 
   // Initial fetch — only once when authenticated
-  // New users (no cache) get a short delay to let Google token propagate
+  // New users (no cache) get a longer delay to let Google token propagate
   useEffect(() => {
     if (status === 'authenticated' && session && !hasFetched.current) {
       hasFetched.current = true;
@@ -540,10 +548,13 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
 
       if (hasCache) {
         console.log('🔄 Initial data load (returning user)');
+        setIsNewUser(false);
         fetchWorkHealth(0);
       } else {
         console.log('🔄 Initial data load (new user, waiting for token propagation)');
-        setTimeout(() => fetchWorkHealth(0), 1500);
+        setIsNewUser(true);
+        connectionStartTime.current = Date.now();
+        setTimeout(() => fetchWorkHealth(0), 3000);
       }
     }
   }, [session, status, fetchWorkHealth, getCacheKey]);
@@ -592,6 +603,8 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     history,
     trackEngagement,
     isAuthenticated: status === 'authenticated',
+    isNewUser,
+    connectionStartTime: connectionStartTime.current,
     hasAIInsights: !!workHealth?.ai && workHealth.aiStatus === 'success',
     aiInsights: workHealth?.ai,
     aiStatus: workHealth?.aiStatus || 'unavailable',

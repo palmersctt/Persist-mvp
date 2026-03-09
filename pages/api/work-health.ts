@@ -1,8 +1,38 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
-import GoogleCalendarService, { WorkHealthMetrics, MeetingCategory } from '../../src/services/googleCalendar';
+import GoogleCalendarService, { WorkHealthMetrics, MeetingCategory, CalendarEvent } from '../../src/services/googleCalendar';
 import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext } from '../../src/services/claudeAI';
+
+/**
+ * Refresh a Google OAuth access token using the refresh token.
+ * Returns the new access token string, or null if refresh fails.
+ */
+async function refreshGoogleToken(refreshToken: string): Promise<string | null> {
+  try {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) return null;
+    return data.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+function isGoogleAuthError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return message.includes('401') || message.includes('403') || message.includes('Unauthorized') ||
+    message.includes('insufficient') || message.includes('Invalid Credentials');
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -58,11 +88,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const calendarService = new GoogleCalendarService();
-    await calendarService.initialize(session.accessToken);
+    let events: CalendarEvent[];
+    let workHealthData: WorkHealthMetrics;
 
-    // Get calendar events and work health analysis using CLIENT-SIDE detected timezone
-    const events = await calendarService.getTodaysEvents(userTimezone);
-    const workHealthData = await calendarService.analyzeWorkHealth(userTimezone);
+    // Fetch calendar data with server-side token refresh retry on auth errors
+    try {
+      await calendarService.initialize(session.accessToken!);
+      events = await calendarService.getTodaysEvents(userTimezone);
+      workHealthData = await calendarService.analyzeWorkHealth(userTimezone, events);
+    } catch (calendarErr) {
+      // If Google rejected the token (401/403), try refreshing and retrying once
+      if (isGoogleAuthError(calendarErr) && session.refreshToken) {
+        console.log('work-health: Google auth error, attempting token refresh...');
+        const newAccessToken = await refreshGoogleToken(session.refreshToken);
+        if (newAccessToken) {
+          console.log('work-health: Token refreshed, retrying calendar fetch...');
+          await calendarService.initialize(newAccessToken);
+          events = await calendarService.getTodaysEvents(userTimezone);
+          workHealthData = await calendarService.analyzeWorkHealth(userTimezone, events);
+        } else {
+          throw calendarErr;
+        }
+      } else {
+        throw calendarErr;
+      }
+    }
 
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
