@@ -389,9 +389,26 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
       severity: workHealth.workRhythmRecovery >= 75 ? 'success' : workHealth.workRhythmRecovery >= 50 ? 'info' : 'warning'
     };
 
+    // Build a fallback whyNarrative from the calendar data
+    const whyParts: string[] = [];
+    if (meetingCount === 0) {
+      whyParts.push('No meetings on the books today — your calendar is wide open.');
+    } else if (meetingCount <= 2) {
+      whyParts.push(`Light day with just ${meetingCount} meeting${meetingCount > 1 ? 's' : ''}, leaving most of your time free.`);
+    } else if (meetingCount <= 5) {
+      whyParts.push(`${meetingCount} meetings today with about ${focusHours} hours of focus time between them.`);
+    } else {
+      whyParts.push(`Heavy day — ${meetingCount} meetings eating into your calendar, leaving only ${focusHours} hours for actual work.`);
+    }
+    if (backToBack >= 3) {
+      whyParts.push(`${backToBack} of those are back-to-back, which will wear you down by the afternoon.`);
+    }
+    const whyNarrative = whyParts.join(' ');
+
     return {
       heroMessage,
       heroMessages,
+      whyNarrative,
       overview: overviewInsight,
       performance: performanceInsight,
       resilience: resilienceInsight,

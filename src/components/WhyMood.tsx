@@ -23,35 +23,39 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
   return (
     <div className="max-w-xs mx-auto w-full mt-2 mb-6">
 
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex justify-between items-center py-2 bg-transparent border-none cursor-pointer"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        <span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          Why {mood}?
-        </span>
-        <span style={{
-          fontSize: '0.7rem',
-          display: 'inline-block',
-          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.3s',
-          color: 'var(--text-muted)'
-        }}>↓</span>
-      </button>
+      {narrative ? (
+        <>
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="w-full flex justify-between items-center py-2 bg-transparent border-none cursor-pointer"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Why {mood}?
+            </span>
+            <span style={{
+              fontSize: '0.7rem',
+              display: 'inline-block',
+              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s',
+              color: 'var(--text-muted)'
+            }}>↓</span>
+          </button>
 
-      {open && (
-        <p style={{
-          fontSize: '0.78rem',
-          color: 'var(--text-secondary)',
-          lineHeight: 1.7,
-          marginBottom: '1rem',
-          paddingBottom: '0.75rem',
-          borderBottom: '1px solid #E7E0D8'
-        }}>
-          {narrative}
-        </p>
-      )}
+          {open && (
+            <p style={{
+              fontSize: '0.78rem',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.7,
+              marginBottom: '1rem',
+              paddingBottom: '0.75rem',
+              borderBottom: '1px solid #E7E0D8'
+            }}>
+              {narrative}
+            </p>
+          )}
+        </>
+      ) : null}
 
       <div style={{ borderTop: '1px solid #E7E0D8' }}>
         {metrics.map(({ key, label, val }) => (
