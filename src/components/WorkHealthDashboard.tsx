@@ -9,6 +9,7 @@ import PersistLogo from './PersistLogo'
 import { detectMood } from '../lib/mood'
 import { trackEvent } from '../lib/trackEvent'
 import { toPng } from 'html-to-image'
+import Image from 'next/image'
 import WhyMood from './WhyMood'
 
 export default function WorkHealthDashboard() {
@@ -468,7 +469,7 @@ export default function WorkHealthDashboard() {
                 style={{ borderColor: showProfile ? '#E7E0D8' : 'rgba(28,25,23,0.1)' }}
               >
                 {session?.user?.image ? (
-                  <img src={session.user.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <Image src={session.user.image} alt="" width={32} height={32} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(28,25,23,0.06)', color: 'var(--text-secondary)' }}>
                     {session?.user?.name?.[0]?.toUpperCase() || '?'}
@@ -483,7 +484,7 @@ export default function WorkHealthDashboard() {
                   <div className="p-4 border-b" style={{ borderColor: '#E7E0D8' }}>
                     <div className="flex items-center gap-3">
                       {session?.user?.image && (
-                        <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                        <Image src={session.user.image} alt="" width={40} height={40} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
                       )}
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session?.user?.name}</p>

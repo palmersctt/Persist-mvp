@@ -1,38 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
-import GoogleCalendarService, { WorkHealthMetrics, MeetingCategory, CalendarEvent } from '../../src/services/googleCalendar';
+import GoogleCalendarService, { WorkHealthMetrics, MeetingCategory } from '../../src/services/googleCalendar';
 import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext } from '../../src/services/claudeAI';
 
-/**
- * Refresh a Google OAuth access token using the refresh token.
- * Returns the new access token string, or null if refresh fails.
- */
-async function refreshGoogleToken(refreshToken: string): Promise<string | null> {
-  try {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) return null;
-    return data.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-function isGoogleAuthError(err: unknown): boolean {
-  const message = err instanceof Error ? err.message : String(err);
-  return message.includes('401') || message.includes('403') || message.includes('Unauthorized') ||
-    message.includes('insufficient') || message.includes('Invalid Credentials') || message.includes('invalid_grant');
-}
 
 const attemptCalendarFetch = async (accessToken: string, userTimezone: string) => {
   const svc = new GoogleCalendarService();
