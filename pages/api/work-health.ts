@@ -31,8 +31,16 @@ async function refreshGoogleToken(refreshToken: string): Promise<string | null> 
 function isGoogleAuthError(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
   return message.includes('401') || message.includes('403') || message.includes('Unauthorized') ||
-    message.includes('insufficient') || message.includes('Invalid Credentials');
+    message.includes('insufficient') || message.includes('Invalid Credentials') || message.includes('invalid_grant');
 }
+
+const attemptCalendarFetch = async (accessToken: string, userTimezone: string) => {
+  const svc = new GoogleCalendarService();
+  await svc.initialize(accessToken);
+  const events = await svc.getTodaysEvents(userTimezone);
+  const workHealthData = await svc.analyzeWorkHealth(userTimezone, events);
+  return { events, workHealthData };
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -87,30 +95,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const calendarService = new GoogleCalendarService();
-    let events: CalendarEvent[];
-    let workHealthData: WorkHealthMetrics;
+    let events;
+    let workHealthData;
 
-    // Fetch calendar data with server-side token refresh retry on auth errors
     try {
-      await calendarService.initialize(session.accessToken!);
-      events = await calendarService.getTodaysEvents(userTimezone);
-      workHealthData = await calendarService.analyzeWorkHealth(userTimezone, events);
-    } catch (calendarErr) {
-      // If Google rejected the token (401/403), try refreshing and retrying once
-      if (isGoogleAuthError(calendarErr) && session.refreshToken) {
-        console.log('work-health: Google auth error, attempting token refresh...');
-        const newAccessToken = await refreshGoogleToken(session.refreshToken);
-        if (newAccessToken) {
-          console.log('work-health: Token refreshed, retrying calendar fetch...');
-          await calendarService.initialize(newAccessToken);
-          events = await calendarService.getTodaysEvents(userTimezone);
-          workHealthData = await calendarService.analyzeWorkHealth(userTimezone, events);
-        } else {
-          throw calendarErr;
+      const result = await attemptCalendarFetch(session.accessToken!, userTimezone);
+      events = result.events;
+      workHealthData = result.workHealthData;
+    } catch (calError) {
+      const msg = calError instanceof Error ? calError.message : String(calError);
+      const isAuthError = msg.includes('401') || msg.includes('403') || msg.includes('invalid_grant');
+
+      if (isAuthError && session.refreshToken) {
+        console.log('Google API auth error, attempting server-side token refresh...');
+        try {
+          const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: process.env.GOOGLE_CLIENT_ID!,
+              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+              grant_type: 'refresh_token',
+              refresh_token: session.refreshToken,
+            }),
+          });
+
+          if (refreshRes.ok) {
+            const tokens = await refreshRes.json();
+            console.log('Server-side token refresh succeeded, retrying...');
+            const result = await attemptCalendarFetch(tokens.access_token, userTimezone);
+            events = result.events;
+            workHealthData = result.workHealthData;
+          } else {
+            throw calError;
+          }
+        } catch {
+          throw calError;
         }
       } else {
-        throw calendarErr;
+        throw calError;
       }
     }
 

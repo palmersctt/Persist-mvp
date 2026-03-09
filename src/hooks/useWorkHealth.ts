@@ -434,6 +434,9 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         if (errorData.needsReauth) {
           throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
         }
+        if (errorData.retryable) {
+          throw new Error(`Calendar not ready (${response.status})`);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -486,19 +489,21 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       }
 
       if (!usedCache) {
-        // Retry with increasing delay — more retries for new users whose token may need time to propagate
-        const maxRetries = isNewUser ? 5 : 3;
-        const isRetryableError = err instanceof Error &&
-          (err.message.includes('HTTP error') || err.message.includes('sign out and sign back in'));
+        const isRetryable =
+          (err instanceof Error && err.message.includes('HTTP error')) ||
+          (err instanceof Error && err.message.includes('Calendar not ready')) ||
+          (err instanceof Error && err.message.includes('503'));
 
-        if (retryCount < maxRetries && isRetryableError) {
-          const delay = isNewUser
-            ? Math.min(3000 + retryCount * 2000, 7000) // 3s, 5s, 7s, 7s, 7s for new users
-            : (retryCount + 1) * 2000; // 2s, 4s, 6s for returning users
-          console.log(`Attempt ${retryCount + 1}/${maxRetries} failed, retrying in ${delay / 1000}s...`);
-          setTimeout(() => {
-            fetchWorkHealth(retryCount + 1);
-          }, delay);
+        const cacheKey = getCacheKey();
+        const isNewUserCheck = cacheKey ? !localStorage.getItem(cacheKey) : true;
+        const maxRetries = isNewUserCheck ? 5 : 3;
+
+        if (retryCount < maxRetries && isRetryable) {
+          const delay = isNewUserCheck
+            ? Math.min(2000 * Math.pow(1.5, retryCount), 12000)
+            : (retryCount + 1) * 2000;
+          console.log(`Attempt ${retryCount + 1}/${maxRetries} failed, retrying in ${Math.round(delay / 1000)}s...`);
+          setTimeout(() => fetchWorkHealth(retryCount + 1), delay);
           return;
         }
 

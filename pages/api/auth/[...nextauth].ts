@@ -46,6 +46,37 @@ async function refreshAccessToken(token: any) {
   }
 }
 
+/**
+ * Quick ping to Google Calendar API to verify the token actually works.
+ */
+async function validateGoogleToken(accessToken: string): Promise<boolean> {
+  try {
+    const res = await fetch(
+      'https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=1',
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Wait for a freshly issued Google token to become usable.
+ * Google sometimes takes 1-3s to activate a new token after OAuth consent.
+ */
+async function waitForTokenActivation(
+  accessToken: string,
+  maxAttempts = 3,
+  delayMs = 1500
+): Promise<boolean> {
+  for (let i = 0; i < maxAttempts; i++) {
+    if (await validateGoogleToken(accessToken)) return true;
+    if (i < maxAttempts - 1) await new Promise(r => setTimeout(r, delayMs));
+  }
+  return false;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -54,7 +85,7 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly',
-          prompt: 'consent',
+          prompt: 'select_account',
           access_type: 'offline',
           response_type: 'code',
         },
@@ -117,7 +148,22 @@ export const authOptions: NextAuthOptions = {
         if (account) {
           token.accessToken = account.access_token
           token.refreshToken = account.refresh_token
-          token.expiresAt = account.expires_at // Unix timestamp
+          token.expiresAt = account.expires_at
+
+          // Block until the token is actually usable by Google Calendar API
+          // This adds ~1-4s to the OAuth redirect but prevents the error screen entirely
+          const isValid = await waitForTokenActivation(account.access_token as string);
+
+          if (!isValid && account.refresh_token) {
+            console.warn('Token not activated after retries, forcing refresh...');
+            const refreshed = await refreshAccessToken({ refreshToken: account.refresh_token });
+            if (!refreshed.error) {
+              token.accessToken = refreshed.accessToken;
+              token.expiresAt = refreshed.expiresAt;
+              token.refreshToken = refreshed.refreshToken;
+            }
+          }
+
           return token
         }
 
