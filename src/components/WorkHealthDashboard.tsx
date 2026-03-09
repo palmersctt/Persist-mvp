@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
-import { useWorkHealth } from '../hooks/useWorkHealth'
+import { useWorkHealth, type HeroMessage } from '../hooks/useWorkHealth'
 import CardContent from './CardContent'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
 import PersistLogo from './PersistLogo'
@@ -421,6 +421,13 @@ export default function WorkHealthDashboard() {
     );
   }
 
+  // Derive quote card state for the overview tab
+  const heroMsg = workHealth?.ai?.heroMessage;
+  const heroMsgs = workHealth?.ai?.heroMessages;
+  const hasValidHero = !!heroMsg && typeof heroMsg === 'object' && 'quote' in heroMsg && !!(heroMsg as HeroMessage).quote;
+  const hasValidHeroMessages = !!heroMsgs && Array.isArray(heroMsgs) && heroMsgs.length > 0 && !!heroMsgs[0]?.quote;
+  const quoteStillLoading = isLoading || (isAILoading && !hasValidHero && !hasValidHeroMessages);
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       {/* Clean Header */}
@@ -528,181 +535,159 @@ export default function WorkHealthDashboard() {
         {/* Overview Tab - All current content */}
         {activeTab === 'overview' && (
           <>
-            {/* Quote Card Hero — 3 states: loading skeleton, full content, fallback */}
-            {(() => {
-              const heroMsg = workHealth?.ai?.heroMessage;
-              const heroMsgs = workHealth?.ai?.heroMessages;
-              const hasValidHero = heroMsg && typeof heroMsg === 'object' && heroMsg !== null && 'quote' in heroMsg && heroMsg.quote;
-              const hasValidHeroMessages = heroMsgs && Array.isArray(heroMsgs) && heroMsgs.length > 0 && heroMsgs[0]?.quote;
-              const stillLoading = isLoading || (isAILoading && !hasValidHero && !hasValidHeroMessages);
-
-              // STATE 1: Loading — show skeleton placeholder
-              if (stillLoading) {
-                return (
-                  <section className="max-w-xs mx-auto">
-                    <style>{`
-                      @keyframes shimmer {
-                        0% { transform: translateX(-100%); }
-                        100% { transform: translateX(100%); }
-                      }
-                      .skeleton-bar {
-                        position: relative;
-                        overflow: hidden;
-                      }
-                      .skeleton-bar::after {
-                        content: '';
-                        position: absolute;
-                        inset: 0;
-                        background: linear-gradient(90deg, transparent 0%, rgba(28,25,23,0.05) 50%, transparent 100%);
-                        animation: shimmer 1.8s ease-in-out infinite;
-                      }
-                    `}</style>
-                    <div
-                      className="w-full rounded-2xl overflow-hidden"
-                      style={{
-                        background: 'linear-gradient(to bottom, #E7E0D8, #FEFCF9)',
-                        padding: '32px 24px 20px',
-                      }}
-                    >
-                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(28,25,23,0.08)', maxWidth: '85%' }} />
-                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(28,25,23,0.06)', maxWidth: '60%' }} />
-                      <div className="skeleton-bar h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(28,25,23,0.04)', maxWidth: '40%' }} />
-                      <div className="skeleton-bar h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(28,25,23,0.04)', maxWidth: '55%' }} />
-                      <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(28,25,23,0.05)' }}>
-                        <div className="skeleton-bar h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(28,25,23,0.06)', maxWidth: '30%' }} />
-                        <div className="flex justify-center gap-8">
-                          {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
-                            <div key={label} className="text-center">
-                              <div className="text-xl font-bold" style={{ color: 'rgba(28,25,23,0.12)', lineHeight: 1 }}>--</div>
-                              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(28,25,23,0.12)' }}>{label}</div>
-                            </div>
-                          ))}
+            {/* Quote Card — Loading skeleton */}
+            {quoteStillLoading && (
+              <section className="max-w-xs mx-auto">
+                <style>{`
+                  @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                  }
+                  .skeleton-bar {
+                    position: relative;
+                    overflow: hidden;
+                  }
+                  .skeleton-bar::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(90deg, transparent 0%, rgba(28,25,23,0.05) 50%, transparent 100%);
+                    animation: shimmer 1.8s ease-in-out infinite;
+                  }
+                `}</style>
+                <div
+                  className="w-full rounded-2xl overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(to bottom, #E7E0D8, #FEFCF9)',
+                    padding: '32px 24px 20px',
+                  }}
+                >
+                  <div className="skeleton-bar h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(28,25,23,0.08)', maxWidth: '85%' }} />
+                  <div className="skeleton-bar h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(28,25,23,0.06)', maxWidth: '60%' }} />
+                  <div className="skeleton-bar h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(28,25,23,0.04)', maxWidth: '40%' }} />
+                  <div className="skeleton-bar h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(28,25,23,0.04)', maxWidth: '55%' }} />
+                  <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(28,25,23,0.05)' }}>
+                    <div className="skeleton-bar h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(28,25,23,0.06)', maxWidth: '30%' }} />
+                    <div className="flex justify-center gap-8">
+                      {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
+                        <div key={label} className="text-center">
+                          <div className="text-xl font-bold" style={{ color: 'rgba(28,25,23,0.12)', lineHeight: 1 }}>--</div>
+                          <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(28,25,23,0.12)' }}>{label}</div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-center gap-1.5 mt-3">
-                        <PersistLogo size={12} variant="dark" />
-                        <span className="text-[9px] tracking-widest" style={{ color: 'rgba(28,25,23,0.15)' }}>PERSIST<span style={{ color: 'rgba(232,125,58,0.3)' }}>WORK</span>.com</span>
-                      </div>
+                      ))}
                     </div>
-                    <p
-                      className="text-sm font-medium text-center mt-5 tracking-wide"
-                      style={{
-                        color: 'rgba(28,25,23,0.4)',
-                        opacity: verbVisible ? 1 : 0,
-                        transition: 'opacity 0.3s ease-in-out',
-                      }}
-                    >
-                      {loadingVerb}{'.'.repeat(dotCount)}
-                    </p>
-                  </section>
-                );
-              }
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 mt-3">
+                    <PersistLogo size={12} variant="dark" />
+                    <span className="text-[9px] tracking-widest" style={{ color: 'rgba(28,25,23,0.15)' }}>PERSIST<span style={{ color: 'rgba(232,125,58,0.3)' }}>WORK</span>.com</span>
+                  </div>
+                </div>
+                <p
+                  className="text-sm font-medium text-center mt-5 tracking-wide"
+                  style={{
+                    color: 'rgba(28,25,23,0.4)',
+                    opacity: verbVisible ? 1 : 0,
+                    transition: 'opacity 0.3s ease-in-out',
+                  }}
+                >
+                  {loadingVerb}{'.'.repeat(dotCount)}
+                </p>
+              </section>
+            )}
 
-              // STATE 2: Valid hero content ready
-              if ((hasValidHero || hasValidHeroMessages) && workHealth) {
-                const normalizedHero = hasValidHero
-                  ? (heroMsg as { quote: string; source: string; subtitle: string })
-                  : heroMsgs![0];
-
-                return (
-                  <section className="max-w-xs mx-auto">
-                    {hasValidHeroMessages && heroMsgs!.length > 1 ? (
-                      <SwipeableQuoteCards
-                        quotes={heroMsgs!}
-                        focus={workHealth.adaptivePerformanceIndex}
-                        strain={workHealth.cognitiveResilience}
-                        balance={workHealth.workRhythmRecovery}
-                        mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
-                        aiGenerated={aiStatus === 'success'}
-                        aiError={workHealth._aiError}
-                        activeCardRef={(el) => { (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
-                        onEngagement={trackEngagement}
-                      />
-                    ) : (
-                      <div ref={cardRef}>
-                        <CardContent
-                          quote={normalizedHero.quote}
-                          source={normalizedHero.source}
-                          subtitle={normalizedHero.subtitle}
-                          focus={workHealth.adaptivePerformanceIndex}
-                          strain={workHealth.cognitiveResilience}
-                          balance={workHealth.workRhythmRecovery}
-                          mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
-                        />
-                      </div>
-                    )}
-                    <div className="mt-3">
-                      <button
-                        onClick={handleShare}
-                        disabled={shareState === 'generating'}
-                        className={`w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          shareState === 'generating'
-                            ? 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-muted)] cursor-wait'
-                            : 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-secondary)] hover:bg-[rgba(28,25,23,0.06)] hover:border-[rgba(28,25,23,0.2)] cursor-pointer'
-                        }`}
-                      >
-                        {shareState === 'generating' ? 'Generating image\u2026' : 'Share today\u2019s quote \u2192'}
-                      </button>
-                    </div>
-                    <WhyMood
-                      mood={detectMood(
-                        workHealth.adaptivePerformanceIndex,
-                        workHealth.cognitiveResilience,
-                        workHealth.workRhythmRecovery
-                      )}
-                      narrative={workHealth.ai?.whyNarrative ?? ''}
+            {/* Quote Card — Full content */}
+            {!quoteStillLoading && (hasValidHero || hasValidHeroMessages) && workHealth && workHealth.ai && (
+              <section className="max-w-xs mx-auto">
+                {hasValidHeroMessages && heroMsgs && heroMsgs.length > 1 ? (
+                  <SwipeableQuoteCards
+                    quotes={heroMsgs as HeroMessage[]}
+                    focus={workHealth.adaptivePerformanceIndex}
+                    strain={workHealth.cognitiveResilience}
+                    balance={workHealth.workRhythmRecovery}
+                    mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                    aiGenerated={aiStatus === 'success'}
+                    aiError={workHealth._aiError}
+                    onMetricClick={(metric) => { setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability'); trackEvent('metric_click', { metric }); }}
+                    activeCardRef={(el) => { (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
+                    onEngagement={trackEngagement}
+                  />
+                ) : (
+                  <div ref={cardRef}>
+                    <CardContent
+                      quote={(heroMsg as HeroMessage).quote}
+                      source={(heroMsg as HeroMessage).source}
+                      subtitle={(heroMsg as HeroMessage).subtitle}
                       focus={workHealth.adaptivePerformanceIndex}
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
-                      onMetricClick={(metric) => {
-                        setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
-                        trackEvent('metric_click', { metric, source: 'why_mood' })
-                      }}
+                      mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                      onMetricClick={(metric) => { setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability'); trackEvent('metric_click', { metric }); }}
                     />
-                  </section>
-                );
-              }
+                  </div>
+                )}
+                <div className="mt-3">
+                  <button
+                    onClick={handleShare}
+                    disabled={shareState === 'generating'}
+                    className={`w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      shareState === 'generating'
+                        ? 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-muted)] cursor-wait'
+                        : 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-secondary)] hover:bg-[rgba(28,25,23,0.06)] hover:border-[rgba(28,25,23,0.2)] cursor-pointer'
+                    }`}
+                  >
+                    {shareState === 'generating' ? 'Generating image\u2026' : 'Share today\u2019s quote \u2192'}
+                  </button>
+                </div>
+                <WhyMood
+                  mood={detectMood(
+                    workHealth.adaptivePerformanceIndex,
+                    workHealth.cognitiveResilience,
+                    workHealth.workRhythmRecovery
+                  )}
+                  narrative={workHealth.ai.whyNarrative ?? ''}
+                  focus={workHealth.adaptivePerformanceIndex}
+                  strain={workHealth.cognitiveResilience}
+                  balance={workHealth.workRhythmRecovery}
+                  onMetricClick={(metric) => {
+                    setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
+                    trackEvent('metric_click', { metric, source: 'why_mood' })
+                  }}
+                />
+              </section>
+            )}
 
-              // STATE 3: Data loaded but no valid hero — show fallback card
-              if (workHealth) {
-                const fallbackQuote = typeof heroMsg === 'string' && heroMsg.length > 0
-                  ? heroMsg
-                  : 'Your calendar has been analyzed. Pull down to refresh for your personalized quote.';
-
-                return (
-                  <section className="max-w-xs mx-auto">
-                    <div ref={cardRef}>
-                      <CardContent
-                        quote={fallbackQuote}
-                        source={typeof heroMsg === 'string' ? '' : 'Persistwork'}
-                        subtitle={workHealth.ai?.overview?.message || `${workHealth.schedule?.meetingCount || 0} meetings today`}
-                        focus={workHealth.adaptivePerformanceIndex}
-                        strain={workHealth.cognitiveResilience}
-                        balance={workHealth.workRhythmRecovery}
-                        mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
-                      />
-                    </div>
-                    <WhyMood
-                      mood={detectMood(
-                        workHealth.adaptivePerformanceIndex,
-                        workHealth.cognitiveResilience,
-                        workHealth.workRhythmRecovery
-                      )}
-                      narrative={workHealth.ai?.whyNarrative ?? ''}
-                      focus={workHealth.adaptivePerformanceIndex}
-                      strain={workHealth.cognitiveResilience}
-                      balance={workHealth.workRhythmRecovery}
-                      onMetricClick={(metric) => {
-                        setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
-                        trackEvent('metric_click', { metric, source: 'why_mood' })
-                      }}
-                    />
-                  </section>
-                );
-              }
-
-              return null;
-            })()}
+            {/* Quote Card — Fallback (data loaded but no valid hero) */}
+            {!quoteStillLoading && !hasValidHero && !hasValidHeroMessages && workHealth && (
+              <section className="max-w-xs mx-auto">
+                <div ref={cardRef}>
+                  <CardContent
+                    quote={typeof heroMsg === 'string' && heroMsg.length > 0 ? heroMsg : 'Your calendar has been analyzed. Pull down to refresh for your personalized quote.'}
+                    source={typeof heroMsg === 'string' ? '' : 'Persistwork'}
+                    subtitle={workHealth.ai?.overview?.message || `${workHealth.schedule?.meetingCount || 0} meetings today`}
+                    focus={workHealth.adaptivePerformanceIndex}
+                    strain={workHealth.cognitiveResilience}
+                    balance={workHealth.workRhythmRecovery}
+                    mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                    onMetricClick={(metric) => { setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability'); trackEvent('metric_click', { metric }); }}
+                  />
+                </div>
+                <WhyMood
+                  mood={detectMood(
+                    workHealth.adaptivePerformanceIndex,
+                    workHealth.cognitiveResilience,
+                    workHealth.workRhythmRecovery
+                  )}
+                  narrative={workHealth.ai?.whyNarrative ?? ''}
+                  focus={workHealth.adaptivePerformanceIndex}
+                  strain={workHealth.cognitiveResilience}
+                  balance={workHealth.workRhythmRecovery}
+                  onMetricClick={(metric) => {
+                    setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
+                    trackEvent('metric_click', { metric, source: 'why_mood' })
+                  }}
+                />
+              </section>
+            )}
 
             {lastRefresh && (
               <div className="text-center pt-8">
