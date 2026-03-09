@@ -323,10 +323,8 @@ export default function WorkHealthDashboard() {
 
         <div className="max-w-md mx-auto px-6 py-24 text-center">
           <div className="mb-8">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
-                 style={{ backgroundColor: 'rgba(232,125,58,0.1)', border: '2px solid rgba(232,125,58,0.3)' }}>
-              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: '#E87D3A' }} />
-            </div>
+            <div className="w-12 h-12 mx-auto mb-6 rounded-full animate-spin"
+                 style={{ border: '3px solid rgba(232,125,58,0.15)', borderTopColor: '#E87D3A' }} />
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
               Setting up your workspace
             </h2>
