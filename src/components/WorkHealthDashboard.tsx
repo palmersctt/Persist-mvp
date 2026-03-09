@@ -532,7 +532,7 @@ export default function WorkHealthDashboard() {
             {(() => {
               const heroMsg = workHealth?.ai?.heroMessage;
               const heroMsgs = workHealth?.ai?.heroMessages;
-              const hasValidHero = heroMsg && typeof heroMsg === 'object' && heroMsg !== null && 'quote' in heroMsg && (heroMsg as Record<string, unknown>).quote;
+              const hasValidHero = heroMsg && typeof heroMsg === 'object' && heroMsg !== null && 'quote' in heroMsg && heroMsg.quote;
               const hasValidHeroMessages = heroMsgs && Array.isArray(heroMsgs) && heroMsgs.length > 0 && heroMsgs[0]?.quote;
               const stillLoading = isLoading || (isAILoading && !hasValidHero && !hasValidHeroMessages);
 
