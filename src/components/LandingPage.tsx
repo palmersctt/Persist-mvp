@@ -793,9 +793,9 @@ export default function LandingPage() {
                   <div><div className="lp-qc-score-num lp-qc-pop">88</div><div className="lp-qc-score-lbl lp-qc-pop-lbl">Strain</div></div>
                   <div><div className="lp-qc-score-num lp-qc-ghost">31</div><div className="lp-qc-score-lbl lp-qc-ghost-lbl">Balance</div></div>
                 </div>
-                <div className="lp-qc-text">&ldquo;That would be great.&rdquo;</div>
-                <div className="lp-qc-source">&mdash; Office Space &middot; Bill Lumbergh</div>
-                <div className="lp-qc-subtitle">Spoiler: it would not be great.</div>
+                <div className="lp-qc-text">&ldquo;You know what the happiest animal on Earth is? It&apos;s a goldfish. You know why? It&apos;s got a 10-second memory.&rdquo;</div>
+                <div className="lp-qc-source">&mdash; Ted Lasso &middot; Ted Lasso</div>
+                <div className="lp-qc-subtitle">Your only viable coping strategy today.</div>
                 <div className="lp-qc-brand">
                   <svg width="13" height="13" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.07)" /><path d="M38 30 L62 50 L38 70" stroke="rgba(255,255,255,0.3)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
                   <span>PERSIST<span className="lp-qc-acc">WORK</span><span className="lp-qc-dotcom">.com</span></span>
