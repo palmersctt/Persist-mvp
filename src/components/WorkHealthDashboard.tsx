@@ -641,7 +641,7 @@ export default function WorkHealthDashboard() {
                             : 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-secondary)] hover:bg-[rgba(28,25,23,0.06)] hover:border-[rgba(28,25,23,0.2)] cursor-pointer'
                         }`}
                       >
-                        {shareState === 'generating' ? 'Generating image\u2026' : 'Share today\u2019s quote \u2192'}
+                        {shareState === 'generating' ? 'Generating image\u2026' : 'Share your day \u2192'}
                       </button>
                     </div>
                     <WhyMood
@@ -650,7 +650,7 @@ export default function WorkHealthDashboard() {
                         workHealth.cognitiveResilience,
                         workHealth.workRhythmRecovery
                       )}
-                      narrative={workHealth.ai.whyNarrative ?? ''}
+                      narrative={workHealth.ai?.whyNarrative ?? ''}
                       focus={workHealth.adaptivePerformanceIndex}
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
