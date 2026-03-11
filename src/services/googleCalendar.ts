@@ -536,24 +536,30 @@ class GoogleCalendarService {
     else if (focusHours < 4) fragmentationScore = 58;
     else if (focusHours < 5) fragmentationScore = 72;
 
-    // Back-to-back transitions — each one stacks painfully
-    let transitionScore = 100;
+    // Back-to-back transitions — each one stacks painfully.
+    // Cap at 90: even without back-to-backs, switching between meetings and
+    // solo work still costs something (context reload, mental preparation).
+    let transitionScore = 90;
     if (backToBackCount >= 5) transitionScore = 5;
     else if (backToBackCount >= 4) transitionScore = 15;
     else if (backToBackCount === 3) transitionScore = 30;
     else if (backToBackCount === 2) transitionScore = 55;
     else if (backToBackCount === 1) transitionScore = 78;
 
-    // Afternoon-heavy days are draining (1pm+ counts as afternoon)
+    // Afternoon-heavy days are draining (1pm+ counts as afternoon).
+    // Cap at 90: even balanced timing has natural energy dips (post-lunch,
+    // late-afternoon) that prevent a truly perfect timing score.
     const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 13).length;
     const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
-    let timingScore = 100;
+    let timingScore = 90;
     if (afternoonMeetings >= 4) timingScore = 40;
     else if (afternoonMeetings > morningMeetings * 1.5) timingScore = 55;
     else if (afternoonMeetings > morningMeetings) timingScore = 75;
 
-    // Meeting-to-work ratio — total hours in meetings vs. workday
-    let recoveryScore = 100;
+    // Meeting-to-work ratio — total hours in meetings vs. workday.
+    // Cap at 90: even low meeting ratios carry scheduling overhead —
+    // the meeting still fragments your mental model of the day.
+    let recoveryScore = 90;
     const totalMeetingHours = actualMeetings.reduce((sum, event) =>
       sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60), 0);
     const workHours = 8;
@@ -590,6 +596,14 @@ class GoogleCalendarService {
       event.category !== 'FOCUS_WORK'
     );
     const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
+
+    // No meetings: low strain but not zero — ambient cognitive load always exists
+    // (email triage, Slack monitoring, context maintenance, prioritization decisions).
+    // Beneficial events slightly reduce it (a walk clears your head).
+    if (actualMeetings.length === 0) {
+      const hasBeneficial = beneficialEvents.length > 0;
+      return hasBeneficial ? 8 : 12;
+    }
 
     // Context switching — unique topics drain mental bandwidth
     const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
@@ -646,9 +660,11 @@ class GoogleCalendarService {
       - energyDepletion * 0.15
     ) + recoveryBoost;
 
-    // Convert resilience → strain (higher = more cognitive load on the day)
-    const strainScore = 100 - Math.min(100, Math.max(0, resilienceScore));
-    return Math.round(Math.max(0, strainScore));
+    // Convert resilience → strain (higher = more cognitive load on the day).
+    // Cap resilience at 92: even the lightest meeting day carries ambient strain
+    // from email, Slack, context-switching between your own tasks.
+    const strainScore = 100 - Math.min(92, Math.max(0, resilienceScore));
+    return Math.round(strainScore);
   }
   
   private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
