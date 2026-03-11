@@ -32,8 +32,6 @@ export default function LandingPage() {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lora:ital@0;1&display=swap');
-
         :root {
           --cream: #FBF7F2;
           --warm-white: #FEFCF9;
@@ -725,7 +723,7 @@ export default function LandingPage() {
         <section className="lp-section lp-demo-section" id="demo">
           <div className="lp-section-inner">
             <div className="lp-demo-intro">
-              <div className="lp-section-label">See it in action</div>
+              <div className="lp-section-label">A day in the life of <span style={{ color: '#E87D3A' }}>you</span></div>
               <h2>A day in the life of <em>your</em> calendar</h2>
               <p>This is a real kind of Tuesday. Eight meetings, one break, zero flow. PERSISTWORK reads between the lines and tells you what&apos;s actually going on.</p>
             </div>
@@ -821,7 +819,7 @@ export default function LandingPage() {
               <div className="lp-step">
                 <div className="lp-step-num">STEP 02</div>
                 <h3>Get your daily card</h3>
-                <p>Every morning, three scores land in your inbox: Focus, Strain, and Balance &mdash; plus a quote that nails the vibe.</p>
+                <p>Every morning, get your three scores &mdash; Focus, Strain, and Balance &mdash; plus a quote that nails the vibe.</p>
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">STEP 03</div>
