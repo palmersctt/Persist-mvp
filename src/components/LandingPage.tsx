@@ -704,9 +704,9 @@ export default function LandingPage() {
         {/* HERO */}
         <section className="lp-section" style={{ padding: '80px 24px 64px' }}>
           <div className="lp-hero" style={{ padding: 0, textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
-<h1>Your calendar has a<br /><em>lot</em> to say about you.</h1>
+<h1>Your workday, <em>decoded.</em></h1>
             <p className="lp-hero-sub">
-              PERSISTWORK reads your day, surfaces what&apos;s actually draining you, and finds a laugh that fits &mdash; because the least your calendar owes you is a joke.
+              Three scores built from your calendar. Now the way your day feels finally makes sense.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
