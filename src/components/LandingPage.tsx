@@ -723,8 +723,8 @@ export default function LandingPage() {
         <section className="lp-section lp-demo-section" id="demo">
           <div className="lp-section-inner">
             <div className="lp-demo-intro">
-              <div className="lp-section-label">A day in the life of <span style={{ color: '#E87D3A' }}>you</span></div>
-              <h2>A day in the life of <em>your</em> calendar</h2>
+              <div className="lp-section-label">See it in action</div>
+              <h2>A day in the life of <span style={{ color: '#E87D3A' }}>you</span></h2>
               <p>This is a real kind of Tuesday. Eight meetings, one break, zero flow. PERSISTWORK reads between the lines and tells you what&apos;s actually going on.</p>
             </div>
 
