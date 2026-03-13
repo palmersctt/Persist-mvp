@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
-import { supabase } from '../../../lib/supabase'
+import { supabaseAdmin } from '../../../lib/supabase'
 
 const VALID_EVENT_TYPES = ['card_swipe', 'metric_click', 'card_share'] as const
 
@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: `Invalid eventType. Must be one of: ${VALID_EVENT_TYPES.join(', ')}` })
       }
 
-      const { error } = await supabase.from('events').insert({
+      const { error } = await supabaseAdmin.from('events').insert({
         user_email: session.user?.email,
         event_type: eventType,
         metadata: metadata || {},
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
       const { event_type, start_date, end_date } = req.query
 
-      let query = supabase
+      let query = supabaseAdmin
         .from('events')
         .select('*')
         .order('created_at', { ascending: false })

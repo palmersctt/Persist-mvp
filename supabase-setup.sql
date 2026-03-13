@@ -20,17 +20,19 @@ CREATE INDEX IF NOT EXISTS users_created_at_idx ON users(created_at);
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
--- Create policy to allow users to read their own data
+-- Users can only read their own row (matched by Supabase Auth email)
 CREATE POLICY "Users can read own data" ON users
-  FOR SELECT USING (true); -- For now, allow read access for analytics
+  FOR SELECT USING (auth.jwt() ->> 'email' = email);
 
--- Create policy to allow inserts (for signup tracking)
+-- Users can only insert a row for themselves
 CREATE POLICY "Allow user creation" ON users
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = email);
 
--- Create policy to allow updates (for login tracking)
+-- Users can only update their own row
 CREATE POLICY "Allow user updates" ON users
-  FOR UPDATE USING (true);
+  FOR UPDATE
+  USING (auth.jwt() ->> 'email' = email)
+  WITH CHECK (auth.jwt() ->> 'email' = email);
 
 -- ============================================================
 -- Events table for user engagement tracking
@@ -51,10 +53,10 @@ CREATE INDEX IF NOT EXISTS events_created_at_idx ON events(created_at);
 -- Enable Row Level Security (RLS)
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
--- Allow reading events (for analytics dashboard)
+-- Users can only read their own events
 CREATE POLICY "Allow reading events" ON events
-  FOR SELECT USING (true);
+  FOR SELECT USING (auth.jwt() ->> 'email' = user_email);
 
--- Allow inserting events (for tracking)
+-- Users can only insert events attributed to themselves
 CREATE POLICY "Allow inserting events" ON events
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = user_email);
