@@ -606,6 +606,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     }
 
     // Reset state and unlock quotes for fresh data
+    setIsNewUser(false);
     setWorkHealth(null);
     setError(null);
     setLastRefresh(new Date());
