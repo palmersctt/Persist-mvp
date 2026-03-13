@@ -434,6 +434,9 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         if (errorData.needsReauth) {
           throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
         }
+        if (errorData.tokenNotReady) {
+          throw new Error(`Token not ready (${response.status})`);
+        }
         if (errorData.retryable) {
           throw new Error(`Calendar not ready (${response.status})`);
         }
@@ -489,7 +492,9 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       }
 
       if (!usedCache) {
+        const isTokenNotReady = err instanceof Error && err.message.includes('Token not ready');
         const isRetryable =
+          isTokenNotReady ||
           (err instanceof Error && err.message.includes('HTTP error')) ||
           (err instanceof Error && err.message.includes('Calendar not ready')) ||
           (err instanceof Error && err.message.includes('503'));
@@ -499,9 +504,14 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         const maxRetries = isNewUserCheck ? 5 : 3;
 
         if (retryCount < maxRetries && isRetryable) {
-          const delay = isNewUserCheck
-            ? Math.min(2000 * Math.pow(1.5, retryCount), 12000)
-            : (retryCount + 1) * 2000;
+          let delay: number;
+          if (isTokenNotReady) {
+            delay = Math.min(800 * Math.pow(1.3, retryCount), 4000);
+          } else if (isNewUserCheck) {
+            delay = Math.min(2000 * Math.pow(1.5, retryCount), 12000);
+          } else {
+            delay = (retryCount + 1) * 2000;
+          }
           console.log(`Attempt ${retryCount + 1}/${maxRetries} failed, retrying in ${Math.round(delay / 1000)}s...`);
           setTimeout(() => fetchWorkHealth(retryCount + 1), delay);
           return;
@@ -559,7 +569,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         console.log('🔄 Initial data load (new user, waiting for token propagation)');
         setIsNewUser(true);
         connectionStartTime.current = Date.now();
-        setTimeout(() => fetchWorkHealth(0), 3000);
+        setTimeout(() => fetchWorkHealth(0), 1500);
       }
     }
   }, [session, status, fetchWorkHealth, getCacheKey]);

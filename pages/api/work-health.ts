@@ -342,10 +342,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const message = error instanceof Error ? error.message : 'Unknown error';
     // Google API often returns 403/404 on first use before token fully propagates
     const isGoogleApiError = message.includes('Google') || message.includes('calendar') || message.includes('403') || message.includes('404');
+    const isAuthRelated = message.includes('401') || message.includes('403') || message.includes('Unauthorized') || message.includes('Invalid Credentials');
     res.status(isGoogleApiError ? 503 : 500).json({
       error: isGoogleApiError ? 'Calendar not ready yet — please retry' : 'Failed to analyze work health',
       details: message,
       retryable: isGoogleApiError,
+      tokenNotReady: isGoogleApiError && isAuthRelated,
     });
   }
 }
