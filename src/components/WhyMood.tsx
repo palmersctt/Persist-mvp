@@ -39,7 +39,7 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
               transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.3s',
               color: 'var(--text-muted)'
-            }}>↓</span>
+            }}>{open ? '↑' : '›'}</span>
           </button>
 
           {open && (
@@ -63,7 +63,12 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
             key={key}
             onClick={() => onMetricClick(key)}
             className="w-full flex items-center bg-transparent border-none cursor-pointer"
-            style={{ padding: '14px 0', borderBottom: '1px solid #E7E0D8', gap: '12px' }}
+            style={{ padding: '14px 4px', margin: '0 -4px', borderBottom: '1px solid #E7E0D8', gap: '12px', borderRadius: '6px', transition: 'background 150ms ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#FDF0E6' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+            onPointerDown={(e) => { e.currentTarget.style.background = '#FDF0E6' }}
+            onPointerUp={(e) => { e.currentTarget.style.background = 'transparent' }}
+            onPointerCancel={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: '90px' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.02em' }}>
@@ -79,7 +84,7 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
             <div style={{ flex: 1, height: '3px', background: 'rgba(28,25,23,0.08)', borderRadius: '2px' }}>
               <div style={{ height: '3px', width: `${val}%`, background: '#E87D3A', borderRadius: '2px', transition: 'width 0.6s ease' }} />
             </div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>›</span>
+            <span style={{ fontSize: '0.85rem', color: '#E87D3A' }}>›</span>
           </button>
         ))}
       </div>

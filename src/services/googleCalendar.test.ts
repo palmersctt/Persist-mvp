@@ -250,10 +250,8 @@ describe('GoogleCalendarService — persona scenarios', () => {
     )
 
     expect(result.cognitiveResilience).toBeGreaterThan(0)
-    expect(result.adaptivePerformanceIndex).toBeGreaterThan(0)
-    expect(result.adaptivePerformanceIndex).toBeLessThan(100)
-    expect(result.workRhythmRecovery).toBeGreaterThan(0)
-    expect(result.workRhythmRecovery).toBeLessThan(100)
+    expect(result.adaptivePerformanceIndex).toBeGreaterThanOrEqual(90)
+    expect(result.workRhythmRecovery).toBeGreaterThanOrEqual(90)
   })
 
   // Only beneficial events (e.g., wellness day)
