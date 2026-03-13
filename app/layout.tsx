@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
 import SessionProvider from "../src/components/SessionProvider";
 import VisitTracker from "../src/components/VisitTracker";
 
@@ -72,6 +73,7 @@ export default function RootLayout({
         <SessionProvider>
           <VisitTracker />
           {children}
+          <Analytics />
         </SessionProvider>
       </body>
     </html>
