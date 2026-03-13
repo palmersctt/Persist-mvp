@@ -177,11 +177,32 @@ INSIGHTS — 1-2 sentences each, be brief:
 Keep messages SHORT (max 20 words each). Match tone to scores — 85%+=great, 65-84%=solid, <65%=flag problems.
 
 QUOTES — 5 real, verbatim quotes matching this vibe: ${quoteMood}
-ONLY from: movies, TV shows, and stand-up comedians. No books, songs, games, anime, or famous-person quotes.
-MUST include at least 2 stand-up comedian quotes (from specials or bits). The rest from movies/TV.
-Comedians to draw from: Mitch Hedberg, John Mulaney, Nate Bargatze, Ali Wong, Anthony Jeselnik, Hannibal Buress, Dave Chappelle, Rodney Dangerfield, Demetri Martin, Steven Wright, Hasan Minhaj, Taylor Tomlinson, Mike Birbiglia, Bo Burnham, Gary Gulman, etc.
-All 5 must be different sources. Go deep — surprise me.
-Each gets a witty subtitle connecting it to how their day feels (not calendar stats).
+Surprise me — go deep, go unexpected. Post-2015 preferred but not required.
+ONLY from: movies, TV shows, and stand-up comedy specials.
+All 5 must be from different sources. Each gets a witty subtitle connecting it to how their day feels.
+
+DRAW FREELY from across all of these — the wider the range the better:
+
+TV: Succession, Ted Lasso, The Bear, Severance, Schitt's Creek, Abbott Elementary,
+The White Lotus, Yellowjackets, Barry, Hacks, Fleabag, What We Do in the Shadows,
+Only Murders in the Building, Shrinking, Reservation Dogs, Slow Horses, Industry,
+The Rehearsal, Nathan For You, I Think You Should Leave, Arrested Development,
+30 Rock, Parks and Recreation, It's Always Sunny in Philadelphia, Veep,
+Brooklyn Nine-Nine, Community, The Good Place, Mad Men, Breaking Bad,
+The Wire, Curb Your Enthusiasm, Seinfeld, The Sopranos
+
+Film: Everything Everywhere All at Once, Barbie, Oppenheimer, The Menu,
+Knives Out, Glass Onion, Parasite, Booksmart, The Favourite, Get Out,
+Palm Springs, Promising Young Woman, Triangle of Sadness, Tár, Poor Things,
+Whiplash, The Big Short, Moneyball, Bridesmaids, Game Night,
+The Grand Budapest Hotel, Her, Inception, Inside Out,
+Clueless, Office Space, Anchorman, Superbad, The Princess Bride
+
+Stand-up: John Mulaney, Bo Burnham, Ali Wong, Nate Bargatze, Taylor Tomlinson,
+Gary Gulman, Nikki Glaser, Hasan Minhaj, Hannah Gadsby, Ronny Chieng,
+Wanda Sykes, Iliza Shlesinger, Mike Birbiglia, Mitch Hedberg, Steven Wright,
+Demetri Martin, Anthony Jeselnik, Dave Chappelle, Chris Rock, Jim Jefferies,
+Tig Notaro, Maria Bamford, Patton Oswalt, Brian Regan, Jim Gaffigan, Kathleen Madigan
 
 WHY NARRATIVE — 2-3 sentences in the same dry, observational voice as the quotes. Explain what the calendar data actually showed today — what happened, why the mood label fits. No metric names, no numbers, no calendar jargon. Plain language, like you're telling a friend.
 ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these recently shown quotes:\n${recentQuotes.map(q => `- "${q}"`).join('\n')}\n` : ''}${analysis.engagement?.favoriteGenres?.length ? `\nUser prefers: ${analysis.engagement.favoriteGenres.join(', ')}` : ''}${analysis.engagement?.sharedQuotes?.length ? `\nUser loved (shared): ${analysis.engagement.sharedQuotes.map((q: string) => `"${q}"`).join(', ')}` : ''}
