@@ -399,6 +399,11 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         lastRefresh: new Date().toISOString()
       }));
     }
+
+    // Set a durable "has ever loaded" flag so browser refreshes don't show first-time UX
+    if (session?.user?.email) {
+      localStorage.setItem(`persist-initialized-${session.user.email}`, '1');
+    }
   };
 
   const fetchWorkHealth = useCallback(async (retryCount = 0, options?: { silent?: boolean }) => {
@@ -560,8 +565,11 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       hasFetched.current = true;
       const cacheKey = getCacheKey();
       const hasCache = cacheKey ? !!localStorage.getItem(cacheKey) : false;
+      const hasEverLoaded = session.user?.email
+        ? !!localStorage.getItem(`persist-initialized-${session.user.email}`)
+        : false;
 
-      if (hasCache) {
+      if (hasCache || hasEverLoaded) {
         console.log('🔄 Initial data load (returning user)');
         setIsNewUser(false);
         fetchWorkHealth(0);
