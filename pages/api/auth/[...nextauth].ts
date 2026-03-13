@@ -1,6 +1,6 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
-import { supabase } from '../../../lib/supabase'
+import { supabaseAdmin } from '../../../lib/supabase'
 
 /**
  * Takes a token, and returns a new token with updated
@@ -97,7 +97,7 @@ export const authOptions: NextAuthOptions = {
       try {
         if (account?.provider === 'google' && user?.email) {
           // Check if user exists in Supabase
-          const { data: existingUser, error: fetchError } = await supabase
+          const { data: existingUser, error: fetchError } = await supabaseAdmin
             .from('users')
             .select('*')
             .eq('email', user.email)
@@ -110,7 +110,7 @@ export const authOptions: NextAuthOptions = {
 
           if (existingUser) {
             // Update last login time for existing user
-            await supabase
+            await supabaseAdmin
               .from('users')
               .update({ 
                 last_login_at: new Date().toISOString(),
@@ -119,7 +119,7 @@ export const authOptions: NextAuthOptions = {
               .eq('email', user.email)
           } else {
             // Create new user record
-            const { error: insertError } = await supabase
+            const { error: insertError } = await supabaseAdmin
               .from('users')
               .insert({
                 email: user.email,

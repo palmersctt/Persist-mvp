@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from './auth/[...nextauth]'
-import { supabase } from '../../lib/supabase'
+import { supabaseAdmin } from '../../lib/supabase'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Read current last_active_at
-    const { data: user, error: fetchError } = await supabase
+    const { data: user, error: fetchError } = await supabaseAdmin
       .from('users')
       .select('last_active_at')
       .eq('email', email)
@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({ last_active_at: now.toISOString() })
       .eq('email', email)
