@@ -12,7 +12,8 @@ interface Props {
 }
 
 export default function WhyMood({ mood, narrative, focus, strain, balance, onMetricClick }: Props) {
-  const [open, setOpen] = useState(false)
+  const isFirstVisit = typeof window !== 'undefined' && !localStorage.getItem('persist-why-mood-seen')
+  const [open, setOpen] = useState(isFirstVisit)
 
   const metrics = [
     { key: 'performance',    label: 'Focus',   val: focus },
@@ -26,9 +27,16 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
       {narrative ? (
         <>
           <button
-            onClick={() => setOpen(o => !o)}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('persist-why-mood-seen', 'true')
+              }
+              setOpen(o => !o)
+            }}
             className="w-full flex justify-between items-center py-2 bg-transparent border-none cursor-pointer"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: '#78716C', borderRadius: '6px', transition: 'background 150ms ease' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#FDF0E6')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Why {mood}?
@@ -38,7 +46,7 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
               display: 'inline-block',
               transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.3s',
-              color: 'var(--text-muted)'
+              color: '#78716C'
             }}>{open ? '↑' : '›'}</span>
           </button>
 
@@ -71,11 +79,11 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
             onPointerCancel={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: '90px' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.02em' }}>
+              <span style={{ fontSize: '0.75rem', color: '#57534E', letterSpacing: '0.02em' }}>
                 {label}
               </span>
               <span style={{
-                fontSize: '1.25rem', fontWeight: 300, color: 'var(--text-primary)',
+                fontSize: '1.25rem', fontWeight: 300, color: key === 'resilience' ? '#57534E' : 'var(--text-primary)',
                 fontFeatureSettings: '"tnum"', letterSpacing: '-0.03em'
               }}>
                 {val}

@@ -53,16 +53,16 @@ Pure white to warm cream — 1px dark border for separation on light backgrounds
 |------------|---------------------------------|---------------------------|
 | popNum     | `rgba(232,125,58,0.9)`          | Emphasized score number   |
 | popLbl     | `rgba(232,125,58,0.55)`         | Emphasized score label    |
-| ghostNum   | `rgba(255,255,255,0.22)`        | De-emphasized score num   |
-| ghostLbl   | `rgba(255,255,255,0.18)`        | De-emphasized score label |
-| flatNum    | `rgba(255,255,255,0.65)`        | OK-tier uniform score num |
-| flatLbl    | `rgba(255,255,255,0.4)`         | OK-tier uniform score lbl |
+| ghostNum   | `rgba(255,255,255,0.40)`        | De-emphasized score num   |
+| ghostLbl   | `rgba(255,255,255,0.35)`        | De-emphasized score label |
+| flatNum    | `rgba(255,255,255,0.80)`        | OK-tier uniform score num |
+| flatLbl    | `rgba(255,255,255,0.55)`        | OK-tier uniform score lbl |
 | moodLabel  | `rgba(232,125,58,0.7)`          | Mood name text            |
 | dotColor   | `rgba(232,125,58,0.7)`          | Mood indicator dot        |
 | dotGlow    | `0 0 12px rgba(232,125,58,0.3)` | Dot glow                  |
 | quote      | `rgba(255,255,255,0.92)`        | Quote text                |
-| source     | `rgba(255,255,255,0.45)`        | Source attribution        |
-| subtitle   | `rgba(255,255,255,0.38)`        | Subtitle / punchline      |
+| source     | `rgba(255,255,255,0.60)`        | Source attribution        |
+| subtitle   | `rgba(255,255,255,0.65)`        | Subtitle / punchline      |
 | brandTxt   | `rgba(255,255,255,0.22)`        | Brand text                |
 | brandAcc   | `rgba(232,125,58,0.55)`         | Brand "WORK" accent       |
 | glowColor  | `rgba(232,125,58,0.07)`         | Ambient glow              |
@@ -75,16 +75,25 @@ OK-tier overrides: moodLabel `rgba(255,255,255,0.45)`, dotColor same, no glow.
 |------------|---------------------------------|---------------------------|
 | popNum     | `rgba(232,125,58,0.9)`          | Emphasized score number   |
 | popLbl     | `rgba(232,125,58,0.55)`         | Emphasized score label    |
-| ghostNum   | `rgba(28,25,23,0.28)`           | De-emphasized score num   |
-| ghostLbl   | `rgba(28,25,23,0.22)`           | De-emphasized score label |
+| ghostNum   | `rgba(28,25,23,0.45)`           | De-emphasized score num   |
+| ghostLbl   | `rgba(28,25,23,0.38)`           | De-emphasized score label |
 | moodLabel  | `rgba(232,125,58,0.65)`         | Mood name text            |
 | dotColor   | `rgba(232,125,58,0.65)`         | Mood indicator dot        |
 | quote      | `rgba(28,25,23,0.88)`           | Quote text                |
-| source     | `rgba(28,25,23,0.5)`            | Source attribution        |
-| subtitle   | `rgba(28,25,23,0.42)`           | Subtitle / punchline      |
+| source     | `rgba(28,25,23,0.65)`           | Source attribution        |
+| subtitle   | `rgba(28,25,23,0.65)`           | Subtitle / punchline      |
 | brandTxt   | `rgba(28,25,23,0.28)`           | Brand text                |
 | brandAcc   | `rgba(232,125,58,0.7)`          | Brand "WORK" accent       |
 | glowColor  | `rgba(232,125,58,0.08)`         | Ambient glow              |
+
+## Dashboard Text Colors
+
+| Element | Value |
+|---|---|
+| Section headers (e.g. "WHY VICTORY?") | `#78716C` |
+| Metric row labels | `#57534E` |
+| De-emphasised metric numbers | `#57534E` |
+| Metric row chevrons | `#E87D3A` |
 
 ## Score Emphasis Rules
 

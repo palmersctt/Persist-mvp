@@ -326,10 +326,10 @@ export default function WorkHealthDashboard() {
             <div className="w-12 h-12 mx-auto mb-6 rounded-full animate-spin"
                  style={{ border: '3px solid rgba(232,125,58,0.15)', borderTopColor: '#E87D3A' }} />
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-              Setting up your workspace
+              Reading your day
             </h2>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              Connecting to your Google Calendar... This may take a moment for first-time setup.
+              We&apos;re scanning your calendar to understand your focus, strain, and balance today. First load takes a few seconds.
             </p>
           </div>
         </div>
@@ -379,42 +379,24 @@ export default function WorkHealthDashboard() {
               <span className="text-3xl">⚠️</span>
             </div>
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-              Connection Issue
+              We&apos;ve been busy
             </h2>
             <p className="text-sm mb-8" style={{ color: 'var(--text-secondary)' }}>
-              {error}
+              We shipped some updates since your last visit. Sign back in to get the latest.
             </p>
-            
+
             <div className="space-y-3">
-              <button
-                onClick={refresh}
-                disabled={isLoading}
-                className="w-full px-6 py-3 font-medium rounded-lg transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--whoop-green)',
-                  color: '#fff',
-                  opacity: isLoading ? 0.5 : 1
-                }}
-              >
-                {isLoading ? 'Retrying...' : 'Try Again'}
-              </button>
-              
               <button
                 onClick={() => signOut()}
                 className="w-full px-6 py-3 font-medium rounded-lg transition-colors"
-                style={{ 
-                  backgroundColor: 'transparent',
-                  color: 'var(--text-secondary)',
-                  border: '1px solid #E7E0D8'
+                style={{
+                  backgroundColor: 'var(--whoop-green)',
+                  color: '#fff',
                 }}
               >
-                Sign Out & Sign Back In
+                Sign Back In
               </button>
             </div>
-            
-            <p className="text-xs mt-8" style={{ color: 'var(--text-muted)' }}>
-              This usually happens when Google Calendar permissions need to be refreshed.
-            </p>
           </div>
         </div>
       </div>

@@ -167,8 +167,8 @@ export const authOptions: NextAuthOptions = {
           return token
         }
 
-        // If token hasn't expired yet, return it as is
-        if (Date.now() < (token.expiresAt as number) * 1000) {
+        // Refresh 5 minutes before expiry instead of after
+        if (Date.now() < ((token.expiresAt as number) - 300) * 1000) {
           return token
         }
 
@@ -205,6 +205,10 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days — matches session
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: true, // Enable debug in production temporarily

@@ -421,7 +421,7 @@ export default function LandingPage() {
           color: rgba(232,125,58,0.9);
         }
         .lp-qc-score-num.lp-qc-ghost {
-          color: rgba(255,255,255,0.22);
+          color: rgba(255,255,255,0.40);
         }
         .lp-qc-score-lbl {
           text-transform: uppercase;
@@ -434,7 +434,7 @@ export default function LandingPage() {
           color: rgba(232,125,58,0.55);
         }
         .lp-qc-score-lbl.lp-qc-ghost-lbl {
-          color: rgba(255,255,255,0.18);
+          color: rgba(255,255,255,0.35);
         }
         .lp-qc-text {
           font-size: 22px;
@@ -448,14 +448,14 @@ export default function LandingPage() {
         }
         .lp-qc-source {
           font-size: 11px;
-          color: rgba(255,255,255,0.45);
+          color: rgba(255,255,255,0.60);
           margin-bottom: 20px;
           font-weight: 500;
           position: relative;
         }
         .lp-qc-subtitle {
           font-size: 12px;
-          color: rgba(255,255,255,0.38);
+          color: rgba(255,255,255,0.65);
           line-height: 1.5;
           font-weight: 400;
           margin-bottom: 22px;
