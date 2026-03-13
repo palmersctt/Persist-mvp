@@ -211,7 +211,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days — matches session
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true, // Enable debug in production temporarily
+  debug: false,
   logger: {
     error(code, metadata) {
       console.error('NextAuth Error:', code, metadata)
