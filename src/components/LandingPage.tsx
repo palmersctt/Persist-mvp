@@ -557,26 +557,6 @@ export default function LandingPage() {
           line-height: 1.5;
         }
 
-        /* CTA SECTION */
-        .lp-cta-section {
-          background: var(--ink);
-          text-align: center;
-          padding: 80px 24px;
-        }
-        .lp-cta-section h2 { color: white; margin-bottom: 16px; }
-        .lp-cta-section h2 em { color: var(--amber); }
-        .lp-cta-section p {
-          color: #A8A29E;
-          font-size: 16px;
-          max-width: 440px;
-          margin: 0 auto 36px;
-        }
-        .lp-cta-note {
-          color: #6B6560;
-          font-size: 13px;
-          margin-top: 14px;
-        }
-
         /* FOOTER */
         .lp-footer {
           background: var(--ink);
@@ -670,7 +650,7 @@ export default function LandingPage() {
           <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={() => scrollToSection('why-it-matters')}>Why it matters</button>
-            <button className="lp-nav-cta" onClick={handleGetStarted}>Try free &rarr;</button>
+            <button className="lp-nav-cta" onClick={() => { window.location.href = '/sandbox' }}>Try it &rarr;</button>
           </div>
           <button
             className="lp-hamburger"
@@ -695,7 +675,7 @@ export default function LandingPage() {
           <div className="lp-mobile-menu-inner">
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={() => scrollToSection('why-it-matters')}>Why it matters</button>
-            <button className="lp-mobile-cta" onClick={handleGetStarted}>Try free &rarr;</button>
+            <button className="lp-mobile-cta" onClick={() => { window.location.href = '/sandbox' }}>Try it &rarr;</button>
           </div>
         </div>
 
@@ -706,16 +686,16 @@ export default function LandingPage() {
             <p className="lp-hero-sub">
               Three scores built from your calendar. Now the way your day feels finally makes sense.
             </p>
-            <button className="lp-hero-cta" onClick={handleGetStarted}>
+            <button className="lp-hero-cta" onClick={() => { window.location.href = '/sandbox' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Connect your calendar &mdash; it&apos;s free
+              Score your day &rarr;
             </button>
-            <p className="lp-hero-note">Google Calendar &middot; Takes 10 seconds &middot; We only read titles &amp; times</p>
+            <p className="lp-hero-note">No sign-in required</p>
           </div>
         </section>
 
@@ -858,11 +838,26 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* FINAL CTA */}
-        <section className="lp-cta-section">
-          <div className="lp-section-inner" style={{ maxWidth: 600 }}>
-            <h2>Your calendar is talking.<br /><em>Start listening.</em></h2>
-            <p>Free to try. No credit card. Just a calendar, three scores, and a laugh you probably need.</p>
+        {/* FINAL CTA — only sign-in on the page */}
+        <section className="lp-section" style={{ paddingBottom: 80 }}>
+          <div style={{ maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+            <h2 style={{
+              fontSize: 28,
+              fontWeight: 800,
+              letterSpacing: '-0.5px',
+              color: 'var(--ink)',
+              marginBottom: 8,
+            }}>
+              Decode your real day
+            </h2>
+            <p style={{
+              fontSize: 15,
+              color: 'var(--ink-light)',
+              lineHeight: 1.6,
+              marginBottom: 24,
+            }}>
+              Connect your Google Calendar and your Focus, Strain, and Balance scores update automatically, every morning.
+            </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -870,9 +865,11 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Connect your calendar &mdash; it&apos;s free
+              See your real scores &mdash; it&apos;s free
             </button>
-            <p className="lp-cta-note">Google Calendar &middot; Takes 10 seconds &middot; We only read titles &amp; times</p>
+            <p className="lp-hero-note" style={{ marginTop: 10 }}>
+              Google Calendar &middot; Read-only access &middot; No email &middot; Nothing stored
+            </p>
           </div>
         </section>
 
@@ -882,6 +879,7 @@ export default function LandingPage() {
           <div className="lp-footer-links">
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
+            <Link href="/privacy#security">Security</Link>
           </div>
         </footer>
       </div>

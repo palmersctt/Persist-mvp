@@ -9,11 +9,12 @@ interface Props {
   strain: number
   balance: number
   onMetricClick: (metric: string) => void
+  defaultOpen?: boolean
 }
 
-export default function WhyMood({ mood, narrative, focus, strain, balance, onMetricClick }: Props) {
+export default function WhyMood({ mood, narrative, focus, strain, balance, onMetricClick, defaultOpen }: Props) {
   const isFirstVisit = typeof window !== 'undefined' && !localStorage.getItem('persist-why-mood-seen')
-  const [open, setOpen] = useState(isFirstVisit)
+  const [open, setOpen] = useState(defaultOpen ?? isFirstVisit)
 
   const metrics = [
     { key: 'performance',    label: 'Focus',   val: focus },

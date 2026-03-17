@@ -17,12 +17,17 @@ export default function Home() {
     }
   }, [session, status, router])
 
+  // While session is resolving, show blank cream background (no flash)
+  if (status === 'loading') {
+    return <div className="min-h-screen" style={{ backgroundColor: '#FBF7F2' }} />
+  }
+
   // Show landing page for non-authenticated users
-  if (status === 'unauthenticated' || status === 'loading') {
+  if (status === 'unauthenticated') {
     return <LandingPage />
   }
 
-  // Show loading state while redirecting
+  // Authenticated: show loading state while redirecting to dashboard
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FBF7F2' }}>
       <div className="text-center flex flex-col items-center">

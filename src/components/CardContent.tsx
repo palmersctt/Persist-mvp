@@ -86,7 +86,6 @@ export default function CardContent({
   strain,
   balance,
   mood,
-  daySummary,
   onMetricClick,
   cardRef,
   forExport = false,
@@ -144,24 +143,6 @@ export default function CardContent({
         </p>
       </div>
 
-      {/* Day summary */}
-      {daySummary && (
-        <>
-          <p style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-            textTransform: 'uppercase' as const, margin: '0 0 6px', position: 'relative',
-            color: isLight ? '#A8A29E' : isOk ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.5)',
-          }}>
-            YOUR INSIGHT
-          </p>
-          <p style={{
-            fontSize: 13, fontWeight: 600, letterSpacing: '0.01em', lineHeight: 1.5,
-            color: tk.source, margin: '0 0 8px', position: 'relative',
-          }}>
-            {daySummary}
-          </p>
-        </>
-      )}
 
       {/* Scores — uniform 32px, color-driven emphasis */}
       <div style={{ display: 'flex', gap: 22, marginBottom: 28, position: 'relative' }}>

@@ -39,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* ── FOUC fix: preconnect + preload fonts before first paint ── */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
