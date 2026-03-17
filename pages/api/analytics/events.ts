@@ -3,13 +3,26 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
 import { supabaseAdmin } from '../../../lib/supabase'
 
-const VALID_EVENT_TYPES = ['card_swipe', 'metric_click', 'card_share'] as const
+const VALID_EVENT_TYPES = [
+  'card_swipe', 'metric_click', 'card_share',
+  'sandbox_trend_viewed', 'sandbox_trend_toggle',
+  'sandbox_custom_selected', 'sandbox_custom_scored', 'sandbox_custom_reset',
+  'sandbox_metric_tab_viewed', 'sandbox_metric_components_viewed',
+  'sandbox_metric_tab_exited', 'sandbox_metric_time_spent',
+  'sandbox_trends_button_viewed', 'sandbox_trends_expanded',
+  'sandbox_trend_toggled', 'sandbox_trend_sparkline_viewed',
+  'sandbox_trend_insights_expanded',
+] as const
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const session = await getServerSession(req, res, authOptions)
 
-    if (!session) {
+    // Allow unauthenticated sandbox event tracking
+    const sandboxSessionId = req.body?.sandboxSessionId
+    const isSandbox = typeof sandboxSessionId === 'string' && sandboxSessionId.startsWith('sandbox-')
+
+    if (!session && !isSandbox) {
       return res.status(401).json({ message: 'Unauthorized' })
     }
 
@@ -21,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const { error } = await supabaseAdmin.from('events').insert({
-        user_email: session.user?.email,
+        user_email: isSandbox ? sandboxSessionId : session?.user?.email,
         event_type: eventType,
         metadata: metadata || {},
       })
@@ -35,6 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'GET') {
+      if (!session) {
+        return res.status(401).json({ message: 'Unauthorized' })
+      }
       const { event_type, start_date, end_date } = req.query
 
       let query = supabaseAdmin
