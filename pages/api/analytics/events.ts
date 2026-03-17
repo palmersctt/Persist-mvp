@@ -3,7 +3,20 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
 import { supabaseAdmin } from '../../../lib/supabase'
 
-const VALID_EVENT_TYPES = ['card_swipe', 'metric_click', 'card_share'] as const
+const VALID_EVENT_TYPES = [
+  'card_swipe', 'metric_click', 'card_share',
+  // Metric detail tab engagement
+  'sandbox_metric_tab_viewed',
+  'sandbox_metric_components_viewed',
+  'sandbox_metric_tab_exited',
+  'sandbox_metric_time_spent',
+  // Trends section engagement
+  'sandbox_trends_button_viewed',
+  'sandbox_trends_expanded',
+  'sandbox_trend_toggled',
+  'sandbox_trend_sparkline_viewed',
+  'sandbox_trend_insights_expanded',
+] as const
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {

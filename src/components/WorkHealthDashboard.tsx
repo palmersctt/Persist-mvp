@@ -25,6 +25,10 @@ export default function WorkHealthDashboard() {
   const cardRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
+  // Metric detail analytics refs
+  const metricComponentsSeen = useRef<Set<string>>(new Set());
+  const metricTabEnteredAt = useRef<number>(0);
+
   const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus, isNewUser, connectionStartTime } = useWorkHealth(activeTab);
 
   const [connectionExpired, setConnectionExpired] = useState(false);
@@ -94,6 +98,44 @@ export default function WorkHealthDashboard() {
 
     return () => { clearInterval(dotId); clearInterval(verbId); };
   }, [isLoading]);
+
+  // Track when a metric detail tab opens
+  useEffect(() => {
+    if (activeTab === 'performance' || activeTab === 'resilience' || activeTab === 'sustainability') {
+      trackEvent('sandbox_metric_tab_viewed', {
+        metric: activeTab,
+      });
+      metricTabEnteredAt.current = Date.now();
+    }
+
+    // When leaving a metric tab, log time spent
+    return () => {
+      if (metricTabEnteredAt.current && activeTab !== 'overview') {
+        const timeSpentMs = Date.now() - metricTabEnteredAt.current;
+        if (timeSpentMs > 1000) {
+          trackEvent('sandbox_metric_time_spent', {
+            metric: activeTab,
+            timeSpentMs,
+            timeSpentSeconds: Math.round(timeSpentMs / 1000),
+          });
+        }
+        metricTabEnteredAt.current = 0;
+      }
+    };
+  }, [activeTab]);
+
+  // Callback ref to track when metric component breakdowns scroll into view
+  const observeMetricComponents = useCallback((metric: string) => (el: HTMLDivElement | null) => {
+    if (!el || metricComponentsSeen.current.has(metric)) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !metricComponentsSeen.current.has(metric)) {
+        metricComponentsSeen.current.add(metric);
+        trackEvent('sandbox_metric_components_viewed', { metric });
+        observer.disconnect();
+      }
+    }, { threshold: 0.3 });
+    observer.observe(el);
+  }, []);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
@@ -699,7 +741,7 @@ export default function WorkHealthDashboard() {
         {/* Focus Tab */}
         {activeTab === 'performance' && (
           <div className="space-y-16">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+            <button onClick={() => { trackEvent('sandbox_metric_tab_exited', { metric: 'performance' }); setActiveTab('overview'); }} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
               <span>&larr;</span><span>Back to Overview</span>
             </button>
             {/* Large Focus Ring */}
@@ -783,7 +825,7 @@ export default function WorkHealthDashboard() {
                 </div>
 
                 {/* Focus Components — unique to this metric's calculation */}
-                <div className="space-y-5 mb-6">
+                <div ref={observeMetricComponents('performance')} className="space-y-5 mb-6">
                   {/* Meeting Density (25% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
@@ -893,7 +935,7 @@ export default function WorkHealthDashboard() {
         {/* Strain Tab */}
         {activeTab === 'resilience' && (
           <div className="space-y-16">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+            <button onClick={() => { trackEvent('sandbox_metric_tab_exited', { metric: 'resilience' }); setActiveTab('overview'); }} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
               <span>&larr;</span><span>Back to Overview</span>
             </button>
             {/* Large Strain Ring */}
@@ -977,7 +1019,7 @@ export default function WorkHealthDashboard() {
                 </div>
 
                 {/* Strain Components — unique to this metric */}
-                <div className="space-y-5 mb-6">
+                <div ref={observeMetricComponents('resilience')} className="space-y-5 mb-6">
                   {/* Context Switching (unique contexts) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
@@ -1087,7 +1129,7 @@ export default function WorkHealthDashboard() {
         {/* Balance Tab */}
         {activeTab === 'sustainability' && (
           <div className="space-y-16">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+            <button onClick={() => { trackEvent('sandbox_metric_tab_exited', { metric: 'sustainability' }); setActiveTab('overview'); }} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
               <span>&larr;</span><span>Back to Overview</span>
             </button>
             {/* Large Balance Ring */}
@@ -1171,7 +1213,7 @@ export default function WorkHealthDashboard() {
                 </div>
 
                 {/* Balance Components — unique to this metric */}
-                <div className="space-y-5 mb-6">
+                <div ref={observeMetricComponents('sustainability')} className="space-y-5 mb-6">
                   {/* Morning/Afternoon Balance */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
