@@ -164,6 +164,7 @@ export default function WorkHealthDashboard() {
       const dataUrl = await toPng(cardRef.current, {
         pixelRatio: 3,
         quality: 1,
+        skipFonts: true,
       });
 
       // Convert data URL to blob

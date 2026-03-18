@@ -198,7 +198,7 @@ export default function SandboxDashboard() {
     if (shareState === 'generating' || !cardRef.current) return
     setShareState('generating')
     try {
-      const dataUrl = await toPng(cardRef.current, { pixelRatio: 3, quality: 1 })
+      const dataUrl = await toPng(cardRef.current, { pixelRatio: 3, quality: 1, skipFonts: true })
       const res = await fetch(dataUrl)
       const blob = await res.blob()
       const file = new File([blob], 'persist-today.png', { type: 'image/png' })
