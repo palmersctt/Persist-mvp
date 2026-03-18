@@ -688,6 +688,15 @@ class GoogleCalendarService {
       return 90;
     }
 
+    // With only 1 meeting, the rest of the day is open — great recovery
+    if (actualMeetings.length === 1) {
+      const hasBeneficial = beneficialEvents.length > 0;
+      const hasFocusBlocks = focusWorkEvents.length > 0;
+      if (hasBeneficial && hasFocusBlocks) return 95;
+      if (hasBeneficial || hasFocusBlocks) return 92;
+      return 88;
+    }
+
     // Work rhythm balance — lopsided days feel worse
     const morningBlock = actualMeetings.filter(e => {
       const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
@@ -907,8 +916,13 @@ class GoogleCalendarService {
     const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
     const longestStretch = this.findLongestConsecutiveStretch(actualMeetings);
     const gaps = this.calculateGapsBetweenMeetings(actualMeetings);
-    const adequateBreaks = gaps.filter(g => g >= 30).length;
-    const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
+    // With 0-1 meetings, gaps array is empty but the day is mostly free — reflect that
+    const adequateBreaks = actualMeetings.length <= 1
+      ? (actualMeetings.length === 0 ? 4 : 3)
+      : gaps.filter(g => g >= 30).length;
+    const shortBreaks = actualMeetings.length <= 1
+      ? 0
+      : gaps.filter(g => g >= 15 && g < 30).length;
     const earlyLateMeetings = actualMeetings.filter(e => {
       const h = this.getTimezoneAwareHours(e.start, this.userTimezone);
       return h < 7 || h >= 17;
