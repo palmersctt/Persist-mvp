@@ -101,6 +101,25 @@ class GoogleCalendarService {
     'design review', 'project meeting', 'scrum', 'sprint', 'kickoff'
   ];
 
+  // Compound patterns checked BEFORE single-keyword matching.
+  // These override what would otherwise be a false-positive category.
+  // Each entry: [pattern, category].  Checked in order; first match wins.
+  private readonly COMPOUND_OVERRIDES: Array<[string, MeetingCategory]> = [
+    // "work through lunch", "working lunch", "skip lunch", "lunch and learn" → not self-care
+    ['work through lunch', 'COLLABORATIVE'],
+    ['working lunch',      'COLLABORATIVE'],
+    ['skip lunch',         'HEAVY_MEETINGS'],
+    ['lunch and learn',    'COLLABORATIVE'],
+    ['lunch & learn',      'COLLABORATIVE'],
+    ['working dinner',     'COLLABORATIVE'],
+    // "sprint planning", "sprint review", "sprint retro" → collaborative ceremonies, not focus
+    ['sprint planning',    'COLLABORATIVE'],
+    ['sprint review',      'COLLABORATIVE'],
+    ['sprint retro',       'COLLABORATIVE'],
+    // "prep for" something is usually meeting prep, not solo focus
+    ['prep for',           'LIGHT_MEETINGS'],
+  ];
+
   async initialize(accessToken: string): Promise<void> {
     const auth = new google.auth.OAuth2();
     auth.setCredentials({ access_token: accessToken });
@@ -150,14 +169,21 @@ class GoogleCalendarService {
   private categorizeEvent(summary: string): MeetingCategory {
     const title = summary.toLowerCase().trim();
 
+    // 1. Compound overrides — most-specific, multi-word patterns first
+    for (const [pattern, cat] of this.COMPOUND_OVERRIDES) {
+      if (title.includes(pattern)) return cat;
+    }
+
+    // 2. Single-keyword matching — collaborative before focus so that
+    //    shared keywords like "planning" resolve to the meeting category
     let category: MeetingCategory;
 
     if (this.matchesKeywords(title, this.BENEFICIAL_KEYWORDS)) category = 'BENEFICIAL';
     else if (this.matchesKeywords(title, this.NEUTRAL_KEYWORDS)) category = 'NEUTRAL';
-    else if (this.matchesKeywords(title, this.FOCUS_KEYWORDS)) category = 'FOCUS_WORK';
+    else if (this.matchesKeywords(title, this.COLLABORATIVE_KEYWORDS)) category = 'COLLABORATIVE';
     else if (this.matchesKeywords(title, this.LIGHT_KEYWORDS)) category = 'LIGHT_MEETINGS';
     else if (this.matchesKeywords(title, this.HEAVY_KEYWORDS)) category = 'HEAVY_MEETINGS';
-    else if (this.matchesKeywords(title, this.COLLABORATIVE_KEYWORDS)) category = 'COLLABORATIVE';
+    else if (this.matchesKeywords(title, this.FOCUS_KEYWORDS)) category = 'FOCUS_WORK';
     else category = 'COLLABORATIVE'; // Default for unmatched meetings
 
     return category;
