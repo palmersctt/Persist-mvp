@@ -469,72 +469,13 @@ function InputPhase({
             that kind of day
           </span>.
         </h1>
+        <p style={{ fontSize: 15, color: 'var(--ink-faint)', margin: '14px 0 0' }}>
+          Tell us about yours.
+        </p>
       </section>
 
-      {/* Empathy section */}
-      <section className="lp-section-gap">
-        <p style={{
-          fontSize: 17,
-          fontWeight: 700,
-          color: 'var(--ink)',
-          lineHeight: 1.5,
-          margin: '0 0 8px',
-        }}>
-          You already know today is going to be a lot.
-        </p>
-        <p style={{
-          fontSize: 15,
-          color: '#57534E',
-          lineHeight: 1.6,
-          margin: '0 0 24px',
-        }}>
-          We name what your calendar is doing to you — in three numbers.
-        </p>
-
-        {/* Stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{
-            background: 'var(--warm-white)',
-            border: '1px solid var(--border)',
-            borderRadius: 12,
-          }}
-          className="lp-stat-card">
-            <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-1px', color: 'var(--amber)', marginBottom: 4 }}>
-              23 hrs/wk
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--ink-light)', lineHeight: 1.4 }}>
-              average time in meetings
-            </div>
-          </div>
-          <div style={{
-            background: 'var(--warm-white)',
-            border: '1px solid var(--border)',
-            borderRadius: 12,
-          }}
-          className="lp-stat-card">
-            <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-1px', color: 'var(--amber)', marginBottom: 4 }}>
-              62%
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--ink-light)', lineHeight: 1.4 }}>
-              have no uninterrupted time
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Demo section */}
-      <section className="lp-demo-gap">
-        <div style={{
-          fontSize: 14,
-          fontWeight: 600,
-          color: 'var(--ink-faint)',
-          paddingBottom: 12,
-          borderBottom: '1px solid var(--border)',
-          marginBottom: 24,
-        }}>
-          Try it — tell us about your day
-        </div>
-
+      {/* Steppers */}
+      <section style={{ paddingTop: 32 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <Stepper
             label="Meetings today"
@@ -553,8 +494,8 @@ function InputPhase({
             onChange={setBackToBack}
           />
           <Stepper
-            label="How many hats"
-            subtitle="Different projects or roles"
+            label="Different topics"
+            subtitle="How scattered is your day"
             value={hats}
             min={1}
             max={6}
@@ -585,7 +526,7 @@ function InputPhase({
           onPointerDown={e => { e.currentTarget.style.transform = 'scale(0.98)' }}
           onPointerUp={e => { e.currentTarget.style.transform = 'translateY(0)' }}
         >
-          Read my day &rarr;
+          How bad is it? &rarr;
         </button>
       </section>
     </div>
@@ -810,9 +751,6 @@ function DashboardPhase({
               >
                 Connect your calendar &mdash; it&apos;s free
               </button>
-              <p style={{ fontSize: 12, color: 'var(--ink-faint)', margin: '0 0 32px' }}>
-                Google Calendar &middot; 10 seconds &middot; read-only
-              </p>
 
               {/* 6. Tagline */}
               <p style={{
@@ -822,7 +760,7 @@ function DashboardPhase({
                 fontStyle: 'italic',
                 margin: '0 0 32px',
               }}>
-                We don&apos;t make your workday better. We make you feel better about your workday.
+                Not a fix. Just the truth.
               </p>
 
               {/* 7. Reset */}
