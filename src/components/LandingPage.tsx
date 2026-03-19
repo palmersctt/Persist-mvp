@@ -341,16 +341,16 @@ export default function LandingPage() {
       <div className="lp-wrap">
         {/* LOGO BAR */}
         <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a
+          <Link
             href="/"
-            onClick={(e) => { e.preventDefault(); setPhase('input'); setDashView('overview'); setShowTrends(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            onClick={() => { setPhase('input'); setDashView('overview'); setShowTrends(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
             style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', cursor: 'pointer' }}
           >
             <PersistLogo size={24} />
             <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.5px', color: 'var(--ink)' }}>
               PERSIST<span style={{ color: 'var(--amber)' }}>WORK</span>
             </span>
-          </a>
+          </Link>
           <button
             onClick={() => signIn('google')}
             style={{
