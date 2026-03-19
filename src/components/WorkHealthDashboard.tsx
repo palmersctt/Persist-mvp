@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
+import Link from 'next/link'
 import { useWorkHealth } from '../hooks/useWorkHealth'
 import CardContent from './CardContent'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
@@ -315,10 +316,10 @@ export default function WorkHealthDashboard() {
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
         <header className="px-6 py-6 sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <PersistLogo size={24} variant="dark" />
               <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
-            </div>
+            </Link>
           </div>
         </header>
 
@@ -344,10 +345,10 @@ export default function WorkHealthDashboard() {
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
         <header className="px-6 py-6 sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <PersistLogo size={24} variant="dark" />
               <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
-            </div>
+            </Link>
             <button
               onClick={() => signOut()}
               className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
