@@ -14,6 +14,7 @@ import type { ScheduleAnalysis } from '../lib/estimateScores'
 import type { HeroMessage } from '../hooks/useWorkHealth'
 import type { Mood } from '../lib/mood'
 import { ComicReliefGenerator } from '../utils/comicReliefGenerator'
+import CardContent from './CardContent'
 import SwipeableQuoteCards from './SwipeableQuoteCards'
 import WhyMood from './WhyMood'
 import PersistLogo from './PersistLogo'
@@ -528,6 +529,31 @@ function InputPhase({
         >
           How bad is it? &rarr;
         </button>
+      </section>
+
+      {/* Ghost card preview */}
+      <section style={{ position: 'relative', overflow: 'hidden', maxHeight: 220, marginBottom: 32 }}>
+        <div style={{ opacity: 0.55, pointerEvents: 'none' }}>
+          <CardContent
+            quote="You miss 100% of the shots you don't take."
+            source="Michael Scott · The Office"
+            subtitle="Survival mode activated — and that's okay"
+            focus={32}
+            strain={71}
+            balance={28}
+            mood="grinding"
+          />
+        </div>
+        {/* Fade-out mask */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 120,
+          background: 'linear-gradient(to bottom, transparent, var(--cream))',
+          pointerEvents: 'none',
+        }} />
       </section>
     </div>
   )
