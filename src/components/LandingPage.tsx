@@ -234,8 +234,6 @@ export default function LandingPage() {
   }
 
   const ft = schedule ? formatFocusTime(Math.max(0, (8 - schedule.durationHours) * 60)) : { hours: 0, minutes: 0 }
-  const showFooter = true
-
   return (
     <>
       <style jsx global>{`
@@ -341,33 +339,29 @@ export default function LandingPage() {
 
       <div className="lp-wrap">
         {/* LOGO BAR */}
-        <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link
             href="/"
             onClick={() => { setPhase('input'); setDashView('overview'); setShowTrends(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', cursor: 'pointer' }}
           >
-            <PersistLogo size={24} />
-            <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.5px', color: 'var(--ink)' }}>
-              PERSIST<span style={{ color: 'var(--amber)' }}>WORK</span>
+            <PersistLogo size={18} />
+            <span style={{ fontWeight: 700, fontSize: 13, letterSpacing: '-0.3px', color: 'var(--ink-light)' }}>
+              PERSIST<span style={{ color: 'rgba(232,125,58,0.7)' }}>WORK</span>
             </span>
           </Link>
           <button
             onClick={() => signIn('google')}
             style={{
               background: 'none',
-              border: '1px solid var(--border)',
-              borderRadius: 8,
-              padding: '6px 14px',
-              fontSize: 13,
-              fontWeight: 600,
-              color: 'var(--ink-light)',
+              border: 'none',
+              padding: '4px 0',
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'var(--ink-faint)',
               cursor: 'pointer',
               fontFamily: 'inherit',
-              transition: 'background 0.15s, border-color 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--amber-light)'; e.currentTarget.style.borderColor = 'var(--amber)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'var(--border)' }}
           >
             Log in
           </button>
@@ -423,16 +417,14 @@ export default function LandingPage() {
           )}
         </AnimatePresence>
 
-        {/* FOOTER — only after dashboard */}
-        {showFooter && (
-          <footer className="lp-footer">
+        {/* FOOTER */}
+        <footer className="lp-footer">
             <span>&copy; 2026 PERSISTWORK</span>
             <div className="lp-footer-links">
               <Link href="/privacy">Privacy Policy</Link>
               <Link href="/terms">Terms of Service</Link>
             </div>
           </footer>
-        )}
       </div>
     </>
   )
@@ -460,15 +452,9 @@ function InputPhase({
           color: 'var(--ink)',
           margin: 0,
         }}>
-          Yeah. It&apos;s{' '}
-          <span style={{
-            fontFamily: "'Lora', Georgia, serif",
-            fontStyle: 'italic',
-            fontWeight: 500,
-            color: 'var(--amber)',
-          }}>
-            that kind of day
-          </span>.
+          <span style={{ color: 'var(--amber)' }}>Yeah.</span> It&apos;s
+          <br />
+          <em style={{ fontFamily: "'Lora', Georgia, serif", fontWeight: 800, fontStyle: 'italic' }}>that kind of day.</em>
         </h1>
         <p style={{ fontSize: 15, color: 'var(--ink-faint)', margin: '14px 0 0' }}>
           Tell us about yours.
@@ -535,13 +521,13 @@ function InputPhase({
       <section style={{ position: 'relative', overflow: 'hidden', maxHeight: 220, marginBottom: 32 }}>
         <div style={{ opacity: 0.55, pointerEvents: 'none' }}>
           <CardContent
-            quote="You miss 100% of the shots you don't take."
-            source="Michael Scott · The Office"
+            quote="I'm not great at the advice. Can I interest you in a sarcastic comment?"
+            source="Chandler Bing · Friends"
             subtitle="Survival mode activated — and that's okay"
-            focus={32}
-            strain={71}
-            balance={28}
-            mood="grinding"
+            focus={22}
+            strain={78}
+            balance={19}
+            mood="survival"
           />
         </div>
         {/* Fade-out mask */}
