@@ -118,12 +118,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           subtitle: 'Your custom day, scored.',
         })),
         whyNarrative: mc === 0
-          ? 'No meetings on the books \u2014 your calendar is wide open.'
-          : mc <= 2
-          ? `Light day with just ${mc} meeting${mc > 1 ? 's' : ''}, leaving most of your time free.`
-          : mc <= 5
-          ? `${mc} meetings today with about ${focusHours} hours of focus time between them.${btb >= 2 ? ` ${btb} are back-to-back.` : ''}`
-          : `Heavy day \u2014 ${mc} meetings eating into your calendar, leaving only ${focusHours} hours for actual work.${btb >= 3 ? ` ${btb} back-to-backs will wear you down.` : ''}`,
+          ? "Nothing on the calendar. That's rare \u2014 and your brain already knows it. Today is yours."
+          : mc <= 2 && btb === 0
+          ? "Light day. You'll actually have time to finish a thought before starting the next one. Enjoy it \u2014 not every day is this kind."
+          : workHealth.adaptivePerformanceIndex >= 70 && workHealth.cognitiveResilience <= 35
+          ? "Your day has room to breathe. That doesn't mean it'll be easy, but it means when it gets hard, you'll have something left in the tank."
+          : workHealth.cognitiveResilience >= 70 && btb >= 3
+          ? `That tired feeling you'll have by 3pm? It's not because the work is hard. It's because your brain hasn't had a single moment to rest between conversations. ${btb} back-to-backs will do that.`
+          : mc >= 6
+          ? `${mc} meetings. Not all of them will matter, but all of them will cost you energy. The ones you remember aren't always the ones that wore you out.`
+          : workHealth.workRhythmRecovery <= 30
+          ? "There's no recovery built into this day. You'll push through \u2014 you always do \u2014 but your body is keeping score even when you're not."
+          : workHealth.adaptivePerformanceIndex <= 40
+          ? "You'll feel busy all day and still wonder what you actually got done. That's not a you problem. There's just nowhere to hide in this schedule."
+          : "Not the worst day, not the best. The kind where you're tired enough to feel it but not enough to say anything about it. That's its own kind of exhausting.",
         overview: {
           title: workHealth.adaptivePerformanceIndex >= 75 ? 'Solid Day Ahead' : workHealth.adaptivePerformanceIndex >= 50 ? 'Mixed Day Ahead' : 'Demanding Day Ahead',
           message: mc === 0

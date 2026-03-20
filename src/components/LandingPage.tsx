@@ -21,26 +21,32 @@ import PersistLogo from './PersistLogo'
 
 // --- Narrative & insight generators ---
 
-// Matches claudeAI.ts getDefaultInsights whyNarrative builder
-function generateNarrative(schedule: ScheduleAnalysis): string {
+function generateNarrative(schedule: ScheduleAnalysis, focus: number, strain: number, balance: number): string {
   const mc = schedule.meetingCount
   const b2b = schedule.backToBackCount
-  const focusHours = Math.max(0, 8 - schedule.durationHours).toFixed(1)
-  const parts: string[] = []
 
   if (mc === 0) {
-    parts.push('No meetings on the books today — your calendar is wide open.')
-  } else if (mc <= 2) {
-    parts.push(`Light day with just ${mc} meeting${mc > 1 ? 's' : ''}, leaving most of your time free.`)
-  } else if (mc <= 5) {
-    parts.push(`${mc} meetings today with about ${focusHours} hours of focus time between them.`)
-  } else {
-    parts.push(`Heavy day — ${mc} meetings eating into your calendar, leaving only ${focusHours} hours for actual work.`)
+    return "Nothing on the calendar. That's rare — and your brain already knows it. Today is yours."
   }
-  if (b2b >= 3) {
-    parts.push(`${b2b} of those are back-to-back, which will wear you down by the afternoon.`)
+  if (mc <= 2 && b2b === 0) {
+    return "Light day. You'll actually have time to finish a thought before starting the next one. Enjoy it — not every day is this kind."
   }
-  return parts.join(' ')
+  if (focus >= 70 && strain <= 35) {
+    return "Your day has room to breathe. That doesn't mean it'll be easy, but it means when it gets hard, you'll have something left in the tank."
+  }
+  if (strain >= 70 && b2b >= 3) {
+    return `That tired feeling you'll have by 3pm? It's not because the work is hard. It's because your brain hasn't had a single moment to rest between conversations. ${b2b} back-to-backs will do that.`
+  }
+  if (mc >= 6) {
+    return `${mc} meetings. Not all of them will matter, but all of them will cost you energy. The ones you remember aren't always the ones that wore you out.`
+  }
+  if (balance <= 30) {
+    return "There's no recovery built into this day. You'll push through — you always do — but your body is keeping score even when you're not."
+  }
+  if (focus <= 40) {
+    return "You'll feel busy all day and still wonder what you actually got done. That's not a you problem. There's just nowhere to hide in this schedule."
+  }
+  return "Not the worst day, not the best. The kind where you're tired enough to feel it but not enough to say anything about it. That's its own kind of exhausting."
 }
 
 interface MetricInsightCopy {
@@ -127,7 +133,7 @@ export default function LandingPage() {
     const metricsObj = buildWorkHealthMetrics(s.focus, s.strain, s.balance, sched)
     const detectedMood = detectMood(s.focus, s.strain, s.balance)
 
-    const narr = generateNarrative(sched)
+    const narr = generateNarrative(sched, s.focus, s.strain, s.balance)
 
     // Subtitle logic matching real app (claudeAI.ts getDefaultInsights)
     let heroSubtitle: string

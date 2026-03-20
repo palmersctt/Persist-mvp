@@ -410,21 +410,29 @@ ${recentQuotes && recentQuotes.length > 0 ? `\nBANNED — do NOT reuse these rec
       severity: workHealth.workRhythmRecovery >= 75 ? 'success' : workHealth.workRhythmRecovery >= 50 ? 'info' : 'warning'
     };
 
-    // Build a fallback whyNarrative from the calendar data
-    const whyParts: string[] = [];
+    // Build a fallback whyNarrative — human connection, not data recitation
+    const perf = workHealth.adaptivePerformanceIndex;
+    const res = workHealth.cognitiveResilience;
+    const sus = workHealth.workRhythmRecovery;
+    let whyNarrative: string;
+
     if (meetingCount === 0) {
-      whyParts.push('No meetings on the books today — your calendar is wide open.');
-    } else if (meetingCount <= 2) {
-      whyParts.push(`Light day with just ${meetingCount} meeting${meetingCount > 1 ? 's' : ''}, leaving most of your time free.`);
-    } else if (meetingCount <= 5) {
-      whyParts.push(`${meetingCount} meetings today with about ${focusHours} hours of focus time between them.`);
+      whyNarrative = "Nothing on the calendar. That's rare — and your brain already knows it. Today is yours.";
+    } else if (meetingCount <= 2 && backToBack === 0) {
+      whyNarrative = "Light day. You'll actually have time to finish a thought before starting the next one. Enjoy it — not every day is this kind.";
+    } else if (perf >= 70 && res <= 35) {
+      whyNarrative = "Your day has room to breathe. That doesn't mean it'll be easy, but it means when it gets hard, you'll have something left in the tank.";
+    } else if (res >= 70 && backToBack >= 3) {
+      whyNarrative = `That tired feeling you'll have by 3pm? It's not because the work is hard. It's because your brain hasn't had a single moment to rest between conversations. ${backToBack} back-to-backs will do that.`;
+    } else if (meetingCount >= 6) {
+      whyNarrative = `${meetingCount} meetings. Not all of them will matter, but all of them will cost you energy. The ones you remember aren't always the ones that wore you out.`;
+    } else if (sus <= 30) {
+      whyNarrative = "There's no recovery built into this day. You'll push through — you always do — but your body is keeping score even when you're not.";
+    } else if (perf <= 40) {
+      whyNarrative = "You'll feel busy all day and still wonder what you actually got done. That's not a you problem. There's just nowhere to hide in this schedule.";
     } else {
-      whyParts.push(`Heavy day — ${meetingCount} meetings eating into your calendar, leaving only ${focusHours} hours for actual work.`);
+      whyNarrative = "Not the worst day, not the best. The kind where you're tired enough to feel it but not enough to say anything about it. That's its own kind of exhausting.";
     }
-    if (backToBack >= 3) {
-      whyParts.push(`${backToBack} of those are back-to-back, which will wear you down by the afternoon.`);
-    }
-    const whyNarrative = whyParts.join(' ');
 
     return {
       heroMessage,
