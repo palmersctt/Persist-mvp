@@ -97,13 +97,14 @@ export default function LandingPage() {
     }
   }, [session, router])
 
-  // Input state
-  const [meetings, setMeetings] = useState(5)
-  const [backToBack, setBackToBack] = useState(2)
-  const [hats, setHats] = useState(3)
+  // Input state — pre-set to a deliberately bad day
+  const [meetings, setMeetings] = useState(7)
+  const [backToBack, setBackToBack] = useState(5)
+  const [hats, setHats] = useState(5)
 
-  // Phase
-  const [phase, setPhase] = useState<'input' | 'dashboard'>('input')
+  // Phase: input → reacting → dashboard
+  const [phase, setPhase] = useState<'input' | 'reacting' | 'dashboard'>('input')
+  const [reactionText, setReactionText] = useState('')
 
   // Computed dashboard state
   const [scores, setScores] = useState<{ focus: number; strain: number; balance: number } | null>(null)
@@ -213,11 +214,28 @@ export default function LandingPage() {
     setTrendView('weekly')
     setDashView('overview')
     setShowTrends(false)
-    setPhase('dashboard')
+
+    // Reaction beat — the product winces before responding
+    const reactions = detectedMood === 'survival' || detectedMood === 'grinding'
+      ? ['...yikes.', 'oh no.', 'okay wow.', 'yeah, that tracks.']
+      : detectedMood === 'scattered'
+      ? ['hmm.', 'that\'s a lot of hats.', 'okay, let me look...']
+      : s.focus >= 70
+      ? ['oh, not bad.', 'okay okay...', 'huh, let\'s see...']
+      : ['...reading the wreckage.', 'let me do the math on this...', 'one sec...']
+    setReactionText(reactions[Math.floor(Math.random() * reactions.length)])
+    setPhase('reacting')
     window.scrollTo({ top: 0 })
+
+    setTimeout(() => {
+      setPhase('dashboard')
+    }, 900)
   }
 
   const handleReset = () => {
+    setMeetings(7)
+    setBackToBack(5)
+    setHats(5)
     setPhase('input')
     setDashView('overview')
     setShowTrends(false)
@@ -348,7 +366,7 @@ export default function LandingPage() {
         <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link
             href="/"
-            onClick={() => { setPhase('input'); setDashView('overview'); setShowTrends(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            onClick={() => { setMeetings(7); setBackToBack(5); setHats(5); setPhase('input'); setDashView('overview'); setShowTrends(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
             style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', cursor: 'pointer' }}
           >
             <PersistLogo size={18} />
@@ -389,6 +407,32 @@ export default function LandingPage() {
                 setHats={setHats}
                 onSubmit={handleReadMyDay}
               />
+            </motion.div>
+          ) : phase === 'reacting' ? (
+            <motion.div
+              key="reacting"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '40vh',
+              }}
+            >
+              <p style={{
+                fontFamily: "'Lora', Georgia, serif",
+                fontStyle: 'italic',
+                fontSize: 24,
+                fontWeight: 500,
+                color: 'var(--ink-light)',
+                textAlign: 'center',
+                letterSpacing: '-0.3px',
+              }}>
+                {reactionText}
+              </p>
             </motion.div>
           ) : (
             <motion.div
@@ -463,7 +507,7 @@ function InputPhase({
           <em style={{ fontFamily: "'Lora', Georgia, serif", fontWeight: 800, fontStyle: 'italic' }}>that kind of day.</em>
         </h1>
         <p style={{ fontSize: 15, color: 'var(--ink-faint)', margin: '14px 0 0' }}>
-          Tell us about yours.
+          Stop me if I&apos;m wrong.
         </p>
       </section>
 
@@ -471,7 +515,7 @@ function InputPhase({
       <section style={{ paddingTop: 32 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <Stepper
-            label="Meetings today"
+            label="Meetings that ate your day"
             subtitle="How many are on the calendar"
             value={meetings}
             min={0}
@@ -479,16 +523,16 @@ function InputPhase({
             onChange={setMeetings}
           />
           <Stepper
-            label="Back to back"
-            subtitle="No break between them"
+            label="Zero breathing room"
+            subtitle="Back-to-back, no break between"
             value={backToBack}
             min={0}
             max={Math.max(0, meetings - 1)}
             onChange={setBackToBack}
           />
           <Stepper
-            label="Different topics"
-            subtitle="How scattered is your day"
+            label="Completely unrelated things"
+            subtitle="How many topics your brain juggled"
             value={hats}
             min={1}
             max={6}
@@ -496,11 +540,22 @@ function InputPhase({
           />
         </div>
 
+        {/* Signal of depth */}
+        <p style={{
+          fontSize: 12,
+          color: 'var(--ink-faint)',
+          textAlign: 'center',
+          margin: '20px 0 0',
+          fontStyle: 'italic',
+        }}>
+          Three questions. We can take it from here.
+        </p>
+
         <button
           onClick={onSubmit}
           style={{
             width: '100%',
-            marginTop: 28,
+            marginTop: 16,
             marginBottom: 48,
             padding: '16px 24px',
             borderRadius: 14,
@@ -794,7 +849,7 @@ function DashboardPhase({
                   padding: '8px 16px',
                 }}
               >
-                &larr; Try different numbers
+                &larr; Change the numbers
               </button>
             </section>
           </motion.div>
