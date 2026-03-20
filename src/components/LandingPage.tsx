@@ -586,10 +586,10 @@ function Stepper({ label, subtitle, value, min, max, onChange }: {
           &minus;
         </button>
         <span style={{
-          fontSize: 28,
-          fontWeight: 800,
+          fontSize: 15,
+          fontWeight: 600,
           color: 'var(--ink)',
-          width: 36,
+          width: 28,
           textAlign: 'center',
           fontFeatureSettings: '"tnum"',
           letterSpacing: '-0.04em',
