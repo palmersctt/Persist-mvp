@@ -300,7 +300,12 @@ export default function LandingPage() {
           width: 100%;
         }
 
-        .lp-headline { font-size: 30px; }
+        /* Hero section — full bleed on mobile */
+        .lp-hero {
+          text-align: center;
+          padding: 56px 24px 0;
+        }
+        .lp-headline { font-size: 36px; }
         .lp-section-gap { padding-top: 40px; }
         .lp-demo-gap { padding-top: 44px; }
         .lp-stat-card { padding: 16px 18px; }
@@ -311,7 +316,8 @@ export default function LandingPage() {
             max-width: 480px;
             padding: 0 24px;
           }
-          .lp-headline { font-size: 34px; }
+          .lp-hero { padding: 64px 32px 0; }
+          .lp-headline { font-size: 40px; }
         }
 
         /* Desktop (1024px+) */
@@ -320,7 +326,8 @@ export default function LandingPage() {
             max-width: 520px;
             padding: 0 32px;
           }
-          .lp-headline { font-size: 38px; }
+          .lp-hero { padding: 80px 40px 0; }
+          .lp-headline { font-size: 48px; }
           .lp-section-gap { padding-top: 52px; }
           .lp-demo-gap { padding-top: 56px; }
           .lp-stat-card { padding: 20px 20px; }
@@ -491,14 +498,14 @@ function InputPhase({
   onSubmit: () => void
 }) {
   return (
-    <div className="lp-content-col">
-      {/* Headline */}
-      <section style={{ textAlign: 'center', padding: '48px 0 0' }}>
+    <div>
+      {/* Hero — full bleed on mobile */}
+      <section className="lp-hero">
         <h1 className="lp-headline" style={{
           fontFamily: "'DM Sans', 'Inter', sans-serif",
           fontWeight: 800,
-          lineHeight: 1.15,
-          letterSpacing: '-0.8px',
+          lineHeight: 1.1,
+          letterSpacing: '-1.2px',
           color: 'var(--ink)',
           margin: 0,
         }}>
@@ -506,13 +513,13 @@ function InputPhase({
           <br />
           <em style={{ fontFamily: "'Lora', Georgia, serif", fontWeight: 800, fontStyle: 'italic' }}>that kind of day.</em>
         </h1>
-        <p style={{ fontSize: 15, color: 'var(--ink-faint)', margin: '14px 0 0' }}>
+        <p style={{ fontSize: 15, color: 'var(--ink-faint)', margin: '18px 0 0' }}>
           Stop me if I&apos;m wrong.
         </p>
       </section>
 
       {/* Steppers */}
-      <section style={{ paddingTop: 32 }}>
+      <section className="lp-content-col" style={{ paddingTop: 36 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <Stepper
             label="Meetings that ate your day"
@@ -579,29 +586,31 @@ function InputPhase({
       </section>
 
       {/* Ghost card preview */}
-      <section style={{ position: 'relative', overflow: 'hidden', maxHeight: 220, marginBottom: 32 }}>
-        <div style={{ opacity: 0.55, pointerEvents: 'none' }}>
-          <CardContent
-            quote="I'm not great at the advice. Can I interest you in a sarcastic comment?"
-            source="Chandler Bing · Friends"
-            subtitle="Survival mode activated — and that's okay"
-            focus={22}
-            strain={78}
-            balance={19}
-            mood="survival"
-          />
-        </div>
-        {/* Fade-out mask */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 120,
-          background: 'linear-gradient(to bottom, transparent, var(--cream))',
-          pointerEvents: 'none',
-        }} />
-      </section>
+      <div className="lp-content-col">
+        <section style={{ position: 'relative', overflow: 'hidden', maxHeight: 220, marginBottom: 32 }}>
+          <div style={{ opacity: 0.55, pointerEvents: 'none' }}>
+            <CardContent
+              quote="I'm not great at the advice. Can I interest you in a sarcastic comment?"
+              source="Chandler Bing · Friends"
+              subtitle="Survival mode activated — and that's okay"
+              focus={22}
+              strain={78}
+              balance={19}
+              mood="survival"
+            />
+          </div>
+          {/* Fade-out mask */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            background: 'linear-gradient(to bottom, transparent, var(--cream))',
+            pointerEvents: 'none',
+          }} />
+        </section>
+      </div>
     </div>
   )
 }
