@@ -673,15 +673,14 @@ function DashboardPhase({
               />
             </div>
 
-            {/* 2. WhyMood — collapsed by default */}
+            {/* 2. WhyMood */}
             <WhyMood
-              mood={moodConfig.name}
+              mood={detectMood(focus, strain, balance)}
               narrative={narrative}
               focus={focus}
               strain={strain}
               balance={balance}
               onMetricClick={onMetricClick}
-              defaultOpen
             />
 
             {/* 3. Trends — entry button or expanded inline */}
