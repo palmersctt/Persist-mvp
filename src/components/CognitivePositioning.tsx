@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { useCognitivePositioning } from '../hooks/useCognitivePositioning'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import PersistLogo from './PersistLogo'
-import type { ZoneKey, WeeklyBreakdown, WeekSnapshot, CognitiveSignals, ClassifiedEventSummary } from '../lib/cognitive-signals'
-import type { RiskLevel } from '../lib/cognitive-classification'
+import type { ZoneKey, WeeklyBreakdown, WeekSnapshot, CognitiveSignals, ClassifiedEventSummary, OutcomeLedger, LedgerItem } from '../lib/cognitive-signals'
+import type { WorkOrientation } from '../lib/cognitive-classification'
 
-// --- Zone config (matches design reference) ---
+// --- Zone config ---
 const ZONE_CONFIG: Record<ZoneKey, {
   label: string; color: string; bg: string
   tagBg: string; tagBorder: string; desc: string; icon: string
@@ -19,7 +19,7 @@ const ZONE_CONFIG: Record<ZoneKey, {
     bg: 'rgba(192, 84, 74, 0.04)',
     tagBg: 'rgba(192, 84, 74, 0.08)',
     tagBorder: 'rgba(192, 84, 74, 0.2)',
-    desc: 'High automation exposure · Low leverage · Declining trajectory',
+    desc: 'Mostly process work · Low outcome delivery · Calendar is filling itself',
     icon: '↓',
   },
   friction: {
@@ -28,7 +28,7 @@ const ZONE_CONFIG: Record<ZoneKey, {
     bg: 'rgba(232, 125, 58, 0.04)',
     tagBg: 'rgba(232, 125, 58, 0.08)',
     tagBorder: 'rgba(232, 125, 58, 0.2)',
-    desc: 'Split between high-value and automatable · Stuck momentum',
+    desc: 'Split between outcomes and tasks · You see the problem but the calendar won\u2019t let you fix it',
     icon: '—',
   },
   agency: {
@@ -37,29 +37,28 @@ const ZONE_CONFIG: Record<ZoneKey, {
     bg: 'rgba(90, 122, 92, 0.04)',
     tagBg: 'rgba(90, 122, 92, 0.08)',
     tagBorder: 'rgba(90, 122, 92, 0.2)',
-    desc: 'Human-essential work dominates · Positive trajectory',
+    desc: 'Outcome work dominates · Your time compounds',
     icon: '↑',
   },
 }
 
-const RISK_COLORS: Record<RiskLevel, { bar: string; bg: string; label: string }> = {
-  total: { bar: '#7A2820', bg: 'rgba(192,84,74,0.08)', label: '#C0544A' },
-  'very-high': { bar: '#C0544A', bg: 'rgba(192,84,74,0.06)', label: '#C0544A' },
-  high: { bar: '#E87D3A', bg: 'rgba(232,125,58,0.06)', label: '#E87D3A' },
-  medium: { bar: '#A8A29E', bg: 'rgba(168,162,158,0.08)', label: '#78716C' },
-  low: { bar: '#5A7A5C', bg: 'rgba(90,122,92,0.06)', label: '#5A7A5C' },
-  'very-low': { bar: '#3D6B40', bg: 'rgba(61,107,64,0.06)', label: '#3D6B40' },
-  none: { bar: '#A8A29E', bg: 'rgba(168,162,158,0.04)', label: '#78716C' },
+// --- Orientation colors (brand tokens only) ---
+const ORIENTATION_COLORS: Record<WorkOrientation, { bar: string; bg: string; label: string }> = {
+  outcome:      { bar: '#5A7A5C', bg: 'rgba(90,122,92,0.06)',   label: '#5A7A5C' },
+  enabling:     { bar: '#E87D3A', bg: 'rgba(232,125,58,0.06)',  label: '#E87D3A' },
+  deliberation: { bar: '#57534E', bg: 'rgba(87,83,78,0.06)',    label: '#57534E' },
+  ceremony:     { bar: '#C0544A', bg: 'rgba(192,84,74,0.06)',   label: '#C0544A' },
+  process:      { bar: '#C0544A', bg: 'rgba(192,84,74,0.06)',   label: '#C0544A' },
+  'non-work':   { bar: '#A8A29E', bg: 'rgba(168,162,158,0.04)', label: '#A8A29E' },
 }
 
-const RISK_LABELS: Record<RiskLevel, string> = {
-  total: 'Fully automatable',
-  'very-high': 'Very high risk',
-  high: 'High risk',
-  medium: 'Shifting',
-  low: 'Human-essential',
-  'very-low': 'Irreplaceable',
-  none: 'Non-work',
+const ORIENTATION_LABELS: Record<WorkOrientation, string> = {
+  outcome: 'Outcome',
+  enabling: 'Enabling',
+  deliberation: 'Deliberation',
+  ceremony: 'Ceremony',
+  process: 'Process',
+  'non-work': 'Non-work',
 }
 
 // --- Sub-components matching design reference ---
@@ -149,15 +148,15 @@ function TrendSpark({ data, color, height = 56 }: {
   )
 }
 
-function BreakdownBar({ item, maxHours, events, isOpen, onToggle, highlight }: {
-  item: WeeklyBreakdown; maxHours: number; events: ClassifiedEventSummary[]; isOpen: boolean; onToggle: () => void; highlight?: 'human' | 'risk' | null
+function OrientationRow({ orientation, hours, maxHours, events, isOpen, onToggle, highlight }: {
+  orientation: WorkOrientation; hours: number; maxHours: number; events: ClassifiedEventSummary[]
+  isOpen: boolean; onToggle: () => void; highlight?: 'human' | 'risk' | null
 }) {
-  const rc = RISK_COLORS[item.risk]
-  const pct = maxHours > 0 ? (item.hours / maxHours) * 100 : 0
-  const categoryEvents = events.filter(e => e.category === item.category)
-
-  const highlightBg = highlight === 'human' ? 'rgba(90,122,92,0.10)' :
-                      highlight === 'risk' ? 'rgba(192,84,74,0.10)' : 'transparent'
+  const oc = ORIENTATION_COLORS[orientation]
+  const pct = maxHours > 0 ? (hours / maxHours) * 100 : 0
+  const isOutcome = orientation === 'outcome' || orientation === 'enabling'
+  const highlightBg = highlight === 'human' && isOutcome ? 'rgba(90,122,92,0.10)' :
+                      highlight === 'risk' && !isOutcome ? 'rgba(192,84,74,0.10)' : 'transparent'
 
   return (
     <div style={{
@@ -169,28 +168,32 @@ function BreakdownBar({ item, maxHours, events, isOpen, onToggle, highlight }: {
         onClick={onToggle}
         style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 4px', cursor: 'pointer' }}
       >
-        <div style={{ width: 140, fontSize: 13, fontWeight: 600, color: '#57534E', flexShrink: 0 }}>{item.category}</div>
+        <div style={{ width: 120, fontSize: 13, fontWeight: 600, color: '#57534E', flexShrink: 0 }}>
+          {ORIENTATION_LABELS[orientation]}
+        </div>
         <div style={{ flex: 1, position: 'relative' }}>
-          <div style={{ height: 22, borderRadius: 5, background: rc.bg, overflow: 'hidden' }}>
+          <div style={{ height: 22, borderRadius: 5, background: oc.bg, overflow: 'hidden' }}>
             <div style={{
-              height: '100%', borderRadius: 5, background: rc.bar, opacity: 0.7,
+              height: '100%', borderRadius: 5, background: oc.bar, opacity: 0.7,
               width: `${pct}%`,
               transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
           </div>
         </div>
-        <div style={{ width: 42, fontSize: 13, fontWeight: 700, color: '#57534E', textAlign: 'right' as const, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{item.hours}h</div>
+        <div style={{ width: 42, fontSize: 13, fontWeight: 700, color: '#57534E', textAlign: 'right' as const, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+          {hours}h
+        </div>
         <div style={{
           fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const,
-          color: rc.label, background: rc.bg, padding: '4px 10px', borderRadius: 5,
-          width: 110, textAlign: 'center' as const, flexShrink: 0,
+          color: oc.label, background: oc.bg, padding: '4px 10px', borderRadius: 5,
+          width: 100, textAlign: 'center' as const, flexShrink: 0,
         }}>
-          {RISK_LABELS[item.risk]}
+          {ORIENTATION_LABELS[orientation]}
         </div>
       </div>
-      {isOpen && categoryEvents.length > 0 && (
+      {isOpen && events.length > 0 && (
         <div style={{ padding: '4px 8px 10px 20px' }}>
-          {categoryEvents.map((evt, i) => (
+          {events.map((evt, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '5px 0',
@@ -204,6 +207,108 @@ function BreakdownBar({ item, maxHours, events, isOpen, onToggle, highlight }: {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function LedgerGroup({ label, items, color }: { label: string; items: LedgerItem[]; color: string }) {
+  if (items.length === 0) return null
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+        color, marginBottom: 6,
+      }}>
+        {label}
+      </div>
+      {items.map((item, i) => (
+        <div key={i} style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '4px 0',
+          borderTop: i > 0 ? '1px solid rgba(231,224,216,0.5)' : 'none',
+        }}>
+          <span style={{ fontSize: 12, color: '#57534E' }}>{item.title}</span>
+          <span style={{ fontSize: 11, color: '#A8A29E', fontVariantNumeric: 'tabular-nums', flexShrink: 0, marginLeft: 12 }}>
+            {item.hours >= 1 ? `${item.hours}h` : `${Math.round(item.hours * 60)}m`}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function OutcomeLedgerPanel({ ledger }: { ledger: OutcomeLedger }) {
+  const { outcomes, tasks, enabling, summary } = ledger
+  return (
+    <div style={{
+      background: '#FEFCF9', border: '1px solid #E7E0D8',
+      borderRadius: 14, padding: '20px 24px', marginBottom: 24,
+    }}>
+      <div style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+        color: '#78716C', marginBottom: 16,
+      }}>
+        Outcome Ledger
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        {/* Left: Produced */}
+        <div>
+          <div style={{
+            fontSize: 13, fontWeight: 800, color: '#5A7A5C', marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span>What your calendar produced</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#A8A29E' }}>
+              {summary.outcomeHours}h
+            </span>
+          </div>
+          <LedgerGroup label="Decisions" items={outcomes.decisions} color="#5A7A5C" />
+          <LedgerGroup label="Relationships" items={outcomes.relationships} color="#5A7A5C" />
+          <LedgerGroup label="Creations" items={outcomes.creations} color="#5A7A5C" />
+          {summary.outcomeCount === 0 && (
+            <div style={{ fontSize: 12, color: '#A8A29E', fontStyle: 'italic' }}>
+              No outcomes on the calendar
+            </div>
+          )}
+        </div>
+
+        {/* Right: Filled */}
+        <div>
+          <div style={{
+            fontSize: 13, fontWeight: 800, color: '#C0544A', marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span>What filled your calendar</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#A8A29E' }}>
+              {summary.taskHours}h
+            </span>
+          </div>
+          <LedgerGroup label="Ceremonies" items={tasks.ceremonies} color="#C0544A" />
+          <LedgerGroup label="Deliberations" items={tasks.deliberations} color="#57534E" />
+          <LedgerGroup label="Process" items={tasks.process} color="#C0544A" />
+          {summary.taskCount === 0 && (
+            <div style={{ fontSize: 12, color: '#A8A29E', fontStyle: 'italic' }}>
+              Every hour drove an outcome
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Enabling callout */}
+      {enabling.length > 0 && (
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #E7E0D8' }}>
+          <LedgerGroup label={`Enabling (crisis response) — ${summary.enabledHours}h`} items={enabling} color="#E87D3A" />
+        </div>
+      )}
+
+      {/* Narrative */}
+      <div style={{
+        marginTop: 16, paddingTop: 12, borderTop: '1px solid #E7E0D8',
+        fontSize: 13, color: '#57534E', lineHeight: 1.5,
+      }}>
+        {summary.narrative}
+      </div>
     </div>
   )
 }
@@ -229,13 +334,12 @@ function Skeleton() {
 
 // --- Main component ---
 
-const HUMAN_RISKS: RiskLevel[] = ['low', 'very-low']
-const AT_RISK_RISKS: RiskLevel[] = ['total', 'very-high', 'high']
+const ORIENTATION_ORDER: WorkOrientation[] = ['outcome', 'enabling', 'deliberation', 'ceremony', 'process']
 
 export default function CognitivePositioning() {
   const { data: session } = useSession()
   const { data, isLoading, error, refresh, status } = useCognitivePositioning()
-  const [openCategory, setOpenCategory] = useState<string | null>(null)
+  const [openOrientation, setOpenOrientation] = useState<string | null>(null)
   const [highlight, setHighlight] = useState<'human' | 'risk' | null>(null)
   const [showProfile, setShowProfile] = useState(false)
   const classificationRef = useRef<HTMLDivElement>(null)
@@ -314,10 +418,22 @@ export default function CognitivePositioning() {
   }
 
   const zone = ZONE_CONFIG[data.zone]
-  const maxHours = Math.max(...data.breakdown.map(b => b.hours))
   const { signals } = data
   const weeksToGo = Math.max(0, 4 - signals.weeksOfData)
   const hasTrend = data.weekData.length >= 2
+
+  // Group breakdown by orientation for display
+  const allEvents: ClassifiedEventSummary[] = data.classifiedEvents || []
+  const orientationRows = ORIENTATION_ORDER
+    .map(o => {
+      const hours = data.breakdown
+        .filter((b: WeeklyBreakdown) => (b.orientation || 'process') === o)
+        .reduce((s: number, b: WeeklyBreakdown) => s + b.hours, 0)
+      const events: ClassifiedEventSummary[] = allEvents.filter((e: ClassifiedEventSummary) => e.orientation === o)
+      return { orientation: o, hours: Math.round(hours * 10) / 10, events }
+    })
+    .filter(r => r.hours > 0)
+  const maxOrientationHours = Math.max(...orientationRows.map(r => r.hours), 0.1)
 
   return (
     <div style={{
@@ -438,12 +554,12 @@ export default function CognitivePositioning() {
           </div>
           <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
             <div style={{ textAlign: 'center' as const, cursor: 'pointer' }} onClick={() => scrollAndHighlight('human')}>
-              <div style={{ fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>Human</div>
+              <div style={{ fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>Produced</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#5A7A5C' }}>{data.humanHours}h</div>
             </div>
             <div style={{ width: 1, background: '#E7E0D8' }} />
             <div style={{ textAlign: 'center' as const, cursor: 'pointer' }} onClick={() => scrollAndHighlight('risk')}>
-              <div style={{ fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>At risk</div>
+              <div style={{ fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>Filled</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#C0544A' }}>{data.autoHours}h</div>
             </div>
           </div>
@@ -455,9 +571,9 @@ export default function CognitivePositioning() {
           borderRadius: 14, padding: '4px 28px', marginBottom: 24,
           display: 'flex', gap: 0,
         }}>
-          <SignalBlock label="Leverage" value={signals.leverage} color="#E87D3A" subtitle="% time on human-essential work" />
+          <SignalBlock label="Leverage" value={signals.leverage} color="#E87D3A" subtitle="Weighted toward outcome work" />
           <div style={{ width: 1, background: '#E7E0D8', margin: '16px 24px' }} />
-          <SignalBlock label="Exposure" value={signals.exposure} color="#C0544A" subtitle="% time in automation-risk work" />
+          <SignalBlock label="Exposure" value={signals.exposure} color="#C0544A" subtitle="% hours in exposed work" />
           <div style={{ width: 1, background: '#E7E0D8', margin: '16px 24px' }} />
           {signals.momentumReady ? (
             <SignalBlock
@@ -478,53 +594,56 @@ export default function CognitivePositioning() {
           )}
         </div>
 
+        {/* Outcome Ledger */}
+        {data.outcomeLedger && <OutcomeLedgerPanel ledger={data.outcomeLedger} />}
+
         {/* Classification + Trend side by side */}
         <div style={{ display: 'grid', gridTemplateColumns: hasTrend ? '1fr 280px' : '1fr', gap: 24 }}>
-          {/* Classification */}
+          {/* Classification by orientation */}
           <div ref={classificationRef} style={{
             background: '#FEFCF9', border: '1px solid #E7E0D8',
             borderRadius: 14, padding: '20px 24px', scrollMarginTop: 20,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#78716C' }}>
-                Work Classification
+                Work Orientation
               </div>
               <div style={{ fontSize: 12, color: '#A8A29E', fontVariantNumeric: 'tabular-nums' }}>
                 {data.totalHours}h this week
               </div>
             </div>
-            {data.breakdown.map((item, i) => {
-              const isHuman = HUMAN_RISKS.includes(item.risk)
-              const isAtRisk = AT_RISK_RISKS.includes(item.risk)
-              const rowHighlight = (highlight === 'human' && isHuman) ? 'human' :
-                                   (highlight === 'risk' && isAtRisk) ? 'risk' : null
+            {orientationRows.map(row => {
+              const isOutcome = row.orientation === 'outcome' || row.orientation === 'enabling'
+              const rowHighlight = (highlight === 'human' && isOutcome) ? 'human' :
+                                   (highlight === 'risk' && !isOutcome) ? 'risk' : null
               return (
-                <BreakdownBar
-                  key={i}
-                  item={item}
-                  maxHours={maxHours}
-                  events={data.classifiedEvents || []}
-                  isOpen={openCategory === item.category}
-                  onToggle={() => setOpenCategory(openCategory === item.category ? null : item.category)}
+                <OrientationRow
+                  key={row.orientation}
+                  orientation={row.orientation}
+                  hours={row.hours}
+                  maxHours={maxOrientationHours}
+                  events={row.events}
+                  isOpen={openOrientation === row.orientation}
+                  onToggle={() => setOpenOrientation(openOrientation === row.orientation ? null : row.orientation)}
                   highlight={rowHighlight}
                 />
               )
             })}
 
-            {/* Stacked summary bar */}
+            {/* Stacked summary bar — produced vs filled */}
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #E7E0D8' }}>
               <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden' }}>
-                {data.breakdown.map((item, i) => (
-                  <div key={i} style={{
-                    width: `${(item.hours / data.totalHours) * 100}%`,
-                    background: RISK_COLORS[item.risk].bar,
+                {orientationRows.map(row => (
+                  <div key={row.orientation} style={{
+                    width: `${data.totalHours > 0 ? (row.hours / data.totalHours) * 100 : 0}%`,
+                    background: ORIENTATION_COLORS[row.orientation].bar,
                     opacity: 0.7,
                   }} />
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                <span style={{ fontSize: 11, color: '#5A7A5C', fontWeight: 600 }}>← Human-essential</span>
-                <span style={{ fontSize: 11, color: '#C0544A', fontWeight: 600 }}>Automatable →</span>
+                <span style={{ fontSize: 11, color: '#5A7A5C', fontWeight: 600 }}>Produced</span>
+                <span style={{ fontSize: 11, color: '#C0544A', fontWeight: 600 }}>Filled</span>
               </div>
             </div>
           </div>
