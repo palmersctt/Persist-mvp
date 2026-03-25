@@ -49,6 +49,7 @@ const RISK_COLORS: Record<RiskLevel, { bar: string; bg: string; label: string }>
   medium: { bar: '#A8A29E', bg: 'rgba(168,162,158,0.08)', label: '#78716C' },
   low: { bar: '#5A7A5C', bg: 'rgba(90,122,92,0.06)', label: '#5A7A5C' },
   'very-low': { bar: '#3D6B40', bg: 'rgba(61,107,64,0.06)', label: '#3D6B40' },
+  none: { bar: '#A8A29E', bg: 'rgba(168,162,158,0.04)', label: '#78716C' },
 }
 
 const RISK_LABELS: Record<RiskLevel, string> = {
@@ -58,6 +59,7 @@ const RISK_LABELS: Record<RiskLevel, string> = {
   medium: 'Shifting',
   low: 'Human-essential',
   'very-low': 'Irreplaceable',
+  none: 'Non-work',
 }
 
 // --- Sub-components matching design reference ---
