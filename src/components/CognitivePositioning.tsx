@@ -398,7 +398,7 @@ export default function CognitivePositioning() {
                     </div>
                     <div className="p-3">
                       <button
-                        onClick={() => signOut()}
+                        onClick={() => signOut({ callbackUrl: '/' })}
                         className="w-full text-xs font-medium py-2 rounded-lg transition-colors"
                         style={{ color: 'var(--text-secondary, #57534E)', backgroundColor: 'rgba(28,25,23,0.04)' }}
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.08)' }}
