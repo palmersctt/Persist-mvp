@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './auth/[...nextauth]'
 import { google } from 'googleapis'
 import { classifyEvents } from '../../src/lib/cognitive-classification'
-import { buildBreakdown, analyze, getMonday, getLocalDateString } from '../../src/lib/cognitive-signals'
+import { buildBreakdown, computeLeverage, computeExposure, analyze, getMonday, getLocalDateString } from '../../src/lib/cognitive-signals'
 import type { CalendarEvent } from '../../src/services/googleCalendar'
 import { supabaseAdmin } from '../../lib/supabase'
 
@@ -175,7 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Log classification results
     for (const c of classified) {
-      console.log(`  ✓ "${c.event.summary}" → ${c.category} (weight=${c.weight}, ${c.durationHours.toFixed(2)}h)`)
+      console.log(`  ✓ "${c.event.summary}" → ${c.category} [${c.orientation}] (weight=${c.weight}, ${c.durationHours.toFixed(2)}h)`)
     }
 
     const breakdown = buildBreakdown(classified)
@@ -210,10 +210,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const weekBreakdown = buildBreakdown(weekClassified)
       const totalHours = weekBreakdown.reduce((s, b) => s + b.hours, 0)
       if (totalHours > 0) {
-        const leverage = Math.round(weekBreakdown.reduce((s, b) => s + b.hours * b.weight, 0) / totalHours)
-        const exposedCats = ['Administrative', 'Information Transfer', 'Coordination']
-        const exposedHours = weekBreakdown.filter(b => exposedCats.includes(b.category)).reduce((s, b) => s + b.hours, 0)
-        const exposure = Math.round((exposedHours / totalHours) * 100)
+        const leverage = computeLeverage(weekBreakdown)
+        const exposure = computeExposure(weekBreakdown)
 
         const snapshot = { weekStart: weekKey, leverage, exposure, totalHours, breakdown: weekBreakdown }
         snapshots.push(snapshot)
@@ -262,6 +260,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     analysis.classifiedEvents = classified.map(c => ({
       title: c.event.summary,
       category: c.category,
+      orientation: c.orientation,
       weight: c.weight,
       risk: c.risk,
       durationHours: Math.round(c.durationHours * 100) / 100,

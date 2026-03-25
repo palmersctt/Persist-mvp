@@ -1,10 +1,11 @@
-import type { WorkCategory, RiskLevel, ClassifiedEvent } from './cognitive-classification'
-import { CATEGORY_WEIGHTS, WEIGHT_TO_RISK } from './cognitive-classification'
+import type { WorkCategory, RiskLevel, ClassifiedEvent, WorkOrientation } from './cognitive-classification'
+import { CATEGORY_WEIGHTS, WEIGHT_TO_RISK, ORIENTATION_WEIGHTS } from './cognitive-classification'
 
 export type ZoneKey = 'displacement' | 'friction' | 'agency'
 
 export interface WeeklyBreakdown {
   category: WorkCategory
+  orientation?: WorkOrientation  // optional for backward compat with stored snapshots
   hours: number
   weight: number
   risk: RiskLevel
@@ -29,6 +30,7 @@ export interface CognitiveSignals {
 export interface ClassifiedEventSummary {
   title: string
   category: string
+  orientation: string
   weight: number
   risk: string
   durationHours: number
@@ -48,50 +50,95 @@ export interface CognitiveAnalysis {
 
 const ALL_CATEGORIES: WorkCategory[] = [
   'Administrative', 'Information Transfer', 'Coordination',
-  'Creation', 'Decision-making', 'Relationship',
+  'Creation', 'Decision-making', 'Relationship', 'Non-work',
 ]
 
-/**
- * Build breakdown from classified events — hours per category
- */
-export function buildBreakdown(classified: ClassifiedEvent[]): WeeklyBreakdown[] {
-  const hoursByCategory: Record<string, number> = {}
-  for (const c of classified) {
-    hoursByCategory[c.category] = (hoursByCategory[c.category] || 0) + c.durationHours
-  }
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-  return ALL_CATEGORIES
-    .map(cat => ({
-      category: cat,
-      hours: Math.round((hoursByCategory[cat] || 0) * 10) / 10,
-      weight: CATEGORY_WEIGHTS[cat],
-      risk: WEIGHT_TO_RISK[CATEGORY_WEIGHTS[cat]],
-    }))
-    .filter(b => b.hours > 0)
-    .sort((a, b) => b.weight - a.weight) // high-value first
+/**
+ * Derive orientation from category for legacy data that doesn't have it stored.
+ * Coordination defaults to 'process' (crisis events are the minority case).
+ */
+function getOrientation(b: WeeklyBreakdown): WorkOrientation {
+  if (b.orientation) return b.orientation
+  const map: Record<string, WorkOrientation> = {
+    'Decision-making': 'outcome',
+    'Relationship': 'outcome',
+    'Creation': 'outcome',
+    'Coordination': 'process',
+    'Information Transfer': 'process',
+    'Administrative': 'process',
+    'Non-work': 'non-work',
+  }
+  return map[b.category] || 'process'
 }
 
+// ── Breakdown ────────────────────────────────────────────────────────────────
+
 /**
- * Compute leverage from breakdown: weighted avg of hours × weight / total hours
+ * Build breakdown from classified events.
+ * Groups by category+orientation so that enabling vs process Coordination
+ * are tracked separately for accurate scoring.
+ */
+export function buildBreakdown(classified: ClassifiedEvent[]): WeeklyBreakdown[] {
+  const groups: Record<string, { category: WorkCategory; orientation: WorkOrientation; hours: number }> = {}
+
+  for (const c of classified) {
+    const key = `${c.category}|${c.orientation}`
+    if (!groups[key]) {
+      groups[key] = { category: c.category, orientation: c.orientation, hours: 0 }
+    }
+    groups[key].hours += c.durationHours
+  }
+
+  return Object.values(groups)
+    .map(g => ({
+      category: g.category,
+      orientation: g.orientation,
+      hours: Math.round(g.hours * 10) / 10,
+      weight: CATEGORY_WEIGHTS[g.category],
+      risk: g.category === 'Non-work' ? ('none' as RiskLevel) : WEIGHT_TO_RISK[CATEGORY_WEIGHTS[g.category]],
+    }))
+    .filter(b => b.hours > 0)
+    .sort((a, b) => {
+      // Sort by orientation value desc, then category weight desc
+      const oa = ORIENTATION_WEIGHTS[getOrientation(a)]
+      const ob = ORIENTATION_WEIGHTS[getOrientation(b)]
+      if (ob !== oa) return ob - oa
+      return (b.weight || 0) - (a.weight || 0)
+    })
+}
+
+// ── Scoring ──────────────────────────────────────────────────────────────────
+
+/**
+ * Compute leverage: weighted average using orientation weights.
+ * Non-work hours are excluded from both numerator and denominator.
+ *
+ *   leverage = (outcome_hours × 100 + enabling_hours × 35) / total_work_hours
  */
 export function computeLeverage(breakdown: WeeklyBreakdown[]): number {
-  const totalHours = breakdown.reduce((s, b) => s + b.hours, 0)
+  const work = breakdown.filter(b => getOrientation(b) !== 'non-work')
+  const totalHours = work.reduce((s, b) => s + b.hours, 0)
   if (totalHours === 0) return 0
-  const weightedSum = breakdown.reduce((s, b) => s + b.hours * b.weight, 0)
+  const weightedSum = work.reduce((s, b) => s + b.hours * ORIENTATION_WEIGHTS[getOrientation(b)], 0)
   return Math.round(weightedSum / totalHours)
 }
 
 /**
- * Compute exposure: % of hours in Administrative + Information Transfer + Coordination
+ * Compute exposure: % of work hours in process orientation.
+ * Non-work hours are excluded from both numerator and denominator.
+ *
+ *   exposure = process_hours / total_work_hours × 100
  */
 export function computeExposure(breakdown: WeeklyBreakdown[]): number {
-  const totalHours = breakdown.reduce((s, b) => s + b.hours, 0)
+  const work = breakdown.filter(b => getOrientation(b) !== 'non-work')
+  const totalHours = work.reduce((s, b) => s + b.hours, 0)
   if (totalHours === 0) return 0
-  const exposedCategories: WorkCategory[] = ['Administrative', 'Information Transfer', 'Coordination']
-  const exposedHours = breakdown
-    .filter(b => exposedCategories.includes(b.category))
+  const processHours = work
+    .filter(b => getOrientation(b) === 'process')
     .reduce((s, b) => s + b.hours, 0)
-  return Math.round((exposedHours / totalHours) * 100)
+  return Math.round((processHours / totalHours) * 100)
 }
 
 /**
@@ -126,24 +173,30 @@ export function computeMomentum(
   }
 }
 
+// ── Zone determination ───────────────────────────────────────────────────────
+
 /**
  * Determine zone from signals.
- * When momentum is not ready, compute from leverage + exposure only.
+ *
+ * With the outcome/process orientation model:
+ *   displacement — mostly process work, low leverage
+ *   agency       — mostly outcome work, high leverage
+ *   friction     — split between outcome and process
  */
 export function determineZone(signals: CognitiveSignals): ZoneKey {
   const { leverage, exposure, momentum, momentumReady } = signals
 
   if (!momentumReady) {
     // Two-signal mode: leverage + exposure only
-    if (leverage < 30 && exposure > 60) return 'displacement'
-    if (leverage > 50 && exposure < 40) return 'agency'
+    if (leverage < 25 && exposure > 65) return 'displacement'
+    if (leverage > 70 && exposure < 30) return 'agency'
     return 'friction'
   }
 
   // Full three-signal mode
-  const isDisplacement = leverage < 30 && exposure > 60 && momentum <= 0
-  const isFriction = leverage >= 25 && leverage <= 55 && exposure >= 35 && exposure <= 65 && momentum > -10 && momentum < 10
-  const isAgency = leverage > 50 && exposure < 40 && momentum > 0
+  const isDisplacement = leverage < 25 && exposure > 65 && momentum <= 0
+  const isFriction = leverage >= 20 && leverage <= 75 && exposure >= 25 && exposure <= 70 && momentum > -10 && momentum < 10
+  const isAgency = leverage > 70 && exposure < 30 && momentum > 0
 
   // Clean matches
   if (isDisplacement && !isFriction && !isAgency) return 'displacement'
@@ -161,33 +214,36 @@ export function determineZone(signals: CognitiveSignals): ZoneKey {
   return 'friction'
 }
 
-/**
- * Generate a human insight string based on zone + signals
- */
-function generateInsight(zone: ZoneKey, signals: CognitiveSignals, autoHours: number, totalHours: number): string {
-  const autoPct = totalHours > 0 ? Math.round((autoHours / totalHours) * 100) : 0
+// ── Insight generation ───────────────────────────────────────────────────────
+
+function generateInsight(zone: ZoneKey, signals: CognitiveSignals, processHours: number, totalHours: number): string {
+  const processPct = totalHours > 0 ? Math.round((processHours / totalHours) * 100) : 0
 
   switch (zone) {
     case 'displacement':
-      return `${autoPct}% of your week is in categories being actively automated at peer companies.${signals.momentumReady && signals.momentum < 0 ? ` Your Leverage has dropped ${Math.abs(signals.momentum)} points in 4 weeks.` : ''} The busyness feels productive — it isn't.`
+      return `${processPct}% of your week is process work — tasks AI can already handle at peer companies.${signals.momentumReady && signals.momentum < 0 ? ` Your Leverage has dropped ${Math.abs(signals.momentum)} points in 4 weeks.` : ''} The busyness feels productive — it isn't.`
     case 'friction':
-      return `You're split — half your week is high-value, half is automatable.${signals.momentumReady ? ` Momentum is ${signals.momentum > 0 ? 'positive but slow' : signals.momentum < 0 ? 'trending down' : 'flat'}.` : ''} You're aware something needs to change. The calendar won't let you.`
+      return `You're split — part of your week drives outcomes, part is process.${signals.momentumReady ? ` Momentum is ${signals.momentum > 0 ? 'positive but slow' : signals.momentum < 0 ? 'trending down' : 'flat'}.` : ''} You're aware something needs to change. The calendar won't let you.`
     case 'agency': {
-      const humanPct = 100 - autoPct
-      return `${humanPct}% of your time is in human-essential categories.${signals.momentumReady && signals.momentum > 0 ? ` You've gained ${signals.momentum} points of Leverage in 4 weeks.` : ''} You're not working less — you're working on things that compound.`
+      const outcomePct = 100 - processPct
+      return `${outcomePct}% of your time is outcome work — decisions, relationships, and creation.${signals.momentumReady && signals.momentum > 0 ? ` You've gained ${signals.momentum} points of Leverage in 4 weeks.` : ''} You're not working less — you're working on things that compound.`
     }
   }
 }
 
+// ── Full analysis ────────────────────────────────────────────────────────────
+
 /**
- * Full analysis: classify events → compute signals → determine zone
+ * Full analysis: breakdown → compute signals → determine zone
  */
 export function analyze(
   breakdown: WeeklyBreakdown[],
   priorSnapshots: WeekSnapshot[],
   timezone?: string
 ): CognitiveAnalysis {
-  const totalHours = breakdown.reduce((s, b) => s + b.hours, 0)
+  // Filter non-work for scoring
+  const workBreakdown = breakdown.filter(b => getOrientation(b) !== 'non-work')
+  const totalHours = workBreakdown.reduce((s, b) => s + b.hours, 0)
   const leverage = computeLeverage(breakdown)
   const exposure = computeExposure(breakdown)
   const { momentum, ready, weeksOfData } = computeMomentum(leverage, priorSnapshots)
@@ -202,11 +258,11 @@ export function analyze(
 
   const zone = determineZone(signals)
 
-  const humanHours = breakdown
-    .filter(b => ['low', 'very-low'].includes(b.risk))
+  const humanHours = workBreakdown
+    .filter(b => getOrientation(b) === 'outcome')
     .reduce((s, b) => s + b.hours, 0)
-  const autoHours = breakdown
-    .filter(b => ['total', 'very-high', 'high'].includes(b.risk))
+  const autoHours = workBreakdown
+    .filter(b => getOrientation(b) === 'process')
     .reduce((s, b) => s + b.hours, 0)
 
   // Build week data array from snapshots + current
@@ -217,14 +273,14 @@ export function analyze(
       leverage,
       exposure,
       totalHours,
-      breakdown,
+      breakdown: workBreakdown,
     },
   ]
 
   return {
     signals,
     zone,
-    breakdown,
+    breakdown: workBreakdown,
     totalHours: Math.round(totalHours * 10) / 10,
     humanHours: Math.round(humanHours * 10) / 10,
     autoHours: Math.round(autoHours * 10) / 10,
@@ -232,6 +288,8 @@ export function analyze(
     insight: generateInsight(zone, signals, autoHours, totalHours),
   }
 }
+
+// ── Date utilities ───────────────────────────────────────────────────────────
 
 /**
  * Get the local date parts (year, month, day, weekday) for a Date in a given timezone.
