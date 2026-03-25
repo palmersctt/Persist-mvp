@@ -258,6 +258,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`cognitive-positioning: ${events.length} events over ${Object.keys(eventsByWeek).length} weeks, currentWeekEvents=${currentWeekEvents.length}, zone=${analysis.zone}, leverage=${analysis.signals.leverage}`)
     console.log(`cognitive-positioning: weekBuckets=${JSON.stringify(Object.keys(eventsByWeek).map(k => `${k}(${eventsByWeek[k].length})`))}`)
 
+    // Attach classified events for drill-down UI
+    analysis.classifiedEvents = classified.map(c => ({
+      title: c.event.summary,
+      category: c.category,
+      weight: c.weight,
+      risk: c.risk,
+      durationHours: Math.round(c.durationHours * 100) / 100,
+    }))
+
     return res.status(200).json(analysis)
   } catch (error) {
     console.error('Error in cognitive-positioning:', error)

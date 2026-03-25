@@ -26,6 +26,14 @@ export interface CognitiveSignals {
   weeksOfData: number
 }
 
+export interface ClassifiedEventSummary {
+  title: string
+  category: string
+  weight: number
+  risk: string
+  durationHours: number
+}
+
 export interface CognitiveAnalysis {
   signals: CognitiveSignals
   zone: ZoneKey
@@ -35,6 +43,7 @@ export interface CognitiveAnalysis {
   autoHours: number
   weekData: WeekSnapshot[]
   insight: string
+  classifiedEvents?: ClassifiedEventSummary[]
 }
 
 const ALL_CATEGORIES: WorkCategory[] = [

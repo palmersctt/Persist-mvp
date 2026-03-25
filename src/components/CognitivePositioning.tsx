@@ -1,8 +1,9 @@
 'use client'
 
+import { useState, useRef, useCallback } from 'react'
 import { useCognitivePositioning } from '../hooks/useCognitivePositioning'
 import { signIn } from 'next-auth/react'
-import type { ZoneKey, WeeklyBreakdown, WeekSnapshot, CognitiveSignals } from '../lib/cognitive-signals'
+import type { ZoneKey, WeeklyBreakdown, WeekSnapshot, CognitiveSignals, ClassifiedEventSummary } from '../lib/cognitive-signals'
 import type { RiskLevel } from '../lib/cognitive-classification'
 
 // --- Zone config (matches design reference) ---
@@ -144,29 +145,61 @@ function TrendSpark({ data, color, height = 56 }: {
   )
 }
 
-function BreakdownBar({ item, maxHours }: { item: WeeklyBreakdown; maxHours: number }) {
+function BreakdownBar({ item, maxHours, events, isOpen, onToggle, highlight }: {
+  item: WeeklyBreakdown; maxHours: number; events: ClassifiedEventSummary[]; isOpen: boolean; onToggle: () => void; highlight?: 'human' | 'risk' | null
+}) {
   const rc = RISK_COLORS[item.risk]
   const pct = maxHours > 0 ? (item.hours / maxHours) * 100 : 0
+  const categoryEvents = events.filter(e => e.category === item.category)
+
+  const highlightBg = highlight === 'human' ? 'rgba(90,122,92,0.10)' :
+                      highlight === 'risk' ? 'rgba(192,84,74,0.10)' : 'transparent'
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 0' }}>
-      <div style={{ width: 140, fontSize: 13, fontWeight: 600, color: '#57534E', flexShrink: 0 }}>{item.category}</div>
-      <div style={{ flex: 1, position: 'relative' }}>
-        <div style={{ height: 22, borderRadius: 5, background: rc.bg, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', borderRadius: 5, background: rc.bar, opacity: 0.7,
-            width: `${pct}%`,
-            transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-          }} />
+    <div style={{
+      background: highlightBg,
+      borderRadius: 8, marginBottom: 2,
+      transition: 'background 0.3s ease',
+    }}>
+      <div
+        onClick={onToggle}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 4px', cursor: 'pointer' }}
+      >
+        <div style={{ width: 140, fontSize: 13, fontWeight: 600, color: '#57534E', flexShrink: 0 }}>{item.category}</div>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <div style={{ height: 22, borderRadius: 5, background: rc.bg, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 5, background: rc.bar, opacity: 0.7,
+              width: `${pct}%`,
+              transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            }} />
+          </div>
+        </div>
+        <div style={{ width: 42, fontSize: 13, fontWeight: 700, color: '#57534E', textAlign: 'right' as const, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{item.hours}h</div>
+        <div style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const,
+          color: rc.label, background: rc.bg, padding: '4px 10px', borderRadius: 5,
+          width: 110, textAlign: 'center' as const, flexShrink: 0,
+        }}>
+          {RISK_LABELS[item.risk]}
         </div>
       </div>
-      <div style={{ width: 42, fontSize: 13, fontWeight: 700, color: '#57534E', textAlign: 'right' as const, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>{item.hours}h</div>
-      <div style={{
-        fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const,
-        color: rc.label, background: rc.bg, padding: '4px 10px', borderRadius: 5,
-        width: 110, textAlign: 'center' as const, flexShrink: 0,
-      }}>
-        {RISK_LABELS[item.risk]}
-      </div>
+      {isOpen && categoryEvents.length > 0 && (
+        <div style={{ padding: '4px 8px 10px 20px' }}>
+          {categoryEvents.map((evt, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '5px 0',
+              borderTop: i > 0 ? '1px solid rgba(231,224,216,0.5)' : 'none',
+            }}>
+              <span style={{ fontSize: 12, color: '#57534E' }}>{evt.title}</span>
+              <span style={{ fontSize: 11, color: '#A8A29E', fontVariantNumeric: 'tabular-nums', flexShrink: 0, marginLeft: 12 }}>
+                {evt.durationHours >= 1 ? `${evt.durationHours}h` : `${Math.round(evt.durationHours * 60)}m`}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -192,8 +225,20 @@ function Skeleton() {
 
 // --- Main component ---
 
+const HUMAN_RISKS: RiskLevel[] = ['low', 'very-low']
+const AT_RISK_RISKS: RiskLevel[] = ['total', 'very-high', 'high']
+
 export default function CognitivePositioning() {
   const { data, isLoading, error, refresh, status } = useCognitivePositioning()
+  const [openCategory, setOpenCategory] = useState<string | null>(null)
+  const [highlight, setHighlight] = useState<'human' | 'risk' | null>(null)
+  const classificationRef = useRef<HTMLDivElement>(null)
+
+  const scrollAndHighlight = useCallback((type: 'human' | 'risk') => {
+    classificationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setHighlight(type)
+    setTimeout(() => setHighlight(null), 2000)
+  }, [])
 
   if (status === 'unauthenticated') {
     return (
@@ -298,12 +343,12 @@ export default function CognitivePositioning() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
-            <div style={{ textAlign: 'center' as const }}>
+            <div style={{ textAlign: 'center' as const, cursor: 'pointer' }} onClick={() => scrollAndHighlight('human')}>
               <div style={{ fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>Human</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#5A7A5C' }}>{data.humanHours}h</div>
             </div>
             <div style={{ width: 1, background: '#E7E0D8' }} />
-            <div style={{ textAlign: 'center' as const }}>
+            <div style={{ textAlign: 'center' as const, cursor: 'pointer' }} onClick={() => scrollAndHighlight('risk')}>
               <div style={{ fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>At risk</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#C0544A' }}>{data.autoHours}h</div>
             </div>
@@ -342,9 +387,9 @@ export default function CognitivePositioning() {
         {/* Classification + Trend side by side */}
         <div style={{ display: 'grid', gridTemplateColumns: hasTrend ? '1fr 280px' : '1fr', gap: 24 }}>
           {/* Classification */}
-          <div style={{
+          <div ref={classificationRef} style={{
             background: '#FEFCF9', border: '1px solid #E7E0D8',
-            borderRadius: 14, padding: '20px 24px',
+            borderRadius: 14, padding: '20px 24px', scrollMarginTop: 20,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#78716C' }}>
@@ -354,9 +399,23 @@ export default function CognitivePositioning() {
                 {data.totalHours}h this week
               </div>
             </div>
-            {data.breakdown.map((item, i) => (
-              <BreakdownBar key={i} item={item} maxHours={maxHours} />
-            ))}
+            {data.breakdown.map((item, i) => {
+              const isHuman = HUMAN_RISKS.includes(item.risk)
+              const isAtRisk = AT_RISK_RISKS.includes(item.risk)
+              const rowHighlight = (highlight === 'human' && isHuman) ? 'human' :
+                                   (highlight === 'risk' && isAtRisk) ? 'risk' : null
+              return (
+                <BreakdownBar
+                  key={i}
+                  item={item}
+                  maxHours={maxHours}
+                  events={data.classifiedEvents || []}
+                  isOpen={openCategory === item.category}
+                  onToggle={() => setOpenCategory(openCategory === item.category ? null : item.category)}
+                  highlight={rowHighlight}
+                />
+              )
+            })}
 
             {/* Stacked summary bar */}
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #E7E0D8' }}>
