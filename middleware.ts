@@ -5,8 +5,13 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
     const isAuth = !!token
-    const isAuthPage = req.nextUrl.pathname === "/" || 
+    const isAuthPage = req.nextUrl.pathname === "/" ||
                        req.nextUrl.pathname.startsWith("/auth")
+    const isPublicPage = req.nextUrl.pathname.startsWith("/positioning")
+
+    if (isPublicPage) {
+      return null
+    }
 
     if (isAuthPage) {
       if (isAuth) {
@@ -27,5 +32,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/"]
+  matcher: ["/dashboard/:path*", "/positioning/:path*", "/"]
 }

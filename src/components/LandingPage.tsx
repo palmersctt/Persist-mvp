@@ -381,21 +381,35 @@ export default function LandingPage() {
               PERSIST<span style={{ color: 'rgba(232,125,58,0.7)' }}>WORK</span>
             </span>
           </Link>
-          <button
-            onClick={() => signIn('google')}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '4px 0',
-              fontSize: 12,
-              fontWeight: 500,
-              color: 'var(--ink-faint)',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            Log in
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Link
+              href="/positioning"
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--ink-faint)',
+                textDecoration: 'none',
+                fontFamily: 'inherit',
+              }}
+            >
+              AI Pulse
+            </Link>
+            <button
+              onClick={() => signIn('google')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '4px 0',
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--ink-faint)',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Log in
+            </button>
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
