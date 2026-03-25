@@ -199,7 +199,7 @@ export default function CognitivePositioning() {
     return (
       <div style={{ minHeight: '100vh', background: '#FBF7F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' as const }}>
-          <p style={{ fontSize: 16, color: '#57534E', marginBottom: 16 }}>Sign in to see your cognitive positioning.</p>
+          <p style={{ fontSize: 16, color: '#57534E', marginBottom: 16 }}>Sign in to see your AI Pulse.</p>
           <button
             onClick={() => signIn('google', { callbackUrl: '/positioning' })}
             style={{ padding: '12px 24px', borderRadius: 10, border: 'none', background: '#E87D3A', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
@@ -242,7 +242,7 @@ export default function CognitivePositioning() {
         <div style={{ textAlign: 'center' as const, maxWidth: 420, padding: '0 24px' }}>
           <p style={{ fontSize: 18, fontWeight: 700, color: '#1C1917', marginBottom: 8 }}>No calendar events yet</p>
           <p style={{ fontSize: 14, color: '#57534E', lineHeight: 1.5 }}>
-            Cognitive positioning analyzes your calendar to show where your time goes. Once you have events on your calendar, come back here.
+            AI Pulse analyzes your calendar to show where your time goes. Once you have events on your calendar, come back here.
           </p>
         </div>
       </div>
