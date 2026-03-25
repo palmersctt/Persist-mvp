@@ -60,28 +60,28 @@ export function classifyEvent(event: CalendarEvent): ClassifiedEvent {
   else if (matches(title, ['standup', 'stand-up', 'daily scrum']) && attendees <= 8) {
     category = 'Coordination'
   }
-  // Non-recurring 1:1 under 45 min → relationship
-  else if (matches(title, ['1:1', 'one-on-one', '1-on-1', 'one on one']) && !isRecurring && durationMin < 45) {
+  // 1:1 meetings → relationship (the human connection is the point)
+  else if (matches(title, ['1:1', 'one-on-one', '1-on-1', 'one on one'])) {
     category = 'Relationship'
   }
-  // Recurring 1:1 → coordination (standing check-in)
-  else if (matches(title, ['1:1', 'one-on-one', '1-on-1', 'one on one']) && isRecurring) {
-    category = 'Coordination'
-  }
   // Strategy / decision meetings with small groups
-  else if (matches(title, ['strategy', 'decision', 'executive', 'leadership']) && attendees < 6) {
+  else if (matches(title, ['strategy', 'decision', 'executive', 'leadership', 'board']) && attendees < 6) {
     category = 'Decision-making'
   }
   // Review meetings with small groups → decision-making
-  else if (matches(title, ['review', 'approval', 'sign-off', 'sign off']) && attendees < 6 && !matches(title, ['sprint review'])) {
+  else if (matches(title, ['review', 'approval', 'sign-off', 'sign off']) && !matches(title, ['sprint review'])) {
     category = 'Decision-making'
+  }
+  // Sprint review is information transfer (team demo)
+  else if (matches(title, ['sprint review'])) {
+    category = 'Information Transfer'
   }
   // Creative / deep work
   else if (matches(title, ['brainstorm', 'design', 'architecture', 'writing', 'deep work', 'focus', 'maker', 'creative', 'prototype', 'ideation'])) {
     category = 'Creation'
   }
   // Coordination ceremonies
-  else if (matches(title, ['sync', 'retro', 'retrospective', 'planning', 'sprint', 'scrum', 'kickoff', 'kick-off', 'status']) && attendees >= 3) {
+  else if (matches(title, ['sync', 'retro', 'retrospective', 'planning', 'sprint', 'scrum', 'kickoff', 'kick-off', 'status', 'team meeting'])) {
     category = 'Coordination'
   }
   // Relationship-building
@@ -93,7 +93,7 @@ export function classifyEvent(event: CalendarEvent): ClassifiedEvent {
     category = 'Information Transfer'
   }
   // Admin tasks
-  else if (matches(title, ['admin', 'expense', 'timesheet', 'booking', 'travel', 'logistics', 'setup', 'IT support'])) {
+  else if (matches(title, ['admin', 'expense', 'timesheet', 'booking', 'book trip', 'travel', 'logistics', 'setup', 'IT support'])) {
     category = 'Administrative'
   }
   // --- Fallback heuristics based on attendees + duration ---
@@ -103,8 +103,8 @@ export function classifyEvent(event: CalendarEvent): ClassifiedEvent {
   else if (attendees >= 3 && durationMin >= 45) {
     category = 'Coordination'
   }
-  else if (attendees === 2 && durationMin < 30) {
-    category = 'Administrative'
+  else if (attendees === 2) {
+    category = 'Relationship'
   }
   else if (attendees <= 1 && matches(title, ['focus', 'block', 'work', 'code', 'write', 'research', 'think'])) {
     category = 'Creation'

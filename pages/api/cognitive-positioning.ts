@@ -87,9 +87,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const userEmail = session.user?.email || 'anonymous'
 
-    // Compute date range: 4 weeks back from current week's Monday
+    // Compute date range: 4 weeks back from current week's Monday (in user's timezone)
     const now = new Date()
-    const currentMonday = getMonday(now)
+    const currentMonday = getMonday(now, userTimezone)
     const fourWeeksAgo = new Date(currentMonday)
     fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 21) // 3 prior weeks
 
@@ -124,7 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Group events by ISO week (Monday-based)
     const eventsByWeek: Record<string, CalendarEvent[]> = {}
     for (const event of events) {
-      const monday = getMonday(event.start)
+      const monday = getMonday(event.start, userTimezone)
       const weekKey = monday.toISOString().slice(0, 10)
       if (!eventsByWeek[weekKey]) eventsByWeek[weekKey] = []
       eventsByWeek[weekKey].push(event)
@@ -134,13 +134,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const currentWeekKey = currentMonday.toISOString().slice(0, 10)
 
     // Build breakdown for current week (or all available events if only today)
+    // Fallback: if no events in current week bucket, use today's events (in user's timezone)
+    const todayLocal = new Intl.DateTimeFormat('en-CA', { timeZone: userTimezone }).format(now) // YYYY-MM-DD
     const currentWeekEvents = eventsByWeek[currentWeekKey] || events.filter(e => {
-      // If no events in current week bucket, use today's events
-      const today = now.toISOString().slice(0, 10)
-      return e.start.toISOString().slice(0, 10) === today
+      const eventDay = new Intl.DateTimeFormat('en-CA', { timeZone: userTimezone }).format(e.start)
+      return eventDay === todayLocal
     })
 
+    // Log raw event data for debugging classification
+    console.log(`cognitive-positioning: raw events for current week (${currentWeekKey}):`)
+    for (const evt of currentWeekEvents) {
+      console.log(`  → "${evt.summary}" | ${Math.round((evt.end.getTime() - evt.start.getTime()) / 60000)}min | attendees=${evt.attendees} | recurring=${evt.isRecurring}`)
+    }
+
     const classified = classifyEvents(currentWeekEvents)
+
+    // Log classification results
+    for (const c of classified) {
+      console.log(`  ✓ "${c.event.summary}" → ${c.category} (weight=${c.weight}, ${c.durationHours.toFixed(2)}h)`)
+    }
+
     const breakdown = buildBreakdown(classified)
 
     // Fetch prior snapshots from Supabase
@@ -200,7 +213,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     snapshots.sort((a, b) => a.weekStart.localeCompare(b.weekStart))
 
     // Analyze
-    const analysis = analyze(breakdown, snapshots)
+    const analysis = analyze(breakdown, snapshots, userTimezone)
 
     // Upsert current week snapshot
     const currentTotalHours = breakdown.reduce((s, b) => s + b.hours, 0)
@@ -217,7 +230,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }, { onConflict: 'user_email,week_start' })
     }
 
-    console.log(`cognitive-positioning: ${events.length} events over ${Object.keys(eventsByWeek).length} weeks, zone=${analysis.zone}, leverage=${analysis.signals.leverage}, tz=${userTimezone}`)
+    console.log(`cognitive-positioning: ${events.length} events over ${Object.keys(eventsByWeek).length} weeks, zone=${analysis.zone}, leverage=${analysis.signals.leverage}, tz=${userTimezone}, currentWeek=${currentWeekKey}, todayLocal=${todayLocal}`)
 
     return res.status(200).json(analysis)
   } catch (error) {

@@ -175,7 +175,8 @@ function generateInsight(zone: ZoneKey, signals: CognitiveSignals, autoHours: nu
  */
 export function analyze(
   breakdown: WeeklyBreakdown[],
-  priorSnapshots: WeekSnapshot[]
+  priorSnapshots: WeekSnapshot[],
+  timezone?: string
 ): CognitiveAnalysis {
   const totalHours = breakdown.reduce((s, b) => s + b.hours, 0)
   const leverage = computeLeverage(breakdown)
@@ -203,7 +204,7 @@ export function analyze(
   const weekData: WeekSnapshot[] = [
     ...priorSnapshots.sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
     {
-      weekStart: getMonday(new Date()).toISOString().slice(0, 10),
+      weekStart: getMonday(new Date(), timezone).toISOString().slice(0, 10),
       leverage,
       exposure,
       totalHours,
@@ -223,12 +224,37 @@ export function analyze(
   }
 }
 
-/** Get Monday of the week for a given date (ISO week) */
-export function getMonday(date: Date): Date {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1) // adjust for Sunday
-  d.setDate(diff)
-  d.setHours(0, 0, 0, 0)
-  return d
+/** Get Monday of the week for a given date (ISO week).
+ *  When timezone is provided, computes "what day is it in that timezone"
+ *  so that Sunday 11pm Pacific isn't treated as Monday UTC.
+ */
+export function getMonday(date: Date, timezone?: string): Date {
+  let year: number, month: number, day: number, weekday: number
+
+  if (timezone) {
+    // Format the date in the user's timezone to get local date parts
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short',
+    }).formatToParts(date)
+
+    year = Number(parts.find(p => p.type === 'year')!.value)
+    month = Number(parts.find(p => p.type === 'month')!.value) - 1
+    day = Number(parts.find(p => p.type === 'day')!.value)
+
+    const weekdayStr = parts.find(p => p.type === 'weekday')!.value
+    const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+    weekday = weekdayMap[weekdayStr] ?? 0
+  } else {
+    year = date.getFullYear()
+    month = date.getMonth()
+    day = date.getDate()
+    weekday = date.getDay()
+  }
+
+  // Roll back to Monday
+  const diff = weekday === 0 ? -6 : 1 - weekday
+  const monday = new Date(year, month, day + diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
 }
