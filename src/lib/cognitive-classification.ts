@@ -9,18 +9,25 @@ export type WorkCategory =
   | 'Relationship'
   | 'Non-work'
 
-export type WorkOrientation = 'outcome' | 'enabling' | 'process' | 'non-work'
+export type WorkOrientation = 'outcome' | 'deliberation' | 'enabling' | 'ceremony' | 'process' | 'non-work'
 
 /**
  * Orientation weights for leverage scoring.
- *   outcome  = 100  (decisions, relationships, creation — compounds over time)
- *   enabling =  35  (crisis coordination that unblocks outcomes — necessary but reactive)
- *   process  =   0  (task execution AI can replace — status updates, admin, ceremonies)
- *   non-work =   0  (excluded from scoring entirely)
+ *   outcome      = 100  (decisions, relationships, creation — compounds over time)
+ *   enabling     =  35  (crisis coordination — necessary, reactive, not yet automatable)
+ *   deliberation =  20  (coordination with embedded decisions — AI shrinks it, doesn't replace it)
+ *   ceremony     =   0  (status syncs, standups — AI replaces with async digests)
+ *   process      =   0  (admin, info transfer — AI-replaceable task execution)
+ *   non-work     =   0  (excluded from scoring entirely)
+ *
+ * Exposure counts deliberation + ceremony + process (everything except outcome & enabling).
+ * Deliberation is exposed because AI reduces the meeting time, even though the decision remains.
  */
 export const ORIENTATION_WEIGHTS: Record<WorkOrientation, number> = {
   'outcome': 100,
   'enabling': 35,
+  'deliberation': 20,
+  'ceremony': 0,
   'process': 0,
   'non-work': 0,
 }
@@ -70,7 +77,13 @@ const NON_WORK_KEYWORDS = [
   'commute', 'lunch break',
 ]
 
-const CRISIS_KEYWORDS = ['incident', 'war room', 'outage', 'triage']
+const CRISIS_KEYWORDS = ['incident', 'war room', 'outage']
+
+const DELIBERATION_KEYWORDS = [
+  'retro', 'retrospective', 'planning',
+  'kickoff', 'kick-off', 'triage',
+  'intake', 'handoff', 'hand-off', 'alignment',
+]
 
 // ── Classification ───────────────────────────────────────────────────────────
 
@@ -236,9 +249,11 @@ export function classifyEvent(event: CalendarEvent): ClassifiedEvent {
 /**
  * Map category + title context → orientation.
  *
- * Outcome:  Decision-making, Relationship, Creation — always.
- * Enabling: Coordination with crisis keywords (incident, war room, outage, triage).
- * Process:  Everything else (Coordination ceremonies, Info Transfer, Administrative).
+ * Outcome:       Decision-making, Relationship, Creation — always.
+ * Enabling:      Crisis coordination (incident, war room, outage).
+ * Deliberation:  Coordination with embedded decisions (retro, planning, triage, kickoff).
+ * Ceremony:      Status-sharing coordination (sync, standup, scrum).
+ * Process:       Info Transfer, Administrative — always.
  */
 function orientationFor(category: WorkCategory, title: string): WorkOrientation {
   switch (category) {
@@ -247,7 +262,9 @@ function orientationFor(category: WorkCategory, title: string): WorkOrientation 
     case 'Creation':
       return 'outcome'
     case 'Coordination':
-      return matches(title, CRISIS_KEYWORDS) ? 'enabling' : 'process'
+      if (matches(title, CRISIS_KEYWORDS)) return 'enabling'
+      if (matches(title, DELIBERATION_KEYWORDS)) return 'deliberation'
+      return 'ceremony'
     case 'Information Transfer':
     case 'Administrative':
       return 'process'

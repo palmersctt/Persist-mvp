@@ -100,8 +100,8 @@ const scenarios: Scenario[] = [
   {
     name: '4. The Meeting Marathon',
     expectedZone: 'displacement',
-    expectedLeverage: 4,
-    expectedExposure: 89,
+    expectedLeverage: 17,
+    expectedExposure: 100,
     events: [
       { summary: 'Kickoff Sync', durationMin: 30, attendees: 5, isRecurring: false, expectedCategory: 'coordination' },
       { summary: 'Vendor Alignment', durationMin: 45, attendees: 4, isRecurring: false, expectedCategory: 'coordination' },
@@ -144,7 +144,7 @@ const scenarios: Scenario[] = [
   {
     name: '7. The Design Sprint Participant',
     expectedZone: 'friction',
-    expectedLeverage: 67,
+    expectedLeverage: 70,
     expectedExposure: 33,
     events: [
       { summary: 'Design Sprint - Ideation', durationMin: 120, attendees: 6, isRecurring: false, expectedCategory: 'creation' },
@@ -276,7 +276,7 @@ const scenarios: Scenario[] = [
   {
     name: '18. The Hybrid Worker',
     expectedZone: 'friction',
-    expectedLeverage: 56,
+    expectedLeverage: 64,
     expectedExposure: 44,
     events: [
       { summary: 'Gym', durationMin: 60, attendees: 1, isRecurring: true, expectedCategory: 'non-work' },
@@ -344,8 +344,8 @@ function expectedOrientation(cat: string): string {
   const nonWorkCategories = ['non-work']
   if (outcomeCategories.includes(cat)) return 'outcome'
   if (nonWorkCategories.includes(cat)) return 'non-work'
-  // coordination could be enabling for crisis, but default to process for expectations
-  return 'process'
+  // coordination could be enabling/deliberation/ceremony, but default to ceremony for expectations
+  return 'ceremony'
 }
 
 function runScenario(scenario: Scenario): ScenarioResult {

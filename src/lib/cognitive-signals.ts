@@ -57,7 +57,7 @@ const ALL_CATEGORIES: WorkCategory[] = [
 
 /**
  * Derive orientation from category for legacy data that doesn't have it stored.
- * Coordination defaults to 'process' (crisis events are the minority case).
+ * Coordination defaults to 'ceremony' (safest guess without title context).
  */
 function getOrientation(b: WeeklyBreakdown): WorkOrientation {
   if (b.orientation) return b.orientation
@@ -65,13 +65,16 @@ function getOrientation(b: WeeklyBreakdown): WorkOrientation {
     'Decision-making': 'outcome',
     'Relationship': 'outcome',
     'Creation': 'outcome',
-    'Coordination': 'process',
+    'Coordination': 'ceremony',
     'Information Transfer': 'process',
     'Administrative': 'process',
     'Non-work': 'non-work',
   }
   return map[b.category] || 'process'
 }
+
+/** Orientations that count toward exposure (AI can significantly reduce or replace) */
+const EXPOSED_ORIENTATIONS: Set<WorkOrientation> = new Set(['process', 'ceremony', 'deliberation'])
 
 // ── Breakdown ────────────────────────────────────────────────────────────────
 
@@ -126,19 +129,20 @@ export function computeLeverage(breakdown: WeeklyBreakdown[]): number {
 }
 
 /**
- * Compute exposure: % of work hours in process orientation.
- * Non-work hours are excluded from both numerator and denominator.
+ * Compute exposure: % of work hours in exposed orientations.
+ * Exposed = process + ceremony + deliberation (everything AI can reduce or replace).
+ * Non-work hours excluded. Enabling (crisis) is NOT exposed.
  *
- *   exposure = process_hours / total_work_hours × 100
+ *   exposure = (process + ceremony + deliberation) / total_work_hours × 100
  */
 export function computeExposure(breakdown: WeeklyBreakdown[]): number {
   const work = breakdown.filter(b => getOrientation(b) !== 'non-work')
   const totalHours = work.reduce((s, b) => s + b.hours, 0)
   if (totalHours === 0) return 0
-  const processHours = work
-    .filter(b => getOrientation(b) === 'process')
+  const exposedHours = work
+    .filter(b => EXPOSED_ORIENTATIONS.has(getOrientation(b)))
     .reduce((s, b) => s + b.hours, 0)
-  return Math.round((processHours / totalHours) * 100)
+  return Math.round((exposedHours / totalHours) * 100)
 }
 
 /**
@@ -262,7 +266,7 @@ export function analyze(
     .filter(b => getOrientation(b) === 'outcome')
     .reduce((s, b) => s + b.hours, 0)
   const autoHours = workBreakdown
-    .filter(b => getOrientation(b) === 'process')
+    .filter(b => EXPOSED_ORIENTATIONS.has(getOrientation(b)))
     .reduce((s, b) => s + b.hours, 0)
 
   // Build week data array from snapshots + current
