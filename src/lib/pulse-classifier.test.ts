@@ -12,7 +12,7 @@
  */
 
 import { classifyEvent, classifyEvents, type WorkCategory, type WorkOrientation } from './cognitive-classification'
-import { buildBreakdown, computeLeverage, computeExposure, determineZone, type CognitiveSignals } from './cognitive-signals'
+import { buildBreakdown, computeLeverage, computeExposure, determineZone, generateOutcomeLedger, type CognitiveSignals, type OutcomeLedger } from './cognitive-signals'
 import type { CalendarEvent } from '../services/googleCalendar'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -487,6 +487,57 @@ if (failedResults.length > 0) {
       }
     }
   }
+}
+
+// ── Outcome Ledger Display ───────────────────────────────────────────────────
+
+console.log('\n' + '='.repeat(140))
+console.log('OUTCOME LEDGERS — "What did your calendar produce?"')
+console.log('='.repeat(140))
+
+for (const scenario of scenarios) {
+  const calEvents = scenario.events.map(e =>
+    makeEvent(e.summary, e.durationMin, e.attendees, e.isRecurring)
+  )
+  const classified = classifyEvents(calEvents)
+  const ledger = generateOutcomeLedger(classified)
+
+  console.log(`\n┌─ ${scenario.name} [${scenario.expectedZone}]`)
+
+  // Outcomes
+  const { decisions, relationships, creations } = ledger.outcomes
+  if (ledger.summary.outcomeCount > 0) {
+    console.log(`│  PRODUCED (${ledger.summary.outcomeHours}h):`)
+    if (decisions.length > 0)
+      console.log(`│    Decisions:     ${decisions.map(d => d.title).join(', ')}`)
+    if (relationships.length > 0)
+      console.log(`│    Relationships: ${relationships.map(r => r.title).join(', ')}`)
+    if (creations.length > 0)
+      console.log(`│    Creations:     ${creations.map(c => c.title).join(', ')}`)
+  } else {
+    console.log(`│  PRODUCED: nothing`)
+  }
+
+  // Tasks
+  if (ledger.summary.taskCount > 0) {
+    console.log(`│  FILLED (${ledger.summary.taskHours}h):`)
+    if (ledger.tasks.deliberations.length > 0)
+      console.log(`│    Deliberations: ${ledger.tasks.deliberations.map(d => d.title).join(', ')}`)
+    if (ledger.tasks.ceremonies.length > 0)
+      console.log(`│    Ceremonies:    ${ledger.tasks.ceremonies.map(c => c.title).join(', ')}`)
+    if (ledger.tasks.process.length > 0)
+      console.log(`│    Process:       ${ledger.tasks.process.map(p => p.title).join(', ')}`)
+  } else {
+    console.log(`│  FILLED: nothing — every hour drove an outcome`)
+  }
+
+  // Enabling
+  if (ledger.enabling.length > 0) {
+    console.log(`│  CRISIS (${ledger.summary.enabledHours}h): ${ledger.enabling.map(e => e.title).join(', ')}`)
+  }
+
+  console.log(`│`)
+  console.log(`└  ${ledger.summary.narrative}`)
 }
 
 console.log('')

@@ -46,6 +46,42 @@ export interface CognitiveAnalysis {
   weekData: WeekSnapshot[]
   insight: string
   classifiedEvents?: ClassifiedEventSummary[]
+  outcomeLedger?: OutcomeLedger
+}
+
+// ── Outcome Ledger ───────────────────────────────────────────────────────────
+
+export interface LedgerItem {
+  title: string
+  hours: number
+  category: string
+  orientation: string
+}
+
+export interface OutcomeLedger {
+  /** What your calendar produced */
+  outcomes: {
+    decisions: LedgerItem[]
+    relationships: LedgerItem[]
+    creations: LedgerItem[]
+  }
+  /** What filled your calendar */
+  tasks: {
+    ceremonies: LedgerItem[]
+    deliberations: LedgerItem[]
+    process: LedgerItem[]
+  }
+  /** Crisis response — neither outcome nor task */
+  enabling: LedgerItem[]
+  /** The case in numbers */
+  summary: {
+    outcomeCount: number
+    taskCount: number
+    outcomeHours: number
+    taskHours: number
+    enabledHours: number
+    narrative: string
+  }
 }
 
 const ALL_CATEGORIES: WorkCategory[] = [
@@ -233,6 +269,98 @@ function generateInsight(zone: ZoneKey, signals: CognitiveSignals, processHours:
       return `${outcomePct}% of your time is outcome work — decisions, relationships, and creation.${signals.momentumReady && signals.momentum > 0 ? ` You've gained ${signals.momentum} points of Leverage in 4 weeks.` : ''} You're not working less — you're working on things that compound.`
     }
   }
+}
+
+// ── Outcome Ledger generation ────────────────────────────────────────────────
+
+/**
+ * Generate an outcome ledger from classified events.
+ *
+ * Contrasts "what your calendar produced" (outcomes) with
+ * "what filled your calendar" (tasks) — the visual argument
+ * for restructuring work around outcome delivery.
+ */
+export function generateOutcomeLedger(classified: ClassifiedEvent[]): OutcomeLedger {
+  const work = classified.filter(c => c.orientation !== 'non-work')
+
+  const toItem = (c: ClassifiedEvent): LedgerItem => ({
+    title: c.event.summary,
+    hours: Math.round(c.durationHours * 100) / 100,
+    category: c.category,
+    orientation: c.orientation,
+  })
+
+  const decisions = work.filter(c => c.category === 'Decision-making')
+  const relationships = work.filter(c => c.category === 'Relationship')
+  const creations = work.filter(c => c.category === 'Creation')
+  const ceremonies = work.filter(c => c.orientation === 'ceremony')
+  const deliberations = work.filter(c => c.orientation === 'deliberation')
+  const process = work.filter(c => c.orientation === 'process')
+  const enabling = work.filter(c => c.orientation === 'enabling')
+
+  const outcomeEvents = [...decisions, ...relationships, ...creations]
+  const taskEvents = [...ceremonies, ...deliberations, ...process]
+
+  const outcomeHours = Math.round(outcomeEvents.reduce((s, c) => s + c.durationHours, 0) * 10) / 10
+  const taskHours = Math.round(taskEvents.reduce((s, c) => s + c.durationHours, 0) * 10) / 10
+  const enabledHours = Math.round(enabling.reduce((s, c) => s + c.durationHours, 0) * 10) / 10
+
+  return {
+    outcomes: {
+      decisions: decisions.map(toItem),
+      relationships: relationships.map(toItem),
+      creations: creations.map(toItem),
+    },
+    tasks: {
+      ceremonies: ceremonies.map(toItem),
+      deliberations: deliberations.map(toItem),
+      process: process.map(toItem),
+    },
+    enabling: enabling.map(toItem),
+    summary: {
+      outcomeCount: outcomeEvents.length,
+      taskCount: taskEvents.length,
+      outcomeHours,
+      taskHours,
+      enabledHours,
+      narrative: buildNarrative(outcomeEvents.length, outcomeHours, taskEvents.length, taskHours, decisions.length, relationships.length, creations.length),
+    },
+  }
+}
+
+function buildNarrative(
+  outcomeCount: number, outcomeHours: number,
+  taskCount: number, taskHours: number,
+  decisionCount: number, relationshipCount: number, creationCount: number,
+): string {
+  if (outcomeCount === 0 && taskCount === 0) {
+    return 'No work events on the calendar.'
+  }
+
+  const parts: string[] = []
+
+  // Outcome side
+  if (outcomeCount > 0) {
+    const items: string[] = []
+    if (decisionCount > 0) items.push(`${decisionCount} decision${decisionCount !== 1 ? 's' : ''}`)
+    if (relationshipCount > 0) items.push(`${relationshipCount} relationship${relationshipCount !== 1 ? 's' : ''}`)
+    if (creationCount > 0) items.push(`${creationCount} creation${creationCount !== 1 ? 's' : ''}`)
+    parts.push(`${outcomeHours}h produced ${items.join(', ')}`)
+  }
+
+  // Task side
+  if (taskCount > 0) {
+    parts.push(`${taskHours}h spent on ${taskCount} task${taskCount !== 1 ? 's' : ''} AI can reduce or replace`)
+  }
+
+  if (outcomeCount === 0) {
+    return `${parts.join('. ')}. No outcomes on the calendar — only tasks.`
+  }
+  if (taskCount === 0) {
+    return `${parts.join('. ')}. Every hour drove an outcome.`
+  }
+
+  return `${parts.join('. ')}.`
 }
 
 // ── Full analysis ────────────────────────────────────────────────────────────

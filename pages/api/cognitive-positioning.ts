@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './auth/[...nextauth]'
 import { google } from 'googleapis'
 import { classifyEvents } from '../../src/lib/cognitive-classification'
-import { buildBreakdown, computeLeverage, computeExposure, analyze, getMonday, getLocalDateString } from '../../src/lib/cognitive-signals'
+import { buildBreakdown, computeLeverage, computeExposure, analyze, generateOutcomeLedger, getMonday, getLocalDateString } from '../../src/lib/cognitive-signals'
 import type { CalendarEvent } from '../../src/services/googleCalendar'
 import { supabaseAdmin } from '../../lib/supabase'
 
@@ -255,6 +255,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`cognitive-positioning: tz=${userTimezone}, todayLocal=${todayLocal}, currentWeek=${currentWeekKey}, serverUTC=${now.toISOString()}`)
     console.log(`cognitive-positioning: ${events.length} events over ${Object.keys(eventsByWeek).length} weeks, currentWeekEvents=${currentWeekEvents.length}, zone=${analysis.zone}, leverage=${analysis.signals.leverage}`)
     console.log(`cognitive-positioning: weekBuckets=${JSON.stringify(Object.keys(eventsByWeek).map(k => `${k}(${eventsByWeek[k].length})`))}`)
+
+    // Attach outcome ledger
+    analysis.outcomeLedger = generateOutcomeLedger(classified)
 
     // Attach classified events for drill-down UI
     analysis.classifiedEvents = classified.map(c => ({
