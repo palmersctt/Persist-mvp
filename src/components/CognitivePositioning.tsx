@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import { useCognitivePositioning } from '../hooks/useCognitivePositioning'
-import { signIn } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import type { ZoneKey, WeeklyBreakdown, WeekSnapshot, CognitiveSignals, ClassifiedEventSummary } from '../lib/cognitive-signals'
 import type { RiskLevel } from '../lib/cognitive-classification'
 
@@ -229,6 +230,7 @@ const HUMAN_RISKS: RiskLevel[] = ['low', 'very-low']
 const AT_RISK_RISKS: RiskLevel[] = ['total', 'very-high', 'high']
 
 export default function CognitivePositioning() {
+  const { data: session } = useSession()
   const { data, isLoading, error, refresh, status } = useCognitivePositioning()
   const [openCategory, setOpenCategory] = useState<string | null>(null)
   const [highlight, setHighlight] = useState<'human' | 'risk' | null>(null)
@@ -309,14 +311,42 @@ export default function CognitivePositioning() {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 60px' }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <svg width={18} height={18} viewBox="0 0 100 100" fill="none">
-              <circle cx="50" cy="50" r="48" fill="rgba(28,25,23,0.06)" />
-              <path d="M38 30 L62 50 L38 70" stroke="#E87D3A" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            </svg>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#1C1917' }}>
-              PERSIST<span style={{ color: '#E87D3A' }}>WORK</span>
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+              <svg width={18} height={18} viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="48" fill="rgba(28,25,23,0.06)" />
+                <path d="M38 30 L62 50 L38 70" stroke="#E87D3A" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#1C1917' }}>
+                PERSIST<span style={{ color: '#E87D3A' }}>WORK</span>
+              </span>
+            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button
+                onClick={refresh}
+                style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: '#A8A29E', fontSize: 14 }}
+                title="Refresh"
+              >
+                ↻
+              </button>
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt=""
+                  width={24} height={24}
+                  style={{ borderRadius: '50%', cursor: 'pointer' }}
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  title="Sign out"
+                />
+              ) : (
+                <button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 500, color: '#A8A29E', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, lineHeight: 1.2 }}>
             AI Pulse
