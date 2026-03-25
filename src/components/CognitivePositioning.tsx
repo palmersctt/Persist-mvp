@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useCognitivePositioning } from '../hooks/useCognitivePositioning'
 import { signIn, signOut, useSession } from 'next-auth/react'
+import PersistLogo from './PersistLogo'
 import type { ZoneKey, WeeklyBreakdown, WeekSnapshot, CognitiveSignals, ClassifiedEventSummary } from '../lib/cognitive-signals'
 import type { RiskLevel } from '../lib/cognitive-classification'
 
@@ -234,7 +235,21 @@ export default function CognitivePositioning() {
   const { data, isLoading, error, refresh, status } = useCognitivePositioning()
   const [openCategory, setOpenCategory] = useState<string | null>(null)
   const [highlight, setHighlight] = useState<'human' | 'risk' | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
   const classificationRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    if (!showProfile) return
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showProfile])
 
   const scrollAndHighlight = useCallback((type: 'human' | 'risk') => {
     classificationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -309,49 +324,96 @@ export default function CognitivePositioning() {
       color: '#1C1917',
     }}>
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 60px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-              <svg width={18} height={18} viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="48" fill="rgba(28,25,23,0.06)" />
-                <path d="M38 30 L62 50 L38 70" stroke="#E87D3A" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              </svg>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#1C1917' }}>
-                PERSIST<span style={{ color: '#E87D3A' }}>WORK</span>
-              </span>
+        {/* Header — matches dashboard */}
+        <header className="sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm" style={{ margin: '0 -24px', padding: '24px 24px 16px' }}>
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
+              <PersistLogo size={24} variant="dark" />
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary, #1C1917)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
             </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="flex items-center space-x-4">
               <button
                 onClick={refresh}
-                style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: '#A8A29E', fontSize: 14 }}
-                title="Refresh"
+                disabled={isLoading}
+                className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                style={{
+                  color: isLoading ? 'var(--text-muted, #A8A29E)' : 'var(--text-secondary, #57534E)',
+                  border: `1px solid ${isLoading ? 'rgba(28,25,23,0.04)' : '#E7E0D8'}`,
+                  backgroundColor: 'transparent',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                }}
+                onMouseEnter={(e) => { if (!isLoading) { e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.06)' } }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
               >
-                ↻
+                {isLoading ? 'Updating...' : 'Refresh'}
               </button>
-              {session?.user?.image ? (
-                <img
-                  src={session.user.image}
-                  alt=""
-                  width={24} height={24}
-                  style={{ borderRadius: '50%', cursor: 'pointer' }}
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  title="Sign out"
-                />
-              ) : (
+              <div ref={profileRef} className="relative">
                 <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 500, color: '#A8A29E', cursor: 'pointer', fontFamily: 'inherit' }}
+                  onClick={() => setShowProfile(!showProfile)}
+                  className="w-8 h-8 rounded-full overflow-hidden border-2 transition-all duration-200 hover:scale-105"
+                  style={{ borderColor: showProfile ? '#E7E0D8' : 'rgba(28,25,23,0.1)' }}
                 >
-                  Sign out
+                  {session?.user?.image ? (
+                    <img src={session.user.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(28,25,23,0.06)', color: 'var(--text-secondary, #57534E)' }}>
+                      {session?.user?.name?.[0]?.toUpperCase() || '?'}
+                    </div>
+                  )}
                 </button>
-              )}
+                {showProfile && (
+                  <div
+                    className="absolute right-0 mt-2 w-72 rounded-xl overflow-hidden shadow-2xl z-50"
+                    style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}
+                  >
+                    <div className="p-4 border-b" style={{ borderColor: '#E7E0D8' }}>
+                      <div className="flex items-center gap-3">
+                        {session?.user?.image && (
+                          <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary, #1C1917)' }}>{session?.user?.name}</p>
+                          <p className="text-xs truncate" style={{ color: 'var(--text-muted, #A8A29E)' }}>{session?.user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 border-b" style={{ borderColor: '#E7E0D8' }}>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-muted, #A8A29E)' }}>Permissions</p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#5A7A5C] text-xs">&#10003;</span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary, #57534E)' }}>Email address</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#5A7A5C] text-xs">&#10003;</span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary, #57534E)' }}>Profile info (name, photo)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#5A7A5C] text-xs">&#10003;</span>
+                          <span className="text-xs" style={{ color: 'var(--text-secondary, #57534E)' }}>Google Calendar (read-only)</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <button
+                        onClick={() => signOut()}
+                        className="w-full text-xs font-medium py-2 rounded-lg transition-colors"
+                        style={{ color: 'var(--text-secondary, #57534E)', backgroundColor: 'rgba(28,25,23,0.04)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.08)' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.04)' }}
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, lineHeight: 1.2 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', margin: '16px 0 0', lineHeight: 1.2 }}>
             AI Pulse
           </h1>
-        </div>
+        </header>
 
         {/* Zone Banner */}
         <div style={{
