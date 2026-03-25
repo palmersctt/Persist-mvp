@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './auth/[...nextauth]'
 import { google } from 'googleapis'
 import { classifyEvents } from '../../src/lib/cognitive-classification'
-import { buildBreakdown, analyze, getMonday } from '../../src/lib/cognitive-signals'
+import { buildBreakdown, analyze, getMonday, getLocalDateString } from '../../src/lib/cognitive-signals'
 import type { CalendarEvent } from '../../src/services/googleCalendar'
 import { supabaseAdmin } from '../../lib/supabase'
 
@@ -133,12 +133,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Current week key
     const currentWeekKey = currentMonday.toISOString().slice(0, 10)
 
-    // Build breakdown for current week (or all available events if only today)
-    // Fallback: if no events in current week bucket, use today's events (in user's timezone)
-    const todayLocal = new Intl.DateTimeFormat('en-CA', { timeZone: userTimezone }).format(now) // YYYY-MM-DD
+    // Today in user's timezone
+    const todayLocal = getLocalDateString(now, userTimezone)
+
+    // Fallback: if no events in current week bucket, use today's events
     const currentWeekEvents = eventsByWeek[currentWeekKey] || events.filter(e => {
-      const eventDay = new Intl.DateTimeFormat('en-CA', { timeZone: userTimezone }).format(e.start)
-      return eventDay === todayLocal
+      return getLocalDateString(e.start, userTimezone) === todayLocal
     })
 
     // Log raw event data for debugging classification
@@ -230,7 +230,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }, { onConflict: 'user_email,week_start' })
     }
 
-    console.log(`cognitive-positioning: ${events.length} events over ${Object.keys(eventsByWeek).length} weeks, zone=${analysis.zone}, leverage=${analysis.signals.leverage}, tz=${userTimezone}, currentWeek=${currentWeekKey}, todayLocal=${todayLocal}`)
+    console.log(`cognitive-positioning: tz=${userTimezone}, todayLocal=${todayLocal}, currentWeek=${currentWeekKey}, serverUTC=${now.toISOString()}`)
+    console.log(`cognitive-positioning: ${events.length} events over ${Object.keys(eventsByWeek).length} weeks, currentWeekEvents=${currentWeekEvents.length}, zone=${analysis.zone}, leverage=${analysis.signals.leverage}`)
+    console.log(`cognitive-positioning: weekBuckets=${JSON.stringify(Object.keys(eventsByWeek).map(k => `${k}(${eventsByWeek[k].length})`))}`)
 
     return res.status(200).json(analysis)
   } catch (error) {

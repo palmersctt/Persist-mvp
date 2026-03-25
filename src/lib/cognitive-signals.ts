@@ -224,37 +224,49 @@ export function analyze(
   }
 }
 
-/** Get Monday of the week for a given date (ISO week).
- *  When timezone is provided, computes "what day is it in that timezone"
- *  so that Sunday 11pm Pacific isn't treated as Monday UTC.
+/**
+ * Get the local date parts (year, month, day, weekday) for a Date in a given timezone.
+ * Returns a plain object — avoids creating a new Date that would snap to server-local time.
  */
-export function getMonday(date: Date, timezone?: string): Date {
-  let year: number, month: number, day: number, weekday: number
-
+export function getLocalDateParts(date: Date, timezone?: string): { year: number; month: number; day: number; weekday: number } {
   if (timezone) {
-    // Format the date in the user's timezone to get local date parts
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
       year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short',
     }).formatToParts(date)
 
-    year = Number(parts.find(p => p.type === 'year')!.value)
-    month = Number(parts.find(p => p.type === 'month')!.value) - 1
-    day = Number(parts.find(p => p.type === 'day')!.value)
-
     const weekdayStr = parts.find(p => p.type === 'weekday')!.value
     const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
-    weekday = weekdayMap[weekdayStr] ?? 0
-  } else {
-    year = date.getFullYear()
-    month = date.getMonth()
-    day = date.getDate()
-    weekday = date.getDay()
-  }
 
-  // Roll back to Monday
+    return {
+      year: Number(parts.find(p => p.type === 'year')!.value),
+      month: Number(parts.find(p => p.type === 'month')!.value) - 1,
+      day: Number(parts.find(p => p.type === 'day')!.value),
+      weekday: weekdayMap[weekdayStr] ?? 0,
+    }
+  }
+  return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate(), weekday: date.getDay() }
+}
+
+/** Get Monday of the week for a given date (ISO week).
+ *  When timezone is provided, computes "what day is it in that timezone"
+ *  so that Sunday 11pm Pacific isn't treated as Monday UTC.
+ *  Returns a Date — note the Date is in server-local time, but represents the correct calendar date.
+ */
+export function getMonday(date: Date, timezone?: string): Date {
+  const { year, month, day, weekday } = getLocalDateParts(date, timezone)
   const diff = weekday === 0 ? -6 : 1 - weekday
   const monday = new Date(year, month, day + diff)
   monday.setHours(0, 0, 0, 0)
   return monday
+}
+
+/**
+ * Get the local date string (YYYY-MM-DD) for a Date in a given timezone.
+ */
+export function getLocalDateString(date: Date, timezone?: string): string {
+  if (timezone) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(date)
+  }
+  return date.toISOString().slice(0, 10)
 }

@@ -274,7 +274,7 @@ export default function CognitivePositioning() {
             </span>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', margin: 0, lineHeight: 1.2 }}>
-            This week
+            AI Pulse
           </h1>
         </div>
 
