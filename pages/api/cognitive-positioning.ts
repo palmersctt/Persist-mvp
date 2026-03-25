@@ -87,19 +87,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const userEmail = session.user?.email || 'anonymous'
 
-    // Compute date range: 4 weeks back from current week's Monday (in user's timezone)
+    // Compute date range using the same timezone-aware approach as work-health.ts
     const now = new Date()
-    const currentMonday = getMonday(now, userTimezone)
-    const fourWeeksAgo = new Date(currentMonday)
-    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 21) // 3 prior weeks
 
-    // End of current week (Sunday 23:59)
-    const endOfWeek = new Date(currentMonday)
-    endOfWeek.setDate(endOfWeek.getDate() + 6)
-    endOfWeek.setHours(23, 59, 59, 999)
+    // Get today's date in user's timezone (sv-SE gives YYYY-MM-DD)
+    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: userTimezone })
 
-    const timeMin = fourWeeksAgo.toISOString()
-    const timeMax = endOfWeek.toISOString()
+    // Get UTC offset for user's timezone
+    const getOffset = (dateStr: string): string => {
+      const d = new Date(dateStr)
+      const utcStr = d.toLocaleString('en-US', { timeZone: 'UTC' })
+      const tzStr = d.toLocaleString('en-US', { timeZone: userTimezone })
+      const diffMs = new Date(tzStr).getTime() - new Date(utcStr).getTime()
+      const diffHours = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60))
+      const diffMinutes = Math.floor((Math.abs(diffMs) % (1000 * 60 * 60)) / (1000 * 60))
+      const sign = diffMs >= 0 ? '+' : '-'
+      return `${sign}${String(diffHours).padStart(2, '0')}:${String(diffMinutes).padStart(2, '0')}`
+    }
+
+    const offset = getOffset(`${todayStr}T12:00:00Z`)
+
+    // Find Monday of current week in user's timezone
+    const todayDate = new Date(`${todayStr}T12:00:00${offset}`)
+    const currentMonday = getMonday(todayDate, userTimezone)
+    const mondayStr = currentMonday.toLocaleDateString('sv-SE', { timeZone: userTimezone })
+
+    // 3 prior weeks back from current Monday
+    const fourWeeksAgoDate = new Date(currentMonday)
+    fourWeeksAgoDate.setDate(fourWeeksAgoDate.getDate() - 21)
+    const fourWeeksAgoStr = fourWeeksAgoDate.toLocaleDateString('sv-SE', { timeZone: userTimezone })
+
+    // End of current week (Sunday 23:59 in user's timezone)
+    const endOfWeekDate = new Date(currentMonday)
+    endOfWeekDate.setDate(endOfWeekDate.getDate() + 6)
+    const endOfWeekStr = endOfWeekDate.toLocaleDateString('sv-SE', { timeZone: userTimezone })
+
+    const timeMin = new Date(`${fourWeeksAgoStr}T00:00:00${offset}`).toISOString()
+    const timeMax = new Date(`${endOfWeekStr}T23:59:59${offset}`).toISOString()
 
     let events: CalendarEvent[]
 
@@ -121,17 +145,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Group events by ISO week (Monday-based)
+    // Group events by ISO week (Monday-based, in user's timezone)
     const eventsByWeek: Record<string, CalendarEvent[]> = {}
     for (const event of events) {
       const monday = getMonday(event.start, userTimezone)
-      const weekKey = monday.toISOString().slice(0, 10)
+      const weekKey = monday.toLocaleDateString('sv-SE', { timeZone: userTimezone })
       if (!eventsByWeek[weekKey]) eventsByWeek[weekKey] = []
       eventsByWeek[weekKey].push(event)
     }
 
-    // Current week key
-    const currentWeekKey = currentMonday.toISOString().slice(0, 10)
+    // Current week key (in user's timezone)
+    const currentWeekKey = mondayStr
 
     // Today in user's timezone
     const todayLocal = getLocalDateString(now, userTimezone)
