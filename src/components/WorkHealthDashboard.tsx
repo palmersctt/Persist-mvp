@@ -206,13 +206,13 @@ export default function WorkHealthDashboard() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FBF7F2' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0B0B0C' }}>
         <div className="text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-3">
             <PersistLogo size={28} variant="dark" />
-            <span className="text-2xl font-semibold text-[#1C1917]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+            <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
           </div>
-          <div className="text-[#A8A29E] text-sm">Loading...</div>
+          <div className="text-[#5F6168] text-sm">Loading...</div>
         </div>
       </div>
     );
@@ -221,48 +221,48 @@ export default function WorkHealthDashboard() {
   if (!session) {
     if (showOnboarding) {
       return (
-        <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#FBF7F2', color: '#1C1917' }}>
+        <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}>
           <div className="max-w-md w-full">
             <div className="text-center mb-8 flex flex-col items-center">
               <div className="flex items-center gap-2 mb-2">
                 <PersistLogo size={28} variant="dark" />
-                <span className="text-2xl font-semibold text-[#1C1917]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+                <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
               </div>
-              <p className="text-[#A8A29E] text-sm">Your calendar has a lot to say about you</p>
+              <p className="text-[#5F6168] text-sm">Your calendar has a lot to say about you</p>
             </div>
 
-            <div className="bg-[#FEFCF9] backdrop-blur rounded-2xl p-8 border border-[#E7E0D8] glass-effect">
-              <h2 className="text-xl font-semibold mb-3 text-center text-[#1C1917]">Here&apos;s what you get</h2>
-              <p className="text-[#57534E] text-sm mb-6 text-center">Three scores from your calendar and a movie quote your day deserves</p>
+            <div className="bg-[#15161A] backdrop-blur rounded-2xl p-8 border border-[#23252B] glass-effect">
+              <h2 className="text-xl font-semibold mb-3 text-center text-[#F5F5F5]">Here&apos;s what you get</h2>
+              <p className="text-[#9B9DA3] text-sm mb-6 text-center">Three scores from your calendar and a movie quote your day deserves</p>
 
               <div className="space-y-5 mb-8">
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(232,125,58,0.12)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#E87D3A' }}>F</span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}>
+                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>F</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-[#1C1917]">Focus</h3>
-                    <p className="text-[#57534E] text-sm">How close you are to hiding in a conference room with your laptop</p>
+                    <h3 className="font-semibold mb-1 text-[#F5F5F5]">Focus</h3>
+                    <p className="text-[#9B9DA3] text-sm">How close you are to hiding in a conference room with your laptop</p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(192,84,74,0.12)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#C0544A' }}>S</span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}>
+                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>S</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-[#1C1917]">Strain</h3>
-                    <p className="text-[#57534E] text-sm">How close you are to faking a dentist appointment</p>
+                    <h3 className="font-semibold mb-1 text-[#F5F5F5]">Strain</h3>
+                    <p className="text-[#9B9DA3] text-sm">How close you are to faking a dentist appointment</p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(90,122,92,0.12)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#5A7A5C' }}>B</span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}>
+                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>B</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-[#1C1917]">Balance</h3>
-                    <p className="text-[#57534E] text-sm">How long until your body sends you an out-of-office</p>
+                    <h3 className="font-semibold mb-1 text-[#F5F5F5]">Balance</h3>
+                    <p className="text-[#9B9DA3] text-sm">How long until your body sends you an out-of-office</p>
                   </div>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function WorkHealthDashboard() {
               <button
                 onClick={completeOnboarding}
                 className="w-full py-4 px-6 rounded-xl font-semibold transition-colors"
-                style={{ backgroundColor: '#1C1917', color: '#FBF7F2' }}
+                style={{ backgroundColor: '#F5F5F5', color: '#0B0B0C' }}
               >
                 Get Started
               </button>
@@ -281,24 +281,24 @@ export default function WorkHealthDashboard() {
     }
 
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#FBF7F2', color: '#1C1917' }}>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}>
         <div className="max-w-md w-full text-center">
           <div className="mb-8 flex flex-col items-center">
             <div className="flex items-center gap-2 mb-2">
               <PersistLogo size={28} variant="dark" />
-              <span className="text-2xl font-semibold text-[#1C1917]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+              <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
             </div>
-            <p className="text-[#A8A29E] text-sm">Your calendar has a lot to say about you</p>
+            <p className="text-[#5F6168] text-sm">Your calendar has a lot to say about you</p>
           </div>
 
-          <div className="bg-[#FEFCF9] backdrop-blur rounded-2xl p-8 border border-[#E7E0D8] glass-effect">
-            <h2 className="text-lg font-semibold mb-3 text-[#1C1917]">Connect your calendar</h2>
-            <p className="text-[#57534E] text-sm mb-6">We read your schedule and find the movie quote your day deserves. Takes 10 seconds.</p>
+          <div className="bg-[#15161A] backdrop-blur rounded-2xl p-8 border border-[#23252B] glass-effect">
+            <h2 className="text-lg font-semibold mb-3 text-[#F5F5F5]">Connect your calendar</h2>
+            <p className="text-[#9B9DA3] text-sm mb-6">We read your schedule and find the movie quote your day deserves. Takes 10 seconds.</p>
 
             <button
               onClick={() => signIn('google')}
               className="w-full py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2"
-              style={{ backgroundColor: '#1C1917', color: '#FBF7F2' }}
+              style={{ backgroundColor: '#F5F5F5', color: '#0B0B0C' }}
             >
               <span>Sign in with Google</span>
             </button>
@@ -314,11 +314,11 @@ export default function WorkHealthDashboard() {
   if (isStillConnecting) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
-        <header className="px-6 py-6 sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm">
+        <header className="px-6 py-6 sticky top-0 z-40 bg-[#15161A]/80 border-b border-[#23252B] backdrop-blur-sm">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <PersistLogo size={24} variant="dark" />
-              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
             </Link>
           </div>
         </header>
@@ -326,7 +326,7 @@ export default function WorkHealthDashboard() {
         <div className="max-w-md mx-auto px-6 py-24 text-center">
           <div className="mb-8">
             <div className="w-12 h-12 mx-auto mb-6 rounded-full animate-spin"
-                 style={{ border: '3px solid rgba(232,125,58,0.15)', borderTopColor: '#E87D3A' }} />
+                 style={{ border: '3px solid rgba(199,249,92,0.15)', borderTopColor: '#C7F95C' }} />
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
               Reading your day
             </h2>
@@ -343,28 +343,28 @@ export default function WorkHealthDashboard() {
   if (error && !workHealth) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
-        <header className="px-6 py-6 sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm">
+        <header className="px-6 py-6 sticky top-0 z-40 bg-[#15161A]/80 border-b border-[#23252B] backdrop-blur-sm">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <PersistLogo size={24} variant="dark" />
-              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
             </Link>
             <button
               onClick={() => signOut()}
               className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.06)';
-                e.currentTarget.style.borderColor = '#E7E0D8';
+                e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.06)';
+                e.currentTarget.style.borderColor = '#23252B';
                 e.currentTarget.style.color = 'var(--text-primary)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = '#E7E0D8';
+                e.currentTarget.style.borderColor = '#23252B';
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }}
               style={{
                 color: 'var(--text-secondary)',
-                border: '1px solid #E7E0D8',
+                border: '1px solid #23252B',
                 backgroundColor: 'transparent',
                 cursor: 'pointer'
               }}
@@ -377,7 +377,7 @@ export default function WorkHealthDashboard() {
         <div className="max-w-md mx-auto px-6 py-24 text-center">
           <div className="mb-8">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
-                 style={{ backgroundColor: 'rgba(192,84,74,0.1)', border: '2px solid #C0544A' }}>
+                 style={{ backgroundColor: 'rgba(199,249,92,0.1)', border: '2px solid #C7F95C' }}>
               <span className="text-3xl">⚠️</span>
             </div>
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -408,11 +408,11 @@ export default function WorkHealthDashboard() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       {/* Clean Header */}
-      <header className="px-6 py-6 sticky top-0 z-40 bg-[#FEFCF9]/80 border-b border-[#E7E0D8] backdrop-blur-sm">
+      <header className="px-6 py-6 sticky top-0 z-40 bg-[#15161A]/80 border-b border-[#23252B] backdrop-blur-sm">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <PersistLogo size={24} variant="dark" />
-            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
           </div>
           <div className="flex items-center space-x-4">
             <button
@@ -421,17 +421,17 @@ export default function WorkHealthDashboard() {
               className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
               onMouseEnter={(e) => {
                 if (!isLoading) {
-                  e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.06)';
-                  e.currentTarget.style.borderColor = '#E7E0D8';
+                  e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.06)';
+                  e.currentTarget.style.borderColor = '#23252B';
                 }
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = isLoading ? 'rgba(28,25,23,0.04)' : '#E7E0D8';
+                e.currentTarget.style.borderColor = isLoading ? 'rgba(245,245,245,0.04)' : '#23252B';
               }}
               style={{
                 color: isLoading ? 'var(--text-muted)' : 'var(--text-secondary)',
-                border: `1px solid ${isLoading ? 'rgba(28,25,23,0.04)' : '#E7E0D8'}`,
+                border: `1px solid ${isLoading ? 'rgba(245,245,245,0.04)' : '#23252B'}`,
                 backgroundColor: 'transparent',
                 cursor: isLoading ? 'not-allowed' : 'pointer'
               }}
@@ -442,12 +442,12 @@ export default function WorkHealthDashboard() {
               <button
                 onClick={() => setShowProfile(!showProfile)}
                 className="w-8 h-8 rounded-full overflow-hidden border-2 transition-all duration-200 hover:scale-105"
-                style={{ borderColor: showProfile ? '#E7E0D8' : 'rgba(28,25,23,0.1)' }}
+                style={{ borderColor: showProfile ? '#23252B' : 'rgba(245,245,245,0.1)' }}
               >
                 {session?.user?.image ? (
                   <img src={session.user.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(28,25,23,0.06)', color: 'var(--text-secondary)' }}>
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(245,245,245,0.06)', color: 'var(--text-secondary)' }}>
                     {session?.user?.name?.[0]?.toUpperCase() || '?'}
                   </div>
                 )}
@@ -455,9 +455,9 @@ export default function WorkHealthDashboard() {
               {showProfile && (
                 <div
                   className="absolute right-0 mt-2 w-72 rounded-xl overflow-hidden shadow-2xl z-50"
-                  style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}
+                  style={{ backgroundColor: '#15161A', border: '1px solid #23252B' }}
                 >
-                  <div className="p-4 border-b" style={{ borderColor: '#E7E0D8' }}>
+                  <div className="p-4 border-b" style={{ borderColor: '#23252B' }}>
                     <div className="flex items-center gap-3">
                       {session?.user?.image && (
                         <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
@@ -468,19 +468,19 @@ export default function WorkHealthDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 border-b" style={{ borderColor: '#E7E0D8' }}>
+                  <div className="p-4 border-b" style={{ borderColor: '#23252B' }}>
                     <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>Permissions</p>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#5A7A5C] text-xs">&#10003;</span>
+                        <span className="text-[#C7F95C] text-xs">&#10003;</span>
                         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Email address</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[#5A7A5C] text-xs">&#10003;</span>
+                        <span className="text-[#C7F95C] text-xs">&#10003;</span>
                         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Profile info (name, photo)</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[#5A7A5C] text-xs">&#10003;</span>
+                        <span className="text-[#C7F95C] text-xs">&#10003;</span>
                         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Google Calendar (read-only)</span>
                       </div>
                     </div>
@@ -489,9 +489,9 @@ export default function WorkHealthDashboard() {
                     <button
                       onClick={() => signOut()}
                       className="w-full text-xs font-medium py-2 rounded-lg transition-colors"
-                      style={{ color: 'var(--text-secondary)', backgroundColor: 'rgba(28,25,23,0.04)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.08)' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(28,25,23,0.04)' }}
+                      style={{ color: 'var(--text-secondary)', backgroundColor: 'rgba(245,245,245,0.04)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.08)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.04)' }}
                     >
                       Sign Out
                     </button>
@@ -537,41 +537,41 @@ export default function WorkHealthDashboard() {
                         content: '';
                         position: absolute;
                         inset: 0;
-                        background: linear-gradient(90deg, transparent 0%, rgba(28,25,23,0.05) 50%, transparent 100%);
+                        background: linear-gradient(90deg, transparent 0%, rgba(245,245,245,0.05) 50%, transparent 100%);
                         animation: shimmer 1.8s ease-in-out infinite;
                       }
                     `}</style>
                     <div
                       className="w-full rounded-2xl overflow-hidden"
                       style={{
-                        background: 'linear-gradient(to bottom, #E7E0D8, #FEFCF9)',
+                        background: 'linear-gradient(to bottom, #23252B, #15161A)',
                         padding: '32px 24px 20px',
                       }}
                     >
-                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(28,25,23,0.08)', maxWidth: '85%' }} />
-                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(28,25,23,0.06)', maxWidth: '60%' }} />
-                      <div className="skeleton-bar h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(28,25,23,0.04)', maxWidth: '40%' }} />
-                      <div className="skeleton-bar h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(28,25,23,0.04)', maxWidth: '55%' }} />
-                      <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(28,25,23,0.05)' }}>
-                        <div className="skeleton-bar h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(28,25,23,0.06)', maxWidth: '30%' }} />
+                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(245,245,245,0.08)', maxWidth: '85%' }} />
+                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '60%' }} />
+                      <div className="skeleton-bar h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '40%' }} />
+                      <div className="skeleton-bar h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '55%' }} />
+                      <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(245,245,245,0.05)' }}>
+                        <div className="skeleton-bar h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '30%' }} />
                         <div className="flex justify-center gap-8">
                           {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
                             <div key={label} className="text-center">
-                              <div className="text-xl font-bold" style={{ color: 'rgba(28,25,23,0.12)', lineHeight: 1 }}>--</div>
-                              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(28,25,23,0.12)' }}>{label}</div>
+                              <div className="text-xl font-bold" style={{ color: 'rgba(245,245,245,0.12)', lineHeight: 1 }}>--</div>
+                              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(245,245,245,0.12)' }}>{label}</div>
                             </div>
                           ))}
                         </div>
                       </div>
                       <div className="flex items-center justify-center gap-1.5 mt-3">
                         <PersistLogo size={12} variant="dark" />
-                        <span className="text-[9px] tracking-widest" style={{ color: 'rgba(28,25,23,0.15)' }}>PERSIST<span style={{ color: 'rgba(232,125,58,0.3)' }}>WORK</span>.com</span>
+                        <span className="text-[9px] tracking-widest" style={{ color: 'rgba(245,245,245,0.15)' }}>PERSIST<span style={{ color: 'rgba(199,249,92,0.3)' }}>WORK</span>.com</span>
                       </div>
                     </div>
                     <p
                       className="text-sm font-medium text-center mt-5 tracking-wide"
                       style={{
-                        color: 'rgba(28,25,23,0.4)',
+                        color: 'rgba(245,245,245,0.4)',
                         opacity: verbVisible ? 1 : 0,
                         transition: 'opacity 0.3s ease-in-out',
                       }}
@@ -621,8 +621,8 @@ export default function WorkHealthDashboard() {
                         disabled={shareState === 'generating'}
                         className={`w-full py-4 px-6 rounded-xl text-sm font-medium transition-all duration-200 ${
                           shareState === 'generating'
-                            ? 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-muted)] cursor-wait'
-                            : 'bg-[rgba(28,25,23,0.03)] border border-[#E7E0D8] text-[var(--text-secondary)] hover:bg-[rgba(28,25,23,0.06)] hover:border-[rgba(28,25,23,0.2)] cursor-pointer'
+                            ? 'bg-[rgba(245,245,245,0.03)] border border-[#23252B] text-[var(--text-muted)] cursor-wait'
+                            : 'bg-[rgba(245,245,245,0.03)] border border-[#23252B] text-[var(--text-secondary)] hover:bg-[rgba(245,245,245,0.06)] hover:border-[rgba(245,245,245,0.2)] cursor-pointer'
                         }`}
                       >
                         {shareState === 'generating' ? 'Generating image\u2026' : 'Share your day \u2192'}
@@ -711,13 +711,13 @@ export default function WorkHealthDashboard() {
                   <circle
                     cx="60" cy="60" r="54"
                     fill="none"
-                    stroke="rgba(232,125,58,0.2)"
+                    stroke="rgba(199,249,92,0.2)"
                     strokeWidth="8"
                   />
                   <circle
                     cx="60" cy="60" r="54"
                     fill="none"
-                    stroke="#E87D3A"
+                    stroke="#C7F95C"
                     strokeWidth="8"
                     strokeDasharray="339.29"
                     strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)}
@@ -728,7 +728,7 @@ export default function WorkHealthDashboard() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{
-                      color: '#E87D3A',
+                      color: '#C7F95C',
                       fontFeatureSettings: '"tnum"',
                       letterSpacing: '-0.04em'
                     }}>
@@ -748,12 +748,12 @@ export default function WorkHealthDashboard() {
               <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
                 style={{
-                  backgroundColor: '#FEFCF9',
-                  border: '1px solid #E7E0D8'
+                  backgroundColor: '#15161A',
+                  border: '1px solid #23252B'
                 }}
               >
                 {/* Focus Insights */}
-                <div className="mb-6 pb-4 border-b border-[#E7E0D8] text-center">
+                <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                     Focus Insights
                   </h4>
@@ -775,7 +775,7 @@ export default function WorkHealthDashboard() {
                           {insight.message}
                         </p>
                         {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#E87D3A', opacity: 0.85 }}>
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>
                             {insight.action}
                           </p>
                         )}
@@ -797,10 +797,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.meetingCount || 0) <= 4 ? 'Moderate' : 'Heavy'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
-                        backgroundColor: '#E87D3A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -821,10 +821,10 @@ export default function WorkHealthDashboard() {
                          formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Some' : 'Scarce'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                        backgroundColor: '#E87D3A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -845,11 +845,11 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.morningMeetings || 0) > 0 && (workHealth?.schedule?.afternoonMeetings || 0) > 0 ? 'Spread out' : 'Well-timed'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${(workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) * 1.5 ? 40 :
                                   (workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) ? 70 : 100}%`,
-                        backgroundColor: '#E87D3A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -870,10 +870,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.meetingRatio || 0) <= 0.5 ? 'Moderate' : 'Heavy'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(15, 100 - ((workHealth?.schedule?.meetingRatio || 0) * 100))}%`,
-                        backgroundColor: '#E87D3A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -884,7 +884,7 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
 
-                <p className="text-xs mt-4 pt-4 border-t border-[#E7E0D8]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
                   How much capacity you have today for deep, uninterrupted work — based on meeting load, available focus blocks, and schedule flow.
                 </p>
               </div>
@@ -905,13 +905,13 @@ export default function WorkHealthDashboard() {
                   <circle
                     cx="60" cy="60" r="54"
                     fill="none"
-                    stroke="rgba(192,84,74,0.2)"
+                    stroke="rgba(199,249,92,0.2)"
                     strokeWidth="8"
                   />
                   <circle
                     cx="60" cy="60" r="54"
                     fill="none"
-                    stroke="#C0544A"
+                    stroke="#C7F95C"
                     strokeWidth="8"
                     strokeDasharray="339.29"
                     strokeDashoffset={(339.29 - (workHealth?.cognitiveResilience || 0) / 100 * 339.29)}
@@ -922,7 +922,7 @@ export default function WorkHealthDashboard() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{
-                      color: '#C0544A',
+                      color: '#C7F95C',
                       fontFeatureSettings: '"tnum"',
                       letterSpacing: '-0.04em'
                     }}>
@@ -942,12 +942,12 @@ export default function WorkHealthDashboard() {
               <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
                 style={{
-                  backgroundColor: '#FEFCF9',
-                  border: '1px solid #E7E0D8'
+                  backgroundColor: '#15161A',
+                  border: '1px solid #23252B'
                 }}
               >
                 {/* Strain Insights */}
-                <div className="mb-6 pb-4 border-b border-[#E7E0D8] text-center">
+                <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                     Strain Insights
                   </h4>
@@ -969,7 +969,7 @@ export default function WorkHealthDashboard() {
                           {insight.message}
                         </p>
                         {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#E87D3A', opacity: 0.85 }}>
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>
                             {insight.action}
                           </p>
                         )}
@@ -991,10 +991,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.uniqueContexts || 0) <= 5 ? 'Moderate' : 'High'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(20, 100 - ((workHealth?.schedule?.uniqueContexts || 0) * 12))}%`,
-                        backgroundColor: '#C0544A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1015,10 +1015,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.afternoonMeetings || 0) <= 3 ? 'Moderate' : 'High'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(20, 100 - ((workHealth?.schedule?.afternoonMeetings || 0) * 20))}%`,
-                        backgroundColor: '#C0544A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1039,10 +1039,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.longestStretch || 0) <= 2 ? 'Short' : 'Long'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(20, 100 - ((workHealth?.schedule?.longestStretch || 0) * 25))}%`,
-                        backgroundColor: '#C0544A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1064,10 +1064,10 @@ export default function WorkHealthDashboard() {
                          formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Low'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                        backgroundColor: '#C0544A'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1078,7 +1078,7 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
 
-                <p className="text-xs mt-4 pt-4 border-t border-[#E7E0D8]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
                   How much cognitive load your schedule is putting on you today — context switches, back-to-back meetings, and decision fatigue.
                 </p>
               </div>
@@ -1099,13 +1099,13 @@ export default function WorkHealthDashboard() {
                   <circle
                     cx="60" cy="60" r="54"
                     fill="none"
-                    stroke="rgba(90,122,92,0.2)"
+                    stroke="rgba(199,249,92,0.2)"
                     strokeWidth="8"
                   />
                   <circle
                     cx="60" cy="60" r="54"
                     fill="none"
-                    stroke="#5A7A5C"
+                    stroke="#C7F95C"
                     strokeWidth="8"
                     strokeDasharray="339.29"
                     strokeDashoffset={(339.29 - (workHealth?.workRhythmRecovery || 0) / 100 * 339.29)}
@@ -1116,7 +1116,7 @@ export default function WorkHealthDashboard() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
                     <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{
-                      color: '#5A7A5C',
+                      color: '#C7F95C',
                       fontFeatureSettings: '"tnum"',
                       letterSpacing: '-0.04em'
                     }}>
@@ -1136,12 +1136,12 @@ export default function WorkHealthDashboard() {
               <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
                 style={{
-                  backgroundColor: '#FEFCF9',
-                  border: '1px solid #E7E0D8'
+                  backgroundColor: '#15161A',
+                  border: '1px solid #23252B'
                 }}
               >
                 {/* Balance Insights */}
-                <div className="mb-6 pb-4 border-b border-[#E7E0D8] text-center">
+                <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
                   <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
                     Balance Insights
                   </h4>
@@ -1163,7 +1163,7 @@ export default function WorkHealthDashboard() {
                           {insight.message}
                         </p>
                         {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#E87D3A', opacity: 0.85 }}>
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>
                             {insight.action}
                           </p>
                         )}
@@ -1185,10 +1185,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) ? 'Afternoon-loaded' : 'Morning-loaded'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(30, 100 - Math.abs((workHealth?.schedule?.morningMeetings || 0) - (workHealth?.schedule?.afternoonMeetings || 0)) * 20)}%`,
-                        backgroundColor: '#5A7A5C'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1209,10 +1209,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.adequateBreaks || 0) >= 1 ? 'Some' : 'None'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.min(100, (workHealth?.schedule?.adequateBreaks || 0) * 25 + (workHealth?.schedule?.shortBreaks || 0) * 12)}%`,
-                        backgroundColor: '#5A7A5C'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1233,10 +1233,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.durationHours || 0) <= 5 ? 'Moderate' : 'Unsustainable'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(15, 100 - ((workHealth?.schedule?.durationHours || 0) * 15))}%`,
-                        backgroundColor: '#5A7A5C'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1257,10 +1257,10 @@ export default function WorkHealthDashboard() {
                          (workHealth?.schedule?.earlyLateMeetings || 0) <= 1 ? 'Minor' : 'Overextended'}
                       </span>
                     </div>
-                    <div className="w-full bg-[#E7E0D8] rounded h-1.5">
+                    <div className="w-full bg-[#23252B] rounded h-1.5">
                       <div className="h-1.5 rounded transition-all duration-700" style={{
                         width: `${Math.max(20, 100 - ((workHealth?.schedule?.earlyLateMeetings || 0) * 30))}%`,
-                        backgroundColor: '#5A7A5C'
+                        backgroundColor: '#C7F95C'
                       }} />
                     </div>
                     <div className="mt-1">
@@ -1273,7 +1273,7 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
 
-                <p className="text-xs mt-4 pt-4 border-t border-[#E7E0D8]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
                   Can you keep this pace up? Measures whether your schedule has enough recovery time and healthy boundaries to avoid burnout.
                 </p>
               </div>

@@ -84,7 +84,7 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
                 {label}
               </span>
               <span style={{
-                fontSize: '1.25rem', fontWeight: 300, color: key === 'resilience' ? '#57534E' : 'var(--text-primary)',
+                fontSize: '1.25rem', fontWeight: 300, color: key === 'resilience' ? '#9B9DA3' : 'var(--text-primary)',
                 fontFeatureSettings: '"tnum"', letterSpacing: '-0.03em'
               }}>
                 {val}
