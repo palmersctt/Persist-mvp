@@ -35,7 +35,7 @@ const SIZE_OPTIONS = [
 
 export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMeetingBuilderProps) {
   const [meetings, setMeetings] = useState<MeetingEntry[]>([
-    { id: '1', title: '', startHour: 9, startMinute: 0, endHour: 10, endMinute: 0, attendees: 4 },
+    { id: '1', title: 'Sprint Planning', startHour: 9, startMinute: 0, endHour: 10, endMinute: 0, attendees: 4 },
   ])
 
   const addMeeting = () => {
@@ -48,7 +48,7 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
 
     setMeetings([...meetings, {
       id: String(Date.now()),
-      title: '',
+      title: `Meeting ${meetings.length + 1}`,
       startHour: Math.min(nextStartH, 20),
       startMinute: nextStartM,
       endHour: nextEndH,
