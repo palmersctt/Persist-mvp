@@ -29,27 +29,27 @@ export default function AuthError() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#FBF7F2', color: '#1C1917' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}>
       <div className="max-w-md w-full text-center">
         <div className="mb-8 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
-            <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#1C1917"/><path d="M38 30 L62 50 L38 70" stroke="#FBF7F2" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-            <span className="text-2xl font-semibold" style={{ color: '#1C1917', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#E87D3A' }}>WORK</span></span>
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="48" fill="#F5F5F5"/><path d="M38 30 L62 50 L38 70" stroke="#0B0B0C" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+            <span className="text-2xl font-semibold" style={{ color: '#F5F5F5', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
           </div>
-          <p className="text-sm" style={{ color: '#A8A29E' }}>Something went wrong</p>
+          <p className="text-sm" style={{ color: '#5F6168' }}>Something went wrong</p>
         </div>
 
-        <div className="backdrop-blur rounded-2xl p-8" style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}>
+        <div className="backdrop-blur rounded-2xl p-8" style={{ backgroundColor: '#15161A', border: '1px solid #23252B' }}>
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-3" style={{ color: '#1C1917' }}>Couldn&apos;t sign you in</h2>
-            <p className="text-sm mb-6" style={{ color: '#57534E' }}>
+            <h2 className="text-lg font-semibold mb-3" style={{ color: '#F5F5F5' }}>Couldn&apos;t sign you in</h2>
+            <p className="text-sm mb-6" style={{ color: '#9B9DA3' }}>
               {getErrorMessage(error)}
             </p>
           </div>
 
           {error === 'Configuration' && (
-            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'rgba(232,125,58,0.08)', border: '1px solid rgba(232,125,58,0.2)' }}>
-              <p className="text-xs" style={{ color: '#D06B2E' }}>
+            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'rgba(199,249,92,0.08)', border: '1px solid rgba(199,249,92,0.2)' }}>
+              <p className="text-xs" style={{ color: '#A8DE3F' }}>
                 <strong>For developers:</strong> Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and NEXTAUTH_URL are properly configured in your environment variables.
               </p>
             </div>
@@ -58,7 +58,7 @@ export default function AuthError() {
           <button
             onClick={handleRetry}
             className="w-full py-3 px-6 rounded-xl font-semibold transition-colors"
-            style={{ backgroundColor: '#1C1917', color: '#FBF7F2' }}
+            style={{ backgroundColor: '#C7F95C', color: '#0B0B0C' }}
           >
             Try Again
           </button>

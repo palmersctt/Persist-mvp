@@ -170,22 +170,10 @@ export default function SandboxDashboard() {
   return (
     <>
       <style jsx global>{`
-        :root {
-          --cream: #FBF7F2;
-          --warm-white: #FEFCF9;
-          --ink: #1C1917;
-          --ink-light: #57534E;
-          --ink-faint: #A8A29E;
-          --amber: #E87D3A;
-          --amber-light: #FDF0E6;
-          --border: #E7E0D8;
-          --text-secondary: #57534E;
-        }
-
         .sb-wrap {
-          font-family: 'Inter', sans-serif;
-          background: var(--cream);
-          color: var(--ink);
+          font-family: var(--font-geist-sans), -apple-system, sans-serif;
+          background: var(--ground);
+          color: var(--text);
           min-height: 100vh;
           padding-bottom: 80px;
           overflow-x: hidden;
@@ -201,8 +189,8 @@ export default function SandboxDashboard() {
           justify-content: space-between;
           align-items: center;
           padding: 16px 16px;
-          background: var(--warm-white);
-          border-bottom: 1px solid var(--border);
+          background: var(--surface);
+          border-bottom: 1px solid var(--rule);
           position: sticky;
           top: 0;
           z-index: 100;
@@ -214,30 +202,30 @@ export default function SandboxDashboard() {
           font-weight: 800;
           font-size: 18px;
           letter-spacing: -0.5px;
-          color: var(--ink);
+          color: var(--text);
           text-decoration: none;
           display: flex;
           align-items: center;
           gap: 8px;
         }
-        .sb-nav-logo span { color: var(--amber); }
+        .sb-nav-logo span { color: var(--signal); }
         .sb-badge {
           font-size: 10px;
           font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          color: var(--amber);
-          background: var(--amber-light);
+          color: var(--signal);
+          background: var(--signal-soft);
           padding: 3px 8px;
           border-radius: 6px;
         }
         .sb-nav-cta {
-          background: var(--amber);
-          color: white;
+          background: var(--signal);
+          color: var(--ground);
           border: none;
           padding: 8px 18px;
           border-radius: 8px;
-          font-weight: 600;
+          font-weight: 700;
           font-size: 14px;
           cursor: pointer;
           font-family: inherit;
@@ -245,7 +233,7 @@ export default function SandboxDashboard() {
         }
         .sb-nav-cta:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(232,125,58,0.3);
+          box-shadow: 0 4px 14px rgba(199,249,92,0.35);
         }
 
         /* Content */
@@ -271,8 +259,8 @@ export default function SandboxDashboard() {
 
         /* Calendar preview */
         .sb-cal {
-          background: var(--warm-white);
-          border: 1px solid var(--border);
+          background: var(--surface);
+          border: 1px solid var(--rule);
           border-radius: 14px;
           overflow: hidden;
         }
@@ -293,7 +281,7 @@ export default function SandboxDashboard() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 8px;
-          background: var(--warm-white);
+          background: var(--surface-2);
           border-left: 3px solid transparent;
         }
         @media (min-width: 640px) {
@@ -302,21 +290,21 @@ export default function SandboxDashboard() {
         .sb-ev-time {
           font-size: 11px;
           font-weight: 600;
-          color: var(--ink-faint);
+          color: var(--text-faint);
           min-width: 40px;
           flex-shrink: 0;
         }
         .sb-ev-title {
           font-size: 13px;
           font-weight: 600;
-          color: var(--ink);
+          color: var(--text);
           flex: 1;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        .sb-ev-amber { border-color: #E8883A; }
+        .sb-ev-amber { border-color: var(--signal); }
 
         /* Share button */
         .sb-share-btn {
@@ -325,17 +313,17 @@ export default function SandboxDashboard() {
           border-radius: 12px;
           font-size: 14px;
           font-weight: 500;
-          background: rgba(28,25,23,0.03);
-          border: 1px solid var(--border);
-          color: var(--ink-light);
+          background: var(--surface);
+          border: 1px solid var(--rule);
+          color: var(--text-muted);
           cursor: pointer;
           font-family: inherit;
           transition: background 0.15s, border-color 0.15s;
           margin-top: 12px;
         }
         .sb-share-btn:hover {
-          background: rgba(28,25,23,0.06);
-          border-color: rgba(28,25,23,0.2);
+          background: var(--surface-2);
+          border-color: var(--signal-edge);
         }
 
         /* Sticky bottom CTA — mobile only */
@@ -346,10 +334,10 @@ export default function SandboxDashboard() {
           left: 0;
           right: 0;
           z-index: 50;
-          background: rgba(251,247,242,0.95);
+          background: rgba(11,11,12,0.95);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border-top: 1px solid var(--border);
+          border-top: 1px solid var(--rule);
           padding: 12px 16px;
           padding-bottom: max(12px, env(safe-area-inset-bottom));
         }
@@ -450,13 +438,13 @@ export default function SandboxDashboard() {
                     height: 32,
                     margin: '0 auto 12px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(232,125,58,0.08)',
+                    backgroundColor: 'rgba(199,249,92,0.08)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                      stroke="#E87D3A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      stroke="#C7F95C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 5v14M5 12l7 7 7-7"/>
                     </svg>
                   </div>
@@ -539,11 +527,11 @@ export default function SandboxDashboard() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{
                         width: 36, height: 36, borderRadius: 10,
-                        backgroundColor: 'rgba(232,125,58,0.08)',
+                        backgroundColor: 'rgba(199,249,92,0.08)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         flexShrink: 0,
                       }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E87D3A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C7F95C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                         </svg>
                       </div>
@@ -567,7 +555,7 @@ export default function SandboxDashboard() {
                     <h2 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', margin: 0 }}>
                       Your Trends
                     </h2>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, backgroundColor: 'rgba(232,125,58,0.08)', color: '#D06B2E' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, backgroundColor: 'rgba(199,249,92,0.08)', color: '#A8DE3F' }}>
                       Preview
                     </span>
                   </div>
@@ -580,8 +568,8 @@ export default function SandboxDashboard() {
                         style={{
                           flex: 1, padding: '10px 16px', fontSize: 13, fontWeight: 600,
                           border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                          backgroundColor: trendView === view ? '#1C1917' : 'transparent',
-                          color: trendView === view ? '#FBF7F2' : 'var(--ink-light)',
+                          backgroundColor: trendView === view ? '#C7F95C' : 'transparent',
+                          color: trendView === view ? '#0B0B0C' : 'var(--ink-light)',
                           transition: 'all 0.15s ease',
                         }}
                       >
@@ -599,9 +587,9 @@ export default function SandboxDashboard() {
                     const allInsights = trendView === 'weekly' ? trends.weekly.insights : trends.monthly.insights
 
                     const metrics = [
-                      { key: 'focus' as const, label: 'Focus', color: '#E87D3A', getValue: (d: typeof items[0]) => d.focus, current: focus },
-                      { key: 'strain' as const, label: 'Strain', color: '#C0544A', getValue: (d: typeof items[0]) => d.strain, current: strain },
-                      { key: 'balance' as const, label: 'Balance', color: '#5A7A5C', getValue: (d: typeof items[0]) => d.balance, current: balance },
+                      { key: 'focus' as const, label: 'Focus', color: '#C7F95C', getValue: (d: typeof items[0]) => d.focus, current: focus },
+                      { key: 'strain' as const, label: 'Strain', color: '#C7F95C', getValue: (d: typeof items[0]) => d.strain, current: strain },
+                      { key: 'balance' as const, label: 'Balance', color: '#C7F95C', getValue: (d: typeof items[0]) => d.balance, current: balance },
                     ]
 
                     // SVG sparkline builder
@@ -651,8 +639,8 @@ export default function SandboxDashboard() {
 
                           // Strain is inverted: up = bad, down = good
                           const arrowColor = key === 'strain'
-                            ? (isUp ? '#C0544A' : isDown ? '#5A7A5C' : 'var(--ink-faint)')
-                            : (isUp ? '#5A7A5C' : isDown ? '#C0544A' : 'var(--ink-faint)')
+                            ? (isUp ? '#C7F95C' : isDown ? '#C7F95C' : 'var(--ink-faint)')
+                            : (isUp ? '#C7F95C' : isDown ? '#C7F95C' : 'var(--ink-faint)')
 
                           // First matching insight for this metric
                           const topInsight = allInsights.find(ins => ins.metric === key)
@@ -702,7 +690,7 @@ export default function SandboxDashboard() {
                                   <span key={d.label} style={{
                                     fontSize: 9,
                                     fontWeight: d.isToday ? 800 : 500,
-                                    color: d.isToday ? '#E87D3A' : 'var(--ink-faint)',
+                                    color: d.isToday ? '#C7F95C' : 'var(--ink-faint)',
                                   }}>
                                     {d.isToday ? 'Today' : d.label}
                                   </span>
@@ -738,7 +726,7 @@ export default function SandboxDashboard() {
                               {allInsights.map((insight, i, arr) => (
                                 <div key={i} style={{ padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                    <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, backgroundColor: insight.metric === 'focus' ? '#E87D3A' : insight.metric === 'strain' ? '#C0544A' : '#5A7A5C' }} />
+                                    <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, backgroundColor: insight.metric === 'focus' ? '#C7F95C' : insight.metric === 'strain' ? '#C7F95C' : '#C7F95C' }} />
                                     <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{insight.title}</span>
                                   </div>
                                   <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, paddingLeft: 12, margin: 0 }}>{insight.message}</p>
@@ -754,12 +742,12 @@ export default function SandboxDashboard() {
                   {/* Best / Worst (weekly only) */}
                   {trendView === 'weekly' && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-                      <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: 'rgba(90,122,92,0.06)', border: '1px solid rgba(90,122,92,0.15)' }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: '#5A7A5C', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Best day</span>
+                      <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: 'rgba(199,249,92,0.06)', border: '1px solid rgba(199,249,92,0.15)' }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#C7F95C', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Best day</span>
                         <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginTop: 2, marginBottom: 0 }}>{trends.weekly.bestDay}</p>
                       </div>
-                      <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: 'rgba(192,84,74,0.06)', border: '1px solid rgba(192,84,74,0.15)' }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: '#C0544A', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Hardest day</span>
+                      <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: 'rgba(199,249,92,0.06)', border: '1px solid rgba(199,249,92,0.15)' }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#C7F95C', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Hardest day</span>
                         <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginTop: 2, marginBottom: 0 }}>{trends.weekly.worstDay}</p>
                       </div>
                     </div>
@@ -770,7 +758,7 @@ export default function SandboxDashboard() {
                     <div style={{ textAlign: 'center', marginTop: 12 }}>
                       <span style={{
                         fontSize: 12, fontWeight: 700,
-                        color: trends.monthly.trend === 'improving' ? '#5A7A5C' : trends.monthly.trend === 'declining' ? '#C0544A' : 'var(--ink-faint)',
+                        color: trends.monthly.trend === 'improving' ? '#C7F95C' : trends.monthly.trend === 'declining' ? '#C7F95C' : 'var(--ink-faint)',
                       }}>
                         {trends.monthly.trend === 'improving' && '\u2191 Improving'}
                         {trends.monthly.trend === 'declining' && '\u2193 Declining'}
@@ -780,7 +768,7 @@ export default function SandboxDashboard() {
                   )}
 
                   {/* WIP banner */}
-                  <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 10, backgroundColor: 'rgba(232,125,58,0.05)', border: '1px solid rgba(232,125,58,0.12)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 10, backgroundColor: 'rgba(199,249,92,0.05)', border: '1px solid rgba(199,249,92,0.12)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>&#128679;</span>
                     <div>
                       <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)', marginBottom: 2, marginTop: 0 }}>We&apos;re building this.</p>
@@ -804,8 +792,8 @@ export default function SandboxDashboard() {
               <section className="text-center">
                 <div className="relative w-32 h-32 mx-auto mb-8">
                   <svg className="w-full h-full" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(232,125,58,0.2)" strokeWidth="8" />
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="#E87D3A" strokeWidth="8"
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(199,249,92,0.2)" strokeWidth="8" />
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#C7F95C" strokeWidth="8"
                       strokeDasharray="339.29"
                       strokeDashoffset={339.29 - (focus / 100) * 339.29}
                       strokeLinecap="round"
@@ -814,7 +802,7 @@ export default function SandboxDashboard() {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <div className="text-5xl font-light mb-1" style={{ color: '#E87D3A', fontFeatureSettings: '"tnum"', letterSpacing: '-0.04em' }}>
+                      <div className="text-5xl font-light mb-1" style={{ color: '#C7F95C', fontFeatureSettings: '"tnum"', letterSpacing: '-0.04em' }}>
                         {focus}
                       </div>
                       <div style={{ fontSize: '0.75rem', lineHeight: '1', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', fontWeight: 600 }}>
@@ -824,12 +812,12 @@ export default function SandboxDashboard() {
                   </div>
                 </div>
 
-                <div ref={(el) => observeOnce(el, 'performance', metricComponentsSeen, 'sandbox_metric_components_viewed', { metric: 'performance' })} className="metric-breakdown max-w-2xl mx-auto rounded-lg" style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}>
-                  <div className="mb-6 pb-4 border-b border-[#E7E0D8] text-center">
+                <div ref={(el) => observeOnce(el, 'performance', metricComponentsSeen, 'sandbox_metric_components_viewed', { metric: 'performance' })} className="metric-breakdown max-w-2xl mx-auto rounded-lg" style={{ backgroundColor: '#15161A', border: '1px solid #23252B' }}>
+                  <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
                     <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--ink)' }}>Focus Insights</h4>
                     <div className="text-center">
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{metricInsights.focus.message}</p>
-                      <p className="text-xs mt-2 leading-relaxed" style={{ color: '#E87D3A', opacity: 0.85 }}>{metricInsights.focus.action}</p>
+                      <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>{metricInsights.focus.action}</p>
                     </div>
                   </div>
 
@@ -839,7 +827,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Meeting Density</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.meetingCount <= 2 ? 'Light' : s.meetingCount <= 4 ? 'Moderate' : 'Heavy'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(25, 100 - (s.meetingCount * 15))}%`, backgroundColor: '#E87D3A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(25, 100 - (s.meetingCount * 15))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.meetingCount} meetings competing for your attention</span></div>
                     </div>
 
@@ -848,7 +836,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Deep Work Blocks</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{ft.hours >= 4 ? 'Plenty' : ft.hours >= 2 ? 'Some' : 'Scarce'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.min(100, ft.hours * 22)}%`, backgroundColor: '#E87D3A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.min(100, ft.hours * 22)}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{ft.hours}h {ft.minutes}m available for uninterrupted work</span></div>
                     </div>
 
@@ -857,7 +845,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Meeting Timing</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.afternoonMeetings > s.morningMeetings * 1.5 ? 'Afternoon-heavy' : s.morningMeetings > 0 && s.afternoonMeetings > 0 ? 'Spread out' : 'Well-timed'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${s.afternoonMeetings > s.morningMeetings * 1.5 ? 40 : s.afternoonMeetings > s.morningMeetings ? 70 : 100}%`, backgroundColor: '#E87D3A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${s.afternoonMeetings > s.morningMeetings * 1.5 ? 40 : s.afternoonMeetings > s.morningMeetings ? 70 : 100}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.morningMeetings} morning, {s.afternoonMeetings} afternoon</span></div>
                     </div>
 
@@ -866,12 +854,12 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Calendar Commitment</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.meetingRatio <= 0.3 ? 'Light' : s.meetingRatio <= 0.5 ? 'Moderate' : 'Heavy'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(15, 100 - (s.meetingRatio * 100))}%`, backgroundColor: '#E87D3A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(15, 100 - (s.meetingRatio * 100))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.durationHours}h of your day is in meetings ({Math.round(s.meetingRatio * 100)}%)</span></div>
                     </div>
                   </div>
 
-                  <p className="text-xs mt-4 pt-4 border-t border-[#E7E0D8]" style={{ color: 'var(--ink-faint)', lineHeight: '1.4' }}>
+                  <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--ink-faint)', lineHeight: '1.4' }}>
                     How much capacity you have today for deep, uninterrupted work — based on meeting load, available focus blocks, and schedule flow.
                   </p>
                 </div>
@@ -888,8 +876,8 @@ export default function SandboxDashboard() {
               <section className="text-center">
                 <div className="relative w-32 h-32 mx-auto mb-8">
                   <svg className="w-full h-full" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(192,84,74,0.2)" strokeWidth="8" />
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="#C0544A" strokeWidth="8"
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(199,249,92,0.2)" strokeWidth="8" />
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#C7F95C" strokeWidth="8"
                       strokeDasharray="339.29"
                       strokeDashoffset={339.29 - (strain / 100) * 339.29}
                       strokeLinecap="round"
@@ -898,18 +886,18 @@ export default function SandboxDashboard() {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <div className="text-5xl font-light mb-1" style={{ color: '#C0544A', fontFeatureSettings: '"tnum"', letterSpacing: '-0.04em' }}>{strain}</div>
+                      <div className="text-5xl font-light mb-1" style={{ color: '#C7F95C', fontFeatureSettings: '"tnum"', letterSpacing: '-0.04em' }}>{strain}</div>
                       <div style={{ fontSize: '0.75rem', lineHeight: '1', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', fontWeight: 600 }}>STRAIN</div>
                     </div>
                   </div>
                 </div>
 
-                <div ref={(el) => observeOnce(el, 'resilience', metricComponentsSeen, 'sandbox_metric_components_viewed', { metric: 'resilience' })} className="metric-breakdown max-w-2xl mx-auto rounded-lg" style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}>
-                  <div className="mb-6 pb-4 border-b border-[#E7E0D8] text-center">
+                <div ref={(el) => observeOnce(el, 'resilience', metricComponentsSeen, 'sandbox_metric_components_viewed', { metric: 'resilience' })} className="metric-breakdown max-w-2xl mx-auto rounded-lg" style={{ backgroundColor: '#15161A', border: '1px solid #23252B' }}>
+                  <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
                     <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--ink)' }}>Strain Insights</h4>
                     <div className="text-center">
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{metricInsights.strain.message}</p>
-                      <p className="text-xs mt-2 leading-relaxed" style={{ color: '#E87D3A', opacity: 0.85 }}>{metricInsights.strain.action}</p>
+                      <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>{metricInsights.strain.action}</p>
                     </div>
                   </div>
 
@@ -919,7 +907,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Context Switching</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.uniqueContexts <= 3 ? 'Low' : s.uniqueContexts <= 5 ? 'Moderate' : 'High'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.uniqueContexts * 12))}%`, backgroundColor: '#C0544A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.uniqueContexts * 12))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.uniqueContexts} different contexts your brain has to shift between</span></div>
                     </div>
 
@@ -928,7 +916,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Decision Fatigue Risk</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.afternoonMeetings <= 1 ? 'Low' : s.afternoonMeetings <= 3 ? 'Moderate' : 'High'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.afternoonMeetings * 20))}%`, backgroundColor: '#C0544A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.afternoonMeetings * 20))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.afternoonMeetings} afternoon meetings when willpower is lower</span></div>
                     </div>
 
@@ -937,7 +925,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Longest Meeting Chain</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.longestStretch <= 1 ? 'None' : s.longestStretch <= 2 ? 'Short' : 'Long'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.longestStretch * 25))}%`, backgroundColor: '#C0544A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.longestStretch * 25))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.longestStretch <= 1 ? 'No back-to-back chains' : `${s.longestStretch} meetings in a row without a real break`}</span></div>
                     </div>
 
@@ -946,12 +934,12 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Cognitive Reserve</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{ft.hours >= 4 ? 'Strong' : ft.hours >= 2 ? 'Moderate' : 'Low'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.min(100, ft.hours * 22)}%`, backgroundColor: '#C0544A' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.min(100, ft.hours * 22)}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{ft.hours}h {ft.minutes}m of quiet time to recharge between demands</span></div>
                     </div>
                   </div>
 
-                  <p className="text-xs mt-4 pt-4 border-t border-[#E7E0D8]" style={{ color: 'var(--ink-faint)', lineHeight: '1.4' }}>
+                  <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--ink-faint)', lineHeight: '1.4' }}>
                     How much cognitive load your schedule is putting on you today — context switches, back-to-back meetings, and decision fatigue.
                   </p>
                 </div>
@@ -968,8 +956,8 @@ export default function SandboxDashboard() {
               <section className="text-center">
                 <div className="relative w-32 h-32 mx-auto mb-8">
                   <svg className="w-full h-full" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(90,122,92,0.2)" strokeWidth="8" />
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="#5A7A5C" strokeWidth="8"
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(199,249,92,0.2)" strokeWidth="8" />
+                    <circle cx="60" cy="60" r="54" fill="none" stroke="#C7F95C" strokeWidth="8"
                       strokeDasharray="339.29"
                       strokeDashoffset={339.29 - (balance / 100) * 339.29}
                       strokeLinecap="round"
@@ -978,18 +966,18 @@ export default function SandboxDashboard() {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <div className="text-5xl font-light mb-1" style={{ color: '#5A7A5C', fontFeatureSettings: '"tnum"', letterSpacing: '-0.04em' }}>{balance}</div>
+                      <div className="text-5xl font-light mb-1" style={{ color: '#C7F95C', fontFeatureSettings: '"tnum"', letterSpacing: '-0.04em' }}>{balance}</div>
                       <div style={{ fontSize: '0.75rem', lineHeight: '1', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', fontWeight: 600 }}>BALANCE</div>
                     </div>
                   </div>
                 </div>
 
-                <div ref={(el) => observeOnce(el, 'sustainability', metricComponentsSeen, 'sandbox_metric_components_viewed', { metric: 'sustainability' })} className="metric-breakdown max-w-2xl mx-auto rounded-lg" style={{ backgroundColor: '#FEFCF9', border: '1px solid #E7E0D8' }}>
-                  <div className="mb-6 pb-4 border-b border-[#E7E0D8] text-center">
+                <div ref={(el) => observeOnce(el, 'sustainability', metricComponentsSeen, 'sandbox_metric_components_viewed', { metric: 'sustainability' })} className="metric-breakdown max-w-2xl mx-auto rounded-lg" style={{ backgroundColor: '#15161A', border: '1px solid #23252B' }}>
+                  <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
                     <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--ink)' }}>Balance Insights</h4>
                     <div className="text-center">
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{metricInsights.balance.message}</p>
-                      <p className="text-xs mt-2 leading-relaxed" style={{ color: '#E87D3A', opacity: 0.85 }}>{metricInsights.balance.action}</p>
+                      <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>{metricInsights.balance.action}</p>
                     </div>
                   </div>
 
@@ -999,7 +987,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Day Balance</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{Math.abs(s.morningMeetings - s.afternoonMeetings) <= 1 ? 'Balanced' : s.afternoonMeetings > s.morningMeetings ? 'Afternoon-loaded' : 'Morning-loaded'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(30, 100 - Math.abs(s.morningMeetings - s.afternoonMeetings) * 20)}%`, backgroundColor: '#5A7A5C' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(30, 100 - Math.abs(s.morningMeetings - s.afternoonMeetings) * 20)}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.morningMeetings} morning vs {s.afternoonMeetings} afternoon meetings</span></div>
                     </div>
 
@@ -1008,7 +996,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Recovery Breaks</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.adequateBreaks >= 3 ? 'Plenty' : s.adequateBreaks >= 1 ? 'Some' : 'None'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.min(100, s.adequateBreaks * 25 + s.shortBreaks * 12)}%`, backgroundColor: '#5A7A5C' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.min(100, s.adequateBreaks * 25 + s.shortBreaks * 12)}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.adequateBreaks} real breaks (30+ min) and {s.shortBreaks} short pauses</span></div>
                     </div>
 
@@ -1017,7 +1005,7 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Work Intensity</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.durationHours <= 3 ? 'Sustainable' : s.durationHours <= 5 ? 'Moderate' : 'Unsustainable'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(15, 100 - (s.durationHours * 15))}%`, backgroundColor: '#5A7A5C' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(15, 100 - (s.durationHours * 15))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.durationHours}h locked into meetings today</span></div>
                     </div>
 
@@ -1026,12 +1014,12 @@ export default function SandboxDashboard() {
                         <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Boundary Health</span>
                         <span className="text-xs" style={{ color: 'var(--ink-faint)', fontWeight: '500' }}>{s.earlyLateMeetings === 0 ? 'Clean' : s.earlyLateMeetings <= 1 ? 'Minor' : 'Overextended'}</span>
                       </div>
-                      <div className="w-full bg-[#E7E0D8] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.earlyLateMeetings * 30))}%`, backgroundColor: '#5A7A5C' }} /></div>
+                      <div className="w-full bg-[#23252B] rounded h-1.5"><div className="h-1.5 rounded transition-all duration-700" style={{ width: `${Math.max(20, 100 - (s.earlyLateMeetings * 30))}%`, backgroundColor: '#C7F95C' }} /></div>
                       <div className="mt-1"><span className="text-xs" style={{ color: 'var(--ink-faint)' }}>{s.earlyLateMeetings === 0 ? 'All meetings within core hours' : `${s.earlyLateMeetings} meeting${s.earlyLateMeetings > 1 ? 's' : ''} before 7am or after 5pm`}</span></div>
                     </div>
                   </div>
 
-                  <p className="text-xs mt-4 pt-4 border-t border-[#E7E0D8]" style={{ color: 'var(--ink-faint)', lineHeight: '1.4' }}>
+                  <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--ink-faint)', lineHeight: '1.4' }}>
                     Can you keep this pace up? Measures whether your schedule has enough recovery time and healthy boundaries to avoid burnout.
                   </p>
                 </div>
@@ -1050,8 +1038,8 @@ export default function SandboxDashboard() {
               padding: 14,
               borderRadius: 12,
               border: 'none',
-              backgroundColor: '#1C1917',
-              color: '#FBF7F2',
+              backgroundColor: '#C7F95C',
+              color: '#0B0B0C',
               fontSize: 14,
               fontWeight: 700,
               cursor: 'pointer',
