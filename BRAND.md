@@ -1,123 +1,125 @@
-# Persistwork Brand Colors
+# Persistwork Brand — Direction A (Performance / Tracking)
+
+Single accent, near-black canvas, monospace numerals. References: Whoop, Strava Premium, Linear.
 
 ## Core Palette
 
-| Token          | Hex       | Usage                                      |
-|----------------|-----------|---------------------------------------------|
-| `--cream`      | `#FBF7F2` | Page background                             |
-| `--warm-white` | `#FEFCF9` | Card/section backgrounds                    |
-| `--ink`        | `#1C1917` | Primary text, dark UI elements              |
-| `--ink-light`  | `#57534E` | Secondary text                              |
-| `--ink-faint`  | `#A8A29E` | Tertiary text, placeholders                 |
-| `--amber`      | `#E87D3A` | Brand accent, CTAs, highlights              |
-| `--amber-light`| `#FDF0E6` | Amber tinted backgrounds                    |
-| `--amber-pale` | `#FEF8F2` | Subtle amber wash                           |
-| `--border`     | `#E7E0D8` | Dividers, card borders                      |
+| Token            | Hex                            | Usage                                          |
+|------------------|--------------------------------|------------------------------------------------|
+| `--ground`       | `#0B0B0C`                      | Page background (everywhere)                   |
+| `--surface`      | `#15161A`                      | Card / panel background                        |
+| `--surface-2`    | `#1F2024`                      | Raised panel, input background                 |
+| `--rule`         | `#23252B`                      | Borders, dividers, hairlines                   |
+| `--text`         | `#F5F5F5`                      | Primary text                                   |
+| `--text-muted`   | `#9B9DA3`                      | Secondary text                                 |
+| `--text-faint`   | `#5F6168`                      | Tertiary text, placeholders, labels            |
+| `--signal`       | `#C7F95C`                      | The only accent. CTAs, alerts, popped scores   |
+| `--signal-dim`   | `#A8DE3F`                      | Signal hover / darker stop in lime gradients   |
+| `--signal-soft`  | `rgba(199, 249, 92, 0.12)`     | Signal-tinted backgrounds, pills               |
+| `--signal-edge`  | `rgba(199, 249, 92, 0.25)`     | Signal-tinted borders                          |
 
-## Mood Tier Colors (v4)
+## Typography
+
+| Family            | Where                                         |
+|-------------------|-----------------------------------------------|
+| Geist Sans        | All body and headline text                    |
+| Geist Mono        | Score numerals and metric numbers (tabular)   |
+
+Loaded via `next/font/google` in `app/layout.tsx`. Exposed as `--font-geist-sans` and `--font-geist-mono`. The `.num-mono` utility in `globals.css` applies mono + tabular-nums.
+
+No italic-for-emphasis. Emphasis is color (`--signal`) or weight, never style.
+
+## Mood Tier Colors
 
 Three tiers. Every mood maps to exactly one tier. One color family per tier.
 All gradients use `160deg` angle. All scores render at uniform `32px` — color-only emphasis.
 
 ### Bad Day (survival, grinding, scattered)
-Deepened dark ink — near-black. The day is heavy.
+
+Near-black ground. Lime score numerals (alarm).
 
 | Mood           | Gradient Start | Gradient End | Text   |
-|----------------|---------------|--------------|--------|
-| Survival Mode  | `#0E0C0B`     | `#1C1917`    | light  |
-| Grinding       | `#1C1917`     | `#0E0C0B`    | light  |
-| Scattered      | `#2E2B29`     | `#1C1917`    | light  |
+|----------------|----------------|--------------|--------|
+| Survival Mode  | `#0B0B0C`      | `#15161A`    | light  |
+| Grinding       | `#15161A`      | `#0B0B0C`    | light  |
+| Scattered      | `#1F2024`      | `#15161A`    | light  |
 
 ### OK Day (autopilot, coasting)
-Lightened warm gray — separates from dark backgrounds with a white border.
+
+Graphite ground. White score numerals (steady, no alarm).
 
 | Mood           | Gradient Start | Gradient End | Text   |
-|----------------|---------------|--------------|--------|
-| Autopilot      | `#4A4542`     | `#2E2B29`    | light  |
-| Coasting       | `#4A4542`     | `#2E2B29`    | light  |
+|----------------|----------------|--------------|--------|
+| Autopilot      | `#1F2024`      | `#15161A`    | light  |
+| Coasting       | `#1F2024`      | `#15161A`    | light  |
 
 ### Good Day (locked-in, flow, victory)
-Pure white to warm cream — 1px dark border for separation on light backgrounds.
+
+Lime panel. Near-black score numerals (celebratory inversion).
 
 | Mood           | Gradient Start | Gradient End | Text   |
-|----------------|---------------|--------------|--------|
-| Locked In      | `#FFFFFF`     | `#FDF4EC`    | dark   |
-| Flow State     | `#FFFFFF`     | `#FDF4EC`    | dark   |
-| Victory Lap    | `#FEF6EE`     | `#F5EDE1`    | dark   |
+|----------------|----------------|--------------|--------|
+| Locked In      | `#C7F95C`      | `#A8DE3F`    | dark   |
+| Flow State     | `#C7F95C`      | `#A8DE3F`    | dark   |
+| Victory Lap    | `#D6F36B`      | `#A8DE3F`    | dark   |
 
-## Card Design Tokens (v4)
+## Card Design Tokens
 
 ### Dark cards (bad + ok tier)
 
-| Token      | Value                           | Usage                     |
-|------------|---------------------------------|---------------------------|
-| popNum     | `rgba(232,125,58,0.9)`          | Emphasized score number   |
-| popLbl     | `rgba(232,125,58,0.55)`         | Emphasized score label    |
-| ghostNum   | `rgba(255,255,255,0.40)`        | De-emphasized score num   |
-| ghostLbl   | `rgba(255,255,255,0.35)`        | De-emphasized score label |
-| flatNum    | `rgba(255,255,255,0.80)`        | OK-tier uniform score num |
-| flatLbl    | `rgba(255,255,255,0.55)`        | OK-tier uniform score lbl |
-| moodLabel  | `rgba(232,125,58,0.7)`          | Mood name text            |
-| dotColor   | `rgba(232,125,58,0.7)`          | Mood indicator dot        |
-| dotGlow    | `0 0 12px rgba(232,125,58,0.3)` | Dot glow                  |
-| quote      | `rgba(255,255,255,0.92)`        | Quote text                |
-| source     | `rgba(255,255,255,0.60)`        | Source attribution        |
-| subtitle   | `rgba(255,255,255,0.65)`        | Subtitle / punchline      |
-| brandTxt   | `rgba(255,255,255,0.22)`        | Brand text                |
-| brandAcc   | `rgba(232,125,58,0.55)`         | Brand "WORK" accent       |
-| glowColor  | `rgba(232,125,58,0.07)`         | Ambient glow              |
+| Token      | Value                              | Usage                       |
+|------------|------------------------------------|-----------------------------|
+| popNum     | `rgba(199, 249, 92, 0.95)`         | Emphasized score number     |
+| popLbl     | `rgba(199, 249, 92, 0.6)`          | Emphasized score label      |
+| ghostNum   | `rgba(245, 245, 245, 0.4)`         | De-emphasized score num     |
+| ghostLbl   | `rgba(245, 245, 245, 0.35)`        | De-emphasized score label   |
+| flatNum    | `rgba(245, 245, 245, 0.85)`        | OK-tier uniform score num   |
+| flatLbl    | `rgba(245, 245, 245, 0.55)`        | OK-tier uniform score lbl   |
+| moodLabel  | `rgba(199, 249, 92, 0.75)`         | Mood name text              |
+| dotColor   | `rgba(199, 249, 92, 0.75)`         | Mood indicator dot          |
+| dotGlow    | `0 0 12px rgba(199, 249, 92, 0.35)`| Dot glow                    |
+| quote      | `rgba(245, 245, 245, 0.92)`        | Quote text                  |
+| source     | `rgba(245, 245, 245, 0.6)`         | Source attribution          |
+| subtitle   | `rgba(245, 245, 245, 0.65)`        | Subtitle / punchline        |
+| brandTxt   | `rgba(245, 245, 245, 0.22)`        | Brand text                  |
+| brandAcc   | `rgba(199, 249, 92, 0.6)`          | Brand "WORK" accent         |
+| glowColor  | `rgba(199, 249, 92, 0.08)`         | Ambient glow                |
 
-OK-tier overrides: moodLabel `rgba(255,255,255,0.45)`, dotColor same, no glow.
+OK-tier overrides: moodLabel `rgba(245, 245, 245, 0.45)`, dotColor same, no glow.
 
-### Light cards (good tier)
+### Light cards (good tier — lime panel)
 
-| Token      | Value                           | Usage                     |
-|------------|---------------------------------|---------------------------|
-| popNum     | `rgba(232,125,58,0.9)`          | Emphasized score number   |
-| popLbl     | `rgba(232,125,58,0.55)`         | Emphasized score label    |
-| ghostNum   | `rgba(28,25,23,0.45)`           | De-emphasized score num   |
-| ghostLbl   | `rgba(28,25,23,0.38)`           | De-emphasized score label |
-| moodLabel  | `rgba(232,125,58,0.65)`         | Mood name text            |
-| dotColor   | `rgba(232,125,58,0.65)`         | Mood indicator dot        |
-| quote      | `rgba(28,25,23,0.88)`           | Quote text                |
-| source     | `rgba(28,25,23,0.65)`           | Source attribution        |
-| subtitle   | `rgba(28,25,23,0.65)`           | Subtitle / punchline      |
-| brandTxt   | `rgba(28,25,23,0.28)`           | Brand text                |
-| brandAcc   | `rgba(232,125,58,0.7)`          | Brand "WORK" accent       |
-| glowColor  | `rgba(232,125,58,0.08)`         | Ambient glow              |
-
-## Dashboard Text Colors
-
-| Element | Value |
-|---|---|
-| Section headers (e.g. "WHY VICTORY?") | `#78716C` |
-| Metric row labels | `#57534E` |
-| De-emphasised metric numbers | `#57534E` |
-| Metric row chevrons | `#E87D3A` |
+| Token      | Value                              | Usage                       |
+|------------|------------------------------------|-----------------------------|
+| popNum     | `rgba(11, 11, 12, 0.92)`           | Emphasized score number     |
+| popLbl     | `rgba(11, 11, 12, 0.7)`            | Emphasized score label      |
+| ghostNum   | `rgba(11, 11, 12, 0.45)`           | De-emphasized score num     |
+| ghostLbl   | `rgba(11, 11, 12, 0.38)`           | De-emphasized score label   |
+| moodLabel  | `rgba(11, 11, 12, 0.75)`           | Mood name text              |
+| dotColor   | `rgba(11, 11, 12, 0.75)`           | Mood indicator dot          |
+| quote      | `rgba(11, 11, 12, 0.9)`            | Quote text                  |
+| source     | `rgba(11, 11, 12, 0.65)`           | Source attribution          |
+| subtitle   | `rgba(11, 11, 12, 0.65)`           | Subtitle / punchline        |
+| brandTxt   | `rgba(11, 11, 12, 0.32)`           | Brand text                  |
+| brandAcc   | `rgba(11, 11, 12, 0.7)`            | Brand "WORK" accent         |
+| glowColor  | `rgba(11, 11, 12, 0.06)`           | Ambient glow                |
 
 ## Score Emphasis Rules
 
-Scores are always 32px (uniform). Tier determines which pop in amber:
-- **Bad tier**: Strain pops, Focus + Balance ghost
-- **OK tier**: All flat (no pop, no ghost — uniform white)
-- **Good tier**: Focus + Balance pop, Strain ghosts
+Scores are always 32px (uniform). Tier determines which pop:
+
+- **Bad tier**: Strain pops (lime), Focus + Balance ghost (faded white)
+- **OK tier**: All flat (uniform white, no pop)
+- **Good tier**: Focus + Balance pop (near-black on lime), Strain ghosts
 
 ## Accent Usage
 
-Amber (`#E87D3A`) is the only accent color. It appears in:
-- CTAs and buttons
-- Popped scores on cards (amber at 0.9 opacity)
-- Mood label + dot on dark cards
+Lime `#C7F95C` is the only accent. It appears in:
+
+- CTAs and primary buttons
+- Popped scores on dark cards
+- Mood label + dot on bad-tier cards
 - Brand wordmark highlight ("PERSIST**WORK**")
-- Section labels and eyebrow tags
+- Section labels, focus rings, status pills
 
-## Semantic Colors (landing page only)
-
-Used for insight cards and calendar events, not in the card system:
-
-| Token      | Hex       | Purpose              |
-|------------|-----------|----------------------|
-| `--sage`   | `#5A7A5C` | Balance / green      |
-| `--rose`   | `#C0544A` | Strain / red         |
-
-These do NOT appear on share cards. Cards use only the tier palette above.
+No other accent colors exist. No rose. No sage. No amber. No "rainbow" semantic colors.

@@ -15,14 +15,14 @@ export interface MoodConfig {
 }
 
 export const MOODS: Record<Mood, MoodConfig> = {
-  survival:   { name: 'Survival Mode', gradient: ['#0E0C0B', '#1C1917'], textColor: 'light' },
-  grinding:   { name: 'Grinding',      gradient: ['#1C1917', '#0E0C0B'], textColor: 'light' },
-  scattered:  { name: 'Scattered',     gradient: ['#2E2B29', '#1C1917'], textColor: 'light' },
-  autopilot:  { name: 'Autopilot',     gradient: ['#4A4542', '#2E2B29'], textColor: 'light' },
-  coasting:   { name: 'Coasting',      gradient: ['#4A4542', '#2E2B29'], textColor: 'light' },
-  'locked-in':{ name: 'Locked In',     gradient: ['#FFFFFF', '#FDF4EC'], textColor: 'dark' },
-  flow:       { name: 'Flow State',    gradient: ['#FFFFFF', '#FDF4EC'], textColor: 'dark' },
-  victory:    { name: 'Victory Lap',   gradient: ['#FEF6EE', '#F5EDE1'], textColor: 'dark' },
+  survival:   { name: 'Survival Mode', gradient: ['#0B0B0C', '#15161A'], textColor: 'light' },
+  grinding:   { name: 'Grinding',      gradient: ['#15161A', '#0B0B0C'], textColor: 'light' },
+  scattered:  { name: 'Scattered',     gradient: ['#1F2024', '#15161A'], textColor: 'light' },
+  autopilot:  { name: 'Autopilot',     gradient: ['#1F2024', '#15161A'], textColor: 'light' },
+  coasting:   { name: 'Coasting',      gradient: ['#1F2024', '#15161A'], textColor: 'light' },
+  'locked-in':{ name: 'Locked In',     gradient: ['#C7F95C', '#A8DE3F'], textColor: 'dark' },
+  flow:       { name: 'Flow State',    gradient: ['#C7F95C', '#A8DE3F'], textColor: 'dark' },
+  victory:    { name: 'Victory Lap',   gradient: ['#D6F36B', '#A8DE3F'], textColor: 'dark' },
 }
 
 export type MoodTier = 'bad' | 'ok' | 'good'

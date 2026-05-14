@@ -30,7 +30,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#FBF7F2"
+  themeColor: "#0B0B0C"
 };
 
 export default function RootLayout({
@@ -40,33 +40,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* ── FOUC fix: preconnect + preload fonts before first paint ── */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Lora:ital@0;1&display=swap"
-        />
-        {/* Hide body until fonts are ready, max 300ms fallback */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          body { visibility: hidden }
-          .fonts-loaded body { visibility: visible }
-        `}} />
-        <script dangerouslySetInnerHTML={{ __html: `
-          if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(function() {
-              document.documentElement.classList.add('fonts-loaded');
-            });
-          } else {
-            document.documentElement.classList.add('fonts-loaded');
-          }
-          // Safety fallback: never hide content more than 300ms
-          setTimeout(function() {
-            document.documentElement.classList.add('fonts-loaded');
-          }, 300);
-        `}} />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

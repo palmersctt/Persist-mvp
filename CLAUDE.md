@@ -20,9 +20,10 @@ Routing: `app/` directory (Next.js App Router). Shared layout in `app/layout.tsx
 
 Always reference `BRAND.md` for colors. Never hardcode new palettes or invent colors.
 
-- Accent color: amber `#E87D3A` — the only accent color in the system.
-- Background: cream `#FBF7F2`
-- Text: ink `#1C1917`
+- Accent color: lime `#C7F95C` — the only accent color in the system.
+- Background: near-black `#0B0B0C`
+- Text: `#F5F5F5`
+- Fonts: Geist Sans (body/headlines), Geist Mono (score numerals only).
 - See `BRAND.md` for the full token table.
 
 ## Three Tiers
@@ -31,9 +32,9 @@ Every mood maps to exactly one tier. One color family per tier.
 
 | Tier | Moods | Card look |
 |------|-------|-----------|
-| bad | survival, grinding, scattered | Dark ink (near-black gradient) |
-| ok | autopilot, coasting | Warm gray |
-| good | locked-in, flow, victory | White/cream |
+| bad | survival, grinding, scattered | Near-black gradient, lime score numerals |
+| ok | autopilot, coasting | Graphite gradient, white score numerals |
+| good | locked-in, flow, victory | Lime gradient, near-black score numerals |
 
 ## Score Names
 
@@ -69,6 +70,8 @@ All scores render at uniform 32px. Color-only emphasis (no size variation).
 - Do NOT duplicate the `MOODS` record from `mood.ts` — import it.
 - Do NOT use old rainbow/multi-color gradients — cards use tier-based monochrome gradients only.
 - Do NOT hardcode color values — reference `BRAND.md` tokens.
+- Do NOT re-introduce cream/amber/Lora-italic styling — the brand is dark + lime + Geist (Direction A).
+- Do NOT use italic-for-emphasis — emphasis is color (`--signal`) or weight only.
 - Do NOT add new tiers — there are exactly three: bad, ok, good.
 - Do NOT rename the display labels (Focus, Strain, Balance) without explicit instruction.
 - Do NOT re-introduce "comic relief" branding — the brand is now "Persist" / "Persistwork".
