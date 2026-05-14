@@ -177,8 +177,8 @@ export default function SwipeableQuoteCards({
                   width: i === currentIndex ? 16 : 6,
                   height: 6,
                   backgroundColor: i === currentIndex
-                    ? 'var(--amber, #E87D3A)'
-                    : 'var(--border, #E7E0D8)',
+                    ? 'var(--signal, #C7F95C)'
+                    : 'var(--rule, #23252B)',
                 }}
               />
             ))}
@@ -188,8 +188,8 @@ export default function SwipeableQuoteCards({
               className="text-[9px] font-medium px-1.5 py-0.5 rounded-full"
               title={aiError ? `AI error: ${aiError}` : undefined}
               style={{
-                backgroundColor: 'rgba(0,0,0,0.04)',
-                color: 'var(--ink-faint, #A8A29E)',
+                backgroundColor: 'rgba(245,245,245,0.06)',
+                color: 'var(--text-faint, #5F6168)',
               }}
             >
               offline

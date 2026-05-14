@@ -35,7 +35,7 @@ const SIZE_OPTIONS = [
 
 export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMeetingBuilderProps) {
   const [meetings, setMeetings] = useState<MeetingEntry[]>([
-    { id: '1', title: '', startHour: 9, startMinute: 0, endHour: 10, endMinute: 0, attendees: 4 },
+    { id: '1', title: 'Sprint Planning', startHour: 9, startMinute: 0, endHour: 10, endMinute: 0, attendees: 4 },
   ])
 
   const addMeeting = () => {
@@ -48,7 +48,7 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
 
     setMeetings([...meetings, {
       id: String(Date.now()),
-      title: '',
+      title: `Meeting ${meetings.length + 1}`,
       startHour: Math.min(nextStartH, 20),
       startMinute: nextStartM,
       endHour: nextEndH,
@@ -133,7 +133,7 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
                   padding: '8px 4px',
                   borderRadius: 6,
                   border: '1px solid var(--border)',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--surface-2)',
                   fontSize: 13,
                   fontWeight: 500,
                   color: 'var(--text-secondary)',
@@ -161,7 +161,7 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
                   padding: '8px 4px',
                   borderRadius: 6,
                   border: '1px solid var(--border)',
-                  backgroundColor: 'white',
+                  backgroundColor: 'var(--surface-2)',
                   fontSize: 13,
                   fontWeight: 500,
                   color: 'var(--text-secondary)',
@@ -183,9 +183,9 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
                     width: 28,
                     height: 28,
                     borderRadius: 6,
-                    border: 'none',
-                    backgroundColor: 'rgba(192,84,74,0.08)',
-                    color: '#C0544A',
+                    border: '1px solid var(--rule)',
+                    backgroundColor: 'var(--surface-2)',
+                    color: 'var(--text-muted)',
                     fontSize: 14,
                     cursor: 'pointer',
                     display: 'flex',
@@ -217,11 +217,11 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
                       fontSize: 11,
                       fontWeight: meeting.attendees === value ? 700 : 500,
                       border: 'none',
-                      borderRight: '1px solid var(--border)',
+                      borderRight: '1px solid var(--rule)',
                       cursor: 'pointer',
                       fontFamily: 'inherit',
-                      backgroundColor: meeting.attendees === value ? '#1C1917' : 'transparent',
-                      color: meeting.attendees === value ? '#FBF7F2' : 'var(--ink-faint)',
+                      backgroundColor: meeting.attendees === value ? 'var(--signal)' : 'transparent',
+                      color: meeting.attendees === value ? 'var(--ground)' : 'var(--text-faint)',
                       transition: 'all 0.12s ease',
                     }}
                   >
@@ -264,14 +264,15 @@ export default function SandboxMeetingBuilder({ onScore, isScoring }: SandboxMee
           marginTop: 16,
           borderRadius: 12,
           border: 'none',
-          backgroundColor: canScore ? '#1C1917' : 'rgba(28,25,23,0.1)',
-          color: canScore ? '#FBF7F2' : 'var(--ink-faint)',
+          backgroundColor: canScore ? 'var(--signal)' : 'var(--surface-2)',
+          color: canScore ? 'var(--ground)' : 'var(--text-faint)',
           fontSize: 15,
           fontWeight: 700,
           cursor: canScore ? 'pointer' : 'not-allowed',
           fontFamily: 'inherit',
           transition: 'all 0.15s ease',
           opacity: isScoring ? 0.7 : 1,
+          boxShadow: canScore ? '0 4px 14px rgba(199,249,92,0.25)' : 'none',
         }}
       >
         {isScoring ? 'Scoring...' : 'Score my day \u2192'}

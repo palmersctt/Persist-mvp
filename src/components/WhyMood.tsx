@@ -35,8 +35,8 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
               setOpen(o => !o)
             }}
             className="w-full flex justify-between items-center py-2 bg-transparent border-none cursor-pointer"
-            style={{ color: '#78716C', borderRadius: '6px', transition: 'background 150ms ease' }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#FDF0E6')}
+            style={{ color: '#9B9DA3', borderRadius: '6px', transition: 'background 150ms ease' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -47,7 +47,7 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
               display: 'inline-block',
               transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.3s',
-              color: '#78716C'
+              color: '#9B9DA3'
             }}>{open ? '↑' : '›'}</span>
           </button>
 
@@ -58,7 +58,7 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
               lineHeight: 1.7,
               marginBottom: '1rem',
               paddingBottom: '0.75rem',
-              borderBottom: '1px solid #E7E0D8'
+              borderBottom: '1px solid #23252B'
             }}>
               {narrative}
             </p>
@@ -66,34 +66,34 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
         </>
       ) : null}
 
-      <div style={{ borderTop: '1px solid #E7E0D8' }}>
+      <div style={{ borderTop: '1px solid #23252B' }}>
         {metrics.map(({ key, label, val }) => (
           <button
             key={key}
             onClick={() => onMetricClick(key)}
             className="w-full flex items-center bg-transparent border-none cursor-pointer"
-            style={{ padding: '14px 4px', margin: '0 -4px', borderBottom: '1px solid #E7E0D8', gap: '12px', borderRadius: '6px', transition: 'background 150ms ease' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#FDF0E6' }}
+            style={{ padding: '14px 4px', margin: '0 -4px', borderBottom: '1px solid #23252B', gap: '12px', borderRadius: '6px', transition: 'background 150ms ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface)' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-            onPointerDown={(e) => { e.currentTarget.style.background = '#FDF0E6' }}
+            onPointerDown={(e) => { e.currentTarget.style.background = 'var(--surface)' }}
             onPointerUp={(e) => { e.currentTarget.style.background = 'transparent' }}
             onPointerCancel={(e) => { e.currentTarget.style.background = 'transparent' }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: '90px' }}>
-              <span style={{ fontSize: '0.75rem', color: '#57534E', letterSpacing: '0.02em' }}>
+              <span style={{ fontSize: '0.75rem', color: '#9B9DA3', letterSpacing: '0.02em' }}>
                 {label}
               </span>
               <span style={{
-                fontSize: '1.25rem', fontWeight: 300, color: key === 'resilience' ? '#57534E' : 'var(--text-primary)',
+                fontSize: '1.25rem', fontWeight: 300, color: key === 'resilience' ? '#9B9DA3' : 'var(--text-primary)',
                 fontFeatureSettings: '"tnum"', letterSpacing: '-0.03em'
               }}>
                 {val}
               </span>
             </div>
-            <div style={{ flex: 1, height: '3px', background: 'rgba(28,25,23,0.08)', borderRadius: '2px' }}>
-              <div style={{ height: '3px', width: `${val}%`, background: '#E87D3A', borderRadius: '2px', transition: 'width 0.6s ease' }} />
+            <div style={{ flex: 1, height: '3px', background: 'rgba(245,245,245,0.08)', borderRadius: '2px' }}>
+              <div style={{ height: '3px', width: `${val}%`, background: '#C7F95C', borderRadius: '2px', transition: 'width 0.6s ease' }} />
             </div>
-            <span style={{ fontSize: '0.85rem', color: '#E87D3A' }}>›</span>
+            <span style={{ fontSize: '0.85rem', color: '#C7F95C' }}>›</span>
           </button>
         ))}
       </div>
