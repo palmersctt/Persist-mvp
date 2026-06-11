@@ -698,7 +698,7 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Decode my workday
+              See what my week costs
             </button>
             <p className="lp-hero-note">Free &middot; Google Calendar &middot; We only read titles &amp; times</p>
           </div>
@@ -892,7 +892,7 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Decode my workday
+              See what my week costs
             </button>
             <p className="lp-cta-note">Free &middot; Google Calendar &middot; We only read titles &amp; times</p>
           </div>
