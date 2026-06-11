@@ -5,6 +5,38 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
 
+// Static demo week for the trends section — continues the Tuesday story from the demo card.
+const TREND_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+const TREND_TUESDAY = 1
+const TREND_METRICS = [
+  { name: 'Focus', values: [52, 14, 38, 61, 70], insight: 'Tuesday didn’t just cost Tuesday. Focus needed until Thursday to recover.' },
+  { name: 'Strain', values: [44, 88, 71, 50, 38], insight: 'Strain stayed elevated all Wednesday — a stacked day bills you the next morning too.' },
+  { name: 'Balance', values: [58, 31, 46, 60, 67], insight: 'Recovery arrived when the calendar made room for it — not before.' },
+]
+
+const SPARK_W = 280
+const SPARK_H = 56
+const SPARK_PX = 10
+const SPARK_PY = 9
+
+function sparkPath(values: number[]) {
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const step = (SPARK_W - SPARK_PX * 2) / (values.length - 1)
+  const pts = values.map((v, i) => ({
+    x: SPARK_PX + i * step,
+    y: SPARK_PY + (1 - (v - min) / range) * (SPARK_H - SPARK_PY * 2),
+  }))
+  let line = `M${pts[0].x},${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cp = step * 0.35
+    line += ` C${pts[i].x + cp},${pts[i].y} ${pts[i + 1].x - cp},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`
+  }
+  const area = `${line} L${pts[pts.length - 1].x},${SPARK_H} L${pts[0].x},${SPARK_H} Z`
+  return { line, area, pts }
+}
+
 export default function LandingPage() {
   const router = useRouter()
   const { data: session } = useSession()
@@ -447,6 +479,62 @@ export default function LandingPage() {
           line-height: 1.5;
         }
 
+        /* TRENDS */
+        .lp-trends-section { background: var(--ground); }
+        .lp-trend-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-top: 40px;
+        }
+        .lp-trend-card {
+          background: var(--surface);
+          border: 1px solid var(--rule);
+          border-radius: 14px;
+          padding: 18px 18px 16px;
+        }
+        .lp-trend-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          margin-bottom: 10px;
+        }
+        .lp-trend-name {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: var(--text);
+        }
+        .lp-trend-delta {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--signal);
+          font-variant-numeric: tabular-nums;
+        }
+        .lp-trend-days {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 6px;
+          padding: 0 2px;
+        }
+        .lp-trend-days span {
+          font-size: 10px;
+          font-weight: 500;
+          color: var(--text-faint);
+        }
+        .lp-trend-days span.lp-trend-today {
+          color: var(--signal);
+          font-weight: 800;
+        }
+        .lp-trend-insight {
+          font-size: 12.5px;
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin-top: 12px;
+        }
+
         /* CTA SECTION */
         .lp-cta-section {
           background: var(--ground);
@@ -548,7 +636,8 @@ export default function LandingPage() {
           .lp-hamburger { display: block !important; }
           .lp-demo-wrap,
           .lp-steps,
-          .lp-why-grid { grid-template-columns: 1fr; }
+          .lp-why-grid,
+          .lp-trend-grid { grid-template-columns: 1fr; }
           .lp-footer {
             flex-direction: column;
             gap: 12px;
@@ -750,6 +839,43 @@ export default function LandingPage() {
                   <div className="lp-stat-desc">average uninterrupted block on a heavy meeting day. Deep work needs 90.</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* TRENDS */}
+        <section className="lp-section lp-trends-section" id="trends">
+          <div className="lp-section-inner">
+            <div className="lp-demo-intro">
+              <div className="lp-section-label">The unlock</div>
+              <h2>One day is a score.<br /><em>A week is a pattern.</em></h2>
+              <p>Here&apos;s that Tuesday in context. A stacked day doesn&apos;t stay in its lane &mdash; it drags Focus down for days and keeps Strain elevated into the next morning. Trends make the cost visible, and the recovery measurable.</p>
+            </div>
+            <div className="lp-trend-grid">
+              {TREND_METRICS.map(({ name, values, insight }) => {
+                const { line, area, pts } = sparkPath(values)
+                const tue = pts[TREND_TUESDAY]
+                return (
+                  <div className="lp-trend-card" key={name}>
+                    <div className="lp-trend-head">
+                      <span className="lp-trend-name">{name}</span>
+                      <span className="lp-trend-delta">{values[TREND_TUESDAY]} &rarr; {values[values.length - 1]}</span>
+                    </div>
+                    <svg width="100%" viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none" style={{ display: 'block', color: 'var(--signal)' }} aria-hidden="true">
+                      <path d={area} fill="currentColor" opacity={0.08} />
+                      <path d={line} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx={tue.x} cy={tue.y} r={5} fill="currentColor" opacity={0.15} />
+                      <circle cx={tue.x} cy={tue.y} r={3} fill="currentColor" />
+                    </svg>
+                    <div className="lp-trend-days">
+                      {TREND_DAYS.map((d, i) => (
+                        <span key={d} className={i === TREND_TUESDAY ? 'lp-trend-today' : undefined}>{d}</span>
+                      ))}
+                    </div>
+                    <p className="lp-trend-insight">{insight}</p>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </section>
