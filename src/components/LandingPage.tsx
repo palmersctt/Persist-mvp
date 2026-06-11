@@ -710,7 +710,7 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
               <h2>Eight meetings. One break. <em>Zero flow.</em></h2>
-              <p>A real kind of Tuesday. PERSISTWORK reads the structure underneath &mdash; and scores what the day actually cost you.</p>
+              <p>A real kind of Tuesday. PERSISTWORK reads between the lines &mdash; and scores what the day actually took.</p>
             </div>
 
             <div className="lp-demo-wrap">
