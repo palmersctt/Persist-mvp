@@ -698,9 +698,9 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              See what my week costs
+              Know my week
             </button>
-            <p className="lp-hero-note">No credit card &middot; We only read your Google Calendar titles &amp; times</p>
+            <p className="lp-hero-note">No credit card &middot; We only read event titles &amp; times</p>
           </div>
         </section>
 
@@ -892,9 +892,9 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              See what my week costs
+              Know my week
             </button>
-            <p className="lp-cta-note">We only read your Google Calendar titles &amp; times</p>
+            <p className="lp-cta-note">We only read event titles &amp; times</p>
           </div>
         </section>
 
