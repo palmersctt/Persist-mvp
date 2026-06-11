@@ -689,7 +689,7 @@ export default function LandingPage() {
           <div className="lp-hero" style={{ padding: 0, textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
             <h1>Your workday, <em>decoded.</em></h1>
             <p className="lp-hero-sub">
-              Focus, Strain, and Balance &mdash; three scores computed from the structure of your day: the fragmentation, the context switching, the recovery you didn&apos;t get.
+              Focus, Strain, and Balance &mdash; three daily scores. The focus you got, the load you carried, the recovery you didn&apos;t.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -700,7 +700,7 @@ export default function LandingPage() {
               </svg>
               Know my week
             </button>
-            <p className="lp-hero-note">No credit card &middot; We only read event titles &amp; times</p>
+            <p className="lp-hero-note">We only read event titles &amp; times</p>
           </div>
         </section>
 
@@ -884,7 +884,7 @@ export default function LandingPage() {
         <section className="lp-cta-section">
           <div className="lp-section-inner" style={{ maxWidth: 600 }}>
             <h2>Your calendar is talking.<br /><em>Start listening.</em></h2>
-            <p>No credit card, nothing to install. Ten seconds of setup, then three scores that finally explain the day.</p>
+            <p>Nothing to install, ten seconds of setup &mdash; then three scores that finally explain the day.</p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
