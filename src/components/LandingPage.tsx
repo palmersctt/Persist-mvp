@@ -700,7 +700,7 @@ export default function LandingPage() {
               </svg>
               See what my week costs
             </button>
-            <p className="lp-hero-note">Google Calendar &middot; No credit card &middot; We only read titles &amp; times</p>
+            <p className="lp-hero-note">No credit card &middot; We only read your Google Calendar titles &amp; times</p>
           </div>
         </section>
 
@@ -894,7 +894,7 @@ export default function LandingPage() {
               </svg>
               See what my week costs
             </button>
-            <p className="lp-cta-note">Google Calendar &middot; We only read titles &amp; times</p>
+            <p className="lp-cta-note">We only read your Google Calendar titles &amp; times</p>
           </div>
         </section>
 
