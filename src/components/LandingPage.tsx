@@ -709,8 +709,8 @@ export default function LandingPage() {
           <div className="lp-section-inner">
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
-              <h2>One Tuesday, <em>decoded.</em></h2>
-              <p>Eight meetings, one break, zero flow. PERSISTWORK reads the structure underneath &mdash; and scores what the day actually cost you.</p>
+              <h2>Eight meetings. One break. <em>Zero flow.</em></h2>
+              <p>A real kind of Tuesday. PERSISTWORK reads the structure underneath &mdash; and scores what the day actually cost you.</p>
             </div>
 
             <div className="lp-demo-wrap">
@@ -790,59 +790,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
-        <section className="lp-section lp-hiw-section" id="how-it-works">
-          <div className="lp-section-inner">
-            <div className="lp-section-label">How it works</div>
-            <h2>Three steps to finally <em>seeing</em> your day</h2>
-            <div className="lp-steps">
-              <div className="lp-step">
-                <div className="lp-step-num">STEP 01</div>
-                <h3>Connect your calendar</h3>
-                <p>Link Google Calendar in 10 seconds. We only read event titles and times &mdash; nothing else, ever.</p>
-              </div>
-              <div className="lp-step">
-                <div className="lp-step-num">STEP 02</div>
-                <h3>Get your daily card</h3>
-                <p>Every morning, get your three scores &mdash; Focus, Strain, and Balance &mdash; built from how your day is actually structured.</p>
-              </div>
-              <div className="lp-step">
-                <div className="lp-step-num">STEP 03</div>
-                <h3>Watch trends emerge</h3>
-                <p>See Focus, Strain, and Balance compound across weeks. Patterns show up that you couldn&apos;t feel in the moment.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* WHY IT MATTERS */}
-        <section className="lp-section lp-why-section" id="why-it-matters">
-          <div className="lp-section-inner">
-            <div className="lp-why-grid">
-              <div className="lp-why-copy">
-                <div className="lp-section-label">Why it matters</div>
-                <h2>The exhaustion is real.<br />Now it&apos;s <em>measurable</em>.</h2>
-                <p>Most calendar apps just show you <strong>what</strong> is happening. PERSISTWORK measures <strong>why your day felt the way it did</strong> &mdash; the fragmentation, the back-to-backs, the meetings that eat your thinking time.</p>
-                <p>We&apos;re not here to fix your calendar (that&apos;s a different problem). We&apos;re here to name it, score it, and surface the patterns underneath.</p>
-              </div>
-              <div className="lp-why-stats">
-                <div className="lp-stat-card">
-                  <div className="lp-stat-num">4.8&times;</div>
-                  <div className="lp-stat-desc">more context switches on a heavy meeting day vs. a focused one &mdash; and you feel every single one.</div>
-                </div>
-                <div className="lp-stat-card">
-                  <div className="lp-stat-num">62%</div>
-                  <div className="lp-stat-desc">of workers say they have no uninterrupted time to do their actual job on most days.</div>
-                </div>
-                <div className="lp-stat-card">
-                  <div className="lp-stat-num">23 min</div>
-                  <div className="lp-stat-desc">average uninterrupted block on a heavy meeting day. Deep work needs 90.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* TRENDS */}
         <section className="lp-section lp-trends-section" id="trends">
           <div className="lp-section-inner">
@@ -876,6 +823,59 @@ export default function LandingPage() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* WHY IT MATTERS */}
+        <section className="lp-section lp-why-section" id="why-it-matters">
+          <div className="lp-section-inner">
+            <div className="lp-why-grid">
+              <div className="lp-why-copy">
+                <div className="lp-section-label">Why it matters</div>
+                <h2>The exhaustion is real.<br />Now it&apos;s <em>measurable</em>.</h2>
+                <p>Most calendar apps just show you <strong>what</strong> is happening. PERSISTWORK measures <strong>why your day felt the way it did</strong> &mdash; the fragmentation, the back-to-backs, the meetings that eat your thinking time.</p>
+                <p>We&apos;re not here to fix your calendar (that&apos;s a different problem). We&apos;re here to name it, score it, and surface the patterns underneath.</p>
+              </div>
+              <div className="lp-why-stats">
+                <div className="lp-stat-card">
+                  <div className="lp-stat-num">4.8&times;</div>
+                  <div className="lp-stat-desc">more context switches on a heavy meeting day vs. a focused one &mdash; and you feel every single one.</div>
+                </div>
+                <div className="lp-stat-card">
+                  <div className="lp-stat-num">62%</div>
+                  <div className="lp-stat-desc">of workers say they have no uninterrupted time to do their actual job on most days.</div>
+                </div>
+                <div className="lp-stat-card">
+                  <div className="lp-stat-num">23 min</div>
+                  <div className="lp-stat-desc">average uninterrupted block on a heavy meeting day. Deep work needs 90.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* HOW IT WORKS */}
+        <section className="lp-section lp-hiw-section" id="how-it-works">
+          <div className="lp-section-inner">
+            <div className="lp-section-label">How it works</div>
+            <h2>Getting in takes <em>10 seconds</em></h2>
+            <div className="lp-steps">
+              <div className="lp-step">
+                <div className="lp-step-num">STEP 01</div>
+                <h3>Connect your calendar</h3>
+                <p>Link Google Calendar in 10 seconds. We only read event titles and times &mdash; nothing else, ever.</p>
+              </div>
+              <div className="lp-step">
+                <div className="lp-step-num">STEP 02</div>
+                <h3>Get your daily card</h3>
+                <p>Every morning, get your three scores &mdash; Focus, Strain, and Balance &mdash; built from how your day is actually structured.</p>
+              </div>
+              <div className="lp-step">
+                <div className="lp-step-num">STEP 03</div>
+                <h3>Watch trends emerge</h3>
+                <p>See Focus, Strain, and Balance compound across weeks. Patterns show up that you couldn&apos;t feel in the moment.</p>
+              </div>
             </div>
           </div>
         </section>
