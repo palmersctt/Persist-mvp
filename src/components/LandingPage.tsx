@@ -869,7 +869,7 @@ export default function LandingPage() {
               <div className="lp-step">
                 <div className="lp-step-num">STEP 02</div>
                 <h3>Get your daily card</h3>
-                <p>Every morning, get your three scores &mdash; Focus, Strain, and Balance &mdash; built from how your day is actually structured.</p>
+                <p>Every morning, get your three scores &mdash; Focus, Strain, and Balance &mdash; built from the day ahead of you.</p>
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">STEP 03</div>
