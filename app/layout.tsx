@@ -16,8 +16,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PERSISTWORK — Your calendar has a lot to say about you",
-  description: "PERSISTWORK reads your calendar, scores your day, and finds the quote that fits. Three numbers, one laugh, zero judgment.",
+  title: "PERSISTWORK — Your workday, decoded",
+  description: "Focus, Strain, and Balance — three daily scores read from your calendar. The focus you got, the load you carried, the recovery you didn't.",
+  openGraph: {
+    title: "PERSISTWORK — Your workday, decoded",
+    description: "Focus, Strain, and Balance — three daily scores read from your calendar. The focus you got, the load you carried, the recovery you didn't.",
+    url: "https://www.persistwork.com",
+    siteName: "PERSISTWORK",
+    type: "website"
+  },
+  twitter: {
+    card: "summary",
+    title: "PERSISTWORK — Your workday, decoded",
+    description: "Focus, Strain, and Balance — three daily scores read from your calendar. The focus you got, the load you carried, the recovery you didn't."
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
