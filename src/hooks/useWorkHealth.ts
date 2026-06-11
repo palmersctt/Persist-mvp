@@ -537,10 +537,35 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   // Load persisted score history immediately so trends render before the fetch completes
   useEffect(() => {
     if (status !== 'authenticated' || !session?.user?.email) return;
+    const historyKey = `persist-history-${session.user.email}`;
     try {
-      const raw = localStorage.getItem(`persist-history-${session.user.email}`);
+      const raw = localStorage.getItem(historyKey);
       if (raw) setScoreHistory(JSON.parse(raw));
     } catch { /* ignore */ }
+
+    // Then merge in the server-persisted history (source of truth across devices).
+    // Server wins per date, except today — the local entry comes from the freshest
+    // score computation, while the server upsert may still be in flight.
+    (async () => {
+      try {
+        const res = await fetch('/api/score-history');
+        if (!res.ok) return;
+        const { scores } = await res.json();
+        if (!Array.isArray(scores) || scores.length === 0) return;
+        const today = new Date().toISOString().split('T')[0];
+        setScoreHistory(prev => {
+          const byDate = new Map<string, DailyScore>();
+          for (const s of prev) byDate.set(s.date, s);
+          for (const s of scores as DailyScore[]) {
+            if (s.date === today && byDate.has(today)) continue;
+            byDate.set(s.date, s);
+          }
+          const merged = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+          try { localStorage.setItem(historyKey, JSON.stringify(merged)); } catch { /* ignore */ }
+          return merged;
+        });
+      } catch { /* offline or server error — the localStorage path still works */ }
+    })();
   }, [session, status]);
 
   // Cache-first: show cached data instantly while fresh data loads

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
 import GoogleCalendarService, { WorkHealthMetrics, MeetingCategory, CalendarEvent } from '../../src/services/googleCalendar';
 import ClaudeAIService, { PersonalizedInsightsResponse, CalendarAnalysis, UserContext } from '../../src/services/claudeAI';
+import { supabaseAdmin } from '../../lib/supabase';
 
 /**
  * Refresh a Google OAuth access token using the refresh token.
@@ -135,6 +136,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         throw calError;
       }
+    }
+
+    // Persist today's scores for trends (fire-and-forget — never blocks the response;
+    // the client keeps a localStorage fallback for offline/DB-down cases)
+    const userEmail = session.user?.email;
+    if (userEmail) {
+      const todayLocal = new Date().toLocaleDateString('sv-SE', { timeZone: userTimezone });
+      supabaseAdmin
+        .from('daily_scores')
+        .upsert({
+          user_email: userEmail,
+          date: todayLocal,
+          performance: workHealthData.adaptivePerformanceIndex,
+          resilience: workHealthData.cognitiveResilience,
+          sustainability: workHealthData.workRhythmRecovery,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_email,date' })
+        .then(({ error }: { error: { message: string } | null }) => {
+          if (error) console.error('daily_scores upsert failed:', error.message);
+        });
     }
 
     // Create enhanced response with backward compatibility
