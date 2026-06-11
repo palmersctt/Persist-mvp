@@ -77,17 +77,20 @@ export function generateMonthlyInsights(
   trend: 'improving' | 'declining' | 'stable',
 ): TrendInsight[] {
   const insights: TrendInsight[] = []
+  const first = weeks[0]
+  const last = weeks[weeks.length - 1]
+  const span = weeks.length
 
   if (trend === 'declining') {
-    insights.push({ type: 'negative', metric: 'focus', title: 'Focus has been sliding', message: `You started the month at ${weeks[0].focus} Focus and you're at ${weeks[3].focus} now. That's not a bad day — that's a trend. Something changed in your calendar and your deep work time has been paying the price.` })
-    insights.push({ type: 'negative', metric: 'strain', title: 'Cognitive load is creeping up', message: `Strain went from ${weeks[0].strain} to ${weeks[3].strain} over four weeks. It happens gradually — each week is only slightly worse, so you don't notice until you're exhausted.` })
-    insights.push({ type: 'neutral', metric: 'balance', title: 'No recovery week in sight', message: `Balance dropped from ${weeks[0].balance} to ${weeks[3].balance}. You haven't had a single week this month where things got meaningfully lighter.` })
+    insights.push({ type: 'negative', metric: 'focus', title: 'Focus has been sliding', message: `You started the month at ${first.focus} Focus and you're at ${last.focus} now. That's not a bad day — that's a trend. Something changed in your calendar and your deep work time has been paying the price.` })
+    insights.push({ type: 'negative', metric: 'strain', title: 'Cognitive load is creeping up', message: `Strain went from ${first.strain} to ${last.strain} over ${span} weeks. It happens gradually — each week is only slightly worse, so you don't notice until you're exhausted.` })
+    insights.push({ type: 'neutral', metric: 'balance', title: 'No recovery week in sight', message: `Balance dropped from ${first.balance} to ${last.balance}. You haven't had a single week this month where things got meaningfully lighter.` })
   } else if (trend === 'improving') {
-    insights.push({ type: 'positive', metric: 'focus', title: `Focus improved ${weeks[3].focus - weeks[0].focus} points this month`, message: `You went from ${weeks[0].focus} to ${weeks[3].focus} Focus. Fewer meetings, better-protected focus blocks, or both. The trajectory matters more than any single day.` })
-    insights.push({ type: 'positive', metric: 'strain', title: 'You systematically cut cognitive load', message: `Strain dropped from ${weeks[0].strain} to ${weeks[3].strain}. Fewer back-to-backs, fewer afternoon-heavy days, and less context switching.` })
-    insights.push({ type: 'positive', metric: 'balance', title: 'This pace is actually repeatable', message: `Balance climbed from ${weeks[0].balance} to ${weeks[3].balance}. The sign of sustainability isn't one great week — it's four weeks where each one is slightly better than the last.` })
+    insights.push({ type: 'positive', metric: 'focus', title: `Focus improved ${last.focus - first.focus} points this month`, message: `You went from ${first.focus} to ${last.focus} Focus. Fewer meetings, better-protected focus blocks, or both. The trajectory matters more than any single day.` })
+    insights.push({ type: 'positive', metric: 'strain', title: 'You systematically cut cognitive load', message: `Strain dropped from ${first.strain} to ${last.strain}. Fewer back-to-backs, fewer afternoon-heavy days, and less context switching.` })
+    insights.push({ type: 'positive', metric: 'balance', title: 'This pace is actually repeatable', message: `Balance climbed from ${first.balance} to ${last.balance}. The sign of sustainability isn't one great week — it's ${span} weeks where each one is slightly better than the last.` })
   } else {
-    insights.push({ type: 'neutral', metric: 'focus', title: 'Four very similar weeks', message: `Focus stayed between ${Math.min(...weeks.map(w => w.focus))} and ${Math.max(...weeks.map(w => w.focus))} all month. Same recurring meetings, same structure, same results. Nothing is getting worse, but nothing is getting better.` })
+    insights.push({ type: 'neutral', metric: 'focus', title: `${span} very similar weeks`, message: `Focus stayed between ${Math.min(...weeks.map(w => w.focus))} and ${Math.max(...weeks.map(w => w.focus))} all month. Same recurring meetings, same structure, same results. Nothing is getting worse, but nothing is getting better.` })
     insights.push({ type: 'neutral', metric: 'balance', title: 'No breakout week', message: `Balance ranged from ${Math.min(...weeks.map(w => w.balance))} to ${Math.max(...weeks.map(w => w.balance))}. You don't have a release valve — no light day that lets you recharge.` })
     insights.push({ type: 'positive', metric: 'strain', title: 'No burnout spikes', message: `Strain stayed stable all month — no week above ${Math.max(...weeks.map(w => w.strain))}. You're not at risk of acute burnout, which is genuinely good.` })
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import type { DailyScore } from '../lib/trends';
 
 // AI Insights interfaces
 interface AIInsight {
@@ -103,14 +104,6 @@ interface WorkHealthMetrics {
 // How often to poll for calendar changes (5 minutes)
 const POLL_INTERVAL_MS = 5 * 60 * 1000;
 
-// Historical score entry
-interface DailyScore {
-  date: string; // YYYY-MM-DD
-  performance: number;
-  resilience: number;
-  sustainability: number;
-}
-
 // Trend direction
 type Trend = 'up' | 'down' | 'flat';
 
@@ -130,6 +123,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   const connectionStartTime = useRef<number | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [history, setHistory] = useState<HistoricalContext | null>(null);
+  const [scoreHistory, setScoreHistory] = useState<DailyScore[]>([]);
 
   // Track whether we've done the initial fetch
   const hasFetched = useRef(false);
@@ -288,6 +282,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     cutoff.setDate(cutoff.getDate() - 30);
     scores = scores.filter(s => new Date(s.date) >= cutoff);
     localStorage.setItem(historyKey, JSON.stringify(scores));
+    setScoreHistory(scores);
 
     // Compute 7-day context
     const last7 = scores.slice(-7);
@@ -539,6 +534,40 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status]);
 
+  // Load persisted score history immediately so trends render before the fetch completes
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user?.email) return;
+    const historyKey = `persist-history-${session.user.email}`;
+    try {
+      const raw = localStorage.getItem(historyKey);
+      if (raw) setScoreHistory(JSON.parse(raw));
+    } catch { /* ignore */ }
+
+    // Then merge in the server-persisted history (source of truth across devices).
+    // Server wins per date, except today — the local entry comes from the freshest
+    // score computation, while the server upsert may still be in flight.
+    (async () => {
+      try {
+        const res = await fetch('/api/score-history');
+        if (!res.ok) return;
+        const { scores } = await res.json();
+        if (!Array.isArray(scores) || scores.length === 0) return;
+        const today = new Date().toISOString().split('T')[0];
+        setScoreHistory(prev => {
+          const byDate = new Map<string, DailyScore>();
+          for (const s of prev) byDate.set(s.date, s);
+          for (const s of scores as DailyScore[]) {
+            if (s.date === today && byDate.has(today)) continue;
+            byDate.set(s.date, s);
+          }
+          const merged = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+          try { localStorage.setItem(historyKey, JSON.stringify(merged)); } catch { /* ignore */ }
+          return merged;
+        });
+      } catch { /* offline or server error — the localStorage path still works */ }
+    })();
+  }, [session, status]);
+
   // Cache-first: show cached data instantly while fresh data loads
   useEffect(() => {
     if (status !== 'authenticated' || !session) return;
@@ -625,6 +654,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     lastRefresh,
     refresh,
     history,
+    scoreHistory,
     trackEngagement,
     isAuthenticated: status === 'authenticated',
     isNewUser,

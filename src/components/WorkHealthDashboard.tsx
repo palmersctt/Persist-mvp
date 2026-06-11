@@ -11,6 +11,7 @@ import { detectMood } from '../lib/mood'
 import { trackEvent } from '../lib/trackEvent'
 import { toPng } from 'html-to-image'
 import WhyMood from './WhyMood'
+import TrendsSection from './TrendsSection'
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -26,7 +27,7 @@ export default function WorkHealthDashboard() {
   const cardRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, trackEngagement, aiStatus, isNewUser, connectionStartTime } = useWorkHealth(activeTab);
+  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, scoreHistory, trackEngagement, aiStatus, isNewUser, connectionStartTime } = useWorkHealth(activeTab);
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 
@@ -687,6 +688,9 @@ export default function WorkHealthDashboard() {
 
               return null;
             })()}
+
+            {/* Real trends — from persisted daily score history */}
+            {workHealth && !isLoading && <TrendsSection history={scoreHistory} />}
 
             {lastRefresh && (
               <div className="text-center pt-8">

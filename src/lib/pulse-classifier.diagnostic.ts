@@ -1,5 +1,7 @@
 /**
- * Pulse Classifier Test Suite — 20 scenarios
+ * Pulse Classifier diagnostic — 20 scenarios, console report.
+ * Not a vitest suite (no assertions; tolerates mismatches and prints analysis).
+ * Run manually: npx tsx src/lib/pulse-classifier.diagnostic.ts
  *
  * New model: outcome / enabling / process / non-work orientation
  *   outcome  (100) = decisions, relationships, creation

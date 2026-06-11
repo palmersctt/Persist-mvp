@@ -5,6 +5,38 @@ import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
 
+// Static demo week for the trends section — continues the Tuesday story from the demo card.
+const TREND_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+const TREND_TUESDAY = 1
+const TREND_METRICS = [
+  { name: 'Focus', values: [52, 14, 38, 61, 70], insight: 'Tuesday didn’t just cost Tuesday. Focus needed until Thursday to recover.' },
+  { name: 'Strain', values: [44, 88, 71, 50, 38], insight: 'Strain stayed elevated all Wednesday — a stacked day bills you the next morning too.' },
+  { name: 'Balance', values: [58, 31, 46, 60, 67], insight: 'Recovery arrived when the calendar made room for it — not before.' },
+]
+
+const SPARK_W = 280
+const SPARK_H = 56
+const SPARK_PX = 10
+const SPARK_PY = 9
+
+function sparkPath(values: number[]) {
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const step = (SPARK_W - SPARK_PX * 2) / (values.length - 1)
+  const pts = values.map((v, i) => ({
+    x: SPARK_PX + i * step,
+    y: SPARK_PY + (1 - (v - min) / range) * (SPARK_H - SPARK_PY * 2),
+  }))
+  let line = `M${pts[0].x},${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const cp = step * 0.35
+    line += ` C${pts[i].x + cp},${pts[i].y} ${pts[i + 1].x - cp},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`
+  }
+  const area = `${line} L${pts[pts.length - 1].x},${SPARK_H} L${pts[0].x},${SPARK_H} Z`
+  return { line, area, pts }
+}
+
 export default function LandingPage() {
   const router = useRouter()
   const { data: session } = useSession()
@@ -284,7 +316,7 @@ export default function LandingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 16px;
+          color: var(--signal);
           flex-shrink: 0;
         }
         .lp-ic-amber { background: var(--signal-soft); }
@@ -447,6 +479,62 @@ export default function LandingPage() {
           line-height: 1.5;
         }
 
+        /* TRENDS */
+        .lp-trends-section { background: var(--ground); }
+        .lp-trend-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-top: 40px;
+        }
+        .lp-trend-card {
+          background: var(--surface);
+          border: 1px solid var(--rule);
+          border-radius: 14px;
+          padding: 18px 18px 16px;
+        }
+        .lp-trend-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          margin-bottom: 10px;
+        }
+        .lp-trend-name {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: var(--text);
+        }
+        .lp-trend-delta {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--signal);
+          font-variant-numeric: tabular-nums;
+        }
+        .lp-trend-days {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 6px;
+          padding: 0 2px;
+        }
+        .lp-trend-days span {
+          font-size: 10px;
+          font-weight: 500;
+          color: var(--text-faint);
+        }
+        .lp-trend-days span.lp-trend-today {
+          color: var(--signal);
+          font-weight: 800;
+        }
+        .lp-trend-insight {
+          font-size: 12.5px;
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin-top: 12px;
+        }
+
         /* CTA SECTION */
         .lp-cta-section {
           background: var(--ground);
@@ -529,7 +617,7 @@ export default function LandingPage() {
         .lp-mobile-cta {
           margin-top: 16px;
           background: var(--signal) !important;
-          color: white !important;
+          color: var(--ground) !important;
           text-align: center !important;
           border-radius: 10px;
           padding: 14px 16px;
@@ -548,7 +636,8 @@ export default function LandingPage() {
           .lp-hamburger { display: block !important; }
           .lp-demo-wrap,
           .lp-steps,
-          .lp-why-grid { grid-template-columns: 1fr; }
+          .lp-why-grid,
+          .lp-trend-grid { grid-template-columns: 1fr; }
           .lp-footer {
             flex-direction: column;
             gap: 12px;
@@ -600,7 +689,7 @@ export default function LandingPage() {
           <div className="lp-hero" style={{ padding: 0, textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
             <h1>Your workday, <em>decoded.</em></h1>
             <p className="lp-hero-sub">
-              Focus, Strain, and Balance &mdash; three scores measured from your workday.
+              Focus, Strain, and Balance &mdash; three scores computed from the structure of your day: the fragmentation, the context switching, the recovery you didn&apos;t get.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -609,9 +698,9 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Connect your calendar &mdash; it&apos;s free
+              Decode my workday
             </button>
-            <p className="lp-hero-note">Google Calendar &middot; Takes 10 seconds &middot; We only read titles &amp; times</p>
+            <p className="lp-hero-note">Free &middot; Google Calendar &middot; We only read titles &amp; times</p>
           </div>
         </section>
 
@@ -620,8 +709,8 @@ export default function LandingPage() {
           <div className="lp-section-inner">
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
-              <h2>A day in the life of <span style={{ color: '#C7F95C' }}>you</span></h2>
-              <p>This is a real kind of Tuesday. Eight meetings, one break, zero flow. PERSISTWORK reads between the lines and tells you what&apos;s actually going on.</p>
+              <h2>One Tuesday, <em>decoded.</em></h2>
+              <p>Eight meetings, one break, zero flow. PERSISTWORK reads the structure underneath &mdash; and scores what the day actually cost you.</p>
             </div>
 
             <div className="lp-demo-wrap">
@@ -645,21 +734,37 @@ export default function LandingPage() {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div className="lp-insights" style={{ flex: 1 }}>
                   <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-amber">&#129521;</div>
+                    <div className="lp-ic-icon lp-ic-amber">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="9" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+                      </svg>
+                    </div>
                     <div>
                       <div className="lp-ic-label lp-label-focus">Focus</div>
                       <div className="lp-ic-text">No uninterrupted block longer than 45 minutes. Deep work never had a chance today.</div>
                     </div>
                   </div>
                   <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-rose">&#128293;</div>
+                    <div className="lp-ic-icon lp-ic-rose">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                      </svg>
+                    </div>
                     <div>
                       <div className="lp-ic-label lp-label-strain">Strain</div>
                       <div className="lp-ic-text">5 different contexts, back-to-back from 1&ndash;5pm. Your brain is paying the switching tax all afternoon.</div>
                     </div>
                   </div>
                   <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-sage">&#9878;&#65039;</div>
+                    <div className="lp-ic-icon lp-ic-sage">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                    </div>
                     <div>
                       <div className="lp-ic-label lp-label-balance">Balance</div>
                       <div className="lp-ic-text">One 30-minute gap in a 7.5-hour day. You needed three. Your future self is already tired.</div>
@@ -738,11 +843,48 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* TRENDS */}
+        <section className="lp-section lp-trends-section" id="trends">
+          <div className="lp-section-inner">
+            <div className="lp-demo-intro">
+              <div className="lp-section-label">The unlock</div>
+              <h2>One day is a score.<br /><em>A week is a pattern.</em></h2>
+              <p>Here&apos;s that Tuesday in context. A stacked day doesn&apos;t stay in its lane &mdash; it drags Focus down for days and keeps Strain elevated into the next morning. Trends make the cost visible, and the recovery measurable.</p>
+            </div>
+            <div className="lp-trend-grid">
+              {TREND_METRICS.map(({ name, values, insight }) => {
+                const { line, area, pts } = sparkPath(values)
+                const tue = pts[TREND_TUESDAY]
+                return (
+                  <div className="lp-trend-card" key={name}>
+                    <div className="lp-trend-head">
+                      <span className="lp-trend-name">{name}</span>
+                      <span className="lp-trend-delta">{values[TREND_TUESDAY]} &rarr; {values[values.length - 1]}</span>
+                    </div>
+                    <svg width="100%" viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none" style={{ display: 'block', color: 'var(--signal)' }} aria-hidden="true">
+                      <path d={area} fill="currentColor" opacity={0.08} />
+                      <path d={line} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx={tue.x} cy={tue.y} r={5} fill="currentColor" opacity={0.15} />
+                      <circle cx={tue.x} cy={tue.y} r={3} fill="currentColor" />
+                    </svg>
+                    <div className="lp-trend-days">
+                      {TREND_DAYS.map((d, i) => (
+                        <span key={d} className={i === TREND_TUESDAY ? 'lp-trend-today' : undefined}>{d}</span>
+                      ))}
+                    </div>
+                    <p className="lp-trend-insight">{insight}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
         {/* FINAL CTA */}
         <section className="lp-cta-section">
           <div className="lp-section-inner" style={{ maxWidth: 600 }}>
             <h2>Your calendar is talking.<br /><em>Start listening.</em></h2>
-            <p>Free to try. No credit card. Just your calendar and three scores that finally explain the day.</p>
+            <p>No credit card, nothing to install. Ten seconds of setup, then three scores that finally explain the day.</p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -750,9 +892,9 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Connect your calendar &mdash; it&apos;s free
+              Decode my workday
             </button>
-            <p className="lp-cta-note">Google Calendar &middot; Takes 10 seconds &middot; We only read titles &amp; times</p>
+            <p className="lp-cta-note">Free &middot; Google Calendar &middot; We only read titles &amp; times</p>
           </div>
         </section>
 
