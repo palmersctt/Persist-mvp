@@ -61,6 +61,9 @@ All scores render at uniform 32px. Color-only emphasis (no size variation).
 | `src/components/SwipeableQuoteCards.tsx` | Multi-quote card carousel |
 | `src/lib/mood.ts` | Mood types, MOODS record, tier logic |
 | `src/lib/mood.test.ts` | Mood unit tests |
+| `src/lib/trends.ts` | Real trends built from persisted daily score history |
+| `src/lib/generateTrends.ts` | Synthetic trends (sandbox demo) + shared insight generators |
+| `src/components/TrendsSection.tsx` | Dashboard trends UI (sparklines, weekly/monthly) |
 | `BRAND.md` | Brand color tokens and card design tokens |
 | `PERSONAS.md` | User personas |
 

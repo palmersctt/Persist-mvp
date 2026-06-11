@@ -16,6 +16,8 @@ type EventType =
   | 'sandbox_trend_toggled'
   | 'sandbox_trend_sparkline_viewed'
   | 'sandbox_trend_insights_expanded'
+  | 'trends_view_toggled'
+  | 'trends_insights_expanded'
 
 export function trackEvent(eventType: EventType, metadata: Record<string, unknown> = {}, sandboxSessionId?: string) {
   const payload: Record<string, unknown> = { eventType, metadata }

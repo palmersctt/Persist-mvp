@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import type { DailyScore } from '../lib/trends';
 
 // AI Insights interfaces
 interface AIInsight {
@@ -103,14 +104,6 @@ interface WorkHealthMetrics {
 // How often to poll for calendar changes (5 minutes)
 const POLL_INTERVAL_MS = 5 * 60 * 1000;
 
-// Historical score entry
-interface DailyScore {
-  date: string; // YYYY-MM-DD
-  performance: number;
-  resilience: number;
-  sustainability: number;
-}
-
 // Trend direction
 type Trend = 'up' | 'down' | 'flat';
 
@@ -130,6 +123,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   const connectionStartTime = useRef<number | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [history, setHistory] = useState<HistoricalContext | null>(null);
+  const [scoreHistory, setScoreHistory] = useState<DailyScore[]>([]);
 
   // Track whether we've done the initial fetch
   const hasFetched = useRef(false);
@@ -288,6 +282,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     cutoff.setDate(cutoff.getDate() - 30);
     scores = scores.filter(s => new Date(s.date) >= cutoff);
     localStorage.setItem(historyKey, JSON.stringify(scores));
+    setScoreHistory(scores);
 
     // Compute 7-day context
     const last7 = scores.slice(-7);
@@ -539,6 +534,15 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status]);
 
+  // Load persisted score history immediately so trends render before the fetch completes
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user?.email) return;
+    try {
+      const raw = localStorage.getItem(`persist-history-${session.user.email}`);
+      if (raw) setScoreHistory(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [session, status]);
+
   // Cache-first: show cached data instantly while fresh data loads
   useEffect(() => {
     if (status !== 'authenticated' || !session) return;
@@ -625,6 +629,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     lastRefresh,
     refresh,
     history,
+    scoreHistory,
     trackEngagement,
     isAuthenticated: status === 'authenticated',
     isNewUser,
