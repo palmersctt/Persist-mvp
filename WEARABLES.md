@@ -61,6 +61,26 @@ WearableActuals` plus OAuth helpers in `src/lib/wearables/<provider>.ts`,
 branch on it in `connect.ts` and `actuals.ts`, and extend the
 `WearableProvider` union. Nothing downstream of `WearableActuals` changes.
 
+### Provider decision (June 2026): WHOOP first
+
+Surveyed the field before committing:
+
+- **WHOOP** — free self-serve developer API (OAuth2, register at
+  developer.whoop.com, ship same day). Recovery/strain vocabulary matches
+  Persist's scores one-for-one, and the brand already references WHOOP's
+  aesthetic. **Chosen as the launch provider.**
+- **Oura** — also free self-serve OAuth2 (personal access tokens were
+  deprecated Dec 2025; OAuth is unaffected). Its "readiness" maps cleanly
+  onto the unlock logic. Strong second provider if early users skew ring.
+- **Garmin** — best demographic fit for trail athletes, but the Garmin
+  Connect Developer Program is suspended to new applicants (no timeline).
+  Revisit when it reopens.
+- **Apple Health** — no cloud API; requires a native iOS companion app to
+  read HealthKit. A later, larger project.
+
+The demo provider is the dogfooding path until a physical device is in
+hand.
+
 ### WHOOP
 
 Register an app at [developer.whoop.com](https://developer.whoop.com) with
