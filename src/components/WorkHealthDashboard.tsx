@@ -12,6 +12,7 @@ import { trackEvent } from '../lib/trackEvent'
 import { toPng } from 'html-to-image'
 import WhyMood from './WhyMood'
 import TrendsSection from './TrendsSection'
+import WearableSection from './WearableSection'
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -688,6 +689,18 @@ export default function WorkHealthDashboard() {
 
               return null;
             })()}
+
+            {/* Forecast vs actual — wearable actuals merged with the calendar forecast */}
+            {workHealth && !isLoading && (
+              <WearableSection
+                forecast={{
+                  focus: workHealth.adaptivePerformanceIndex,
+                  strain: workHealth.cognitiveResilience,
+                  balance: workHealth.workRhythmRecovery,
+                }}
+                dayShape={workHealth.dayShape ?? null}
+              />
+            )}
 
             {/* Real trends — from persisted daily score history */}
             {workHealth && !isLoading && <TrendsSection history={scoreHistory} />}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import type { DailyScore } from '../lib/trends';
+import type { DayShape } from '../lib/readiness';
 
 // AI Insights interfaces
 interface AIInsight {
@@ -88,6 +89,9 @@ interface WorkHealthMetrics {
   status: string;
   schedule: ScheduleAnalysis;
   breakdown: WorkHealthBreakdown;
+
+  // Event timing (no titles) for the wearable forecast-vs-actual merge
+  dayShape?: DayShape;
 
   // Legacy fields for backward compatibility
   readiness: number;

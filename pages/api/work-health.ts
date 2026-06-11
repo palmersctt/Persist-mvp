@@ -160,6 +160,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
+      dayShape?: {
+        firstEventStartISO: string | null;
+        lastEventEndISO: string | null;
+        events: { startISO: string; endISO: string }[];
+      };
       ai?: PersonalizedInsightsResponse;
       aiStatus?: 'success' | 'fallback' | 'unavailable' | 'local';
       _aiError?: string;
@@ -174,6 +179,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
+
+    // Event timing only (no titles) — lets the client compute when the
+    // workday unlocks and merge the calendar forecast with wearable actuals
+    const eventTimes = events.map(e => ({
+      startISO: e.start.toISOString(),
+      endISO: e.end.toISOString(),
+    }));
+    enhancedResponse.dayShape = {
+      firstEventStartISO: eventTimes.length
+        ? eventTimes.reduce((min, e) => (e.startISO < min ? e.startISO : min), eventTimes[0].startISO)
+        : null,
+      lastEventEndISO: eventTimes.length
+        ? eventTimes.reduce((max, e) => (e.endISO > max ? e.endISO : max), eventTimes[0].endISO)
+        : null,
+      events: eventTimes,
+    };
 
     // Build calendar analysis (shared by both fast and full paths)
     const meetingTypes = events.reduce((acc, event) => {
