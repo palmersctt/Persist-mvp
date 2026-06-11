@@ -284,7 +284,7 @@ export default function LandingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 16px;
+          color: var(--signal);
           flex-shrink: 0;
         }
         .lp-ic-amber { background: var(--signal-soft); }
@@ -529,7 +529,7 @@ export default function LandingPage() {
         .lp-mobile-cta {
           margin-top: 16px;
           background: var(--signal) !important;
-          color: white !important;
+          color: var(--ground) !important;
           text-align: center !important;
           border-radius: 10px;
           padding: 14px 16px;
@@ -600,7 +600,7 @@ export default function LandingPage() {
           <div className="lp-hero" style={{ padding: 0, textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
             <h1>Your workday, <em>decoded.</em></h1>
             <p className="lp-hero-sub">
-              Focus, Strain, and Balance &mdash; three scores measured from your workday.
+              Focus, Strain, and Balance &mdash; three scores computed from the structure of your day: the fragmentation, the context switching, the recovery you didn&apos;t get.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -609,9 +609,9 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Connect your calendar &mdash; it&apos;s free
+              Decode my workday
             </button>
-            <p className="lp-hero-note">Google Calendar &middot; Takes 10 seconds &middot; We only read titles &amp; times</p>
+            <p className="lp-hero-note">Free &middot; Google Calendar &middot; We only read titles &amp; times</p>
           </div>
         </section>
 
@@ -620,8 +620,8 @@ export default function LandingPage() {
           <div className="lp-section-inner">
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
-              <h2>A day in the life of <span style={{ color: '#C7F95C' }}>you</span></h2>
-              <p>This is a real kind of Tuesday. Eight meetings, one break, zero flow. PERSISTWORK reads between the lines and tells you what&apos;s actually going on.</p>
+              <h2>One Tuesday, <em>decoded.</em></h2>
+              <p>Eight meetings, one break, zero flow. PERSISTWORK reads the structure underneath &mdash; and scores what the day actually cost you.</p>
             </div>
 
             <div className="lp-demo-wrap">
@@ -645,21 +645,37 @@ export default function LandingPage() {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div className="lp-insights" style={{ flex: 1 }}>
                   <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-amber">&#129521;</div>
+                    <div className="lp-ic-icon lp-ic-amber">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="9" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+                      </svg>
+                    </div>
                     <div>
                       <div className="lp-ic-label lp-label-focus">Focus</div>
                       <div className="lp-ic-text">No uninterrupted block longer than 45 minutes. Deep work never had a chance today.</div>
                     </div>
                   </div>
                   <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-rose">&#128293;</div>
+                    <div className="lp-ic-icon lp-ic-rose">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                      </svg>
+                    </div>
                     <div>
                       <div className="lp-ic-label lp-label-strain">Strain</div>
                       <div className="lp-ic-text">5 different contexts, back-to-back from 1&ndash;5pm. Your brain is paying the switching tax all afternoon.</div>
                     </div>
                   </div>
                   <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-sage">&#9878;&#65039;</div>
+                    <div className="lp-ic-icon lp-ic-sage">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                    </div>
                     <div>
                       <div className="lp-ic-label lp-label-balance">Balance</div>
                       <div className="lp-ic-text">One 30-minute gap in a 7.5-hour day. You needed three. Your future self is already tired.</div>
@@ -742,7 +758,7 @@ export default function LandingPage() {
         <section className="lp-cta-section">
           <div className="lp-section-inner" style={{ maxWidth: 600 }}>
             <h2>Your calendar is talking.<br /><em>Start listening.</em></h2>
-            <p>Free to try. No credit card. Just your calendar and three scores that finally explain the day.</p>
+            <p>No credit card, nothing to install. Ten seconds of setup, then three scores that finally explain the day.</p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -750,9 +766,9 @@ export default function LandingPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Connect your calendar &mdash; it&apos;s free
+              Decode my workday
             </button>
-            <p className="lp-cta-note">Google Calendar &middot; Takes 10 seconds &middot; We only read titles &amp; times</p>
+            <p className="lp-cta-note">Free &middot; Google Calendar &middot; We only read titles &amp; times</p>
           </div>
         </section>
 
