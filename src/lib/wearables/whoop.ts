@@ -133,8 +133,14 @@ export async function fetchWhoopActuals(
   const sleepScore = sleep?.score as Record<string, unknown> | undefined;
   const cycleScore = cycle?.score as Record<string, number> | undefined;
 
+  // Actual sleep = time in bed minus awake time (stage_summary), falling
+  // back to the start/end span (time in bed) when stages are unavailable
   let sleepHours = 0;
-  if (sleep?.start && sleep?.end) {
+  const stages = sleepScore?.stage_summary as Record<string, number> | undefined;
+  if (typeof stages?.total_in_bed_time_milli === 'number') {
+    const asleepMs = stages.total_in_bed_time_milli - (stages.total_awake_time_milli ?? 0);
+    sleepHours = Math.max(0, Math.round((asleepMs / 3600000) * 10) / 10);
+  } else if (sleep?.start && sleep?.end) {
     const ms = new Date(sleep.end as string).getTime() - new Date(sleep.start as string).getTime();
     sleepHours = Math.max(0, Math.round((ms / 3600000) * 10) / 10);
   }

@@ -95,6 +95,9 @@ interface StravaActivity {
   start_date?: string;
   moving_time?: number; // seconds
   distance?: number; // meters
+  // Relative effort. In Strava's example responses but not the declared
+  // SummaryActivity schema — present for subscriber accounts, often null.
+  suffer_score?: number | null;
 }
 
 /**
@@ -143,12 +146,17 @@ export async function fetchStravaActuals(
       }
     : undefined;
 
-  // No dayStrain: Strava's relative effort (suffer score) is not present in
-  // the SummaryActivity list response, only on detailed/zones endpoints.
+  // Best-effort relative effort for today's activities (subscriber-only
+  // field; treat absence as no data, not zero)
+  const todayEffort = sorted
+    .filter((a) => (a.start_date ?? '').startsWith(date))
+    .reduce((sum, a) => sum + (a.suffer_score ?? 0), 0);
+
   return {
     date,
     provider: 'strava',
     lastActivity,
     weekActivityCount: sorted.length,
+    dayStrain: todayEffort > 0 ? todayEffort : undefined,
   };
 }
