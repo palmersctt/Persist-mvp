@@ -84,15 +84,15 @@ export function forecastVsActual(
   const lightDay = forecast.strain <= 35 && forecast.focus >= 60;
 
   if (actuals.recovery == null) {
-    // Activity provider — compare the calendar's demands with logged movement
+    // Activity provider — compare the calendar's demands with logged training
     if (actuals.weekActivityCount == null) return null;
     if (actuals.weekActivityCount === 0) {
       return heavyDay
-        ? 'Nothing logged this week and the calendar keeps taking. The trail debt is growing.'
+        ? 'Nothing logged this week and the calendar keeps taking. The training debt is growing.'
         : 'Nothing logged this week — and today’s forecast leaves room to fix that.';
     }
     const n = actuals.weekActivityCount;
-    const logged = `${n} ${n === 1 ? 'activity' : 'activities'} logged this week`;
+    const logged = `${n} ${n === 1 ? 'session' : 'sessions'} logged this week`;
     return heavyDay
       ? `${logged} against a heavy calendar. You’re keeping the deal.`
       : `${logged}, light forecast today. Keep the streak honest.`;
@@ -109,35 +109,35 @@ export function forecastVsActual(
     return `Heavy forecast on a middling tank (recovery ${actuals.recovery}%). Spend your energy on the meetings that matter.`;
   }
   if (lightDay && readiness === 'charged') {
-    return `Light forecast, full tank (recovery ${actuals.recovery}%). This is the day to plan the long ride.`;
+    return `Light forecast, full tank (recovery ${actuals.recovery}%). This is the day for the big session.`;
   }
   if (lightDay && readiness === 'drained') {
     return `The light calendar is lucky — recovery is at ${actuals.recovery}% and your body needs the slack.`;
   }
-  return `Forecast and actuals roughly agree today (recovery ${actuals.recovery}%). Pace it and you end the day with something left.`;
+  return `Forecast and actuals roughly agree today (recovery ${actuals.recovery}%). Pace the workday and you end it with something left to train on.`;
 }
 
 function unlockedMessage(actuals: WearableActuals | null): { headline: string; detail: string } {
   if (!actuals) {
     return {
       headline: 'Workday clear',
-      detail: 'Connect a wearable to see what your body has left for the trails.',
+      detail: 'Connect a wearable to see what you have left to train with.',
     };
   }
 
   const readiness = assessBodyReadiness(actuals);
   if (readiness === null) {
-    // Activity provider — the unlock closes the loop on logged movement
+    // Activity provider — the unlock closes the loop on logged training
     const loggedToday =
       actuals.lastActivity && actuals.lastActivity.startISO.startsWith(actuals.date);
     if (loggedToday) {
       return {
-        headline: 'Workday clear — and the trail is already logged',
+        headline: 'Workday clear — today’s session is already logged',
         detail: `${describeActivity(actuals.lastActivity!)} today. Loop closed.`,
       };
     }
     return {
-      headline: 'Workday clear — go log something',
+      headline: 'Workday clear — go train',
       detail: actuals.lastActivity
         ? `Last logged: ${describeActivity(actuals.lastActivity)}. The evening is wide open.`
         : 'Nothing logged this week yet. The evening is wide open.',
@@ -147,16 +147,16 @@ function unlockedMessage(actuals: WearableActuals | null): { headline: string; d
   const sleepClause = actuals.sleepHours != null ? ` on ${actuals.sleepHours}h of sleep` : '';
   const byReadiness: Record<BodyReadiness, { headline: string; detail: string }> = {
     charged: {
-      headline: 'Workday clear — hit the trails',
-      detail: `Recovery ${actuals.recovery}%${sleepClause}. Your body barely noticed today. Go spend the surplus.`,
+      headline: 'Workday clear — train hard',
+      detail: `Recovery ${actuals.recovery}%${sleepClause}. Your body barely noticed the workday. Make today the quality session.`,
     },
     steady: {
-      headline: 'Workday clear — an easy ride is earned',
-      detail: `Recovery ${actuals.recovery}%. You have something left, just not everything. Keep it conversational-pace.`,
+      headline: 'Workday clear — keep it easy',
+      detail: `Recovery ${actuals.recovery}%. There's a session in you, just not a hard one. Keep it aerobic.`,
     },
     drained: {
       headline: 'Workday clear — make it a recovery day',
-      detail: `Recovery ${actuals.recovery}%. Your body already paid for today. A walk counts; the trails will still be there tomorrow.`,
+      detail: `Recovery ${actuals.recovery}%. The workday took what you had. A walk counts; hard training resumes tomorrow.`,
     },
   };
   return byReadiness[readiness];
@@ -196,11 +196,11 @@ export function computeUnlock(
   // Events whose end is in the future still count as "to go", including one in progress.
   const meetingsRemaining = remaining.length;
 
-  let detail = `${plural(meetingsRemaining, 'meeting')} between you and the trailhead.`;
+  let detail = `${plural(meetingsRemaining, 'meeting')} between you and your training window.`;
   if (readiness === 'drained' && actuals) {
     detail = `${plural(meetingsRemaining, 'meeting')} to go, and recovery is already at ${actuals.recovery}%. Don't let the afternoon eat what's left.`;
   } else if (readiness === 'charged' && actuals) {
-    detail = `${plural(meetingsRemaining, 'meeting')} to go. Recovery ${actuals.recovery}% — protect it and the evening is yours.`;
+    detail = `${plural(meetingsRemaining, 'meeting')} to go. Recovery ${actuals.recovery}% — protect it and tonight's session is yours.`;
   }
 
   return {

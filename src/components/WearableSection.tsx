@@ -237,8 +237,8 @@ export default function WearableSection({
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
             Connect a wearable and Persist merges recovery, sleep, and HRV with today&apos;s
-            schedule &mdash; so the moment your last meeting ends, you know whether you&apos;re
-            cleared to hit the trails or owe your body a rest day.
+            schedule &mdash; so the moment your last meeting ends, you know whether to train hard,
+            keep it easy, or take the recovery day.
           </p>
           {notice && (
             <p className="text-xs mb-3" style={{ color: 'var(--signal-dim)' }}>

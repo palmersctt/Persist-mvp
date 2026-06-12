@@ -93,7 +93,7 @@ describe('computeUnlock – counting down', () => {
     const state = computeUnlock(now, dayShape, stravaActuals());
     expect(state.unlocked).toBe(false);
     expect(state.readiness).toBeNull();
-    expect(state.detail).toContain('trailhead');
+    expect(state.detail).toContain('training window');
   });
 });
 
@@ -110,7 +110,7 @@ describe('computeUnlock – unlocked', () => {
     expect(state.unlocked).toBe(true);
     expect(state.meetingsRemaining).toBe(0);
     expect(state.readiness).toBe('charged');
-    expect(state.headline).toContain('hit the trails');
+    expect(state.headline).toContain('train hard');
   });
 
   it('unlocks with a recovery-day message when drained', () => {
@@ -122,7 +122,7 @@ describe('computeUnlock – unlocked', () => {
   it('unlocks with a steady message in the middle band', () => {
     const state = computeUnlock(evening, dayShape, actuals({ recovery: 50 }));
     expect(state.unlocked).toBe(true);
-    expect(state.headline).toContain('easy ride');
+    expect(state.headline).toContain('keep it easy');
   });
 
   it('treats an empty calendar as unlocked', () => {
@@ -162,7 +162,7 @@ describe('computeUnlock – unlocked', () => {
   it('nudges toward logging when nothing is logged today (Strava)', () => {
     const state = computeUnlock(evening, dayShape, stravaActuals());
     expect(state.unlocked).toBe(true);
-    expect(state.headline).toContain('go log something');
+    expect(state.headline).toContain('go train');
     expect(state.detail).toContain('TrailRun');
   });
 });
@@ -176,7 +176,7 @@ describe('forecastVsActual', () => {
   });
 
   it('celebrates a charged body on a light day', () => {
-    expect(forecastVsActual(light, actuals({ recovery: 90 }))).toContain('long ride');
+    expect(forecastVsActual(light, actuals({ recovery: 90 }))).toContain('big session');
   });
 
   it('falls back to a steady read otherwise', () => {
@@ -186,7 +186,7 @@ describe('forecastVsActual', () => {
 
   it('compares logged activities against the forecast for activity providers', () => {
     expect(forecastVsActual(heavy, stravaActuals({ weekActivityCount: 3 }))).toContain(
-      '3 activities'
+      '3 sessions'
     );
   });
 

@@ -2,18 +2,24 @@
 
 ## The model
 
-Persist already reads the **forecast**: your calendar tells it what today is
+Persist decodes the **forecast**: your calendar tells it what today is
 going to demand (Focus / Strain / Balance). A wearable supplies the
 **actual**: what your body brought to the day (recovery, sleep, HRV, resting
 HR) and what it has left.
 
-Merging the two unlocks the workday. While meetings remain, the dashboard
-counts down to the moment you're clear. The instant the last event ends, the
-unlock state answers the only question that matters at 5pm:
+Merging the two unlocks the workday — built for working athletes (trail
+runners, triathletes, cyclists) whose training happens around a meeting-heavy
+job. While meetings remain, the dashboard counts down to the moment you're
+clear. The instant the last event ends, the unlock state answers the working
+athlete's only 5pm question — do I train today, and how hard:
 
-- **charged** — "Workday clear — hit the trails."
-- **steady** — "Workday clear — an easy ride is earned."
+- **charged** — "Workday clear — train hard."
+- **steady** — "Workday clear — keep it easy."
 - **drained** — "Workday clear — make it a recovery day."
+
+Vocabulary is deliberately sport-agnostic: workday, unlock, recovery,
+session, train hard / keep it easy / recovery day. No trail/ride/run
+specifics — never assume the sport.
 
 Readiness uses WHOOP-style recovery bands (green ≥ 67, yellow 34–66,
 red < 34), with green knocked down a notch when sleep was under 6 hours.
