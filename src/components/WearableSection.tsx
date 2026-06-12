@@ -281,9 +281,9 @@ export default function WearableSection({
             onClick={async () => {
               trackEvent('wearable_connect_clicked', { provider: 'demo' });
               setDemoConnecting(true);
-              const ok = await connectDemo();
+              const err = await connectDemo();
               setDemoConnecting(false);
-              if (!ok) setNotice('Demo data couldn’t connect right now — try again.');
+              if (err) setNotice(err);
             }}
             disabled={demoConnecting}
             className="w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors"

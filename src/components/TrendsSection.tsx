@@ -14,7 +14,9 @@ const H = 48;
 const PAD_X = 12;
 const PAD_Y = 6;
 
-function buildPath(values: number[]) {
+function buildPath(rawValues: number[]) {
+  // A single tracked day still draws: render it as a flat line with a dot
+  const values = rawValues.length === 1 ? [rawValues[0], rawValues[0]] : rawValues;
   if (values.length < 2) return { line: '', area: '', pts: [] as { x: number; y: number }[] };
   const minV = Math.min(...values);
   const maxV = Math.max(...values);
@@ -37,50 +39,9 @@ export default function TrendsSection({ history }: { history: DailyScore[] }) {
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
   const trends = useMemo(() => buildTrendsFromHistory(history), [history]);
 
-  if (trends.daysTracked === 0) return null;
+  if (trends.daysTracked === 0 || !trends.weekly) return null;
 
-  // --- Baseline-building state: tracked days exist but not enough for a trend ---
-  if (!trends.weekly) {
-    return (
-      <section className="max-w-xs mx-auto w-full">
-        <h2
-          className="text-[11px] font-bold uppercase mb-3"
-          style={{ letterSpacing: '0.12em', color: 'var(--text-faint)' }}
-        >
-          Your Trends
-        </h2>
-        <div
-          className="rounded-xl p-5"
-          style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>
-              Building your baseline
-            </span>
-            <span className="text-xs font-semibold" style={{ color: 'var(--signal)' }}>
-              Day {trends.daysTracked} of {MIN_WEEKLY_DAYS}
-            </span>
-          </div>
-          <div className="flex gap-1.5 mb-4">
-            {Array.from({ length: MIN_WEEKLY_DAYS }).map((_, i) => (
-              <div
-                key={i}
-                className="h-1 flex-1 rounded-full"
-                style={{
-                  backgroundColor: i < trends.daysTracked ? 'var(--signal)' : 'var(--rule)',
-                }}
-              />
-            ))}
-          </div>
-          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            Persist is learning what your normal looks like. Trends unlock after {MIN_WEEKLY_DAYS}{' '}
-            tracked days &mdash; then every day compounds into the pattern.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
+  const baselineReady = trends.daysTracked >= MIN_WEEKLY_DAYS;
   const monthlyReady = !!trends.monthly;
   const activeView = view === 'monthly' && !monthlyReady ? 'weekly' : view;
 
@@ -126,6 +87,39 @@ export default function TrendsSection({ history }: { history: DailyScore[] }) {
         </span>
       </div>
 
+      {/* Baseline progress — the real charts render from day 1; this strip
+          shows how close insights are to unlocking */}
+      {!baselineReady && (
+        <div
+          className="rounded-xl px-4 py-3.5 mb-4"
+          style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold" style={{ color: 'var(--text)' }}>
+              Baseline building
+            </span>
+            <span className="text-xs font-semibold" style={{ color: 'var(--signal)' }}>
+              Day {trends.daysTracked} of {MIN_WEEKLY_DAYS}
+            </span>
+          </div>
+          <div className="flex gap-1.5 mb-2">
+            {Array.from({ length: MIN_WEEKLY_DAYS }).map((_, i) => (
+              <div
+                key={i}
+                className="h-1 flex-1 rounded-full"
+                style={{
+                  backgroundColor: i < trends.daysTracked ? 'var(--signal)' : 'var(--rule)',
+                }}
+              />
+            ))}
+          </div>
+          <p className="text-[11px] leading-relaxed mb-0" style={{ color: 'var(--text-muted)' }}>
+            Today&apos;s scores are already on the charts below &mdash; each day adds a point.
+            Insights and best/hardest day unlock at {MIN_WEEKLY_DAYS} tracked days.
+          </p>
+        </div>
+      )}
+
       <div
         className="flex rounded-lg overflow-hidden mb-4"
         style={{ border: '1px solid var(--rule)' }}
@@ -170,12 +164,18 @@ export default function TrendsSection({ history }: { history: DailyScore[] }) {
           const current = values[todayIdx >= 0 ? todayIdx : values.length - 1];
 
           // Direction arrow — compare first-half vs second-half averages
-          const half = Math.floor(values.length / 2);
-          const firstHalf = values.slice(0, half).reduce((a, b) => a + b, 0) / half;
-          const secondHalf = values.slice(half).reduce((a, b) => a + b, 0) / (values.length - half);
-          const diff = secondHalf - firstHalf;
-          const isUp = diff > 3;
-          const isDown = diff < -3;
+          // (needs at least two points to mean anything)
+          let isUp = false;
+          let isDown = false;
+          if (values.length >= 2) {
+            const half = Math.floor(values.length / 2);
+            const firstHalf = values.slice(0, half).reduce((a, b) => a + b, 0) / half;
+            const secondHalf =
+              values.slice(half).reduce((a, b) => a + b, 0) / (values.length - half);
+            const diff = secondHalf - firstHalf;
+            isUp = diff > 3;
+            isDown = diff < -3;
+          }
 
           const topInsight = allInsights.find((ins) => ins.metric === key);
 
@@ -274,7 +274,7 @@ export default function TrendsSection({ history }: { history: DailyScore[] }) {
         })}
       </div>
 
-      {activeView === 'weekly' && (
+      {activeView === 'weekly' && baselineReady && (
         <div className="grid grid-cols-2 gap-2 mt-3">
           <div
             className="rounded-lg px-3.5 py-3"

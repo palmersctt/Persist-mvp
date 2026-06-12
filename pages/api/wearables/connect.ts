@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import crypto from 'crypto';
 import { authOptions } from '../auth/[...nextauth]';
-import { supabaseAdmin } from '../../../lib/supabase';
+import { supabaseAdmin, isServiceRoleConfigured } from '../../../lib/supabase';
 import { getWhoopAuthUrl, isWhoopConfigured } from '../../../src/lib/wearables/whoop';
 import { getStravaAuthUrl, isStravaConfigured } from '../../../src/lib/wearables/strava';
 
@@ -25,6 +25,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // `json=1` lets the dashboard connect demo data in the background
     // instead of a full-page redirect round-trip
     const wantsJson = req.query.json === '1';
+    if (!isServiceRoleConfigured) {
+      console.error('demo wearable connect blocked: SUPABASE_SERVICE_ROLE_KEY is not set');
+      return wantsJson
+        ? res.status(503).json({
+            ok: false,
+            error:
+              'Server persistence isn’t configured (SUPABASE_SERVICE_ROLE_KEY missing) — demo data can’t be saved.',
+          })
+        : res.redirect('/dashboard?wearable=error');
+    }
     const { error } = await supabaseAdmin.from('wearable_connections').upsert(
       {
         user_email: session.user.email,

@@ -46,7 +46,7 @@ function parseDate(iso: string): Date {
 
 export function buildTrendsFromHistory(
   history: DailyScore[],
-  todayISO: string = new Date().toISOString().split('T')[0]
+  todayISO: string = new Date().toLocaleDateString('sv-SE')
 ): RealTrends {
   // Dedupe by date (last entry wins), then sort ascending
   const byDate = new Map<string, DailyScore>();
@@ -55,8 +55,10 @@ export function buildTrendsFromHistory(
   const daysTracked = scores.length;
 
   // ---- Weekly: last 7 recorded days ----
+  // The chart renders from day 1 so users see their data accumulating;
+  // insights wait until MIN_WEEKLY_DAYS so they aren't built on noise.
   let weekly: RealTrends['weekly'] = null;
-  if (daysTracked >= MIN_WEEKLY_DAYS) {
+  if (daysTracked >= 1) {
     const recent = scores.slice(-7);
     const spanMs =
       parseDate(recent[recent.length - 1].date).getTime() - parseDate(recent[0].date).getTime();
@@ -77,13 +79,16 @@ export function buildTrendsFromHistory(
     const worst = [...days].sort((a, b) => a.focus - b.focus)[0];
     weekly = {
       days,
-      insights: generateWeeklyInsights(
-        days,
-        latest.performance,
-        latest.resilience,
-        latest.sustainability,
-        days[days.length - 1].date
-      ),
+      insights:
+        daysTracked >= MIN_WEEKLY_DAYS
+          ? generateWeeklyInsights(
+              days,
+              latest.performance,
+              latest.resilience,
+              latest.sustainability,
+              days[days.length - 1].date
+            )
+          : [],
       bestDay: best.date,
       worstDay: worst.date,
     };
