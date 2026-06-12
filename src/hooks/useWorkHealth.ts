@@ -117,7 +117,9 @@ interface HistoricalContext {
   daysTracked: number;
 }
 
-export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
+export const useWorkHealth = (
+  _tabType?: 'overview' | 'performance' | 'resilience' | 'sustainability'
+) => {
   const { data: session, status } = useSession();
   const [workHealth, setWorkHealth] = useState<WorkHealthMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -161,9 +163,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       if (!raw) return [];
       const entries: { quote: string; timestamp: string }[] = JSON.parse(raw);
       const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
-      return entries
-        .filter(e => new Date(e.timestamp).getTime() > cutoff)
-        .map(e => e.quote);
+      return entries.filter((e) => new Date(e.timestamp).getTime() > cutoff).map((e) => e.quote);
     } catch {
       return [];
     }
@@ -177,7 +177,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       const raw = localStorage.getItem(key);
       let entries: { quote: string; timestamp: string }[] = raw ? JSON.parse(raw) : [];
       // Deduplicate
-      entries = entries.filter(e => e.quote !== quote);
+      entries = entries.filter((e) => e.quote !== quote);
       entries.push({ quote, timestamp: new Date().toISOString() });
       // Keep last 20
       if (entries.length > 20) entries = entries.slice(-20);
@@ -196,7 +196,11 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     timestamp: string;
   }
 
-  const getEngagementData = (): { sharedQuotes: string[]; dwellFavorites: string[]; favoriteGenres: string[] } => {
+  const getEngagementData = (): {
+    sharedQuotes: string[];
+    dwellFavorites: string[];
+    favoriteGenres: string[];
+  } => {
     const key = getEngagementKey();
     if (!key) return { sharedQuotes: [], dwellFavorites: [], favoriteGenres: [] };
     try {
@@ -204,26 +208,39 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
       if (!raw) return { sharedQuotes: [], dwellFavorites: [], favoriteGenres: [] };
       const entries: EngagementEntry[] = JSON.parse(raw);
       const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
-      const recent = entries.filter(e => new Date(e.timestamp).getTime() > cutoff);
+      const recent = entries.filter((e) => new Date(e.timestamp).getTime() > cutoff);
 
-      const sharedQuotes = [...new Set(recent.filter(e => e.action === 'share').map(e => e.quote))].slice(-10);
+      const sharedQuotes = [
+        ...new Set(recent.filter((e) => e.action === 'share').map((e) => e.quote)),
+      ].slice(-10);
       // Dwell favorites: quotes user spent 8+ seconds on (read them carefully)
-      const dwellFavorites = [...new Set(
-        recent
-          .filter(e => e.action === 'dwell' && (e.dwellMs || 0) >= 8000)
-          .sort((a, b) => (b.dwellMs || 0) - (a.dwellMs || 0))
-          .map(e => e.quote)
-      )].slice(-10);
+      const dwellFavorites = [
+        ...new Set(
+          recent
+            .filter((e) => e.action === 'dwell' && (e.dwellMs || 0) >= 8000)
+            .sort((a, b) => (b.dwellMs || 0) - (a.dwellMs || 0))
+            .map((e) => e.quote)
+        ),
+      ].slice(-10);
 
       // Infer genre preferences from sources they engaged with
       const genreHints: Record<string, number> = {};
       for (const e of recent) {
         const src = (e.source || '').toLowerCase();
-        if (src.includes('standup') || src.includes('special') || src.includes('comedy')) genreHints['standup'] = (genreHints['standup'] || 0) + 1;
-        if (src.includes('office') || src.includes('succession') || src.includes('bear') || src.includes('severance')) genreHints['workplace TV'] = (genreHints['workplace TV'] || 0) + 1;
-        if (/\b(book|novel|poem|song|lyric)\b/.test(src)) genreHints['literature/music'] = (genreHints['literature/music'] || 0) + 1;
+        if (src.includes('standup') || src.includes('special') || src.includes('comedy'))
+          genreHints['standup'] = (genreHints['standup'] || 0) + 1;
+        if (
+          src.includes('office') ||
+          src.includes('succession') ||
+          src.includes('bear') ||
+          src.includes('severance')
+        )
+          genreHints['workplace TV'] = (genreHints['workplace TV'] || 0) + 1;
+        if (/\b(book|novel|poem|song|lyric)\b/.test(src))
+          genreHints['literature/music'] = (genreHints['literature/music'] || 0) + 1;
         // Generic film/TV
-        if (!Object.values(genreHints).length) genreHints['film/TV'] = (genreHints['film/TV'] || 0) + 1;
+        if (!Object.values(genreHints).length)
+          genreHints['film/TV'] = (genreHints['film/TV'] || 0) + 1;
       }
       const favoriteGenres = Object.entries(genreHints)
         .sort((a, b) => b[1] - a[1])
@@ -236,21 +253,24 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     }
   };
 
-  const trackEngagement = useCallback((quote: string, source: string, action: 'share' | 'dwell', dwellMs?: number) => {
-    const key = getEngagementKey();
-    if (!key || !quote) return;
-    try {
-      const raw = localStorage.getItem(key);
-      let entries: EngagementEntry[] = raw ? JSON.parse(raw) : [];
-      entries.push({ quote, source, action, dwellMs, timestamp: new Date().toISOString() });
-      // Keep last 200 entries
-      if (entries.length > 200) entries = entries.slice(-200);
-      localStorage.setItem(key, JSON.stringify(entries));
-    } catch {
-      // Ignore storage errors
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  const trackEngagement = useCallback(
+    (quote: string, source: string, action: 'share' | 'dwell', dwellMs?: number) => {
+      const key = getEngagementKey();
+      if (!key || !quote) return;
+      try {
+        const raw = localStorage.getItem(key);
+        let entries: EngagementEntry[] = raw ? JSON.parse(raw) : [];
+        entries.push({ quote, source, action, dwellMs, timestamp: new Date().toISOString() });
+        // Keep last 200 entries
+        if (entries.length > 200) entries = entries.slice(-200);
+        localStorage.setItem(key, JSON.stringify(entries));
+      } catch {
+        // Ignore storage errors
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [session]
+  );
 
   const getHistoryKey = () => {
     if (!session?.user?.email) return null;
@@ -258,67 +278,72 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
   };
 
   // Save today's scores and compute historical context
-  const updateHistory = useCallback((data: WorkHealthMetrics) => {
-    const historyKey = getHistoryKey();
-    if (!historyKey) return;
+  const updateHistory = useCallback(
+    (data: WorkHealthMetrics) => {
+      const historyKey = getHistoryKey();
+      if (!historyKey) return;
 
-    const today = new Date().toISOString().split('T')[0];
-    const entry: DailyScore = {
-      date: today,
-      performance: data.adaptivePerformanceIndex,
-      resilience: data.cognitiveResilience,
-      sustainability: data.workRhythmRecovery,
-    };
+      // Local calendar date — UTC would file evening logins under tomorrow,
+      // splitting or skipping days in the trend history
+      const today = new Date().toLocaleDateString('sv-SE');
+      const entry: DailyScore = {
+        date: today,
+        performance: data.adaptivePerformanceIndex,
+        resilience: data.cognitiveResilience,
+        sustainability: data.workRhythmRecovery,
+      };
 
-    let scores: DailyScore[] = [];
-    try {
-      const raw = localStorage.getItem(historyKey);
-      if (raw) scores = JSON.parse(raw);
-    } catch {}
+      let scores: DailyScore[] = [];
+      try {
+        const raw = localStorage.getItem(historyKey);
+        if (raw) scores = JSON.parse(raw);
+      } catch {}
 
-    // Update or add today's entry
-    const idx = scores.findIndex(s => s.date === today);
-    if (idx >= 0) scores[idx] = entry;
-    else scores.push(entry);
+      // Update or add today's entry
+      const idx = scores.findIndex((s) => s.date === today);
+      if (idx >= 0) scores[idx] = entry;
+      else scores.push(entry);
 
-    // Keep last 30 days
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
-    scores = scores.filter(s => new Date(s.date) >= cutoff);
-    localStorage.setItem(historyKey, JSON.stringify(scores));
-    setScoreHistory(scores);
+      // Keep last 30 days
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      scores = scores.filter((s) => new Date(s.date) >= cutoff);
+      localStorage.setItem(historyKey, JSON.stringify(scores));
+      setScoreHistory(scores);
 
-    // Compute 7-day context
-    const last7 = scores.slice(-7);
-    if (last7.length < 2) {
-      setHistory(null);
-      return;
-    }
+      // Compute 7-day context
+      const last7 = scores.slice(-7);
+      if (last7.length < 2) {
+        setHistory(null);
+        return;
+      }
 
-    const avg = {
-      performance: Math.round(last7.reduce((s, d) => s + d.performance, 0) / last7.length),
-      resilience: Math.round(last7.reduce((s, d) => s + d.resilience, 0) / last7.length),
-      sustainability: Math.round(last7.reduce((s, d) => s + d.sustainability, 0) / last7.length),
-    };
+      const avg = {
+        performance: Math.round(last7.reduce((s, d) => s + d.performance, 0) / last7.length),
+        resilience: Math.round(last7.reduce((s, d) => s + d.resilience, 0) / last7.length),
+        sustainability: Math.round(last7.reduce((s, d) => s + d.sustainability, 0) / last7.length),
+      };
 
-    const getTrend = (current: number, weekAvg: number): Trend => {
-      const diff = current - weekAvg;
-      if (diff >= 5) return 'up';
-      if (diff <= -5) return 'down';
-      return 'flat';
-    };
+      const getTrend = (current: number, weekAvg: number): Trend => {
+        const diff = current - weekAvg;
+        if (diff >= 5) return 'up';
+        if (diff <= -5) return 'down';
+        return 'flat';
+      };
 
-    setHistory({
-      weeklyAvg: avg,
-      trend: {
-        performance: getTrend(data.adaptivePerformanceIndex, avg.performance),
-        resilience: getTrend(data.cognitiveResilience, avg.resilience),
-        sustainability: getTrend(data.workRhythmRecovery, avg.sustainability),
-      },
-      daysTracked: last7.length,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+      setHistory({
+        weeklyAvg: avg,
+        trend: {
+          performance: getTrend(data.adaptivePerformanceIndex, avg.performance),
+          resilience: getTrend(data.cognitiveResilience, avg.resilience),
+          sustainability: getTrend(data.workRhythmRecovery, avg.sustainability),
+        },
+        daysTracked: last7.length,
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [session]
+  );
 
   // Create a fingerprint from calendar metrics to detect real changes
   const getFingerprint = (data: WorkHealthMetrics): string => {
@@ -342,14 +367,16 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     const engagement = getEngagementData();
     return {
       'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
+      Pragma: 'no-cache',
       'X-User-Timezone': userTimezone,
       ...(recentQuotes.length > 0 && {
-        'X-Recent-Quotes': encodeURIComponent(JSON.stringify(recentQuotes))
+        'X-Recent-Quotes': encodeURIComponent(JSON.stringify(recentQuotes)),
       }),
-      ...((engagement.sharedQuotes.length > 0 || engagement.dwellFavorites.length > 0 || engagement.favoriteGenres.length > 0) && {
-        'X-User-Engagement': encodeURIComponent(JSON.stringify(engagement))
-      })
+      ...((engagement.sharedQuotes.length > 0 ||
+        engagement.dwellFavorites.length > 0 ||
+        engagement.favoriteGenres.length > 0) && {
+        'X-User-Engagement': encodeURIComponent(JSON.stringify(engagement)),
+      }),
     };
   };
 
@@ -358,7 +385,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
 
     if (preserveQuotes && quotesLocked.current) {
       // Update metrics + insights but keep the quotes the user is reading
-      setWorkHealth(prev => {
+      setWorkHealth((prev) => {
         if (!prev?.ai?.heroMessages || !data.ai) return data;
         return {
           ...data,
@@ -366,7 +393,7 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
             ...data.ai,
             heroMessage: prev.ai.heroMessage,
             heroMessages: prev.ai.heroMessages,
-          }
+          },
         } as WorkHealthMetrics;
       });
     } else {
@@ -385,7 +412,11 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         data.ai.heroMessages.forEach((msg: HeroMessage) => {
           if (msg.quote) saveQuoteToHistory(msg.quote);
         });
-      } else if (data.ai?.heroMessage && typeof data.ai.heroMessage === 'object' && data.ai.heroMessage.quote) {
+      } else if (
+        data.ai?.heroMessage &&
+        typeof data.ai.heroMessage === 'object' &&
+        data.ai.heroMessage.quote
+      ) {
         saveQuoteToHistory(data.ai.heroMessage.quote);
       }
     }
@@ -393,10 +424,13 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     // Always save ORIGINAL (unmerged) data to cache — next visit gets fresh quotes
     const generalCacheKey = getCacheKey();
     if (generalCacheKey) {
-      localStorage.setItem(generalCacheKey, JSON.stringify({
-        metrics: data,
-        lastRefresh: new Date().toISOString()
-      }));
+      localStorage.setItem(
+        generalCacheKey,
+        JSON.stringify({
+          metrics: data,
+          lastRefresh: new Date().toISOString(),
+        })
+      );
     }
 
     // Set a durable "has ever loaded" flag so browser refreshes don't show first-time UX
@@ -405,138 +439,146 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     }
   };
 
-  const fetchWorkHealth = useCallback(async (retryCount = 0, options?: { silent?: boolean }) => {
-    if (status !== 'authenticated' || !session) {
-      setError('Not authenticated');
-      return;
-    }
-
-    const isSilent = options?.silent || false;
-
-    // Set loading state (skip for silent background polls)
-    if (!isSilent) {
-      if (workHealth) {
-        setIsAILoading(true);
-      } else {
-        setIsLoading(true);
-      }
-    }
-    setError(null);
-
-    try {
-      // Single API call — server handles AI timeout + local fallback internally
-      const { url, userTimezone } = buildFetchUrl();
-      console.log(`🔄 Fetching work health${isSilent ? ' (background poll)' : ''}...`);
-
-      const response = await fetch(url, {
-        cache: 'no-cache',
-        headers: buildFetchHeaders(userTimezone),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (errorData.needsReauth) {
-          throw new Error('Please sign out and sign back in to refresh your Google Calendar connection');
-        }
-        if (errorData.tokenNotReady) {
-          throw new Error(`Token not ready (${response.status})`);
-        }
-        if (errorData.retryable) {
-          throw new Error(`Calendar not ready (${response.status})`);
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const newFingerprint = getFingerprint(data);
-
-      // For silent polls, only continue if calendar data changed
-      if (isSilent && calendarFingerprint.current === newFingerprint) {
-        console.log('📊 Background poll: no calendar changes detected');
+  const fetchWorkHealth = useCallback(
+    async (retryCount = 0, options?: { silent?: boolean }) => {
+      if (status !== 'authenticated' || !session) {
+        setError('Not authenticated');
         return;
       }
 
-      // Only preserve quotes on background polls — initial fetch should always show fresh AI
-      const shouldPreserveQuotes = isSilent && quotesLocked.current;
-      handleFetchSuccess(data, shouldPreserveQuotes);
+      const isSilent = options?.silent || false;
 
-      console.log(`✅ Work health loaded (${data.aiStatus || 'unknown'})`);
-
-    } catch (err) {
-      console.error('Error fetching work health:', err);
-
-      // For silent polls, don't overwrite existing data with errors
-      if (isSilent && workHealth) {
-        console.log('Background poll failed, keeping existing data');
-        return;
-      }
-
-      setError(err instanceof Error ? err.message : 'Failed to fetch work health data');
-
-      // Try to use cached data
-      const cacheKey = getCacheKey();
-      let usedCache = false;
-
-      if (cacheKey) {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          try {
-            const data = JSON.parse(cached);
-            setWorkHealth({
-              ...data.metrics,
-              status: 'CACHED'
-            });
-            setLastRefresh(new Date(data.lastRefresh));
-            usedCache = true;
-            console.log('Using cached data due to API failure');
-          } catch (e) {
-            console.error('Error loading cached data:', e);
-          }
+      // Set loading state (skip for silent background polls)
+      if (!isSilent) {
+        if (workHealth) {
+          setIsAILoading(true);
+        } else {
+          setIsLoading(true);
         }
       }
+      setError(null);
 
-      if (!usedCache) {
-        const isTokenNotReady = err instanceof Error && err.message.includes('Token not ready');
-        const isRetryable =
-          isTokenNotReady ||
-          (err instanceof Error && err.message.includes('HTTP error')) ||
-          (err instanceof Error && err.message.includes('Calendar not ready')) ||
-          (err instanceof Error && err.message.includes('503'));
+      try {
+        // Single API call — server handles AI timeout + local fallback internally
+        const { url, userTimezone } = buildFetchUrl();
+        console.log(`🔄 Fetching work health${isSilent ? ' (background poll)' : ''}...`);
 
-        const cacheKey = getCacheKey();
-        const isNewUserCheck = cacheKey ? !localStorage.getItem(cacheKey) : true;
-        const maxRetries = isNewUserCheck ? 5 : 3;
+        const response = await fetch(url, {
+          cache: 'no-cache',
+          headers: buildFetchHeaders(userTimezone),
+        });
 
-        if (retryCount < maxRetries && isRetryable) {
-          let delay: number;
-          if (isTokenNotReady) {
-            delay = Math.min(800 * Math.pow(1.3, retryCount), 4000);
-          } else if (isNewUserCheck) {
-            delay = Math.min(2000 * Math.pow(1.5, retryCount), 12000);
-          } else {
-            delay = (retryCount + 1) * 2000;
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.needsReauth) {
+            throw new Error(
+              'Please sign out and sign back in to refresh your Google Calendar connection'
+            );
           }
-          console.log(`Attempt ${retryCount + 1}/${maxRetries} failed, retrying in ${Math.round(delay / 1000)}s...`);
-          setTimeout(() => fetchWorkHealth(retryCount + 1), delay);
+          if (errorData.tokenNotReady) {
+            throw new Error(`Token not ready (${response.status})`);
+          }
+          if (errorData.retryable) {
+            throw new Error(`Calendar not ready (${response.status})`);
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const newFingerprint = getFingerprint(data);
+
+        // For silent polls, only continue if calendar data changed
+        if (isSilent && calendarFingerprint.current === newFingerprint) {
+          console.log('📊 Background poll: no calendar changes detected');
           return;
         }
 
-        setWorkHealth(null);
+        // Only preserve quotes on background polls — initial fetch should always show fresh AI
+        const shouldPreserveQuotes = isSilent && quotesLocked.current;
+        handleFetchSuccess(data, shouldPreserveQuotes);
 
-        if (err instanceof Error && err.message.includes('sign out and sign back in')) {
-          setError('Calendar connection expired. Please sign out and sign back in.');
-        } else {
-          setError('Unable to connect to Google Calendar. Please try refreshing the page or sign out and back in.');
+        console.log(`✅ Work health loaded (${data.aiStatus || 'unknown'})`);
+      } catch (err) {
+        console.error('Error fetching work health:', err);
+
+        // For silent polls, don't overwrite existing data with errors
+        if (isSilent && workHealth) {
+          console.log('Background poll failed, keeping existing data');
+          return;
+        }
+
+        setError(err instanceof Error ? err.message : 'Failed to fetch work health data');
+
+        // Try to use cached data
+        const cacheKey = getCacheKey();
+        let usedCache = false;
+
+        if (cacheKey) {
+          const cached = localStorage.getItem(cacheKey);
+          if (cached) {
+            try {
+              const data = JSON.parse(cached);
+              setWorkHealth({
+                ...data.metrics,
+                status: 'CACHED',
+              });
+              setLastRefresh(new Date(data.lastRefresh));
+              usedCache = true;
+              console.log('Using cached data due to API failure');
+            } catch (e) {
+              console.error('Error loading cached data:', e);
+            }
+          }
+        }
+
+        if (!usedCache) {
+          const isTokenNotReady = err instanceof Error && err.message.includes('Token not ready');
+          const isRetryable =
+            isTokenNotReady ||
+            (err instanceof Error && err.message.includes('HTTP error')) ||
+            (err instanceof Error && err.message.includes('Calendar not ready')) ||
+            (err instanceof Error && err.message.includes('503'));
+
+          const cacheKey = getCacheKey();
+          const isNewUserCheck = cacheKey ? !localStorage.getItem(cacheKey) : true;
+          const maxRetries = isNewUserCheck ? 5 : 3;
+
+          if (retryCount < maxRetries && isRetryable) {
+            let delay: number;
+            if (isTokenNotReady) {
+              delay = Math.min(800 * Math.pow(1.3, retryCount), 4000);
+            } else if (isNewUserCheck) {
+              delay = Math.min(2000 * Math.pow(1.5, retryCount), 12000);
+            } else {
+              delay = (retryCount + 1) * 2000;
+            }
+            console.log(
+              `Attempt ${retryCount + 1}/${maxRetries} failed, retrying in ${Math.round(delay / 1000)}s...`
+            );
+            setTimeout(() => fetchWorkHealth(retryCount + 1), delay);
+            return;
+          }
+
+          setWorkHealth(null);
+
+          if (err instanceof Error && err.message.includes('sign out and sign back in')) {
+            setError('Calendar connection expired. Please sign out and sign back in.');
+          } else {
+            setError(
+              'Unable to connect to Google Calendar. Please try refreshing the page or sign out and back in.'
+            );
+          }
+        }
+      } finally {
+        if (!isSilent) {
+          setIsLoading(false);
+          setIsAILoading(false);
         }
       }
-    } finally {
-      if (!isSilent) {
-        setIsLoading(false);
-        setIsAILoading(false);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, status]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [session, status]
+  );
 
   // Load persisted score history immediately so trends render before the fetch completes
   useEffect(() => {
@@ -545,7 +587,9 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
     try {
       const raw = localStorage.getItem(historyKey);
       if (raw) setScoreHistory(JSON.parse(raw));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     // Then merge in the server-persisted history (source of truth across devices).
     // Server wins per date, except today — the local entry comes from the freshest
@@ -556,8 +600,8 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
         if (!res.ok) return;
         const { scores } = await res.json();
         if (!Array.isArray(scores) || scores.length === 0) return;
-        const today = new Date().toISOString().split('T')[0];
-        setScoreHistory(prev => {
+        const today = new Date().toLocaleDateString('sv-SE');
+        setScoreHistory((prev) => {
           const byDate = new Map<string, DailyScore>();
           for (const s of prev) byDate.set(s.date, s);
           for (const s of scores as DailyScore[]) {
@@ -565,10 +609,16 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
             byDate.set(s.date, s);
           }
           const merged = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
-          try { localStorage.setItem(historyKey, JSON.stringify(merged)); } catch { /* ignore */ }
+          try {
+            localStorage.setItem(historyKey, JSON.stringify(merged));
+          } catch {
+            /* ignore */
+          }
           return merged;
         });
-      } catch { /* offline or server error — the localStorage path still works */ }
+      } catch {
+        /* offline or server error — the localStorage path still works */
+      }
     })();
   }, [session, status]);
 
@@ -586,7 +636,9 @@ export const useWorkHealth = (_tabType?: 'overview' | 'performance' | 'resilienc
           // Don't lock — cache is just a loading placeholder, fresh API should replace it
           console.log('⚡ Showing cached data instantly');
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status]);

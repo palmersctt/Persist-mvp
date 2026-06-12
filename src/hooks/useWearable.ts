@@ -61,15 +61,19 @@ export const useWearable = () => {
     window.location.href = `/api/wearables/connect?provider=${provider}`;
   }, []);
 
-  // Demo data needs no OAuth — connect it in place without a page reload
-  const connectDemo = useCallback(async (): Promise<boolean> => {
+  // Demo data needs no OAuth — connect it in place without a page reload.
+  // Resolves to null on success, or a user-facing error message.
+  const connectDemo = useCallback(async (): Promise<string | null> => {
     try {
       const res = await fetch('/api/wearables/connect?provider=demo&json=1');
-      if (!res.ok) return false;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return data.error || 'Demo data couldn’t connect right now — try again.';
+      }
       await fetchActuals();
-      return true;
+      return null;
     } catch {
-      return false;
+      return 'Demo data couldn’t connect right now — try again.';
     }
   }, [fetchActuals]);
 

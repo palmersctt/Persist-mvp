@@ -14,10 +14,13 @@ const day = (
 });
 
 describe('buildTrendsFromHistory', () => {
-  it('returns no weekly trend below the minimum tracked days', () => {
+  it('renders the chart from day one but withholds insights below the minimum', () => {
     const trends = buildTrendsFromHistory([day('2026-06-10', 50, 40, 60)], '2026-06-10');
     expect(trends.daysTracked).toBe(1);
-    expect(trends.weekly).toBeNull();
+    expect(trends.weekly).not.toBeNull();
+    expect(trends.weekly!.days).toHaveLength(1);
+    expect(trends.weekly!.days[0].isToday).toBe(true);
+    expect(trends.weekly!.insights).toEqual([]);
   });
 
   it('builds a weekly trend with display-name mapping and today marker', () => {
