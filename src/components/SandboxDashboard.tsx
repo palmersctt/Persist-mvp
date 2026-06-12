@@ -13,6 +13,9 @@ import SwipeableQuoteCards from './SwipeableQuoteCards'
 import WhyMood from './WhyMood'
 import PersistLogo from './PersistLogo'
 import SandboxMeetingBuilder, { type MeetingEntry } from './SandboxMeetingBuilder'
+import { WearablePanel } from './WearableSection'
+import { computeUnlock, forecastVsActual, type DayShape } from '../lib/readiness'
+import type { WearableActuals } from '../lib/wearables/types'
 
 function formatFocusTime(focusTimeMinutes: number) {
   const safe = Math.max(0, Math.min(480, focusTimeMinutes))
@@ -20,6 +23,64 @@ function formatFocusTime(focusTimeMinutes: number) {
 }
 
 const EMPTY_SCHEDULE = { meetingCount: 0, backToBackCount: 0, bufferTime: 0, durationHours: 0, fragmentationScore: 0, morningMeetings: 0, afternoonMeetings: 0, meetingRatio: 0, uniqueContexts: 0, longestStretch: 0, adequateBreaks: 0, shortBreaks: 0, earlyLateMeetings: 0 }
+
+// --- Forecast vs Actual preview (synthetic body scenarios) ---
+type BodyScenario = 'charged' | 'steady' | 'drained' | 'strava'
+
+const BODY_SCENARIOS: { key: BodyScenario; label: string }[] = [
+  { key: 'charged', label: 'Charged' },
+  { key: 'steady', label: 'Steady' },
+  { key: 'drained', label: 'Drained' },
+  { key: 'strava', label: 'Strava log' },
+]
+
+function sandboxActuals(scenario: BodyScenario): WearableActuals {
+  const date = new Date().toLocaleDateString('sv-SE')
+  if (scenario === 'strava') {
+    const yesterday = new Date(Date.now() - 24 * 3600 * 1000)
+    yesterday.setHours(17, 30, 0, 0)
+    return {
+      date,
+      provider: 'strava',
+      weekActivityCount: 3,
+      lastActivity: {
+        type: 'Trail Run',
+        name: 'After-work loop',
+        startISO: yesterday.toISOString(),
+        durationMin: 52,
+        distanceKm: 8.4,
+      },
+    }
+  }
+  const presets = {
+    charged: { recovery: 88, sleepHours: 7.9, sleepPerformance: 96, hrvMs: 98, restingHr: 49 },
+    steady: { recovery: 54, sleepHours: 6.7, sleepPerformance: 81, hrvMs: 67, restingHr: 55 },
+    drained: { recovery: 22, sleepHours: 5.1, sleepPerformance: 58, hrvMs: 41, restingHr: 63 },
+  } as const
+  return { date, provider: 'demo', ...presets[scenario] }
+}
+
+/** Treat the entered meetings as today's calendar so the unlock is live. */
+function dayShapeFromMeetings(meetings: MeetingEntry[]): DayShape {
+  const events = meetings
+    .filter(m => m.title.trim())
+    .map(m => {
+      const s = new Date()
+      s.setHours(m.startHour, m.startMinute, 0, 0)
+      const e = new Date()
+      e.setHours(m.endHour, m.endMinute, 0, 0)
+      return { startISO: s.toISOString(), endISO: e.toISOString() }
+    })
+  return {
+    firstEventStartISO: events.length
+      ? events.reduce((min, ev) => (ev.startISO < min ? ev.startISO : min), events[0].startISO)
+      : null,
+    lastEventEndISO: events.length
+      ? events.reduce((max, ev) => (ev.endISO > max ? ev.endISO : max), events[0].endISO)
+      : null,
+    events,
+  }
+}
 
 // Trend types and generation imported from ../lib/generateTrends
 
@@ -33,6 +94,7 @@ export default function SandboxDashboard() {
   const [isScoring, setIsScoring] = useState(false)
   const [trends, setTrends] = useState<GeneratedTrends | null>(null)
   const [trendView, setTrendView] = useState<'weekly' | 'monthly'>('weekly')
+  const [bodyScenario, setBodyScenario] = useState<BodyScenario>('charged')
   const [showTrends, setShowTrends] = useState(false)
   const [scoreTimestamp, setScoreTimestamp] = useState<number>(0)
 
@@ -493,6 +555,59 @@ export default function SandboxDashboard() {
                   }}
                   defaultOpen
                 />
+
+                {/* Forecast vs Actual preview — synthetic body data merged with the entered meetings */}
+                <section style={{ marginTop: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <h2 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-faint)', margin: 0 }}>
+                      Forecast vs Actual
+                    </h2>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, backgroundColor: 'var(--signal-soft)', color: 'var(--signal-dim)' }}>
+                      Preview
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, margin: '0 0 10px' }}>
+                    Your meetings above are the forecast. Pick a body state to see how the workday
+                    unlock reads it &mdash; the countdown compares your entered meeting times with
+                    right now.
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                    {BODY_SCENARIOS.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          trackEvent('sandbox_wearable_scenario_toggled', { from: bodyScenario, to: key }, getSandboxSessionId())
+                          setBodyScenario(key)
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '8px 4px',
+                          borderRadius: 8,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer',
+                          border: '1px solid',
+                          borderColor: bodyScenario === key ? 'var(--signal)' : 'var(--rule)',
+                          backgroundColor: bodyScenario === key ? 'var(--signal)' : 'transparent',
+                          color: bodyScenario === key ? 'var(--ground)' : 'var(--text-muted)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {(() => {
+                    const previewActuals = sandboxActuals(bodyScenario)
+                    const unlock = computeUnlock(new Date(), dayShapeFromMeetings(customMeetings), previewActuals)
+                    const insight = forecastVsActual({ focus, strain, balance }, previewActuals)
+                    return <WearablePanel unlock={unlock} actuals={previewActuals} insight={insight} />
+                  })()}
+                  <p style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', margin: '2px 0 0' }}>
+                    Demo body data &mdash; the real dashboard connects Strava or WHOOP.
+                  </p>
+                </section>
 
                 {/* Trends entry card */}
                 {trends && !showTrends && (

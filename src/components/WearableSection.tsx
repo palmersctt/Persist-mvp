@@ -9,8 +9,159 @@ import {
   type ForecastScores,
 } from '../lib/readiness';
 import { trackEvent } from '../lib/trackEvent';
+import type { UnlockState } from '../lib/readiness';
+import type { WearableActuals } from '../lib/wearables/types';
 
 const MONO = 'var(--font-geist-mono), ui-monospace, monospace';
+
+/**
+ * Presentational unlock banner + actuals row. Shared between the
+ * authenticated dashboard (live data via useWearable) and the public
+ * sandbox preview (synthetic scenarios).
+ */
+export function WearablePanel({
+  unlock,
+  actuals,
+  insight,
+  stale = false,
+}: {
+  unlock: UnlockState;
+  actuals: WearableActuals | null;
+  insight: string | null;
+  stale?: boolean;
+}) {
+  const celebrate = unlock.unlocked && unlock.readiness === 'charged';
+  const metrics: { label: string; value: string }[] = actuals
+    ? [
+        ...(actuals.recovery != null ? [{ label: 'Recovery', value: `${actuals.recovery}%` }] : []),
+        ...(actuals.sleepHours != null
+          ? [{ label: 'Sleep', value: `${actuals.sleepHours}h` }]
+          : []),
+        ...(actuals.hrvMs != null ? [{ label: 'HRV', value: `${actuals.hrvMs}ms` }] : []),
+        ...(actuals.restingHr != null ? [{ label: 'RHR', value: `${actuals.restingHr}` }] : []),
+        ...(actuals.weekActivityCount != null
+          ? [{ label: 'This week', value: `${actuals.weekActivityCount}` }]
+          : []),
+        ...(actuals.lastActivity != null
+          ? [{ label: 'Last out', value: `${actuals.lastActivity.durationMin}m` }]
+          : []),
+      ]
+    : [];
+
+  return (
+    <>
+      {/* Workday unlock state */}
+      <div
+        className="rounded-xl p-5 mb-2.5"
+        style={
+          celebrate
+            ? {
+                background: 'linear-gradient(160deg, #C7F95C, #A8DE3F)',
+                border: '1px solid var(--signal-dim)',
+              }
+            : { backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }
+        }
+      >
+        <div className="flex items-center gap-2 mb-1.5">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{
+              backgroundColor: celebrate ? 'rgba(11,11,12,0.75)' : 'var(--signal)',
+              boxShadow: celebrate ? 'none' : '0 0 12px rgba(199,249,92,0.35)',
+            }}
+          />
+          <span
+            className="text-[10px] font-bold uppercase"
+            style={{
+              letterSpacing: '0.1em',
+              color: celebrate ? 'rgba(11,11,12,0.7)' : 'var(--signal-dim)',
+            }}
+          >
+            {unlock.unlocked ? 'Workday unlocked' : 'Workday locked'}
+          </span>
+        </div>
+        <p
+          className="text-[15px] font-bold mb-1"
+          style={{ color: celebrate ? 'rgba(11,11,12,0.92)' : 'var(--text)' }}
+        >
+          {unlock.headline}
+        </p>
+        {!unlock.unlocked && unlock.minutesUntilClear != null && (
+          <p
+            className="text-xs font-semibold mb-1"
+            style={{
+              color: 'var(--signal)',
+              fontFamily: MONO,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {unlock.minutesUntilClear >= 60
+              ? `${Math.floor(unlock.minutesUntilClear / 60)}h ${unlock.minutesUntilClear % 60}m to go`
+              : `${unlock.minutesUntilClear}m to go`}
+          </p>
+        )}
+        <p
+          className="text-xs leading-relaxed mb-0"
+          style={{ color: celebrate ? 'rgba(11,11,12,0.65)' : 'var(--text-muted)' }}
+        >
+          {unlock.detail}
+        </p>
+      </div>
+
+      {/* Today's actuals */}
+      {actuals && (
+        <div
+          className="rounded-xl px-4 py-3.5 mb-2.5"
+          style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
+        >
+          <div className="flex justify-between">
+            {metrics.map((m) => (
+              <div key={m.label} className="text-center">
+                <div
+                  className="text-lg font-bold"
+                  style={{
+                    color: 'var(--signal)',
+                    fontFamily: MONO,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {m.value}
+                </div>
+                <div
+                  className="text-[9px] uppercase tracking-wider mt-0.5 font-medium"
+                  style={{ color: 'var(--text-faint)' }}
+                >
+                  {m.label}
+                </div>
+              </div>
+            ))}
+          </div>
+          {actuals.lastActivity && (
+            <p className="text-[10px] mt-2 mb-0 text-center" style={{ color: 'var(--text-faint)' }}>
+              Last logged: {actuals.lastActivity.name || actuals.lastActivity.type}
+              {actuals.lastActivity.distanceKm != null
+                ? ` · ${actuals.lastActivity.distanceKm}km`
+                : ''}
+            </p>
+          )}
+          {stale && (
+            <p className="text-[10px] mt-2 mb-0 text-center" style={{ color: 'var(--text-faint)' }}>
+              Showing your last sync ({actuals.date}) &mdash; provider unreachable right now.
+            </p>
+          )}
+          {insight && (
+            <p
+              className="text-[11px] mt-2.5 mb-0 leading-snug"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {insight}
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 
 // "Forecast vs Actual" dashboard section. The calendar forecast (Focus/
 // Strain/Balance + event timing) merges with wearable actuals (recovery,
@@ -134,23 +285,6 @@ export default function WearableSection({
   }
 
   // --- Connected: unlock state + actuals ---
-  const celebrate = unlock.unlocked && unlock.readiness === 'charged';
-  const metrics: { label: string; value: string }[] = actuals
-    ? [
-        ...(actuals.recovery != null ? [{ label: 'Recovery', value: `${actuals.recovery}%` }] : []),
-        ...(actuals.sleepHours != null
-          ? [{ label: 'Sleep', value: `${actuals.sleepHours}h` }]
-          : []),
-        ...(actuals.hrvMs != null ? [{ label: 'HRV', value: `${actuals.hrvMs}ms` }] : []),
-        ...(actuals.restingHr != null ? [{ label: 'RHR', value: `${actuals.restingHr}` }] : []),
-        ...(actuals.weekActivityCount != null
-          ? [{ label: 'This week', value: `${actuals.weekActivityCount}` }]
-          : []),
-        ...(actuals.lastActivity != null
-          ? [{ label: 'Last out', value: `${actuals.lastActivity.durationMin}m` }]
-          : []),
-      ]
-    : [];
   const insight = actuals ? forecastVsActual(forecast, actuals) : null;
 
   return (
@@ -174,115 +308,7 @@ export default function WearableSection({
         </span>
       </div>
 
-      {/* Workday unlock state */}
-      <div
-        className="rounded-xl p-5 mb-2.5"
-        style={
-          celebrate
-            ? {
-                background: 'linear-gradient(160deg, #C7F95C, #A8DE3F)',
-                border: '1px solid var(--signal-dim)',
-              }
-            : { backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }
-        }
-      >
-        <div className="flex items-center gap-2 mb-1.5">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{
-              backgroundColor: celebrate ? 'rgba(11,11,12,0.75)' : 'var(--signal)',
-              boxShadow: celebrate ? 'none' : '0 0 12px rgba(199,249,92,0.35)',
-            }}
-          />
-          <span
-            className="text-[10px] font-bold uppercase"
-            style={{
-              letterSpacing: '0.1em',
-              color: celebrate ? 'rgba(11,11,12,0.7)' : 'var(--signal-dim)',
-            }}
-          >
-            {unlock.unlocked ? 'Workday unlocked' : 'Workday locked'}
-          </span>
-        </div>
-        <p
-          className="text-[15px] font-bold mb-1"
-          style={{ color: celebrate ? 'rgba(11,11,12,0.92)' : 'var(--text)' }}
-        >
-          {unlock.headline}
-        </p>
-        {!unlock.unlocked && unlock.minutesUntilClear != null && (
-          <p
-            className="text-xs font-semibold mb-1"
-            style={{
-              color: 'var(--signal)',
-              fontFamily: MONO,
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {unlock.minutesUntilClear >= 60
-              ? `${Math.floor(unlock.minutesUntilClear / 60)}h ${unlock.minutesUntilClear % 60}m to go`
-              : `${unlock.minutesUntilClear}m to go`}
-          </p>
-        )}
-        <p
-          className="text-xs leading-relaxed mb-0"
-          style={{ color: celebrate ? 'rgba(11,11,12,0.65)' : 'var(--text-muted)' }}
-        >
-          {unlock.detail}
-        </p>
-      </div>
-
-      {/* Today's actuals */}
-      {actuals && (
-        <div
-          className="rounded-xl px-4 py-3.5 mb-2.5"
-          style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
-        >
-          <div className="flex justify-between">
-            {metrics.map((m) => (
-              <div key={m.label} className="text-center">
-                <div
-                  className="text-lg font-bold"
-                  style={{
-                    color: 'var(--signal)',
-                    fontFamily: MONO,
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {m.value}
-                </div>
-                <div
-                  className="text-[9px] uppercase tracking-wider mt-0.5 font-medium"
-                  style={{ color: 'var(--text-faint)' }}
-                >
-                  {m.label}
-                </div>
-              </div>
-            ))}
-          </div>
-          {actuals.lastActivity && (
-            <p className="text-[10px] mt-2 mb-0 text-center" style={{ color: 'var(--text-faint)' }}>
-              Last logged: {actuals.lastActivity.name || actuals.lastActivity.type}
-              {actuals.lastActivity.distanceKm != null
-                ? ` · ${actuals.lastActivity.distanceKm}km`
-                : ''}
-            </p>
-          )}
-          {stale && (
-            <p className="text-[10px] mt-2 mb-0 text-center" style={{ color: 'var(--text-faint)' }}>
-              Showing your last sync ({actuals.date}) &mdash; provider unreachable right now.
-            </p>
-          )}
-          {insight && (
-            <p
-              className="text-[11px] mt-2.5 mb-0 leading-snug"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {insight}
-            </p>
-          )}
-        </div>
-      )}
+      <WearablePanel unlock={unlock} actuals={actuals} insight={insight} stale={stale} />
 
       <div className="text-center">
         <button
