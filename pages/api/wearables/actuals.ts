@@ -4,6 +4,7 @@ import { authOptions } from '../auth/[...nextauth]';
 import { supabaseAdmin } from '../../../lib/supabase';
 import { generateDemoActuals } from '../../../src/lib/wearables/demo';
 import { fetchWhoopActuals, refreshWhoopToken } from '../../../src/lib/wearables/whoop';
+import { fetchStravaActuals, refreshStravaToken } from '../../../src/lib/wearables/strava';
 import type { WearableActuals, WearableProvider } from '../../../src/lib/wearables/types';
 
 interface ConnectionRow {
@@ -28,8 +29,8 @@ function rowToActuals(row: DailyRow): WearableActuals {
   return {
     date: row.date,
     provider: row.provider,
-    recovery: row.recovery ?? 0,
-    sleepHours: row.sleep_hours != null ? Number(row.sleep_hours) : 0,
+    recovery: row.recovery ?? undefined,
+    sleepHours: row.sleep_hours != null ? Number(row.sleep_hours) : undefined,
     sleepPerformance: row.sleep_performance ?? undefined,
     hrvMs: row.hrv_ms ?? undefined,
     restingHr: row.resting_hr ?? undefined,
@@ -43,8 +44,8 @@ async function persistActuals(userEmail: string, actuals: WearableActuals) {
       user_email: userEmail,
       date: actuals.date,
       provider: actuals.provider,
-      recovery: actuals.recovery,
-      sleep_hours: actuals.sleepHours,
+      recovery: actuals.recovery ?? null,
+      sleep_hours: actuals.sleepHours ?? null,
       sleep_performance: actuals.sleepPerformance ?? null,
       hrv_ms: actuals.hrvMs ?? null,
       resting_hr: actuals.restingHr ?? null,
@@ -56,10 +57,35 @@ async function persistActuals(userEmail: string, actuals: WearableActuals) {
   if (error) console.error('wearable_daily upsert failed:', error.message);
 }
 
-async function getWhoopActuals(
+interface OAuthProviderAdapter {
+  provider: 'whoop' | 'strava';
+  refresh: (
+    refreshToken: string
+  ) => Promise<{ accessToken: string; refreshToken: string | null; expiresAt: string } | null>;
+  fetch: (accessToken: string, date: string) => Promise<WearableActuals | null>;
+  unauthorizedError: string;
+}
+
+const OAUTH_ADAPTERS: Record<'whoop' | 'strava', OAuthProviderAdapter> = {
+  whoop: {
+    provider: 'whoop',
+    refresh: refreshWhoopToken,
+    fetch: fetchWhoopActuals,
+    unauthorizedError: 'WHOOP_UNAUTHORIZED',
+  },
+  strava: {
+    provider: 'strava',
+    refresh: refreshStravaToken,
+    fetch: fetchStravaActuals,
+    unauthorizedError: 'STRAVA_UNAUTHORIZED',
+  },
+};
+
+async function getOAuthActuals(
   userEmail: string,
   connection: ConnectionRow,
-  date: string
+  date: string,
+  adapter: OAuthProviderAdapter
 ): Promise<WearableActuals | null> {
   let accessToken = connection.access_token;
   let refreshToken = connection.refresh_token;
@@ -80,29 +106,29 @@ async function getWhoopActuals(
         updated_at: new Date().toISOString(),
       })
       .eq('user_email', userEmail)
-      .eq('provider', 'whoop');
+      .eq('provider', adapter.provider);
   };
 
   // Proactively refresh if the token expires within 5 minutes
   const expiresSoon =
     connection.expires_at && new Date(connection.expires_at).getTime() - Date.now() < 5 * 60 * 1000;
   if (expiresSoon && refreshToken) {
-    const tokens = await refreshWhoopToken(refreshToken);
+    const tokens = await adapter.refresh(refreshToken);
     if (tokens) await persistTokens(tokens);
   }
 
   if (!accessToken) return null;
 
   try {
-    return await fetchWhoopActuals(accessToken, date);
+    return await adapter.fetch(accessToken, date);
   } catch (err) {
     // Access token rejected — refresh once and retry
-    if (err instanceof Error && err.message === 'WHOOP_UNAUTHORIZED' && refreshToken) {
-      const tokens = await refreshWhoopToken(refreshToken);
+    if (err instanceof Error && err.message === adapter.unauthorizedError && refreshToken) {
+      const tokens = await adapter.refresh(refreshToken);
       if (tokens) {
         await persistTokens(tokens);
         try {
-          return await fetchWhoopActuals(tokens.accessToken, date);
+          return await adapter.fetch(tokens.accessToken, date);
         } catch {
           return null;
         }
@@ -155,8 +181,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let actuals: WearableActuals | null = null;
   if (connection.provider === 'demo') {
     actuals = generateDemoActuals(userEmail, today);
-  } else if (connection.provider === 'whoop') {
-    actuals = await getWhoopActuals(userEmail, connection, today);
+  } else if (connection.provider === 'whoop' || connection.provider === 'strava') {
+    actuals = await getOAuthActuals(
+      userEmail,
+      connection,
+      today,
+      OAUTH_ADAPTERS[connection.provider]
+    );
   }
 
   if (actuals) {

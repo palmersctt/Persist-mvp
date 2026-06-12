@@ -16,6 +16,20 @@ const actuals = (overrides: Partial<WearableActuals> = {}): WearableActuals => (
   ...overrides,
 });
 
+// Activity-only provider (Strava): no recovery/sleep, just logged movement
+const stravaActuals = (overrides: Partial<WearableActuals> = {}): WearableActuals => ({
+  date: '2026-06-11',
+  provider: 'strava',
+  weekActivityCount: 3,
+  lastActivity: {
+    type: 'TrailRun',
+    startISO: '2026-06-10T17:30:00Z',
+    durationMin: 52,
+    distanceKm: 8.4,
+  },
+  ...overrides,
+});
+
 describe('assessBodyReadiness', () => {
   it('is charged when recovery is green and sleep adequate', () => {
     expect(assessBodyReadiness(actuals({ recovery: 80, sleepHours: 7.5 }))).toBe('charged');
@@ -31,6 +45,14 @@ describe('assessBodyReadiness', () => {
 
   it('is drained in the red recovery band', () => {
     expect(assessBodyReadiness(actuals({ recovery: 20 }))).toBe('drained');
+  });
+
+  it('is null for activity-only providers with no recovery data', () => {
+    expect(assessBodyReadiness(stravaActuals())).toBeNull();
+  });
+
+  it('stays charged on green recovery when sleep is unknown', () => {
+    expect(assessBodyReadiness(actuals({ recovery: 80, sleepHours: undefined }))).toBe('charged');
   });
 });
 
@@ -65,6 +87,13 @@ describe('computeUnlock – counting down', () => {
     const state = computeUnlock(now, dayShape, null);
     expect(state.unlocked).toBe(false);
     expect(state.readiness).toBeNull();
+  });
+
+  it('counts down with null readiness for activity-only providers', () => {
+    const state = computeUnlock(now, dayShape, stravaActuals());
+    expect(state.unlocked).toBe(false);
+    expect(state.readiness).toBeNull();
+    expect(state.detail).toContain('trailhead');
   });
 });
 
@@ -110,6 +139,32 @@ describe('computeUnlock – unlocked', () => {
     const state = computeUnlock(evening, null, actuals());
     expect(state.unlocked).toBe(true);
   });
+
+  it('closes the loop when an activity is already logged today (Strava)', () => {
+    const state = computeUnlock(
+      evening,
+      dayShape,
+      stravaActuals({
+        lastActivity: {
+          type: 'TrailRun',
+          startISO: '2026-06-11T17:05:00Z',
+          durationMin: 48,
+          distanceKm: 7.2,
+        },
+      })
+    );
+    expect(state.unlocked).toBe(true);
+    expect(state.readiness).toBeNull();
+    expect(state.headline).toContain('already logged');
+    expect(state.detail).toContain('TrailRun');
+  });
+
+  it('nudges toward logging when nothing is logged today (Strava)', () => {
+    const state = computeUnlock(evening, dayShape, stravaActuals());
+    expect(state.unlocked).toBe(true);
+    expect(state.headline).toContain('go log something');
+    expect(state.detail).toContain('TrailRun');
+  });
 });
 
 describe('forecastVsActual', () => {
@@ -127,5 +182,26 @@ describe('forecastVsActual', () => {
   it('falls back to a steady read otherwise', () => {
     const msg = forecastVsActual({ focus: 55, strain: 50, balance: 55 }, actuals({ recovery: 55 }));
     expect(msg).toContain('55%');
+  });
+
+  it('compares logged activities against the forecast for activity providers', () => {
+    expect(forecastVsActual(heavy, stravaActuals({ weekActivityCount: 3 }))).toContain(
+      '3 activities'
+    );
+  });
+
+  it('calls out an empty week for activity providers', () => {
+    expect(forecastVsActual(light, stravaActuals({ weekActivityCount: 0 }))).toContain(
+      'Nothing logged'
+    );
+  });
+
+  it('returns null when the provider has nothing to compare', () => {
+    expect(
+      forecastVsActual(
+        light,
+        stravaActuals({ weekActivityCount: undefined, lastActivity: undefined })
+      )
+    ).toBeNull();
   });
 });

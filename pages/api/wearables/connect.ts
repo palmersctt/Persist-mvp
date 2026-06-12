@@ -4,10 +4,11 @@ import crypto from 'crypto';
 import { authOptions } from '../auth/[...nextauth]';
 import { supabaseAdmin } from '../../../lib/supabase';
 import { getWhoopAuthUrl, isWhoopConfigured } from '../../../src/lib/wearables/whoop';
+import { getStravaAuthUrl, isStravaConfigured } from '../../../src/lib/wearables/strava';
 
-// Starts a wearable connection. `?provider=whoop` kicks off the WHOOP OAuth
-// dance; `?provider=demo` creates a tokenless demo connection so the full
-// forecast-vs-actual flow works without a device.
+// Starts a wearable connection. `?provider=whoop|strava` kicks off that
+// provider's OAuth dance; `?provider=demo` creates a tokenless demo
+// connection so the full forecast-vs-actual flow works without a device.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -39,20 +40,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.redirect('/dashboard?wearable=connected');
   }
 
-  if (provider === 'whoop') {
-    if (!isWhoopConfigured()) {
-      return res.redirect('/dashboard?wearable=whoop-unavailable');
+  if (provider === 'whoop' || provider === 'strava') {
+    const configured = provider === 'whoop' ? isWhoopConfigured() : isStravaConfigured();
+    if (!configured) {
+      return res.redirect(`/dashboard?wearable=${provider}-unavailable`);
     }
-    // CSRF protection: random state, echoed back by WHOOP and checked
-    // against this cookie in the callback.
+    // CSRF protection: random state, echoed back by the provider and checked
+    // against this cookie in the callback. The provider cookie tells the
+    // callback which token exchange to run.
     const state = crypto.randomBytes(16).toString('hex');
     const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-    res.setHeader(
-      'Set-Cookie',
-      `persist-wearable-state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600${secure}`
-    );
+    const cookieAttrs = `Path=/; HttpOnly; SameSite=Lax; Max-Age=600${secure}`;
+    res.setHeader('Set-Cookie', [
+      `persist-wearable-state=${state}; ${cookieAttrs}`,
+      `persist-wearable-provider=${provider}; ${cookieAttrs}`,
+    ]);
     const redirectUri = `${process.env.NEXTAUTH_URL}/api/wearables/callback`;
-    return res.redirect(getWhoopAuthUrl(state, redirectUri));
+    const authUrl =
+      provider === 'whoop'
+        ? getWhoopAuthUrl(state, redirectUri)
+        : getStravaAuthUrl(state, redirectUri);
+    return res.redirect(authUrl);
   }
 
   return res.status(400).json({ error: 'Unknown provider' });

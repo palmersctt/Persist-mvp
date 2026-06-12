@@ -61,25 +61,41 @@ WearableActuals` plus OAuth helpers in `src/lib/wearables/<provider>.ts`,
 branch on it in `connect.ts` and `actuals.ts`, and extend the
 `WearableProvider` union. Nothing downstream of `WearableActuals` changes.
 
-### Provider decision (June 2026): WHOOP first
+### Provider decision (June 2026): Strava to test, WHOOP for recovery data
 
 Surveyed the field before committing:
 
+- **Strava** — self-serve OAuth2 app (strava.com/settings/api); under the
+  2026 developer program, API access requires a Strava subscription
+  (~$12/mo) but no review for up to 10 athletes. **No hardware needed** —
+  activities recorded with the phone app count. Activity-only (no
+  recovery/sleep/HRV), so its actuals answer "did you actually get out",
+  closing the unlock loop. **Chosen as the first real-data test path.**
 - **WHOOP** — free self-serve developer API (OAuth2, register at
   developer.whoop.com, ship same day). Recovery/strain vocabulary matches
-  Persist's scores one-for-one, and the brand already references WHOOP's
-  aesthetic. **Chosen as the launch provider.**
+  Persist's scores one-for-one. Requires owning a WHOOP. **The recovery
+  provider once a device is in hand.**
 - **Oura** — also free self-serve OAuth2 (personal access tokens were
   deprecated Dec 2025; OAuth is unaffected). Its "readiness" maps cleanly
-  onto the unlock logic. Strong second provider if early users skew ring.
+  onto the unlock logic. Strong second recovery provider if users skew ring.
 - **Garmin** — best demographic fit for trail athletes, but the Garmin
   Connect Developer Program is suspended to new applicants (no timeline).
   Revisit when it reopens.
+- **COROS** — API access is partner-application only, not self-serve. Not
+  viable for a quick test.
+- **Amazfit / Zepp** — the Zepp developer platform targets on-watch apps;
+  there is no practical open cloud API for third parties.
 - **Apple Health** — no cloud API; requires a native iOS companion app to
   read HealthKit. A later, larger project.
 
-The demo provider is the dogfooding path until a physical device is in
-hand.
+The demo provider remains the zero-cost dogfooding path.
+
+Providers therefore come in two flavors, and `WearableActuals` keeps both
+honest: recovery providers fill `recovery/sleepHours/hrvMs/restingHr`;
+activity providers fill `lastActivity/weekActivityCount` and leave the
+biometrics absent. `readiness` is null for activity providers — the unlock
+still fires, with "go log it / already logged" messaging instead of a
+body-capacity verdict.
 
 ### WHOOP
 
@@ -94,6 +110,24 @@ WHOOP_CLIENT_SECRET=...
 
 Without these, the WHOOP connect button redirects back with a friendly
 "not configured" notice — the demo provider still works.
+
+### Strava
+
+Create an app at [strava.com/settings/api](https://www.strava.com/settings/api)
+(requires a Strava subscription for API access). Set the Authorization
+Callback Domain to your deployment's domain, then set:
+
+```
+STRAVA_CLIENT_ID=...
+STRAVA_CLIENT_SECRET=...
+```
+
+Scopes requested: `read,activity:read_all` (`activity:read` alone excludes
+private activities, and a personal trail log is usually private). Strava
+access tokens expire every 6 hours (`expires_in: 21600`);
+`/api/wearables/actuals` refreshes them automatically. Note: relative
+effort (suffer score) is not in the activity list response, so Strava
+actuals carry no `dayStrain`.
 
 ### Demo
 
