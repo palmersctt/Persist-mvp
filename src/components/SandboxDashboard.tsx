@@ -25,33 +25,16 @@ function formatFocusTime(focusTimeMinutes: number) {
 const EMPTY_SCHEDULE = { meetingCount: 0, backToBackCount: 0, bufferTime: 0, durationHours: 0, fragmentationScore: 0, morningMeetings: 0, afternoonMeetings: 0, meetingRatio: 0, uniqueContexts: 0, longestStretch: 0, adequateBreaks: 0, shortBreaks: 0, earlyLateMeetings: 0 }
 
 // --- Forecast vs Actual preview (synthetic body scenarios) ---
-type BodyScenario = 'charged' | 'steady' | 'drained' | 'strava'
+type BodyScenario = 'charged' | 'steady' | 'drained'
 
 const BODY_SCENARIOS: { key: BodyScenario; label: string }[] = [
   { key: 'charged', label: 'Charged' },
   { key: 'steady', label: 'Steady' },
   { key: 'drained', label: 'Drained' },
-  { key: 'strava', label: 'Strava log' },
 ]
 
 function sandboxActuals(scenario: BodyScenario): WearableActuals {
   const date = new Date().toLocaleDateString('sv-SE')
-  if (scenario === 'strava') {
-    const yesterday = new Date(Date.now() - 24 * 3600 * 1000)
-    yesterday.setHours(17, 30, 0, 0)
-    return {
-      date,
-      provider: 'strava',
-      weekActivityCount: 3,
-      lastActivity: {
-        type: 'Trail Run',
-        name: 'After-work loop',
-        startISO: yesterday.toISOString(),
-        durationMin: 52,
-        distanceKm: 8.4,
-      },
-    }
-  }
   const presets = {
     charged: { recovery: 88, sleepHours: 7.9, sleepPerformance: 96, hrvMs: 98, restingHr: 49 },
     steady: { recovery: 54, sleepHours: 6.7, sleepPerformance: 81, hrvMs: 67, restingHr: 55 },
@@ -605,7 +588,7 @@ export default function SandboxDashboard() {
                     return <WearablePanel unlock={unlock} actuals={previewActuals} insight={insight} />
                   })()}
                   <p style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', margin: '2px 0 0' }}>
-                    Demo body data &mdash; the real dashboard connects Strava or WHOOP.
+                    Demo body data &mdash; the real dashboard connects WHOOP.
                   </p>
                 </section>
 
