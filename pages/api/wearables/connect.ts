@@ -22,6 +22,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const provider = req.query.provider as string;
 
   if (provider === 'demo') {
+    // `json=1` lets the dashboard connect demo data in the background
+    // instead of a full-page redirect round-trip
+    const wantsJson = req.query.json === '1';
     const { error } = await supabaseAdmin.from('wearable_connections').upsert(
       {
         user_email: session.user.email,
@@ -35,9 +38,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
     if (error) {
       console.error('demo wearable connect failed:', error.message);
-      return res.redirect('/dashboard?wearable=error');
+      return wantsJson
+        ? res.status(500).json({ ok: false, error: 'Failed to save demo connection' })
+        : res.redirect('/dashboard?wearable=error');
     }
-    return res.redirect('/dashboard?wearable=connected');
+    return wantsJson
+      ? res.status(200).json({ ok: true })
+      : res.redirect('/dashboard?wearable=connected');
   }
 
   if (provider === 'whoop' || provider === 'strava') {

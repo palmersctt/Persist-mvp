@@ -174,8 +174,19 @@ export default function WearableSection({
   forecast: ForecastScores;
   dayShape: DayShape | null;
 }) {
-  const { connected, provider, actuals, stale, isLoading, connect, disconnect } = useWearable();
+  const {
+    connected,
+    provider,
+    actuals,
+    stale,
+    available,
+    isLoading,
+    connect,
+    connectDemo,
+    disconnect,
+  } = useWearable();
   const [notice, setNotice] = useState<string | null>(null);
+  const [demoConnecting, setDemoConnecting] = useState(false);
 
   // Tick every 30s so the countdown to "clear" stays honest
   const [now, setNow] = useState(() => new Date());
@@ -225,9 +236,9 @@ export default function WearableSection({
             Your calendar is the forecast. Your body is the actual.
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-            Connect Strava and the unlock closes the loop on the rides and runs you actually log
-            &mdash; no device needed, the phone app counts. Connect WHOOP and it also knows what
-            your body has left: recovery, sleep, HRV.
+            Connect a wearable and Persist merges recovery, sleep, and HRV with today&apos;s
+            schedule &mdash; so the moment your last meeting ends, you know whether you&apos;re
+            cleared to hit the trails or owe your body a rest day.
           </p>
           {notice && (
             <p className="text-xs mb-3" style={{ color: 'var(--signal-dim)' }}>
@@ -236,48 +247,55 @@ export default function WearableSection({
           )}
           <button
             onClick={() => {
-              trackEvent('wearable_connect_clicked', { provider: 'strava' });
-              connect('strava');
-            }}
-            className="w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors mb-2"
-            style={{
-              backgroundColor: 'var(--signal)',
-              color: 'var(--ground)',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            Connect Strava
-          </button>
-          <button
-            onClick={() => {
+              if (!available.whoop) return;
               trackEvent('wearable_connect_clicked', { provider: 'whoop' });
               connect('whoop');
             }}
+            disabled={!available.whoop}
             className="w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors mb-2"
+            style={
+              available.whoop
+                ? {
+                    backgroundColor: 'var(--signal)',
+                    color: 'var(--ground)',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }
+                : {
+                    backgroundColor: 'var(--surface-2)',
+                    color: 'var(--text-faint)',
+                    border: '1px solid var(--rule)',
+                    cursor: 'not-allowed',
+                  }
+            }
+          >
+            Connect WHOOP
+          </button>
+          {!available.whoop && (
+            <p className="text-[10px] mb-2 text-center" style={{ color: 'var(--text-faint)' }}>
+              WHOOP isn&apos;t configured in this environment yet &mdash; preview with demo data
+              below.
+            </p>
+          )}
+          <button
+            onClick={async () => {
+              trackEvent('wearable_connect_clicked', { provider: 'demo' });
+              setDemoConnecting(true);
+              const ok = await connectDemo();
+              setDemoConnecting(false);
+              if (!ok) setNotice('Demo data couldn’t connect right now — try again.');
+            }}
+            disabled={demoConnecting}
+            className="w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors"
             style={{
               backgroundColor: 'transparent',
               color: 'var(--text)',
               border: '1px solid var(--rule)',
-              cursor: 'pointer',
+              cursor: demoConnecting ? 'wait' : 'pointer',
+              opacity: demoConnecting ? 0.6 : 1,
             }}
           >
-            Connect WHOOP
-          </button>
-          <button
-            onClick={() => {
-              trackEvent('wearable_connect_clicked', { provider: 'demo' });
-              connect('demo');
-            }}
-            className="w-full py-2 px-4 rounded-lg text-xs font-medium transition-opacity hover:opacity-70"
-            style={{
-              backgroundColor: 'transparent',
-              color: 'var(--text-faint)',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            Preview with demo data
+            {demoConnecting ? 'Connecting demo data…' : 'Preview with demo data'}
           </button>
         </div>
       </section>

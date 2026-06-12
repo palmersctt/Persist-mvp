@@ -3,8 +3,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
 import { supabaseAdmin } from '../../../lib/supabase';
 import { generateDemoActuals } from '../../../src/lib/wearables/demo';
-import { fetchWhoopActuals, refreshWhoopToken } from '../../../src/lib/wearables/whoop';
-import { fetchStravaActuals, refreshStravaToken } from '../../../src/lib/wearables/strava';
+import {
+  fetchWhoopActuals,
+  refreshWhoopToken,
+  isWhoopConfigured,
+} from '../../../src/lib/wearables/whoop';
+import {
+  fetchStravaActuals,
+  refreshStravaToken,
+  isStravaConfigured,
+} from '../../../src/lib/wearables/strava';
 import type { WearableActuals, WearableProvider } from '../../../src/lib/wearables/types';
 
 interface ConnectionRow {
@@ -175,7 +183,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const connection = (connections?.[0] as ConnectionRow | undefined) ?? null;
   if (!connection) {
-    return res.status(200).json({ connected: false });
+    // Tell the UI which OAuth providers are actually configured so it can
+    // disable un-launchable connect buttons instead of redirect-bouncing
+    return res.status(200).json({
+      connected: false,
+      available: { whoop: isWhoopConfigured(), strava: isStravaConfigured() },
+    });
   }
 
   let actuals: WearableActuals | null = null;

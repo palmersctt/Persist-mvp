@@ -61,41 +61,43 @@ WearableActuals` plus OAuth helpers in `src/lib/wearables/<provider>.ts`,
 branch on it in `connect.ts` and `actuals.ts`, and extend the
 `WearableProvider` union. Nothing downstream of `WearableActuals` changes.
 
-### Provider decision (June 2026): Strava to test, WHOOP for recovery data
+### Provider decision (June 2026, revised): body-first — WHOOP is the story
 
-Surveyed the field before committing:
+The product story is ONE sentence: the calendar is the forecast, your
+body is the actual. "Actual" means body capacity (recovery, sleep, HRV),
+and the UI offers exactly one real provider: **WHOOP** (free self-serve
+developer API at developer.whoop.com; recovery vocabulary matches
+Persist's scores one-for-one). The demo provider previews the same
+body-shaped data with zero setup.
 
-- **Strava** — self-serve OAuth2 app (strava.com/settings/api); under the
-  2026 developer program, API access requires a Strava subscription
-  (~$12/mo) but no review for up to 10 athletes. **No hardware needed** —
-  activities recorded with the phone app count. Activity-only (no
-  recovery/sleep/HRV), so its actuals answer "did you actually get out",
-  closing the unlock loop. **Chosen as the first real-data test path.**
-- **WHOOP** — free self-serve developer API (OAuth2, register at
-  developer.whoop.com, ship same day). Recovery/strain vocabulary matches
-  Persist's scores one-for-one. Requires owning a WHOOP. **The recovery
-  provider once a device is in hand.**
-- **Oura** — also free self-serve OAuth2 (personal access tokens were
-  deprecated Dec 2025; OAuth is unaffected). Its "readiness" maps cleanly
-  onto the unlock logic. Strong second recovery provider if users skew ring.
-- **Garmin** — best demographic fit for trail athletes, but the Garmin
-  Connect Developer Program is suspended to new applicants (no timeline).
-  Revisit when it reopens.
-- **COROS** — API access is partner-application only, not self-serve. Not
-  viable for a quick test.
-- **Amazfit / Zepp** — the Zepp developer platform targets on-watch apps;
-  there is no practical open cloud API for third parties.
-- **Apple Health** — no cloud API; requires a native iOS companion app to
-  read HealthKit. A later, larger project.
+**Strava is integrated but dormant.** It was built as the cheapest
+plumbing test (self-serve OAuth, no hardware — but a Strava subscription
+is now required for API access). Being activity-only it tells a second
+story ("did you actually get out") that muddied the first, so its connect
+button is removed from the UI. The provider, routes, and unlock messaging
+remain in code behind the abstraction; re-enable by adding the button
+back and setting `STRAVA_*` env vars.
 
-The demo provider remains the zero-cost dogfooding path.
+The rest of the body-data field, for when a second provider matters:
 
-Providers therefore come in two flavors, and `WearableActuals` keeps both
-honest: recovery providers fill `recovery/sleepHours/hrvMs/restingHr`;
-activity providers fill `lastActivity/weekActivityCount` and leave the
-biometrics absent. `readiness` is null for activity providers — the unlock
-still fires, with "go log it / already logged" messaging instead of a
-body-capacity verdict.
+- **Oura** — free self-serve OAuth2; "readiness" maps 1:1 onto the unlock
+  logic. The natural second provider if users skew ring.
+- **COROS** — the API _does_ carry body data (nightly sleep stages, HRV,
+  recovery %, EvoLab training load), and COROS even ships an official MCP
+  server — but access is a partner application, not self-serve. Worth
+  applying if trail-runner users skew COROS; not a quick add.
+- **Garmin** — Body Battery would fit, but the Connect Developer Program
+  is suspended to new applicants (no timeline).
+- **Fitbit** — self-serve API with sleep/HRV/RHR (its readiness score
+  itself isn't exposed); we'd derive bands from raw signals.
+- **Amazfit / Zepp** — on-watch app platform only; no practical open
+  cloud API. **Apple Health** — no cloud API; needs a native iOS app.
+
+`WearableActuals` still supports both flavors honestly: recovery
+providers fill `recovery/sleepHours/hrvMs/restingHr`; activity providers
+fill `lastActivity/weekActivityCount` and leave biometrics absent
+(`readiness` is null and the unlock falls back to "go log it / already
+logged" messaging).
 
 ### WHOOP
 
