@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   bodyCapacity,
   workdayCost,
-  headroomBand,
+  readinessBand,
   spentFraction,
-  computeHeadroom,
+  computeReadiness,
   forecastVsActual,
   MAX_WORKDAY_TAX,
   type DayShape,
@@ -82,11 +82,11 @@ describe('workdayCost', () => {
   });
 });
 
-describe('headroomBand', () => {
+describe('readinessBand', () => {
   it('maps headroom to train hard / keep it easy / recovery day', () => {
-    expect(headroomBand(80)).toBe('prime');
-    expect(headroomBand(50)).toBe('maintain');
-    expect(headroomBand(30)).toBe('recover');
+    expect(readinessBand(80)).toBe('prime');
+    expect(readinessBand(50)).toBe('maintain');
+    expect(readinessBand(30)).toBe('recover');
   });
 });
 
@@ -109,35 +109,35 @@ describe('spentFraction', () => {
   });
 });
 
-describe('computeHeadroom – morning window', () => {
+describe('computeReadiness – morning window', () => {
   it('shows full capacity and points a charged athlete at the morning when the day is heavy', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       morning,
       dayShape,
       heavyDay,
       actuals({ recovery: 88, sleepHours: 7.9 })
     );
     expect(state.phase).toBe('morning');
-    expect(state.headroomNow).toBe(88);
-    expect(state.headroomEndOfDay).toBeLessThan(70);
+    expect(state.readinessNow).toBe(88);
+    expect(state.readinessEndOfDay).toBeLessThan(70);
     expect(state.band).toBe('prime');
     expect(state.headline).toContain('train hard');
     expect(state.detail).toContain('this morning');
   });
 
   it('says both windows work when the calendar is light', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       morning,
       dayShape,
       lightDay,
       actuals({ recovery: 88, sleepHours: 7.9 })
     );
-    expect(state.headroomEndOfDay).toBe(88);
+    expect(state.readinessEndOfDay).toBe(88);
     expect(state.detail).toContain('both windows work');
   });
 
   it('calls the recovery day before work even starts when the tank is empty', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       morning,
       dayShape,
       lightDay,
@@ -148,32 +148,32 @@ describe('computeHeadroom – morning window', () => {
   });
 });
 
-describe('computeHeadroom – mid-workday', () => {
+describe('computeReadiness – mid-workday', () => {
   it('projects the evening and plans on the projection', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       midday,
       dayShape,
       heavyDay,
       actuals({ recovery: 88, sleepHours: 7.9 })
     );
     expect(state.phase).toBe('workday');
-    expect(state.headroomNow!).toBeLessThan(88);
-    expect(state.headroomNow!).toBeGreaterThan(state.headroomEndOfDay!);
+    expect(state.readinessNow!).toBeLessThan(88);
+    expect(state.readinessNow!).toBeGreaterThan(state.readinessEndOfDay!);
     expect(state.meetingsRemaining).toBe(2);
     expect(state.detail).toContain('when the calendar clears');
   });
 
   it('headroom only drops as meetings actually elapse', () => {
-    const early = computeHeadroom(morning, dayShape, heavyDay, actuals({ recovery: 88 }));
-    const mid = computeHeadroom(midday, dayShape, heavyDay, actuals({ recovery: 88 }));
-    expect(early.headroomNow!).toBeGreaterThan(mid.headroomNow!);
-    expect(mid.headroomEndOfDay).toBe(early.headroomEndOfDay);
+    const early = computeReadiness(morning, dayShape, heavyDay, actuals({ recovery: 88 }));
+    const mid = computeReadiness(midday, dayShape, heavyDay, actuals({ recovery: 88 }));
+    expect(early.readinessNow!).toBeGreaterThan(mid.readinessNow!);
+    expect(mid.readinessEndOfDay).toBe(early.readinessEndOfDay);
   });
 });
 
-describe('computeHeadroom – workday clear', () => {
+describe('computeReadiness – workday clear', () => {
   it('verdicts train hard when the workday barely taxed a charged body', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       evening,
       dayShape,
       lightDay,
@@ -185,7 +185,7 @@ describe('computeHeadroom – workday clear', () => {
   });
 
   it('downgrades a charged body to easy after a brutal workday', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       evening,
       dayShape,
       heavyDay,
@@ -196,7 +196,7 @@ describe('computeHeadroom – workday clear', () => {
   });
 
   it('calls the recovery day when body and calendar are both spent', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       evening,
       dayShape,
       heavyDay,
@@ -207,38 +207,38 @@ describe('computeHeadroom – workday clear', () => {
   });
 
   it('treats an empty calendar as clear with untaxed capacity', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       evening,
       { firstEventStartISO: null, lastEventEndISO: null, events: [] },
       lightDay,
       actuals({ recovery: 70 })
     );
     expect(state.phase).toBe('clear');
-    expect(state.headroomEndOfDay).toBe(70);
+    expect(state.readinessEndOfDay).toBe(70);
   });
 
   it('never taxes more than MAX_WORKDAY_TAX even on the worst day', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       evening,
       dayShape,
       { focus: 0, strain: 100, balance: 0 },
       actuals({ recovery: 100, sleepHours: 8 })
     );
-    expect(state.headroomEndOfDay).toBe(100 - MAX_WORKDAY_TAX);
+    expect(state.readinessEndOfDay).toBe(100 - MAX_WORKDAY_TAX);
   });
 });
 
-describe('computeHeadroom – without recovery data', () => {
+describe('computeReadiness – without recovery data', () => {
   it('has null headroom without a wearable but still phases the day', () => {
-    const state = computeHeadroom(midday, dayShape, heavyDay, null);
-    expect(state.headroomNow).toBeNull();
+    const state = computeReadiness(midday, dayShape, heavyDay, null);
+    expect(state.readinessNow).toBeNull();
     expect(state.band).toBeNull();
     expect(state.phase).toBe('workday');
     expect(state.detail).toContain('Connect a wearable');
   });
 
   it('closes the loop when an activity is already logged today (Strava)', () => {
-    const state = computeHeadroom(
+    const state = computeReadiness(
       evening,
       dayShape,
       lightDay,
@@ -252,13 +252,13 @@ describe('computeHeadroom – without recovery data', () => {
       })
     );
     expect(state.phase).toBe('clear');
-    expect(state.headroomNow).toBeNull();
+    expect(state.readinessNow).toBeNull();
     expect(state.headline).toContain('already logged');
     expect(state.detail).toContain('TrailRun');
   });
 
   it('nudges toward training when nothing is logged today (Strava)', () => {
-    const state = computeHeadroom(evening, dayShape, lightDay, stravaActuals());
+    const state = computeReadiness(evening, dayShape, lightDay, stravaActuals());
     expect(state.headline).toContain('go train');
     expect(state.detail).toContain('TrailRun');
   });

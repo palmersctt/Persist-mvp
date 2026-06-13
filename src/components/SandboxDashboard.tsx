@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { toPng } from 'html-to-image';
 import { trackEvent, getSandboxSessionId, resetSandboxSessionId } from '../lib/trackEvent';
-import { detectMood } from '../lib/mood';
+import { detectMood, moodFromReadinessBand } from '../lib/mood';
 import { generateTrendsFromScore } from '../lib/generateTrends';
 import type { GeneratedTrends } from '../lib/generateTrends';
 import type { HeroMessage, WorkHealthMetrics } from '../hooks/useWorkHealth';
@@ -14,7 +14,7 @@ import WhyMood from './WhyMood';
 import PersistLogo from './PersistLogo';
 import SandboxMeetingBuilder, { type MeetingEntry } from './SandboxMeetingBuilder';
 import { WearablePanel } from './WearableSection';
-import { computeHeadroom, forecastVsActual, type DayShape } from '../lib/readiness';
+import { computeReadiness, forecastVsActual, VERDICTS, type DayShape } from '../lib/readiness';
 import type { WearableActuals } from '../lib/wearables/types';
 
 function formatFocusTime(focusTimeMinutes: number) {
@@ -189,7 +189,24 @@ export default function SandboxDashboard() {
   const focus = customMetrics?.adaptivePerformanceIndex ?? 0;
   const strain = customMetrics?.cognitiveResilience ?? 0;
   const balance = customMetrics?.workRhythmRecovery ?? 0;
-  const mood = customMetrics ? detectMood(focus, strain, balance) : 'autopilot';
+  // One algorithm, one mood: the selected body scenario fuses with the scored
+  // day, and the card's mood/verdict come from the same readiness band shown
+  // in the panel below
+  const previewActuals = sandboxActuals(bodyScenario);
+  const previewState = customMetrics
+    ? computeReadiness(
+        new Date(),
+        dayShapeFromMeetings(customMeetings ?? []),
+        { focus, strain, balance },
+        previewActuals
+      )
+    : null;
+  const mood = customMetrics
+    ? previewState?.band
+      ? moodFromReadinessBand(previewState.band, focus, strain, balance)
+      : detectMood(focus, strain, balance)
+    : 'autopilot';
+  const previewVerdict = previewState?.band ? VERDICTS[previewState.band] : undefined;
   const narrative = customMetrics?.ai?.whyNarrative ?? '';
   const s = customMetrics?.schedule ?? EMPTY_SCHEDULE;
   const ft = formatFocusTime(customMetrics?.focusTime ?? 0);
@@ -694,9 +711,9 @@ export default function SandboxDashboard() {
                         margin: '0 0 10px',
                       }}
                     >
-                      Your meetings above are the forecast; the body state is the actual. Headroom
-                      fuses them &mdash; your scores set what the workday costs, and the tax lands
-                      as your entered meeting times pass.
+                      Your meetings above are the forecast; the body state is the actual. Readiness
+                      fuses them &mdash; and the card above carries the same number and verdict, so
+                      it's one story.
                     </p>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                       {BODY_SCENARIOS.map(({ key, label }) => (
@@ -729,19 +746,13 @@ export default function SandboxDashboard() {
                         </button>
                       ))}
                     </div>
-                    {(() => {
-                      const previewActuals = sandboxActuals(bodyScenario);
-                      const state = computeHeadroom(
-                        new Date(),
-                        dayShapeFromMeetings(customMeetings),
-                        { focus, strain, balance },
-                        previewActuals
-                      );
-                      const insight = forecastVsActual({ focus, strain, balance }, previewActuals);
-                      return (
-                        <WearablePanel state={state} actuals={previewActuals} insight={insight} />
-                      );
-                    })()}
+                    {previewState && (
+                      <WearablePanel
+                        state={previewState}
+                        actuals={previewActuals}
+                        insight={forecastVsActual({ focus, strain, balance }, previewActuals)}
+                      />
+                    )}
                     <p
                       style={{
                         fontSize: 10,

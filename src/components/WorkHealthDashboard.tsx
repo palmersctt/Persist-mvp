@@ -1,18 +1,20 @@
-'use client'
+'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { useSession, signIn, signOut } from 'next-auth/react'
-import Link from 'next/link'
-import { useWorkHealth } from '../hooks/useWorkHealth'
-import CardContent from './CardContent'
-import SwipeableQuoteCards from './SwipeableQuoteCards'
-import PersistLogo from './PersistLogo'
-import { detectMood } from '../lib/mood'
-import { trackEvent } from '../lib/trackEvent'
-import { toPng } from 'html-to-image'
-import WhyMood from './WhyMood'
-import TrendsSection from './TrendsSection'
-import WearableSection from './WearableSection'
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import Link from 'next/link';
+import { useWorkHealth } from '../hooks/useWorkHealth';
+import CardContent from './CardContent';
+import SwipeableQuoteCards from './SwipeableQuoteCards';
+import PersistLogo from './PersistLogo';
+import { detectMood, moodFromReadinessBand } from '../lib/mood';
+import { computeReadiness, VERDICTS } from '../lib/readiness';
+import { useWearable } from '../hooks/useWearable';
+import { trackEvent } from '../lib/trackEvent';
+import { toPng } from 'html-to-image';
+import WhyMood from './WhyMood';
+import TrendsSection from './TrendsSection';
+import WearableSection from './WearableSection';
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -22,13 +24,60 @@ export default function WorkHealthDashboard() {
     }
     return false;
   });
-  const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'resilience' | 'sustainability'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'performance' | 'resilience' | 'sustainability'
+  >('overview');
   const [shareState, setShareState] = useState<'idle' | 'generating'>('idle');
   const [showProfile, setShowProfile] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const { workHealth, isLoading, isAILoading, error, lastRefresh, refresh, scoreHistory, trackEngagement, aiStatus, isNewUser, connectionStartTime } = useWorkHealth(activeTab);
+  const {
+    workHealth,
+    isLoading,
+    isAILoading,
+    error,
+    lastRefresh,
+    refresh,
+    scoreHistory,
+    trackEngagement,
+    aiStatus,
+    isNewUser,
+    connectionStartTime,
+  } = useWorkHealth(activeTab);
+  const wearable = useWearable();
+
+  // One algorithm, one mood: when the wearable is connected, the readiness
+  // band drives the card's mood and verdict — never a second, calendar-only
+  // opinion sitting above a different verdict below.
+  const readinessState = workHealth
+    ? computeReadiness(
+        new Date(),
+        workHealth.dayShape ?? null,
+        {
+          focus: workHealth.adaptivePerformanceIndex,
+          strain: workHealth.cognitiveResilience,
+          balance: workHealth.workRhythmRecovery,
+        },
+        wearable.actuals
+      )
+    : null;
+  const cardMood = workHealth
+    ? readinessState?.band
+      ? moodFromReadinessBand(
+          readinessState.band,
+          workHealth.adaptivePerformanceIndex,
+          workHealth.cognitiveResilience,
+          workHealth.workRhythmRecovery
+        )
+      : detectMood(
+          workHealth.adaptivePerformanceIndex,
+          workHealth.cognitiveResilience,
+          workHealth.workRhythmRecovery
+        )
+    : null;
+  const cardReadiness = readinessState?.readinessNow ?? null;
+  const cardVerdict = readinessState?.band ? VERDICTS[readinessState.band] : undefined;
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 
@@ -67,11 +116,26 @@ export default function WorkHealthDashboard() {
   useEffect(() => {
     if (!isLoading) return;
     const verbs = [
-      'Judging', 'Snooping', 'Squinting', 'Overthinking',
-      'Spiraling', 'Procrastinating', 'Panicking', 'Manifesting',
-      'Bargaining', 'Regretting', 'Stress-eating', 'Dissociating',
-      'Catastrophizing', 'Vibing', 'Coping', 'Gasping',
-      'Whispering', 'Stalling', 'Pacing', 'Doom-scrolling',
+      'Judging',
+      'Snooping',
+      'Squinting',
+      'Overthinking',
+      'Spiraling',
+      'Procrastinating',
+      'Panicking',
+      'Manifesting',
+      'Bargaining',
+      'Regretting',
+      'Stress-eating',
+      'Dissociating',
+      'Catastrophizing',
+      'Vibing',
+      'Coping',
+      'Gasping',
+      'Whispering',
+      'Stalling',
+      'Pacing',
+      'Doom-scrolling',
     ];
     shuffledRef.current = [...verbs].sort(() => Math.random() - 0.5);
     verbIndexRef.current = 0;
@@ -81,7 +145,7 @@ export default function WorkHealthDashboard() {
 
     // Animate dots: cycle 1 → 2 → 3 every 400ms
     const dotId = setInterval(() => {
-      setDotCount(d => (d % 3) + 1);
+      setDotCount((d) => (d % 3) + 1);
     }, 400);
 
     // Swap verb every 2.8s with fade
@@ -95,7 +159,10 @@ export default function WorkHealthDashboard() {
       }, 300);
     }, 2800);
 
-    return () => { clearInterval(dotId); clearInterval(verbId); };
+    return () => {
+      clearInterval(dotId);
+      clearInterval(verbId);
+    };
   }, [isLoading]);
 
   const completeOnboarding = () => {
@@ -106,30 +173,37 @@ export default function WorkHealthDashboard() {
   };
 
   // Helper function to safely format focus time and prevent timezone bugs
-  const formatFocusTime = (focusTimeMinutes: number): { hours: number, minutes: number, isRealistic: boolean } => {
+  const formatFocusTime = (
+    focusTimeMinutes: number
+  ): { hours: number; minutes: number; isRealistic: boolean } => {
     const maxReasonableFocusTime = 480; // 8 hours max
-    const minReasonableFocusTime = 0;   // 0 hours min
+    const minReasonableFocusTime = 0; // 0 hours min
 
-    const safeFocusTime = Math.max(minReasonableFocusTime, Math.min(maxReasonableFocusTime, focusTimeMinutes));
+    const safeFocusTime = Math.max(
+      minReasonableFocusTime,
+      Math.min(maxReasonableFocusTime, focusTimeMinutes)
+    );
     const isRealistic = safeFocusTime === focusTimeMinutes;
 
     if (!isRealistic) {
       console.warn('🚨 FRONTEND - Unrealistic focus time detected and capped:', {
         originalFocusTime: focusTimeMinutes,
         cappedFocusTime: safeFocusTime,
-        location: 'WorkHealthDashboard.tsx'
+        location: 'WorkHealthDashboard.tsx',
       });
     }
 
     return {
       hours: Math.floor(safeFocusTime / 60),
       minutes: Math.round(safeFocusTime % 60),
-      isRealistic
+      isRealistic,
     };
   };
 
   // Get per-metric insight directly from AI response
-  const getMetricInsight = (metric: 'overview' | 'performance' | 'resilience' | 'sustainability') => {
+  const getMetricInsight = (
+    metric: 'overview' | 'performance' | 'resilience' | 'sustainability'
+  ) => {
     if (!workHealth?.ai) return null;
 
     // Read directly from per-metric fields
@@ -139,7 +213,12 @@ export default function WorkHealthDashboard() {
     // Fallback to legacy insights array
     if (workHealth.ai.insights && workHealth.ai.insights.length > 0) {
       const first = workHealth.ai.insights[0];
-      return { title: first.title, message: first.message, action: first.recommendation || '', severity: first.severity || 'info' as const };
+      return {
+        title: first.title,
+        message: first.message,
+        action: first.recommendation || '',
+        severity: first.severity || ('info' as const),
+      };
     }
 
     return null;
@@ -208,11 +287,19 @@ export default function WorkHealthDashboard() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0B0B0C' }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#0B0B0C' }}
+      >
         <div className="text-center flex flex-col items-center">
           <div className="flex items-center gap-2 mb-3">
             <PersistLogo size={28} variant="dark" />
-            <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
+            <span
+              className="text-2xl font-semibold text-[#F5F5F5]"
+              style={{ letterSpacing: '1.5px' }}
+            >
+              PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
+            </span>
           </div>
           <div className="text-[#5F6168] text-sm">Loading...</div>
         </div>
@@ -223,48 +310,81 @@ export default function WorkHealthDashboard() {
   if (!session) {
     if (showOnboarding) {
       return (
-        <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}>
+        <div
+          className="min-h-screen flex items-center justify-center px-4"
+          style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}
+        >
           <div className="max-w-md w-full">
             <div className="text-center mb-8 flex flex-col items-center">
               <div className="flex items-center gap-2 mb-2">
                 <PersistLogo size={28} variant="dark" />
-                <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
+                <span
+                  className="text-2xl font-semibold text-[#F5F5F5]"
+                  style={{ letterSpacing: '1.5px' }}
+                >
+                  PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
+                </span>
               </div>
               <p className="text-[#5F6168] text-sm">Your calendar has a lot to say about you</p>
             </div>
 
             <div className="bg-[#15161A] backdrop-blur rounded-2xl p-8 border border-[#23252B] glass-effect">
-              <h2 className="text-xl font-semibold mb-3 text-center text-[#F5F5F5]">Here&apos;s what you get</h2>
-              <p className="text-[#9B9DA3] text-sm mb-6 text-center">Three scores from your calendar and a movie quote your day deserves</p>
+              <h2 className="text-xl font-semibold mb-3 text-center text-[#F5F5F5]">
+                Here&apos;s what you get
+              </h2>
+              <p className="text-[#9B9DA3] text-sm mb-6 text-center">
+                Three scores from your calendar and a movie quote your day deserves
+              </p>
 
               <div className="space-y-5 mb-8">
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>F</span>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}
+                  >
+                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>
+                      F
+                    </span>
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1 text-[#F5F5F5]">Focus</h3>
-                    <p className="text-[#9B9DA3] text-sm">How close you are to hiding in a conference room with your laptop</p>
+                    <p className="text-[#9B9DA3] text-sm">
+                      How close you are to hiding in a conference room with your laptop
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>S</span>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}
+                  >
+                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>
+                      S
+                    </span>
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1 text-[#F5F5F5]">Strain</h3>
-                    <p className="text-[#9B9DA3] text-sm">How close you are to faking a dentist appointment</p>
+                    <p className="text-[#9B9DA3] text-sm">
+                      How close you are to faking a dentist appointment
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}>
-                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>B</span>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}
+                  >
+                    <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>
+                      B
+                    </span>
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1 text-[#F5F5F5]">Balance</h3>
-                    <p className="text-[#9B9DA3] text-sm">How long until your body sends you an out-of-office</p>
+                    <p className="text-[#9B9DA3] text-sm">
+                      How long until your body sends you an out-of-office
+                    </p>
                   </div>
                 </div>
               </div>
@@ -283,19 +403,29 @@ export default function WorkHealthDashboard() {
     }
 
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}>
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: '#0B0B0C', color: '#F5F5F5' }}
+      >
         <div className="max-w-md w-full text-center">
           <div className="mb-8 flex flex-col items-center">
             <div className="flex items-center gap-2 mb-2">
               <PersistLogo size={28} variant="dark" />
-              <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
+              <span
+                className="text-2xl font-semibold text-[#F5F5F5]"
+                style={{ letterSpacing: '1.5px' }}
+              >
+                PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
+              </span>
             </div>
             <p className="text-[#5F6168] text-sm">Your calendar has a lot to say about you</p>
           </div>
 
           <div className="bg-[#15161A] backdrop-blur rounded-2xl p-8 border border-[#23252B] glass-effect">
             <h2 className="text-lg font-semibold mb-3 text-[#F5F5F5]">Connect your calendar</h2>
-            <p className="text-[#9B9DA3] text-sm mb-6">We read your schedule and find the movie quote your day deserves. Takes 10 seconds.</p>
+            <p className="text-[#9B9DA3] text-sm mb-6">
+              We read your schedule and find the movie quote your day deserves. Takes 10 seconds.
+            </p>
 
             <button
               onClick={() => signIn('google')}
@@ -320,20 +450,28 @@ export default function WorkHealthDashboard() {
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <PersistLogo size={24} variant="dark" />
-              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
+              <span
+                className="text-lg font-semibold"
+                style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}
+              >
+                PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
+              </span>
             </Link>
           </div>
         </header>
 
         <div className="max-w-md mx-auto px-6 py-24 text-center">
           <div className="mb-8">
-            <div className="w-12 h-12 mx-auto mb-6 rounded-full animate-spin"
-                 style={{ border: '3px solid rgba(199,249,92,0.15)', borderTopColor: '#C7F95C' }} />
+            <div
+              className="w-12 h-12 mx-auto mb-6 rounded-full animate-spin"
+              style={{ border: '3px solid rgba(199,249,92,0.15)', borderTopColor: '#C7F95C' }}
+            />
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
               Reading your day
             </h2>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              We&apos;re scanning your calendar to understand your focus, strain, and balance today. First load takes a few seconds.
+              We&apos;re scanning your calendar to understand your focus, strain, and balance today.
+              First load takes a few seconds.
             </p>
           </div>
         </div>
@@ -349,7 +487,12 @@ export default function WorkHealthDashboard() {
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <PersistLogo size={24} variant="dark" />
-              <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
+              <span
+                className="text-lg font-semibold"
+                style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}
+              >
+                PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
+              </span>
             </Link>
             <button
               onClick={() => signOut()}
@@ -368,18 +511,20 @@ export default function WorkHealthDashboard() {
                 color: 'var(--text-secondary)',
                 border: '1px solid #23252B',
                 backgroundColor: 'transparent',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               Sign Out
             </button>
           </div>
         </header>
-        
+
         <div className="max-w-md mx-auto px-6 py-24 text-center">
           <div className="mb-8">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
-                 style={{ backgroundColor: 'rgba(199,249,92,0.1)', border: '2px solid #C7F95C' }}>
+            <div
+              className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(199,249,92,0.1)', border: '2px solid #C7F95C' }}
+            >
               <span className="text-3xl">⚠️</span>
             </div>
             <h2 className="text-2xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -414,7 +559,12 @@ export default function WorkHealthDashboard() {
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <PersistLogo size={24} variant="dark" />
-            <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
+            <span
+              className="text-lg font-semibold"
+              style={{ color: 'var(--text-primary)', letterSpacing: '1.5px' }}
+            >
+              PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
+            </span>
           </div>
           <div className="flex items-center space-x-4">
             <button
@@ -429,13 +579,15 @@ export default function WorkHealthDashboard() {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = isLoading ? 'rgba(245,245,245,0.04)' : '#23252B';
+                e.currentTarget.style.borderColor = isLoading
+                  ? 'rgba(245,245,245,0.04)'
+                  : '#23252B';
               }}
               style={{
                 color: isLoading ? 'var(--text-muted)' : 'var(--text-secondary)',
                 border: `1px solid ${isLoading ? 'rgba(245,245,245,0.04)' : '#23252B'}`,
                 backgroundColor: 'transparent',
-                cursor: isLoading ? 'not-allowed' : 'pointer'
+                cursor: isLoading ? 'not-allowed' : 'pointer',
               }}
             >
               {isLoading ? 'Updating...' : 'Refresh'}
@@ -447,9 +599,20 @@ export default function WorkHealthDashboard() {
                 style={{ borderColor: showProfile ? '#23252B' : 'rgba(245,245,245,0.1)' }}
               >
                 {session?.user?.image ? (
-                  <img src={session.user.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(245,245,245,0.06)', color: 'var(--text-secondary)' }}>
+                  <div
+                    className="w-full h-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      backgroundColor: 'rgba(245,245,245,0.06)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
                     {session?.user?.name?.[0]?.toUpperCase() || '?'}
                   </div>
                 )}
@@ -462,28 +625,51 @@ export default function WorkHealthDashboard() {
                   <div className="p-4 border-b" style={{ borderColor: '#23252B' }}>
                     <div className="flex items-center gap-3">
                       {session?.user?.image && (
-                        <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                        <img
+                          src={session.user.image}
+                          alt=""
+                          className="w-10 h-10 rounded-full"
+                          referrerPolicy="no-referrer"
+                        />
                       )}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{session?.user?.name}</p>
-                        <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{session?.user?.email}</p>
+                        <p
+                          className="text-sm font-medium truncate"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          {session?.user?.name}
+                        </p>
+                        <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                          {session?.user?.email}
+                        </p>
                       </div>
                     </div>
                   </div>
                   <div className="p-4 border-b" style={{ borderColor: '#23252B' }}>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>Permissions</p>
+                    <p
+                      className="text-[10px] uppercase tracking-wider font-semibold mb-2"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      Permissions
+                    </p>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[#C7F95C] text-xs">&#10003;</span>
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Email address</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          Email address
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[#C7F95C] text-xs">&#10003;</span>
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Profile info (name, photo)</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          Profile info (name, photo)
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[#C7F95C] text-xs">&#10003;</span>
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Google Calendar (read-only)</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          Google Calendar (read-only)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -491,9 +677,16 @@ export default function WorkHealthDashboard() {
                     <button
                       onClick={() => signOut()}
                       className="w-full text-xs font-medium py-2 rounded-lg transition-colors"
-                      style={{ color: 'var(--text-secondary)', backgroundColor: 'rgba(245,245,245,0.04)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.08)' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.04)' }}
+                      style={{
+                        color: 'var(--text-secondary)',
+                        backgroundColor: 'rgba(245,245,245,0.04)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.08)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(245,245,245,0.04)';
+                      }}
                     >
                       Sign Out
                     </button>
@@ -510,7 +703,6 @@ export default function WorkHealthDashboard() {
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 pb-12 space-y-16">
-        
         {/* Overview Tab - All current content */}
         {activeTab === 'overview' && (
           <>
@@ -518,9 +710,16 @@ export default function WorkHealthDashboard() {
             {(() => {
               const heroMsg = workHealth?.ai?.heroMessage;
               const heroMsgs = workHealth?.ai?.heroMessages;
-              const hasValidHero = heroMsg && typeof heroMsg === 'object' && heroMsg !== null && 'quote' in heroMsg && heroMsg.quote;
-              const hasValidHeroMessages = heroMsgs && Array.isArray(heroMsgs) && heroMsgs.length > 0 && heroMsgs[0]?.quote;
-              const stillLoading = isLoading || (isAILoading && !hasValidHero && !hasValidHeroMessages);
+              const hasValidHero =
+                heroMsg &&
+                typeof heroMsg === 'object' &&
+                heroMsg !== null &&
+                'quote' in heroMsg &&
+                heroMsg.quote;
+              const hasValidHeroMessages =
+                heroMsgs && Array.isArray(heroMsgs) && heroMsgs.length > 0 && heroMsgs[0]?.quote;
+              const stillLoading =
+                isLoading || (isAILoading && !hasValidHero && !hasValidHeroMessages);
 
               // STATE 1: Loading — show skeleton placeholder
               if (stillLoading) {
@@ -550,24 +749,57 @@ export default function WorkHealthDashboard() {
                         padding: '32px 24px 20px',
                       }}
                     >
-                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-2" style={{ backgroundColor: 'rgba(245,245,245,0.08)', maxWidth: '85%' }} />
-                      <div className="skeleton-bar h-6 rounded-lg mx-auto mb-4" style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '60%' }} />
-                      <div className="skeleton-bar h-3 rounded mx-auto mb-4" style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '40%' }} />
-                      <div className="skeleton-bar h-3 rounded mx-auto mb-6" style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '55%' }} />
-                      <div className="rounded-2xl px-5 py-4" style={{ backgroundColor: 'rgba(245,245,245,0.05)' }}>
-                        <div className="skeleton-bar h-2 rounded mx-auto mb-3" style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '30%' }} />
+                      <div
+                        className="skeleton-bar h-6 rounded-lg mx-auto mb-2"
+                        style={{ backgroundColor: 'rgba(245,245,245,0.08)', maxWidth: '85%' }}
+                      />
+                      <div
+                        className="skeleton-bar h-6 rounded-lg mx-auto mb-4"
+                        style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '60%' }}
+                      />
+                      <div
+                        className="skeleton-bar h-3 rounded mx-auto mb-4"
+                        style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '40%' }}
+                      />
+                      <div
+                        className="skeleton-bar h-3 rounded mx-auto mb-6"
+                        style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '55%' }}
+                      />
+                      <div
+                        className="rounded-2xl px-5 py-4"
+                        style={{ backgroundColor: 'rgba(245,245,245,0.05)' }}
+                      >
+                        <div
+                          className="skeleton-bar h-2 rounded mx-auto mb-3"
+                          style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '30%' }}
+                        />
                         <div className="flex justify-center gap-8">
                           {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
                             <div key={label} className="text-center">
-                              <div className="text-xl font-bold" style={{ color: 'rgba(245,245,245,0.12)', lineHeight: 1 }}>--</div>
-                              <div className="text-[9px] uppercase tracking-wider mt-1.5 font-medium" style={{ color: 'rgba(245,245,245,0.12)' }}>{label}</div>
+                              <div
+                                className="text-xl font-bold"
+                                style={{ color: 'rgba(245,245,245,0.12)', lineHeight: 1 }}
+                              >
+                                --
+                              </div>
+                              <div
+                                className="text-[9px] uppercase tracking-wider mt-1.5 font-medium"
+                                style={{ color: 'rgba(245,245,245,0.12)' }}
+                              >
+                                {label}
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
                       <div className="flex items-center justify-center gap-1.5 mt-3">
                         <PersistLogo size={12} variant="dark" />
-                        <span className="text-[9px] tracking-widest" style={{ color: 'rgba(245,245,245,0.15)' }}>PERSIST<span style={{ color: 'rgba(199,249,92,0.3)' }}>WORK</span>.com</span>
+                        <span
+                          className="text-[9px] tracking-widest"
+                          style={{ color: 'rgba(245,245,245,0.15)' }}
+                        >
+                          PERSIST<span style={{ color: 'rgba(199,249,92,0.3)' }}>WORK</span>.com
+                        </span>
                       </div>
                     </div>
                     <p
@@ -578,7 +810,8 @@ export default function WorkHealthDashboard() {
                         transition: 'opacity 0.3s ease-in-out',
                       }}
                     >
-                      {loadingVerb}{'.'.repeat(dotCount)}
+                      {loadingVerb}
+                      {'.'.repeat(dotCount)}
                     </p>
                   </section>
                 );
@@ -598,10 +831,14 @@ export default function WorkHealthDashboard() {
                         focus={workHealth.adaptivePerformanceIndex}
                         strain={workHealth.cognitiveResilience}
                         balance={workHealth.workRhythmRecovery}
-                        mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                        mood={cardMood!}
+                        readiness={cardReadiness}
+                        verdict={cardVerdict}
                         aiGenerated={aiStatus === 'success'}
                         aiError={workHealth._aiError}
-                        activeCardRef={(el) => { (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
+                        activeCardRef={(el) => {
+                          (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+                        }}
                         onEngagement={trackEngagement}
                       />
                     ) : (
@@ -613,7 +850,9 @@ export default function WorkHealthDashboard() {
                           focus={workHealth.adaptivePerformanceIndex}
                           strain={workHealth.cognitiveResilience}
                           balance={workHealth.workRhythmRecovery}
-                          mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                          mood={cardMood!}
+                          readiness={cardReadiness}
+                          verdict={cardVerdict}
                         />
                       </div>
                     )}
@@ -627,22 +866,22 @@ export default function WorkHealthDashboard() {
                             : 'bg-[rgba(245,245,245,0.03)] border border-[#23252B] text-[var(--text-secondary)] hover:bg-[rgba(245,245,245,0.06)] hover:border-[rgba(245,245,245,0.2)] cursor-pointer'
                         }`}
                       >
-                        {shareState === 'generating' ? 'Generating image\u2026' : 'Share your day \u2192'}
+                        {shareState === 'generating'
+                          ? 'Generating image\u2026'
+                          : 'Share your day \u2192'}
                       </button>
                     </div>
                     <WhyMood
-                      mood={detectMood(
-                        workHealth.adaptivePerformanceIndex,
-                        workHealth.cognitiveResilience,
-                        workHealth.workRhythmRecovery
-                      )}
+                      mood={cardMood!}
                       narrative={workHealth.ai?.whyNarrative ?? ''}
                       focus={workHealth.adaptivePerformanceIndex}
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
                       onMetricClick={(metric) => {
-                        setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
-                        trackEvent('metric_click', { metric, source: 'why_mood' })
+                        setActiveTab(
+                          metric as 'overview' | 'performance' | 'resilience' | 'sustainability'
+                        );
+                        trackEvent('metric_click', { metric, source: 'why_mood' });
                       }}
                     />
                   </section>
@@ -651,9 +890,10 @@ export default function WorkHealthDashboard() {
 
               // STATE 3: Data loaded but no valid hero — show fallback card
               if (workHealth) {
-                const fallbackQuote = typeof heroMsg === 'string' && heroMsg.length > 0
-                  ? heroMsg
-                  : 'Your calendar has been analyzed. Pull down to refresh for your personalized quote.';
+                const fallbackQuote =
+                  typeof heroMsg === 'string' && heroMsg.length > 0
+                    ? heroMsg
+                    : 'Your calendar has been analyzed. Pull down to refresh for your personalized quote.';
 
                 return (
                   <section className="max-w-xs mx-auto">
@@ -661,26 +901,29 @@ export default function WorkHealthDashboard() {
                       <CardContent
                         quote={fallbackQuote}
                         source={typeof heroMsg === 'string' ? '' : 'Persistwork'}
-                        subtitle={workHealth.ai?.overview?.message || `${workHealth.schedule?.meetingCount || 0} meetings today`}
+                        subtitle={
+                          workHealth.ai?.overview?.message ||
+                          `${workHealth.schedule?.meetingCount || 0} meetings today`
+                        }
                         focus={workHealth.adaptivePerformanceIndex}
                         strain={workHealth.cognitiveResilience}
                         balance={workHealth.workRhythmRecovery}
-                        mood={detectMood(workHealth.adaptivePerformanceIndex, workHealth.cognitiveResilience, workHealth.workRhythmRecovery)}
+                        mood={cardMood!}
+                        readiness={cardReadiness}
+                        verdict={cardVerdict}
                       />
                     </div>
                     <WhyMood
-                      mood={detectMood(
-                        workHealth.adaptivePerformanceIndex,
-                        workHealth.cognitiveResilience,
-                        workHealth.workRhythmRecovery
-                      )}
+                      mood={cardMood!}
                       narrative={workHealth.ai?.whyNarrative ?? ''}
                       focus={workHealth.adaptivePerformanceIndex}
                       strain={workHealth.cognitiveResilience}
                       balance={workHealth.workRhythmRecovery}
                       onMetricClick={(metric) => {
-                        setActiveTab(metric as 'overview' | 'performance' | 'resilience' | 'sustainability')
-                        trackEvent('metric_click', { metric, source: 'why_mood' })
+                        setActiveTab(
+                          metric as 'overview' | 'performance' | 'resilience' | 'sustainability'
+                        );
+                        trackEvent('metric_click', { metric, source: 'why_mood' });
                       }}
                     />
                   </section>
@@ -699,6 +942,7 @@ export default function WorkHealthDashboard() {
                   balance: workHealth.workRhythmRecovery,
                 }}
                 dayShape={workHealth.dayShape ?? null}
+                wearable={wearable}
               />
             )}
 
@@ -708,7 +952,8 @@ export default function WorkHealthDashboard() {
             {lastRefresh && (
               <div className="text-center pt-8">
                 <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                  Last updated {lastRefresh.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                  Last updated{' '}
+                  {lastRefresh.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                 </p>
               </div>
             )}
@@ -718,60 +963,79 @@ export default function WorkHealthDashboard() {
         {/* Focus Tab */}
         {activeTab === 'performance' && (
           <div className="space-y-16">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
-              <span>&larr;</span><span>Back to Overview</span>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <span>&larr;</span>
+              <span>Back to Overview</span>
             </button>
             {/* Large Focus Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
                 <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
                   <circle
-                    cx="60" cy="60" r="54"
+                    cx="60"
+                    cy="60"
+                    r="54"
                     fill="none"
                     stroke="rgba(199,249,92,0.2)"
                     strokeWidth="8"
                   />
                   <circle
-                    cx="60" cy="60" r="54"
+                    cx="60"
+                    cy="60"
+                    r="54"
                     fill="none"
                     stroke="#C7F95C"
                     strokeWidth="8"
                     strokeDasharray="339.29"
-                    strokeDashoffset={(339.29 - (workHealth?.adaptivePerformanceIndex || 0) / 100 * 339.29)}
+                    strokeDashoffset={
+                      339.29 - ((workHealth?.adaptivePerformanceIndex || 0) / 100) * 339.29
+                    }
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
-                    <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{
-                      color: '#C7F95C',
-                      fontFeatureSettings: '"tnum"',
-                      letterSpacing: '-0.04em'
-                    }}>
+                    <div
+                      className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`}
+                      style={{
+                        color: '#C7F95C',
+                        fontFeatureSettings: '"tnum"',
+                        letterSpacing: '-0.04em',
+                      }}
+                    >
                       {isLoading ? '—' : `${workHealth?.adaptivePerformanceIndex || 0}`}
                     </div>
                     <div className="text-center">
-                      <div className="whoop-metric-label" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                      <div
+                        className="whoop-metric-label"
+                        style={{ fontSize: '0.75rem', lineHeight: '1' }}
+                      >
                         FOCUS
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              
+
               {/* Performance Breakdown - Always visible */}
               <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
                 style={{
                   backgroundColor: '#15161A',
-                  border: '1px solid #23252B'
+                  border: '1px solid #23252B',
                 }}
               >
                 {/* Focus Insights */}
                 <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  <h4
+                    className="text-xs font-semibold mb-3"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Focus Insights
                   </h4>
                   {isAILoading && activeTab === 'performance' ? (
@@ -783,22 +1047,35 @@ export default function WorkHealthDashboard() {
                         </span>
                       </div>
                     </div>
-                  ) : (() => {
-                    const insight = getMetricInsight('performance');
-                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
-                    return (
-                      <div className="text-center">
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {insight.message}
-                        </p>
-                        {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>
-                            {insight.action}
+                  ) : (
+                    (() => {
+                      const insight = getMetricInsight('performance');
+                      if (!insight)
+                        return (
+                          <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                            No insights available
                           </p>
-                        )}
-                      </div>
-                    );
-                  })()}
+                        );
+                      return (
+                        <div className="text-center">
+                          <p
+                            className="text-xs leading-relaxed"
+                            style={{ color: 'var(--text-secondary)' }}
+                          >
+                            {insight.message}
+                          </p>
+                          {insight.action && (
+                            <p
+                              className="text-xs mt-2 leading-relaxed"
+                              style={{ color: '#C7F95C', opacity: 0.85 }}
+                            >
+                              {insight.action}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
 
                 {/* Focus Components — unique to this metric's calculation */}
@@ -806,23 +1083,36 @@ export default function WorkHealthDashboard() {
                   {/* Meeting Density (25% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Meeting Density
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.meetingCount || 0) <= 2 ? 'Light' :
-                         (workHealth?.schedule?.meetingCount || 0) <= 4 ? 'Moderate' : 'Heavy'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.meetingCount || 0) <= 2
+                          ? 'Light'
+                          : (workHealth?.schedule?.meetingCount || 0) <= 4
+                            ? 'Moderate'
+                            : 'Heavy'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(25, 100 - ((workHealth?.schedule?.meetingCount || 0) * 15))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(25, 100 - (workHealth?.schedule?.meetingCount || 0) * 15)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.meetingCount || 0} meetings competing for your attention
+                        {workHealth?.schedule?.meetingCount || 0} meetings competing for your
+                        attention
                       </span>
                     </div>
                   </div>
@@ -830,23 +1120,37 @@ export default function WorkHealthDashboard() {
                   {/* Focus Fragmentation (30% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Deep Work Blocks
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Plenty' :
-                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Some' : 'Scarce'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4
+                          ? 'Plenty'
+                          : formatFocusTime(workHealth?.focusTime || 0).hours >= 2
+                            ? 'Some'
+                            : 'Scarce'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m available for uninterrupted work
+                        {formatFocusTime(workHealth?.focusTime || 0).hours}h{' '}
+                        {formatFocusTime(workHealth?.focusTime || 0).minutes}m available for
+                        uninterrupted work
                       </span>
                     </div>
                   </div>
@@ -854,24 +1158,46 @@ export default function WorkHealthDashboard() {
                   {/* Timing Alignment (10% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Meeting Timing
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) * 1.5 ? 'Afternoon-heavy' :
-                         (workHealth?.schedule?.morningMeetings || 0) > 0 && (workHealth?.schedule?.afternoonMeetings || 0) > 0 ? 'Spread out' : 'Well-timed'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.afternoonMeetings || 0) >
+                        (workHealth?.schedule?.morningMeetings || 0) * 1.5
+                          ? 'Afternoon-heavy'
+                          : (workHealth?.schedule?.morningMeetings || 0) > 0 &&
+                              (workHealth?.schedule?.afternoonMeetings || 0) > 0
+                            ? 'Spread out'
+                            : 'Well-timed'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${(workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) * 1.5 ? 40 :
-                                  (workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) ? 70 : 100}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${
+                            (workHealth?.schedule?.afternoonMeetings || 0) >
+                            (workHealth?.schedule?.morningMeetings || 0) * 1.5
+                              ? 40
+                              : (workHealth?.schedule?.afternoonMeetings || 0) >
+                                  (workHealth?.schedule?.morningMeetings || 0)
+                                ? 70
+                                : 100
+                          }%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.morningMeetings || 0} morning, {workHealth?.schedule?.afternoonMeetings || 0} afternoon
+                        {workHealth?.schedule?.morningMeetings || 0} morning,{' '}
+                        {workHealth?.schedule?.afternoonMeetings || 0} afternoon
                       </span>
                     </div>
                   </div>
@@ -879,30 +1205,47 @@ export default function WorkHealthDashboard() {
                   {/* Meeting-to-Work Ratio (15% weight) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Calendar Commitment
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.meetingRatio || 0) <= 0.3 ? 'Light' :
-                         (workHealth?.schedule?.meetingRatio || 0) <= 0.5 ? 'Moderate' : 'Heavy'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.meetingRatio || 0) <= 0.3
+                          ? 'Light'
+                          : (workHealth?.schedule?.meetingRatio || 0) <= 0.5
+                            ? 'Moderate'
+                            : 'Heavy'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(15, 100 - ((workHealth?.schedule?.meetingRatio || 0) * 100))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(15, 100 - (workHealth?.schedule?.meetingRatio || 0) * 100)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.durationHours || 0}h of your day is in meetings ({Math.round((workHealth?.schedule?.meetingRatio || 0) * 100)}%)
+                        {workHealth?.schedule?.durationHours || 0}h of your day is in meetings (
+                        {Math.round((workHealth?.schedule?.meetingRatio || 0) * 100)}%)
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  How much capacity you have today for deep, uninterrupted work — based on meeting load, available focus blocks, and schedule flow.
+                <p
+                  className="text-xs mt-4 pt-4 border-t border-[#23252B]"
+                  style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}
+                >
+                  How much capacity you have today for deep, uninterrupted work — based on meeting
+                  load, available focus blocks, and schedule flow.
                 </p>
               </div>
             </section>
@@ -912,60 +1255,79 @@ export default function WorkHealthDashboard() {
         {/* Strain Tab */}
         {activeTab === 'resilience' && (
           <div className="space-y-16">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
-              <span>&larr;</span><span>Back to Overview</span>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <span>&larr;</span>
+              <span>Back to Overview</span>
             </button>
             {/* Large Strain Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
                 <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
                   <circle
-                    cx="60" cy="60" r="54"
+                    cx="60"
+                    cy="60"
+                    r="54"
                     fill="none"
                     stroke="rgba(199,249,92,0.2)"
                     strokeWidth="8"
                   />
                   <circle
-                    cx="60" cy="60" r="54"
+                    cx="60"
+                    cy="60"
+                    r="54"
                     fill="none"
                     stroke="#C7F95C"
                     strokeWidth="8"
                     strokeDasharray="339.29"
-                    strokeDashoffset={(339.29 - (workHealth?.cognitiveResilience || 0) / 100 * 339.29)}
+                    strokeDashoffset={
+                      339.29 - ((workHealth?.cognitiveResilience || 0) / 100) * 339.29
+                    }
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
-                    <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{
-                      color: '#C7F95C',
-                      fontFeatureSettings: '"tnum"',
-                      letterSpacing: '-0.04em'
-                    }}>
+                    <div
+                      className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`}
+                      style={{
+                        color: '#C7F95C',
+                        fontFeatureSettings: '"tnum"',
+                        letterSpacing: '-0.04em',
+                      }}
+                    >
                       {isLoading ? '—' : `${workHealth?.cognitiveResilience || 0}`}
                     </div>
                     <div className="text-center">
-                      <div className="whoop-metric-label" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                      <div
+                        className="whoop-metric-label"
+                        style={{ fontSize: '0.75rem', lineHeight: '1' }}
+                      >
                         STRAIN
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              
+
               {/* Strain Breakdown - Always visible */}
               <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
                 style={{
                   backgroundColor: '#15161A',
-                  border: '1px solid #23252B'
+                  border: '1px solid #23252B',
                 }}
               >
                 {/* Strain Insights */}
                 <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  <h4
+                    className="text-xs font-semibold mb-3"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Strain Insights
                   </h4>
                   {isAILoading && activeTab === 'resilience' ? (
@@ -977,22 +1339,35 @@ export default function WorkHealthDashboard() {
                         </span>
                       </div>
                     </div>
-                  ) : (() => {
-                    const insight = getMetricInsight('resilience');
-                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
-                    return (
-                      <div className="text-center">
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {insight.message}
-                        </p>
-                        {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>
-                            {insight.action}
+                  ) : (
+                    (() => {
+                      const insight = getMetricInsight('resilience');
+                      if (!insight)
+                        return (
+                          <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                            No insights available
                           </p>
-                        )}
-                      </div>
-                    );
-                  })()}
+                        );
+                      return (
+                        <div className="text-center">
+                          <p
+                            className="text-xs leading-relaxed"
+                            style={{ color: 'var(--text-secondary)' }}
+                          >
+                            {insight.message}
+                          </p>
+                          {insight.action && (
+                            <p
+                              className="text-xs mt-2 leading-relaxed"
+                              style={{ color: '#C7F95C', opacity: 0.85 }}
+                            >
+                              {insight.action}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
 
                 {/* Strain Components — unique to this metric */}
@@ -1000,23 +1375,36 @@ export default function WorkHealthDashboard() {
                   {/* Context Switching (unique contexts) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Context Switching
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.uniqueContexts || 0) <= 3 ? 'Low' :
-                         (workHealth?.schedule?.uniqueContexts || 0) <= 5 ? 'Moderate' : 'High'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.uniqueContexts || 0) <= 3
+                          ? 'Low'
+                          : (workHealth?.schedule?.uniqueContexts || 0) <= 5
+                            ? 'Moderate'
+                            : 'High'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.uniqueContexts || 0) * 12))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(20, 100 - (workHealth?.schedule?.uniqueContexts || 0) * 12)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.uniqueContexts || 0} different contexts your brain has to shift between
+                        {workHealth?.schedule?.uniqueContexts || 0} different contexts your brain
+                        has to shift between
                       </span>
                     </div>
                   </div>
@@ -1024,23 +1412,36 @@ export default function WorkHealthDashboard() {
                   {/* Decision Fatigue (afternoon-weighted meetings) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Decision Fatigue Risk
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.afternoonMeetings || 0) <= 1 ? 'Low' :
-                         (workHealth?.schedule?.afternoonMeetings || 0) <= 3 ? 'Moderate' : 'High'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.afternoonMeetings || 0) <= 1
+                          ? 'Low'
+                          : (workHealth?.schedule?.afternoonMeetings || 0) <= 3
+                            ? 'Moderate'
+                            : 'High'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.afternoonMeetings || 0) * 20))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(20, 100 - (workHealth?.schedule?.afternoonMeetings || 0) * 20)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.afternoonMeetings || 0} afternoon meetings when willpower is lower
+                        {workHealth?.schedule?.afternoonMeetings || 0} afternoon meetings when
+                        willpower is lower
                       </span>
                     </div>
                   </div>
@@ -1048,24 +1449,37 @@ export default function WorkHealthDashboard() {
                   {/* Longest Consecutive Stretch */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Longest Meeting Chain
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.longestStretch || 0) <= 1 ? 'None' :
-                         (workHealth?.schedule?.longestStretch || 0) <= 2 ? 'Short' : 'Long'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.longestStretch || 0) <= 1
+                          ? 'None'
+                          : (workHealth?.schedule?.longestStretch || 0) <= 2
+                            ? 'Short'
+                            : 'Long'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.longestStretch || 0) * 25))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(20, 100 - (workHealth?.schedule?.longestStretch || 0) * 25)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {(workHealth?.schedule?.longestStretch || 0) <= 1 ? 'No back-to-back chains' :
-                         `${workHealth?.schedule?.longestStretch} meetings in a row without a real break`}
+                        {(workHealth?.schedule?.longestStretch || 0) <= 1
+                          ? 'No back-to-back chains'
+                          : `${workHealth?.schedule?.longestStretch} meetings in a row without a real break`}
                       </span>
                     </div>
                   </div>
@@ -1073,30 +1487,48 @@ export default function WorkHealthDashboard() {
                   {/* Cognitive Reserve (focus time for recharging) */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Cognitive Reserve
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4 ? 'Strong' :
-                         formatFocusTime(workHealth?.focusTime || 0).hours >= 2 ? 'Moderate' : 'Low'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {formatFocusTime(workHealth?.focusTime || 0).hours >= 4
+                          ? 'Strong'
+                          : formatFocusTime(workHealth?.focusTime || 0).hours >= 2
+                            ? 'Moderate'
+                            : 'Low'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.min(100, formatFocusTime(workHealth?.focusTime || 0).hours * 22)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {formatFocusTime(workHealth?.focusTime || 0).hours}h {formatFocusTime(workHealth?.focusTime || 0).minutes}m of quiet time to recharge between demands
+                        {formatFocusTime(workHealth?.focusTime || 0).hours}h{' '}
+                        {formatFocusTime(workHealth?.focusTime || 0).minutes}m of quiet time to
+                        recharge between demands
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  How much cognitive load your schedule is putting on you today — context switches, back-to-back meetings, and decision fatigue.
+                <p
+                  className="text-xs mt-4 pt-4 border-t border-[#23252B]"
+                  style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}
+                >
+                  How much cognitive load your schedule is putting on you today — context switches,
+                  back-to-back meetings, and decision fatigue.
                 </p>
               </div>
             </section>
@@ -1106,60 +1538,79 @@ export default function WorkHealthDashboard() {
         {/* Balance Tab */}
         {activeTab === 'sustainability' && (
           <div className="space-y-16">
-            <button onClick={() => setActiveTab('overview')} className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
-              <span>&larr;</span><span>Back to Overview</span>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className="flex items-center space-x-2 text-sm transition-opacity hover:opacity-70"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <span>&larr;</span>
+              <span>Back to Overview</span>
             </button>
             {/* Large Balance Ring */}
             <section className="text-center">
               <div className="relative w-32 h-32 mx-auto mb-8">
                 <svg className="w-full h-full whoop-progress-ring" viewBox="0 0 120 120">
                   <circle
-                    cx="60" cy="60" r="54"
+                    cx="60"
+                    cy="60"
+                    r="54"
                     fill="none"
                     stroke="rgba(199,249,92,0.2)"
                     strokeWidth="8"
                   />
                   <circle
-                    cx="60" cy="60" r="54"
+                    cx="60"
+                    cy="60"
+                    r="54"
                     fill="none"
                     stroke="#C7F95C"
                     strokeWidth="8"
                     strokeDasharray="339.29"
-                    strokeDashoffset={(339.29 - (workHealth?.workRhythmRecovery || 0) / 100 * 339.29)}
+                    strokeDashoffset={
+                      339.29 - ((workHealth?.workRhythmRecovery || 0) / 100) * 339.29
+                    }
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
-                    <div className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`} style={{
-                      color: '#C7F95C',
-                      fontFeatureSettings: '"tnum"',
-                      letterSpacing: '-0.04em'
-                    }}>
+                    <div
+                      className={`text-5xl font-light mb-1 transition-all duration-500 ${isLoading ? 'opacity-50' : ''}`}
+                      style={{
+                        color: '#C7F95C',
+                        fontFeatureSettings: '"tnum"',
+                        letterSpacing: '-0.04em',
+                      }}
+                    >
                       {isLoading ? '—' : `${workHealth?.workRhythmRecovery || 0}`}
                     </div>
                     <div className="text-center">
-                      <div className="whoop-metric-label" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                      <div
+                        className="whoop-metric-label"
+                        style={{ fontSize: '0.75rem', lineHeight: '1' }}
+                      >
                         BALANCE
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              
+
               {/* Balance Breakdown - Always visible */}
               <div
                 className="max-w-2xl mx-auto mt-4 mb-8 p-6 rounded-lg"
                 style={{
                   backgroundColor: '#15161A',
-                  border: '1px solid #23252B'
+                  border: '1px solid #23252B',
                 }}
               >
                 {/* Balance Insights */}
                 <div className="mb-6 pb-4 border-b border-[#23252B] text-center">
-                  <h4 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  <h4
+                    className="text-xs font-semibold mb-3"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Balance Insights
                   </h4>
                   {isAILoading && activeTab === 'sustainability' ? (
@@ -1171,22 +1622,35 @@ export default function WorkHealthDashboard() {
                         </span>
                       </div>
                     </div>
-                  ) : (() => {
-                    const insight = getMetricInsight('sustainability');
-                    if (!insight) return <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>No insights available</p>;
-                    return (
-                      <div className="text-center">
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                          {insight.message}
-                        </p>
-                        {insight.action && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{ color: '#C7F95C', opacity: 0.85 }}>
-                            {insight.action}
+                  ) : (
+                    (() => {
+                      const insight = getMetricInsight('sustainability');
+                      if (!insight)
+                        return (
+                          <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                            No insights available
                           </p>
-                        )}
-                      </div>
-                    );
-                  })()}
+                        );
+                      return (
+                        <div className="text-center">
+                          <p
+                            className="text-xs leading-relaxed"
+                            style={{ color: 'var(--text-secondary)' }}
+                          >
+                            {insight.message}
+                          </p>
+                          {insight.action && (
+                            <p
+                              className="text-xs mt-2 leading-relaxed"
+                              style={{ color: '#C7F95C', opacity: 0.85 }}
+                            >
+                              {insight.action}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
 
                 {/* Balance Components — unique to this metric */}
@@ -1194,23 +1658,40 @@ export default function WorkHealthDashboard() {
                   {/* Morning/Afternoon Balance */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Day Balance
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {Math.abs((workHealth?.schedule?.morningMeetings || 0) - (workHealth?.schedule?.afternoonMeetings || 0)) <= 1 ? 'Balanced' :
-                         (workHealth?.schedule?.afternoonMeetings || 0) > (workHealth?.schedule?.morningMeetings || 0) ? 'Afternoon-loaded' : 'Morning-loaded'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {Math.abs(
+                          (workHealth?.schedule?.morningMeetings || 0) -
+                            (workHealth?.schedule?.afternoonMeetings || 0)
+                        ) <= 1
+                          ? 'Balanced'
+                          : (workHealth?.schedule?.afternoonMeetings || 0) >
+                              (workHealth?.schedule?.morningMeetings || 0)
+                            ? 'Afternoon-loaded'
+                            : 'Morning-loaded'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(30, 100 - Math.abs((workHealth?.schedule?.morningMeetings || 0) - (workHealth?.schedule?.afternoonMeetings || 0)) * 20)}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(30, 100 - Math.abs((workHealth?.schedule?.morningMeetings || 0) - (workHealth?.schedule?.afternoonMeetings || 0)) * 20)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.morningMeetings || 0} morning vs {workHealth?.schedule?.afternoonMeetings || 0} afternoon meetings
+                        {workHealth?.schedule?.morningMeetings || 0} morning vs{' '}
+                        {workHealth?.schedule?.afternoonMeetings || 0} afternoon meetings
                       </span>
                     </div>
                   </div>
@@ -1218,23 +1699,36 @@ export default function WorkHealthDashboard() {
                   {/* Break Adequacy */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Recovery Breaks
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.adequateBreaks || 0) >= 3 ? 'Plenty' :
-                         (workHealth?.schedule?.adequateBreaks || 0) >= 1 ? 'Some' : 'None'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.adequateBreaks || 0) >= 3
+                          ? 'Plenty'
+                          : (workHealth?.schedule?.adequateBreaks || 0) >= 1
+                            ? 'Some'
+                            : 'None'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.min(100, (workHealth?.schedule?.adequateBreaks || 0) * 25 + (workHealth?.schedule?.shortBreaks || 0) * 12)}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.min(100, (workHealth?.schedule?.adequateBreaks || 0) * 25 + (workHealth?.schedule?.shortBreaks || 0) * 12)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {workHealth?.schedule?.adequateBreaks || 0} real breaks (30+ min) and {workHealth?.schedule?.shortBreaks || 0} short pauses
+                        {workHealth?.schedule?.adequateBreaks || 0} real breaks (30+ min) and{' '}
+                        {workHealth?.schedule?.shortBreaks || 0} short pauses
                       </span>
                     </div>
                   </div>
@@ -1242,19 +1736,31 @@ export default function WorkHealthDashboard() {
                   {/* Work Intensity */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Work Intensity
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.durationHours || 0) <= 3 ? 'Sustainable' :
-                         (workHealth?.schedule?.durationHours || 0) <= 5 ? 'Moderate' : 'Unsustainable'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.durationHours || 0) <= 3
+                          ? 'Sustainable'
+                          : (workHealth?.schedule?.durationHours || 0) <= 5
+                            ? 'Moderate'
+                            : 'Unsustainable'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(15, 100 - ((workHealth?.schedule?.durationHours || 0) * 15))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(15, 100 - (workHealth?.schedule?.durationHours || 0) * 15)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -1266,19 +1772,31 @@ export default function WorkHealthDashboard() {
                   {/* Off-Hours Meetings */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Boundary Health
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)', fontWeight: '500' }}>
-                        {(workHealth?.schedule?.earlyLateMeetings || 0) === 0 ? 'Clean' :
-                         (workHealth?.schedule?.earlyLateMeetings || 0) <= 1 ? 'Minor' : 'Overextended'}
+                      <span
+                        className="text-xs"
+                        style={{ color: 'var(--text-muted)', fontWeight: '500' }}
+                      >
+                        {(workHealth?.schedule?.earlyLateMeetings || 0) === 0
+                          ? 'Clean'
+                          : (workHealth?.schedule?.earlyLateMeetings || 0) <= 1
+                            ? 'Minor'
+                            : 'Overextended'}
                       </span>
                     </div>
                     <div className="w-full bg-[#23252B] rounded h-1.5">
-                      <div className="h-1.5 rounded transition-all duration-700" style={{
-                        width: `${Math.max(20, 100 - ((workHealth?.schedule?.earlyLateMeetings || 0) * 30))}%`,
-                        backgroundColor: '#C7F95C'
-                      }} />
+                      <div
+                        className="h-1.5 rounded transition-all duration-700"
+                        style={{
+                          width: `${Math.max(20, 100 - (workHealth?.schedule?.earlyLateMeetings || 0) * 30)}%`,
+                          backgroundColor: '#C7F95C',
+                        }}
+                      />
                     </div>
                     <div className="mt-1">
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -1290,16 +1808,18 @@ export default function WorkHealthDashboard() {
                   </div>
                 </div>
 
-                <p className="text-xs mt-4 pt-4 border-t border-[#23252B]" style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  Can you keep this pace up? Measures whether your schedule has enough recovery time and healthy boundaries to avoid burnout.
+                <p
+                  className="text-xs mt-4 pt-4 border-t border-[#23252B]"
+                  style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}
+                >
+                  Can you keep this pace up? Measures whether your schedule has enough recovery time
+                  and healthy boundaries to avoid burnout.
                 </p>
               </div>
             </section>
-
           </div>
         )}
-
       </div>
     </div>
-  )
+  );
 }
