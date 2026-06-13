@@ -78,7 +78,7 @@ export default function AuthPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-wide mb-2" style={{ color: '#F5F5F5' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></h1>
-          <p className="text-sm" style={{ color: '#5F6168' }}>Your workday, decoded</p>
+          <p className="text-sm" style={{ color: '#5F6168' }}>Some days work is the workout</p>
         </div>
 
         {/* Auth Form */}
