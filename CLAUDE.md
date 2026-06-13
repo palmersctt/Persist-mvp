@@ -64,7 +64,7 @@ All scores render at uniform 32px. Color-only emphasis (no size variation).
 | `src/lib/trends.ts` | Real trends built from persisted daily score history |
 | `src/lib/generateTrends.ts` | Synthetic trends (sandbox demo) + shared insight generators |
 | `src/components/TrendsSection.tsx` | Dashboard trends UI (sparklines, weekly/monthly) |
-| `src/lib/readiness.ts` | Forecast (calendar) × actual (wearable) merge + workday unlock |
+| `src/lib/readiness.ts` | Headroom algorithm: calendar scores × wearable capacity, time-aware |
 | `src/lib/wearables/` | Wearable providers (WHOOP, demo) normalized to `WearableActuals` |
 | `src/components/WearableSection.tsx` | Dashboard "Forecast vs Actual" section |
 | `WEARABLES.md` | Wearable integration model, provider setup, schema |

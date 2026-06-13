@@ -1,13 +1,20 @@
 import type { WearableActuals } from './wearables/types';
 
-// Forecast vs. actual merge logic.
+// Forecast × actual fusion: the HEADROOM algorithm.
 //
-// The calendar is the FORECAST — what today is going to demand (Focus/Strain/
-// Balance). The wearable is the ACTUAL — what your body brought to the day
-// (recovery providers like WHOOP) or proof you actually got out (activity
-// providers like Strava). This module merges the two into one answer: when
-// does the workday unlock, and what are you cleared to do once it does?
-// Pure functions only, so everything here is unit-testable.
+// The calendar scores quantify what the workday COSTS (Focus/Strain/Balance
+// → demand). The wearable quantifies what the body HAS (recovery, sleep →
+// capacity). Headroom is what's left to train with at any moment of the
+// day — the workday's tax is applied as meeting minutes actually elapse,
+// so a 6am check and a 6pm check give different, honest answers.
+//
+//   capacity   = recovery − shortSleepPenalty                  (0..100)
+//   demand     = 0.5·strain + 0.3·(100−balance) + 0.2·(100−focus)
+//   cost       = clamp((demand − 20) / 80, 0..1)               (light days cost ~0)
+//   tax        = MAX_WORKDAY_TAX · cost                        (≤ 45 points)
+//   headroom(t)= capacity − tax · spentFraction(t)
+//
+// Pure functions only — everything here is unit-testable.
 
 export interface ForecastScores {
   focus: number;
@@ -27,35 +34,71 @@ export interface DayShape {
   events: DayShapeEvent[];
 }
 
-/** How much the body has left in the tank, derived from wearable actuals. */
-export type BodyReadiness = 'charged' | 'steady' | 'drained';
+export type HeadroomBand = 'prime' | 'maintain' | 'recover';
+export type DayPhase = 'morning' | 'workday' | 'clear';
 
-export interface UnlockState {
-  /** True once nothing is left on the calendar. */
-  unlocked: boolean;
-  /** When the last remaining event ends (null when already unlocked). */
-  unlockISO: string | null;
+export interface ReadinessState {
+  phase: DayPhase;
+  /** Headroom right now (null without recovery data). */
+  headroomNow: number | null;
+  /** Headroom projected for when the calendar clears. */
+  headroomEndOfDay: number | null;
+  /** Band for the actionable training window (now in morning/clear, end-of-day mid-workday). */
+  band: HeadroomBand | null;
+  /** How much of capacity the full workday takes, 0..1. */
+  workdayCost: number;
   meetingsRemaining: number;
-  minutesUntilClear: number | null;
-  /** null when no wearable is connected or the provider has no recovery data. */
-  readiness: BodyReadiness | null;
+  /** When the calendar clears (last event end), if still ahead. */
+  clearISO: string | null;
   headline: string;
   detail: string;
 }
 
-/**
- * Bucket recovery into WHOOP-style bands (green ≥ 67, yellow 34–66, red < 34).
- * A green recovery on short sleep gets knocked down a notch — the surplus
- * isn't real if it was borrowed from sleep. Returns null for activity-only
- * providers that don't report recovery.
- */
-export function assessBodyReadiness(actuals: WearableActuals): BodyReadiness | null {
+/** A brutal workday can take at most this many points of headroom. */
+export const MAX_WORKDAY_TAX = 45;
+/** Band thresholds: ≥65 train hard, 40–64 keep it easy, <40 recovery day. */
+export const PRIME_THRESHOLD = 65;
+export const MAINTAIN_THRESHOLD = 40;
+
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+const clamp100 = (n: number) => Math.round(Math.min(100, Math.max(0, n)));
+
+/** What the body brought today: recovery, penalized for short sleep. */
+export function bodyCapacity(actuals: WearableActuals): number | null {
   if (actuals.recovery == null) return null;
-  if (actuals.recovery >= 67) {
-    return actuals.sleepHours != null && actuals.sleepHours < 6 ? 'steady' : 'charged';
+  let capacity = actuals.recovery;
+  if (actuals.sleepHours != null && actuals.sleepHours < 6) {
+    capacity -= (6 - actuals.sleepHours) * 8;
   }
-  if (actuals.recovery >= 34) return 'steady';
-  return 'drained';
+  return clamp100(capacity);
+}
+
+/** How much of an athlete's capacity this calendar burns, 0..1. */
+export function workdayCost(forecast: ForecastScores): number {
+  const demand =
+    0.5 * forecast.strain + 0.3 * (100 - forecast.balance) + 0.2 * (100 - forecast.focus);
+  return clamp01((demand - 20) / 80);
+}
+
+export function headroomBand(headroom: number): HeadroomBand {
+  if (headroom >= PRIME_THRESHOLD) return 'prime';
+  if (headroom >= MAINTAIN_THRESHOLD) return 'maintain';
+  return 'recover';
+}
+
+/** Fraction of the day's meeting minutes already elapsed at `now`, 0..1. */
+export function spentFraction(now: Date, dayShape: DayShape | null): number {
+  const events = dayShape?.events ?? [];
+  let total = 0;
+  let spent = 0;
+  for (const e of events) {
+    const start = new Date(e.startISO).getTime();
+    const end = new Date(e.endISO).getTime();
+    if (end <= start) continue;
+    total += end - start;
+    spent += Math.min(Math.max(now.getTime() - start, 0), end - start);
+  }
+  return total === 0 ? 1 : spent / total;
 }
 
 function formatClockTime(date: Date): string {
@@ -98,118 +141,181 @@ export function forecastVsActual(
       : `${logged}, light forecast today. Keep the streak honest.`;
   }
 
-  const readiness = assessBodyReadiness(actuals);
-  if (heavyDay && readiness === 'drained') {
+  const capacity = bodyCapacity(actuals)!;
+  if (heavyDay && capacity < MAINTAIN_THRESHOLD) {
     return `Forecast and actuals disagree: your calendar wants a big day, but recovery is at ${actuals.recovery}%. Guard every break you have.`;
   }
-  if (heavyDay && readiness === 'charged') {
+  if (heavyDay && capacity >= PRIME_THRESHOLD) {
     return `Heavy forecast, but you showed up charged — recovery at ${actuals.recovery}%. Today is survivable, maybe even good.`;
   }
   if (heavyDay) {
     return `Heavy forecast on a middling tank (recovery ${actuals.recovery}%). Spend your energy on the meetings that matter.`;
   }
-  if (lightDay && readiness === 'charged') {
+  if (lightDay && capacity >= PRIME_THRESHOLD) {
     return `Light forecast, full tank (recovery ${actuals.recovery}%). This is the day for the big session.`;
   }
-  if (lightDay && readiness === 'drained') {
+  if (lightDay && capacity < MAINTAIN_THRESHOLD) {
     return `The light calendar is lucky — recovery is at ${actuals.recovery}% and your body needs the slack.`;
   }
   return `Forecast and actuals roughly agree today (recovery ${actuals.recovery}%). Pace the workday and you end it with something left to train on.`;
 }
 
-function unlockedMessage(actuals: WearableActuals | null): { headline: string; detail: string } {
-  if (!actuals) {
+interface Message {
+  headline: string;
+  detail: string;
+}
+
+function messageWithoutRecoveryData(
+  phase: DayPhase,
+  actuals: WearableActuals | null,
+  meetingsRemaining: number,
+  clearTime: string | null
+): Message {
+  // Activity provider (Strava): the value is closing the loop on logged training
+  if (actuals) {
+    if (phase === 'clear') {
+      const loggedToday =
+        actuals.lastActivity && actuals.lastActivity.startISO.startsWith(actuals.date);
+      if (loggedToday) {
+        return {
+          headline: 'Workday clear — today’s session is already logged',
+          detail: `${describeActivity(actuals.lastActivity!)} today. Loop closed.`,
+        };
+      }
+      return {
+        headline: 'Workday clear — go train',
+        detail: actuals.lastActivity
+          ? `Last logged: ${describeActivity(actuals.lastActivity)}. The evening is wide open.`
+          : 'Nothing logged this week yet. The evening is wide open.',
+      };
+    }
+    return {
+      headline: phase === 'morning' ? 'Morning window open' : 'Workday in progress',
+      detail: `${plural(meetingsRemaining, 'meeting')} between you and your next training window${clearTime ? ` — calendar clears at ${clearTime}` : ''}.`,
+    };
+  }
+
+  // No wearable at all
+  if (phase === 'clear') {
     return {
       headline: 'Workday clear',
       detail: 'Connect a wearable to see what you have left to train with.',
     };
   }
-
-  const readiness = assessBodyReadiness(actuals);
-  if (readiness === null) {
-    // Activity provider — the unlock closes the loop on logged training
-    const loggedToday =
-      actuals.lastActivity && actuals.lastActivity.startISO.startsWith(actuals.date);
-    if (loggedToday) {
-      return {
-        headline: 'Workday clear — today’s session is already logged',
-        detail: `${describeActivity(actuals.lastActivity!)} today. Loop closed.`,
-      };
-    }
-    return {
-      headline: 'Workday clear — go train',
-      detail: actuals.lastActivity
-        ? `Last logged: ${describeActivity(actuals.lastActivity)}. The evening is wide open.`
-        : 'Nothing logged this week yet. The evening is wide open.',
-    };
-  }
-
-  const sleepClause = actuals.sleepHours != null ? ` on ${actuals.sleepHours}h of sleep` : '';
-  const byReadiness: Record<BodyReadiness, { headline: string; detail: string }> = {
-    charged: {
-      headline: 'Workday clear — train hard',
-      detail: `Recovery ${actuals.recovery}%${sleepClause}. Your body barely noticed the workday. Make today the quality session.`,
-    },
-    steady: {
-      headline: 'Workday clear — keep it easy',
-      detail: `Recovery ${actuals.recovery}%. There's a session in you, just not a hard one. Keep it aerobic.`,
-    },
-    drained: {
-      headline: 'Workday clear — make it a recovery day',
-      detail: `Recovery ${actuals.recovery}%. The workday took what you had. A walk counts; hard training resumes tomorrow.`,
-    },
+  return {
+    headline: phase === 'morning' ? 'Morning window open' : 'Workday in progress',
+    detail: `${plural(meetingsRemaining, 'meeting')} on the calendar${clearTime ? `, clear at ${clearTime}` : ''}. Connect a wearable to see your headroom.`,
   };
-  return byReadiness[readiness];
 }
 
 /**
- * Merge the calendar forecast with wearable actuals into a workday unlock
- * state. The unlock moment is when the last calendar event ends; the message
- * once unlocked depends on what the actuals say.
+ * The forecast × actual fusion. Combines calendar scores (what the workday
+ * costs) with wearable capacity (what the body has) into time-aware
+ * headroom — valid for a 6am session before the chaos or a 6pm session
+ * after it.
  */
-export function computeUnlock(
+export function computeHeadroom(
   now: Date,
   dayShape: DayShape | null,
+  forecast: ForecastScores,
   actuals: WearableActuals | null
-): UnlockState {
-  const readiness = actuals ? assessBodyReadiness(actuals) : null;
-
-  const remaining = (dayShape?.events ?? []).filter((e) => new Date(e.endISO) > now);
-  const unlockDate =
+): ReadinessState {
+  const cost = workdayCost(forecast);
+  const events = dayShape?.events ?? [];
+  const remaining = events.filter((e) => new Date(e.endISO) > now);
+  const meetingsRemaining = remaining.length;
+  const firstStart = dayShape?.firstEventStartISO ? new Date(dayShape.firstEventStartISO) : null;
+  const clearDate =
     remaining.length > 0
       ? new Date(Math.max(...remaining.map((e) => new Date(e.endISO).getTime())))
       : null;
+  const clearTime = clearDate ? formatClockTime(clearDate) : null;
 
-  if (!unlockDate) {
+  const phase: DayPhase =
+    meetingsRemaining === 0 ? 'clear' : firstStart && now < firstStart ? 'morning' : 'workday';
+
+  const capacity = actuals ? bodyCapacity(actuals) : null;
+
+  if (capacity === null) {
     return {
-      unlocked: true,
-      unlockISO: null,
-      meetingsRemaining: 0,
-      minutesUntilClear: null,
-      readiness,
-      ...unlockedMessage(actuals),
+      phase,
+      headroomNow: null,
+      headroomEndOfDay: null,
+      band: null,
+      workdayCost: cost,
+      meetingsRemaining,
+      clearISO: clearDate ? clearDate.toISOString() : null,
+      ...messageWithoutRecoveryData(phase, actuals, meetingsRemaining, clearTime),
     };
   }
 
-  const minutesUntilClear = Math.max(0, Math.ceil((unlockDate.getTime() - now.getTime()) / 60000));
-  const clearTime = formatClockTime(unlockDate);
-  // Events whose end is in the future still count as "to go", including one in progress.
-  const meetingsRemaining = remaining.length;
+  const tax = MAX_WORKDAY_TAX * cost;
+  const headroomNow = clamp100(capacity - tax * spentFraction(now, dayShape));
+  const headroomEndOfDay = clamp100(capacity - tax);
+  const nowBand = headroomBand(headroomNow);
+  const endBand = headroomBand(headroomEndOfDay);
+  const recovery = actuals!.recovery!;
+  const sleepClause = actuals!.sleepHours != null ? `, ${actuals!.sleepHours}h sleep` : '';
 
-  let detail = `${plural(meetingsRemaining, 'meeting')} between you and your training window.`;
-  if (readiness === 'drained' && actuals) {
-    detail = `${plural(meetingsRemaining, 'meeting')} to go, and recovery is already at ${actuals.recovery}%. Don't let the afternoon eat what's left.`;
-  } else if (readiness === 'charged' && actuals) {
-    detail = `${plural(meetingsRemaining, 'meeting')} to go. Recovery ${actuals.recovery}% — protect it and tonight's session is yours.`;
+  let message: Message;
+  let band: HeadroomBand;
+
+  if (phase === 'morning') {
+    band = nowBand;
+    const headlineByBand: Record<HeadroomBand, string> = {
+      prime: 'Morning window — train hard',
+      maintain: 'Morning window — keep it easy',
+      recover: 'Morning check — recovery day',
+    };
+    let detail: string;
+    if (nowBand === 'recover') {
+      detail = `Headroom ${headroomNow} (recovery ${recovery}%${sleepClause}). The tank is empty before the workday even starts. Today is about absorbing, not adding.`;
+    } else if (endBand !== nowBand) {
+      detail = `Headroom ${headroomNow} now, ~${headroomEndOfDay} after the workday takes its share (recovery ${recovery}%${sleepClause}). If today has a hard session in it, it’s this morning.`;
+    } else {
+      detail = `Headroom ${headroomNow}, and today’s calendar only costs ~${Math.round(tax)} points (recovery ${recovery}%${sleepClause}). Morning or evening — both windows work.`;
+    }
+    message = { headline: headlineByBand[band], detail };
+  } else if (phase === 'workday') {
+    // Mid-workday: the actionable decision is the evening session — plan on
+    // the projection, not the moment
+    band = endBand;
+    const headlineByBand: Record<HeadroomBand, string> = {
+      prime: 'On track — evening session is a go',
+      maintain: 'On track for an easy evening session',
+      recover: 'Tonight is a recovery night',
+    };
+    message = {
+      headline: headlineByBand[band],
+      detail: `Headroom ${headroomNow} now → ~${headroomEndOfDay} when the calendar clears${clearTime ? ` at ${clearTime}` : ''}. ${plural(meetingsRemaining, 'meeting')} still to absorb.`,
+    };
+  } else {
+    band = endBand;
+    const messages: Record<HeadroomBand, Message> = {
+      prime: {
+        headline: 'Workday clear — train hard',
+        detail: `Headroom ${headroomEndOfDay} (recovery ${recovery}%${sleepClause}). The workday barely taxed it. Make today the quality session.`,
+      },
+      maintain: {
+        headline: 'Workday clear — keep it easy',
+        detail: `Headroom ${headroomEndOfDay}. The workday took its share — there’s a session in you, just not a hard one.`,
+      },
+      recover: {
+        headline: 'Workday clear — make it a recovery day',
+        detail: `Headroom ${headroomEndOfDay}. Between recovery ${recovery}% and today’s calendar, the tank is spent. A walk counts; hard training resumes tomorrow.`,
+      },
+    };
+    message = messages[band];
   }
 
   return {
-    unlocked: false,
-    unlockISO: unlockDate.toISOString(),
+    phase,
+    headroomNow,
+    headroomEndOfDay,
+    band,
+    workdayCost: cost,
     meetingsRemaining,
-    minutesUntilClear,
-    readiness,
-    headline: `Clear at ${clearTime}`,
-    detail,
+    clearISO: clearDate ? clearDate.toISOString() : null,
+    ...message,
   };
 }

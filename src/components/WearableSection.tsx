@@ -3,34 +3,40 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useWearable } from '../hooks/useWearable';
 import {
-  computeUnlock,
+  computeHeadroom,
   forecastVsActual,
   type DayShape,
   type ForecastScores,
+  type ReadinessState,
 } from '../lib/readiness';
 import { trackEvent } from '../lib/trackEvent';
-import type { UnlockState } from '../lib/readiness';
 import type { WearableActuals } from '../lib/wearables/types';
 
 const MONO = 'var(--font-geist-mono), ui-monospace, monospace';
 
+const PHASE_LABELS: Record<ReadinessState['phase'], string> = {
+  morning: 'Morning window',
+  workday: 'Mid-workday',
+  clear: 'Workday clear',
+};
+
 /**
- * Presentational unlock banner + actuals row. Shared between the
+ * Presentational headroom panel + actuals row. Shared between the
  * authenticated dashboard (live data via useWearable) and the public
  * sandbox preview (synthetic scenarios).
  */
 export function WearablePanel({
-  unlock,
+  state,
   actuals,
   insight,
   stale = false,
 }: {
-  unlock: UnlockState;
+  state: ReadinessState;
   actuals: WearableActuals | null;
   insight: string | null;
   stale?: boolean;
 }) {
-  const celebrate = unlock.unlocked && unlock.readiness === 'charged';
+  const celebrate = state.phase === 'clear' && state.band === 'prime';
   const metrics: { label: string; value: string }[] = actuals
     ? [
         ...(actuals.recovery != null ? [{ label: 'Recovery', value: `${actuals.recovery}%` }] : []),
@@ -50,7 +56,7 @@ export function WearablePanel({
 
   return (
     <>
-      {/* Workday unlock state */}
+      {/* Headroom: capacity from the body, taxed by the workday in real time */}
       <div
         className="rounded-xl p-5 mb-2.5"
         style={
@@ -77,34 +83,53 @@ export function WearablePanel({
               color: celebrate ? 'rgba(11,11,12,0.7)' : 'var(--signal-dim)',
             }}
           >
-            {unlock.unlocked ? 'Workday unlocked' : 'Workday locked'}
+            {PHASE_LABELS[state.phase]}
           </span>
         </div>
+        {state.headroomNow != null && (
+          <div className="flex items-baseline gap-2 mb-1.5">
+            <span
+              className="text-3xl font-bold"
+              style={{
+                color: celebrate ? 'rgba(11,11,12,0.92)' : 'var(--signal)',
+                fontFamily: MONO,
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1,
+              }}
+            >
+              {state.headroomNow}
+            </span>
+            <span
+              className="text-[9px] uppercase tracking-wider font-medium"
+              style={{ color: celebrate ? 'rgba(11,11,12,0.55)' : 'var(--text-faint)' }}
+            >
+              Headroom
+            </span>
+            {state.phase === 'workday' && state.headroomEndOfDay != null && (
+              <span
+                className="text-xs font-semibold"
+                style={{
+                  color: celebrate ? 'rgba(11,11,12,0.7)' : 'var(--text-muted)',
+                  fontFamily: MONO,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                → ~{state.headroomEndOfDay} at clear
+              </span>
+            )}
+          </div>
+        )}
         <p
           className="text-[15px] font-bold mb-1"
           style={{ color: celebrate ? 'rgba(11,11,12,0.92)' : 'var(--text)' }}
         >
-          {unlock.headline}
+          {state.headline}
         </p>
-        {!unlock.unlocked && unlock.minutesUntilClear != null && (
-          <p
-            className="text-xs font-semibold mb-1"
-            style={{
-              color: 'var(--signal)',
-              fontFamily: MONO,
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {unlock.minutesUntilClear >= 60
-              ? `${Math.floor(unlock.minutesUntilClear / 60)}h ${unlock.minutesUntilClear % 60}m to go`
-              : `${unlock.minutesUntilClear}m to go`}
-          </p>
-        )}
         <p
           className="text-xs leading-relaxed mb-0"
           style={{ color: celebrate ? 'rgba(11,11,12,0.65)' : 'var(--text-muted)' }}
         >
-          {unlock.detail}
+          {state.detail}
         </p>
       </div>
 
@@ -214,7 +239,10 @@ export default function WearableSection({
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
   }, []);
 
-  const unlock = useMemo(() => computeUnlock(now, dayShape, actuals), [now, dayShape, actuals]);
+  const state = useMemo(
+    () => computeHeadroom(now, dayShape, forecast, actuals),
+    [now, dayShape, forecast, actuals]
+  );
 
   if (isLoading) return null;
 
@@ -236,9 +264,9 @@ export default function WearableSection({
             Your calendar is the forecast. Your body is the actual.
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-            Connect a wearable and Persist merges recovery, sleep, and HRV with today&apos;s
-            schedule &mdash; so the moment your last meeting ends, you know whether to train hard,
-            keep it easy, or take the recovery day.
+            Connect a wearable and Persist fuses recovery, sleep, and HRV with your Focus, Strain,
+            and Balance scores into one number &mdash; headroom &mdash; so whether you train at 6am
+            or 6pm, you know how hard to go.
           </p>
           {notice && (
             <p className="text-xs mb-3" style={{ color: 'var(--signal-dim)' }}>
@@ -326,7 +354,7 @@ export default function WearableSection({
         </span>
       </div>
 
-      <WearablePanel unlock={unlock} actuals={actuals} insight={insight} stale={stale} />
+      <WearablePanel state={state} actuals={actuals} insight={insight} stale={stale} />
 
       <div className="text-center">
         <button

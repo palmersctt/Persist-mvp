@@ -7,17 +7,35 @@ going to demand (Focus / Strain / Balance). A wearable supplies the
 **actual**: what your body brought to the day (recovery, sleep, HRV, resting
 HR) and what it has left.
 
-Merging the two unlocks the workday — built for working athletes (trail
-runners, triathletes, cyclists) whose training happens around a meeting-heavy
-job. While meetings remain, the dashboard counts down to the moment you're
-clear. The instant the last event ends, the unlock state answers the working
-athlete's only 5pm question — do I train today, and how hard:
+The two fuse into **headroom** (0–100): what a working athlete has left to
+train with at any moment. Not a countdown — people train at 6am before the
+chaos as often as 6pm after it, so the algorithm is time-aware:
 
-- **charged** — "Workday clear — train hard."
-- **steady** — "Workday clear — keep it easy."
-- **drained** — "Workday clear — make it a recovery day."
+```
+capacity    = recovery − 8·max(0, 6 − sleepHours)            (what the body has)
+demand      = 0.5·Strain + 0.3·(100−Balance) + 0.2·(100−Focus)
+cost        = clamp((demand − 20) / 80, 0..1)                (light days cost ~0)
+tax         = 45 · cost                                      (a brutal day takes ≤45 pts)
+headroom(t) = capacity − tax · spentFraction(t)              (tax lands as meetings elapse)
+```
 
-Vocabulary is deliberately sport-agnostic: workday, unlock, recovery,
+`spentFraction` is the share of the day's meeting minutes already elapsed
+(in-progress meetings count partially). Bands map headroom to verdicts:
+**≥65 train hard · 40–64 keep it easy · <40 recovery day**. Three phases
+shape the message:
+
+- **morning** (before the first meeting) — full capacity; if the day ahead
+  is expensive and the projection drops a band, the algorithm points at the
+  morning window: "if today has a hard session in it, it's this morning."
+- **mid-workday** — shows headroom now → projected at clear; the evening
+  session is planned on the projection, not the moment.
+- **clear** — the final verdict on what's left.
+
+All constants (45-pt max tax, 8 pts/missing sleep hour, band thresholds,
+demand weights) are v1 heuristics in `src/lib/readiness.ts`, unit-tested
+and meant to be tuned against real worn data.
+
+Vocabulary is deliberately sport-agnostic: workday, headroom, recovery,
 session, train hard / keep it easy / recovery day. No trail/ride/run
 specifics — never assume the sport.
 

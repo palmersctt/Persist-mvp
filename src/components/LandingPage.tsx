@@ -828,9 +828,9 @@ export default function LandingPage() {
               <em>Your training, unlocked.</em>
             </h1>
             <p className="lp-hero-sub">
-              Your calendar is the forecast. Your wearable is the actual. Persist scores what the
-              workday takes &mdash; and the moment your last meeting ends, gives you the verdict:
-              train hard, keep it easy, or take the recovery day.
+              Your calendar is the forecast. Your wearable is the actual. Persist fuses them into
+              one number &mdash; headroom &mdash; so whether you train at 6am or 6pm, you know how
+              hard to go: train hard, keep it easy, or take the recovery day.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg
@@ -1116,47 +1116,48 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">Forecast vs actual</div>
               <h2>
-                The workday ends.
+                Your scores meet your body.
                 <br />
-                <em>The verdict is waiting.</em>
+                <em>Headroom is what&apos;s left.</em>
               </h2>
               <p>
-                Connect a wearable and Persist merges recovery, sleep, and HRV with the calendar.
-                While meetings remain, it counts down to your training window. The moment
-                you&apos;re clear, it answers the working athlete&apos;s only 5pm question &mdash;
-                do I train today, and how hard?
+                Connect a wearable and Persist fuses recovery, sleep, and HRV with your Focus,
+                Strain, and Balance scores into one number: headroom &mdash; what you have left to
+                train with. The workday&apos;s tax lands as meetings pass, so a 6am check and a 6pm
+                check both tell the truth.
               </p>
             </div>
             <div className="lp-verdict-grid">
               <div className="lp-verdict-card">
                 <div className="lp-verdict-chip">
-                  <span className="lp-verdict-dot"></span>Workday locked
+                  <span className="lp-verdict-dot"></span>Morning window
                 </div>
-                <div className="lp-verdict-headline">Clear at 4:30 PM</div>
-                <div className="lp-verdict-metrics">1h 12m to go &middot; Recovery 74%</div>
+                <div className="lp-verdict-headline">Train hard &mdash; before the chaos</div>
+                <div className="lp-verdict-metrics">Headroom 88 &rarr; ~61 after work</div>
                 <p className="lp-verdict-text">
-                  2 meetings between you and your training window. Protect what&apos;s left and
-                  tonight&apos;s session is yours.
+                  Recovery 88%, but today&apos;s Strain forecast will tax ~27 points. If today has a
+                  hard session in it, it&apos;s this morning.
                 </p>
               </div>
               <div className="lp-verdict-card">
                 <div className="lp-verdict-chip">
-                  <span className="lp-verdict-dot"></span>Workday unlocked
+                  <span className="lp-verdict-dot"></span>Mid-workday
                 </div>
-                <div className="lp-verdict-headline">Make it a recovery day</div>
-                <div className="lp-verdict-metrics">Recovery 22% &middot; Sleep 5.1h</div>
+                <div className="lp-verdict-headline">Easy evening session ahead</div>
+                <div className="lp-verdict-metrics">Headroom 71 &rarr; ~58 at 4:30 PM</div>
                 <p className="lp-verdict-text">
-                  The workday took what you had. A walk counts; hard training resumes tomorrow.
+                  Two meetings left to absorb. Plan tonight on the projection, not on how you feel
+                  between calls.
                 </p>
               </div>
               <div className="lp-verdict-card lp-celebrate">
                 <div className="lp-verdict-chip">
-                  <span className="lp-verdict-dot"></span>Workday unlocked
+                  <span className="lp-verdict-dot"></span>Workday clear
                 </div>
                 <div className="lp-verdict-headline">Train hard</div>
-                <div className="lp-verdict-metrics">Recovery 88% &middot; Sleep 7.9h</div>
+                <div className="lp-verdict-metrics">Headroom 82 &middot; Recovery 88%</div>
                 <p className="lp-verdict-text">
-                  Light forecast, full tank. This is the day for the big session.
+                  A light forecast barely taxed the tank. Make it the quality session.
                 </p>
               </div>
             </div>
@@ -1191,8 +1192,9 @@ export default function LandingPage() {
                 <div className="lp-step-num">STEP 03</div>
                 <h3>Get the verdict</h3>
                 <p>
-                  Three scores in the morning, a countdown to your training window through the day,
-                  and one answer when the last meeting ends: train hard, keep it easy, or recover.
+                  One headroom number, live all day &mdash; your scores set what the workday costs,
+                  your body sets what you have, and the answer is the same at 6am or 6pm: train
+                  hard, keep it easy, or recover.
                 </p>
               </div>
             </div>
