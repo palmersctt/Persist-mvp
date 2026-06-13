@@ -1,10 +1,10 @@
 import type { WearableActuals } from './wearables/types';
 
-// Forecast × actual fusion: the HEADROOM algorithm.
+// Forecast × actual fusion: the READINESS algorithm.
 //
 // The calendar scores quantify what the workday COSTS (Focus/Strain/Balance
 // → demand). The wearable quantifies what the body HAS (recovery, sleep →
-// capacity). Headroom is what's left to train with at any moment of the
+// capacity). Readiness is what's left to train with at any moment of the
 // day — the workday's tax is applied as meeting minutes actually elapse,
 // so a 6am check and a 6pm check give different, honest answers.
 //
@@ -12,7 +12,7 @@ import type { WearableActuals } from './wearables/types';
 //   demand     = 0.5·strain + 0.3·(100−balance) + 0.2·(100−focus)
 //   cost       = clamp((demand − 20) / 80, 0..1)               (light days cost ~0)
 //   tax        = MAX_WORKDAY_TAX · cost                        (≤ 45 points)
-//   headroom(t)= capacity − tax · spentFraction(t)
+//   readiness(t)= capacity − tax · spentFraction(t)
 //
 // Pure functions only — everything here is unit-testable.
 
@@ -34,17 +34,17 @@ export interface DayShape {
   events: DayShapeEvent[];
 }
 
-export type HeadroomBand = 'prime' | 'maintain' | 'recover';
+export type ReadinessBand = 'prime' | 'maintain' | 'recover';
 export type DayPhase = 'morning' | 'workday' | 'clear';
 
 export interface ReadinessState {
   phase: DayPhase;
-  /** Headroom right now (null without recovery data). */
-  headroomNow: number | null;
-  /** Headroom projected for when the calendar clears. */
-  headroomEndOfDay: number | null;
+  /** Readiness right now (null without recovery data). */
+  readinessNow: number | null;
+  /** Readiness projected for when the calendar clears. */
+  readinessEndOfDay: number | null;
   /** Band for the actionable training window (now in morning/clear, end-of-day mid-workday). */
-  band: HeadroomBand | null;
+  band: ReadinessBand | null;
   /** How much of capacity the full workday takes, 0..1. */
   workdayCost: number;
   meetingsRemaining: number;
@@ -54,7 +54,7 @@ export interface ReadinessState {
   detail: string;
 }
 
-/** A brutal workday can take at most this many points of headroom. */
+/** A brutal workday can take at most this many points of readiness. */
 export const MAX_WORKDAY_TAX = 45;
 /** Band thresholds: ≥65 train hard, 40–64 keep it easy, <40 recovery day. */
 export const PRIME_THRESHOLD = 65;
@@ -80,9 +80,16 @@ export function workdayCost(forecast: ForecastScores): number {
   return clamp01((demand - 20) / 80);
 }
 
-export function headroomBand(headroom: number): HeadroomBand {
-  if (headroom >= PRIME_THRESHOLD) return 'prime';
-  if (headroom >= MAINTAIN_THRESHOLD) return 'maintain';
+/** Display verdicts for each band — the single vocabulary used everywhere. */
+export const VERDICTS: Record<ReadinessBand, string> = {
+  prime: 'Train hard',
+  maintain: 'Keep it easy',
+  recover: 'Recovery day',
+};
+
+export function readinessBand(readiness: number): ReadinessBand {
+  if (readiness >= PRIME_THRESHOLD) return 'prime';
+  if (readiness >= MAINTAIN_THRESHOLD) return 'maintain';
   return 'recover';
 }
 
@@ -204,17 +211,17 @@ function messageWithoutRecoveryData(
   }
   return {
     headline: phase === 'morning' ? 'Morning window open' : 'Workday in progress',
-    detail: `${plural(meetingsRemaining, 'meeting')} on the calendar${clearTime ? `, clear at ${clearTime}` : ''}. Connect a wearable to see your headroom.`,
+    detail: `${plural(meetingsRemaining, 'meeting')} on the calendar${clearTime ? `, clear at ${clearTime}` : ''}. Connect a wearable to see your readiness.`,
   };
 }
 
 /**
  * The forecast × actual fusion. Combines calendar scores (what the workday
  * costs) with wearable capacity (what the body has) into time-aware
- * headroom — valid for a 6am session before the chaos or a 6pm session
+ * readiness — valid for a 6am session before the chaos or a 6pm session
  * after it.
  */
-export function computeHeadroom(
+export function computeReadiness(
   now: Date,
   dayShape: DayShape | null,
   forecast: ForecastScores,
@@ -239,8 +246,8 @@ export function computeHeadroom(
   if (capacity === null) {
     return {
       phase,
-      headroomNow: null,
-      headroomEndOfDay: null,
+      readinessNow: null,
+      readinessEndOfDay: null,
       band: null,
       workdayCost: cost,
       meetingsRemaining,
@@ -250,59 +257,59 @@ export function computeHeadroom(
   }
 
   const tax = MAX_WORKDAY_TAX * cost;
-  const headroomNow = clamp100(capacity - tax * spentFraction(now, dayShape));
-  const headroomEndOfDay = clamp100(capacity - tax);
-  const nowBand = headroomBand(headroomNow);
-  const endBand = headroomBand(headroomEndOfDay);
+  const readinessNow = clamp100(capacity - tax * spentFraction(now, dayShape));
+  const readinessEndOfDay = clamp100(capacity - tax);
+  const nowBand = readinessBand(readinessNow);
+  const endBand = readinessBand(readinessEndOfDay);
   const recovery = actuals!.recovery!;
   const sleepClause = actuals!.sleepHours != null ? `, ${actuals!.sleepHours}h sleep` : '';
 
   let message: Message;
-  let band: HeadroomBand;
+  let band: ReadinessBand;
 
   if (phase === 'morning') {
     band = nowBand;
-    const headlineByBand: Record<HeadroomBand, string> = {
+    const headlineByBand: Record<ReadinessBand, string> = {
       prime: 'Morning window — train hard',
       maintain: 'Morning window — keep it easy',
       recover: 'Morning check — recovery day',
     };
     let detail: string;
     if (nowBand === 'recover') {
-      detail = `Headroom ${headroomNow} (recovery ${recovery}%${sleepClause}). The tank is empty before the workday even starts. Today is about absorbing, not adding.`;
+      detail = `Readiness ${readinessNow} (recovery ${recovery}%${sleepClause}). The tank is empty before the workday even starts. Today is about absorbing, not adding.`;
     } else if (endBand !== nowBand) {
-      detail = `Headroom ${headroomNow} now, ~${headroomEndOfDay} after the workday takes its share (recovery ${recovery}%${sleepClause}). If today has a hard session in it, it’s this morning.`;
+      detail = `Readiness ${readinessNow} now, ~${readinessEndOfDay} after the workday takes its share (recovery ${recovery}%${sleepClause}). If today has a hard session in it, it’s this morning.`;
     } else {
-      detail = `Headroom ${headroomNow}, and today’s calendar only costs ~${Math.round(tax)} points (recovery ${recovery}%${sleepClause}). Morning or evening — both windows work.`;
+      detail = `Readiness ${readinessNow}, and today’s calendar only costs ~${Math.round(tax)} points (recovery ${recovery}%${sleepClause}). Morning or evening — both windows work.`;
     }
     message = { headline: headlineByBand[band], detail };
   } else if (phase === 'workday') {
     // Mid-workday: the actionable decision is the evening session — plan on
     // the projection, not the moment
     band = endBand;
-    const headlineByBand: Record<HeadroomBand, string> = {
+    const headlineByBand: Record<ReadinessBand, string> = {
       prime: 'On track — evening session is a go',
       maintain: 'On track for an easy evening session',
       recover: 'Tonight is a recovery night',
     };
     message = {
       headline: headlineByBand[band],
-      detail: `Headroom ${headroomNow} now → ~${headroomEndOfDay} when the calendar clears${clearTime ? ` at ${clearTime}` : ''}. ${plural(meetingsRemaining, 'meeting')} still to absorb.`,
+      detail: `Readiness ${readinessNow} now → ~${readinessEndOfDay} when the calendar clears${clearTime ? ` at ${clearTime}` : ''}. ${plural(meetingsRemaining, 'meeting')} still to absorb.`,
     };
   } else {
     band = endBand;
-    const messages: Record<HeadroomBand, Message> = {
+    const messages: Record<ReadinessBand, Message> = {
       prime: {
         headline: 'Workday clear — train hard',
-        detail: `Headroom ${headroomEndOfDay} (recovery ${recovery}%${sleepClause}). The workday barely taxed it. Make today the quality session.`,
+        detail: `Readiness ${readinessEndOfDay} (recovery ${recovery}%${sleepClause}). The workday barely taxed it. Make today the quality session.`,
       },
       maintain: {
         headline: 'Workday clear — keep it easy',
-        detail: `Headroom ${headroomEndOfDay}. The workday took its share — there’s a session in you, just not a hard one.`,
+        detail: `Readiness ${readinessEndOfDay}. The workday took its share — there’s a session in you, just not a hard one.`,
       },
       recover: {
         headline: 'Workday clear — make it a recovery day',
-        detail: `Headroom ${headroomEndOfDay}. Between recovery ${recovery}% and today’s calendar, the tank is spent. A walk counts; hard training resumes tomorrow.`,
+        detail: `Readiness ${readinessEndOfDay}. Between recovery ${recovery}% and today’s calendar, the tank is spent. A walk counts; hard training resumes tomorrow.`,
       },
     };
     message = messages[band];
@@ -310,8 +317,8 @@ export function computeHeadroom(
 
   return {
     phase,
-    headroomNow,
-    headroomEndOfDay,
+    readinessNow,
+    readinessEndOfDay,
     band,
     workdayCost: cost,
     meetingsRemaining,

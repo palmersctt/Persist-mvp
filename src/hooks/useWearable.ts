@@ -91,3 +91,5 @@ export const useWearable = () => {
 
   return { ...state, isLoading, connect, connectDemo, disconnect, refresh: fetchActuals };
 };
+
+export type WearableHook = ReturnType<typeof useWearable>;

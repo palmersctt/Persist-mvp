@@ -7,7 +7,7 @@ going to demand (Focus / Strain / Balance). A wearable supplies the
 **actual**: what your body brought to the day (recovery, sleep, HRV, resting
 HR) and what it has left.
 
-The two fuse into **headroom** (0–100): what a working athlete has left to
+The two fuse into **readiness** (0–100): what a working athlete has left to
 train with at any moment. Not a countdown — people train at 6am before the
 chaos as often as 6pm after it, so the algorithm is time-aware:
 
@@ -16,18 +16,18 @@ capacity    = recovery − 8·max(0, 6 − sleepHours)            (what the body
 demand      = 0.5·Strain + 0.3·(100−Balance) + 0.2·(100−Focus)
 cost        = clamp((demand − 20) / 80, 0..1)                (light days cost ~0)
 tax         = 45 · cost                                      (a brutal day takes ≤45 pts)
-headroom(t) = capacity − tax · spentFraction(t)              (tax lands as meetings elapse)
+readiness(t) = capacity − tax · spentFraction(t)              (tax lands as meetings elapse)
 ```
 
 `spentFraction` is the share of the day's meeting minutes already elapsed
-(in-progress meetings count partially). Bands map headroom to verdicts:
+(in-progress meetings count partially). Bands map readiness to verdicts:
 **≥65 train hard · 40–64 keep it easy · <40 recovery day**. Three phases
 shape the message:
 
 - **morning** (before the first meeting) — full capacity; if the day ahead
   is expensive and the projection drops a band, the algorithm points at the
   morning window: "if today has a hard session in it, it's this morning."
-- **mid-workday** — shows headroom now → projected at clear; the evening
+- **mid-workday** — shows readiness now → projected at clear; the evening
   session is planned on the projection, not the moment.
 - **clear** — the final verdict on what's left.
 
@@ -35,12 +35,9 @@ All constants (45-pt max tax, 8 pts/missing sleep hour, band thresholds,
 demand weights) are v1 heuristics in `src/lib/readiness.ts`, unit-tested
 and meant to be tuned against real worn data.
 
-Vocabulary is deliberately sport-agnostic: workday, headroom, recovery,
+Vocabulary is deliberately sport-agnostic: workday, readiness, recovery,
 session, train hard / keep it easy / recovery day. No trail/ride/run
 specifics — never assume the sport.
-
-Readiness uses WHOOP-style recovery bands (green ≥ 67, yellow 34–66,
-red < 34), with green knocked down a notch when sleep was under 6 hours.
 
 ## Architecture
 
@@ -54,7 +51,7 @@ provider APIs (WHOOP / demo)
 useWearable (client hook)
         │            ┌── dayShape (event times) from /api/work-health
         ▼            ▼
-src/lib/readiness.ts — computeUnlock / forecastVsActual (pure, tested)
+src/lib/readiness.ts — computeReadiness / forecastVsActual (pure, tested)
         │
         ▼
 WearableSection (dashboard "Forecast vs Actual" section)
@@ -65,17 +62,17 @@ WearableSection (dashboard "Forecast vs Actual" section)
 | `src/lib/wearables/types.ts`                 | `WearableActuals` — the normalized shape every provider maps into                 |
 | `src/lib/wearables/whoop.ts`                 | WHOOP OAuth + Developer API v2 client (server-side only)                          |
 | `src/lib/wearables/demo.ts`                  | Deterministic demo actuals (no device required)                                   |
-| `src/lib/readiness.ts`                       | Forecast×actual merge: `assessBodyReadiness`, `computeUnlock`, `forecastVsActual` |
+| `src/lib/readiness.ts`                       | Readiness algorithm: `bodyCapacity`, `workdayCost`, `computeReadiness`            |
 | `pages/api/wearables/connect.ts`             | Starts OAuth (whoop) or creates a demo connection                                 |
 | `pages/api/wearables/callback.ts`            | WHOOP OAuth callback (state-checked)                                              |
 | `pages/api/wearables/actuals.ts`             | Returns today's normalized actuals; persists to `wearable_daily`                  |
 | `pages/api/wearables/disconnect.ts`          | Deletes the connection (keeps history)                                            |
 | `src/hooks/useWearable.ts`                   | Client state: connected/provider/actuals + connect/disconnect                     |
-| `src/components/WearableSection.tsx`         | Dashboard UI: unlock banner + actuals row                                         |
+| `src/components/WearableSection.tsx`         | Dashboard UI: readiness panel + actuals row                                       |
 | `supabase/migrations/20260611_wearables.sql` | `wearable_connections` + `wearable_daily`                                         |
 
 The work-health API also returns `dayShape` — event start/end times only (no
-titles) — so the client can compute the unlock moment without another
+titles) — so the client can compute time-aware readiness without another
 calendar round-trip.
 
 ## Providers
@@ -98,14 +95,14 @@ body-shaped data with zero setup.
 plumbing test (self-serve OAuth, no hardware — but a Strava subscription
 is now required for API access). Being activity-only it tells a second
 story ("did you actually get out") that muddied the first, so its connect
-button is removed from the UI. The provider, routes, and unlock messaging
+button is removed from the UI. The provider, routes, and messaging
 remain in code behind the abstraction; re-enable by adding the button
 back and setting `STRAVA_*` env vars.
 
 The rest of the body-data field, for when a second provider matters:
 
-- **Oura** — free self-serve OAuth2; "readiness" maps 1:1 onto the unlock
-  logic. The natural second provider if users skew ring.
+- **Oura** — free self-serve OAuth2; its readiness score maps 1:1 onto our
+  capacity input. The natural second provider if users skew ring.
 - **COROS** — the API _does_ carry body data (nightly sleep stages, HRV,
   recovery %, EvoLab training load), and COROS even ships an official MCP
   server — but access is a partner application, not self-serve. Worth
@@ -120,8 +117,8 @@ The rest of the body-data field, for when a second provider matters:
 `WearableActuals` still supports both flavors honestly: recovery
 providers fill `recovery/sleepHours/hrvMs/restingHr`; activity providers
 fill `lastActivity/weekActivityCount` and leave biometrics absent
-(`readiness` is null and the unlock falls back to "go log it / already
-logged" messaging).
+(numeric readiness is null and the panel falls back to "go log it /
+already logged" messaging).
 
 ### WHOOP
 

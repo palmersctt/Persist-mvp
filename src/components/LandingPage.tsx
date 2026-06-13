@@ -829,7 +829,7 @@ export default function LandingPage() {
             </h1>
             <p className="lp-hero-sub">
               Your calendar is the forecast. Your wearable is the actual. Persist fuses them into
-              one number &mdash; headroom &mdash; so whether you train at 6am or 6pm, you know how
+              one number &mdash; readiness &mdash; so whether you train at 6am or 6pm, you know how
               hard to go: train hard, keep it easy, or take the recovery day.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
@@ -1118,11 +1118,11 @@ export default function LandingPage() {
               <h2>
                 Your scores meet your body.
                 <br />
-                <em>Headroom is what&apos;s left.</em>
+                <em>Readiness is what&apos;s left.</em>
               </h2>
               <p>
                 Connect a wearable and Persist fuses recovery, sleep, and HRV with your Focus,
-                Strain, and Balance scores into one number: headroom &mdash; what you have left to
+                Strain, and Balance scores into one number: readiness &mdash; what you have left to
                 train with. The workday&apos;s tax lands as meetings pass, so a 6am check and a 6pm
                 check both tell the truth.
               </p>
@@ -1133,7 +1133,7 @@ export default function LandingPage() {
                   <span className="lp-verdict-dot"></span>Morning window
                 </div>
                 <div className="lp-verdict-headline">Train hard &mdash; before the chaos</div>
-                <div className="lp-verdict-metrics">Headroom 88 &rarr; ~61 after work</div>
+                <div className="lp-verdict-metrics">Readiness 88 &rarr; ~61 after work</div>
                 <p className="lp-verdict-text">
                   Recovery 88%, but today&apos;s Strain forecast will tax ~27 points. If today has a
                   hard session in it, it&apos;s this morning.
@@ -1144,7 +1144,7 @@ export default function LandingPage() {
                   <span className="lp-verdict-dot"></span>Mid-workday
                 </div>
                 <div className="lp-verdict-headline">Easy evening session ahead</div>
-                <div className="lp-verdict-metrics">Headroom 71 &rarr; ~58 at 4:30 PM</div>
+                <div className="lp-verdict-metrics">Readiness 71 &rarr; ~58 at 4:30 PM</div>
                 <p className="lp-verdict-text">
                   Two meetings left to absorb. Plan tonight on the projection, not on how you feel
                   between calls.
@@ -1155,7 +1155,7 @@ export default function LandingPage() {
                   <span className="lp-verdict-dot"></span>Workday clear
                 </div>
                 <div className="lp-verdict-headline">Train hard</div>
-                <div className="lp-verdict-metrics">Headroom 82 &middot; Recovery 88%</div>
+                <div className="lp-verdict-metrics">Readiness 82 &middot; Recovery 88%</div>
                 <p className="lp-verdict-text">
                   A light forecast barely taxed the tank. Make it the quality session.
                 </p>
@@ -1192,7 +1192,7 @@ export default function LandingPage() {
                 <div className="lp-step-num">STEP 03</div>
                 <h3>Get the verdict</h3>
                 <p>
-                  One headroom number, live all day &mdash; your scores set what the workday costs,
+                  One readiness number, live all day &mdash; your scores set what the workday costs,
                   your body sets what you have, and the answer is the same at 6am or 6pm: train
                   hard, keep it easy, or recover.
                 </p>

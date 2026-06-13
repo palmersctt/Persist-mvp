@@ -30,46 +30,46 @@ Always reference `BRAND.md` for colors. Never hardcode new palettes or invent co
 
 Every mood maps to exactly one tier. One color family per tier.
 
-| Tier | Moods | Card look |
-|------|-------|-----------|
-| bad | survival, grinding, scattered | Near-black gradient, lime score numerals |
-| ok | autopilot, coasting | Graphite gradient, white score numerals |
-| good | locked-in, flow, victory | Lime gradient, near-black score numerals |
+| Tier | Moods                         | Card look                                |
+| ---- | ----------------------------- | ---------------------------------------- |
+| bad  | survival, grinding, scattered | Near-black gradient, lime score numerals |
+| ok   | autopilot, coasting           | Graphite gradient, white score numerals  |
+| good | locked-in, flow, victory      | Lime gradient, near-black score numerals |
 
 ## Score Names
 
 Internal metric names → display labels:
 
-| Internal | Display |
-|----------|---------|
-| `performance` / `adaptivePerformanceIndex` | **Focus** |
-| `resilience` / `cognitiveResilience` | **Strain** |
-| `sustainability` / `workRhythmRecovery` | **Balance** |
+| Internal                                   | Display     |
+| ------------------------------------------ | ----------- |
+| `performance` / `adaptivePerformanceIndex` | **Focus**   |
+| `resilience` / `cognitiveResilience`       | **Strain**  |
+| `sustainability` / `workRhythmRecovery`    | **Balance** |
 
 All scores render at uniform 32px. Color-only emphasis (no size variation).
 
 ## Key Files
 
-| Path | Purpose |
-|------|---------|
-| `app/page.tsx` | Landing page |
-| `app/dashboard/page.tsx` | Dashboard page |
-| `app/layout.tsx` | Root layout |
-| `src/components/CardContent.tsx` | Card renderer (single source) |
-| `src/components/LandingPage.tsx` | Landing page component |
-| `src/components/WorkHealthDashboard.tsx` | Dashboard component |
-| `src/components/SwipeableQuoteCards.tsx` | Multi-quote card carousel |
-| `src/lib/mood.ts` | Mood types, MOODS record, tier logic |
-| `src/lib/mood.test.ts` | Mood unit tests |
-| `src/lib/trends.ts` | Real trends built from persisted daily score history |
-| `src/lib/generateTrends.ts` | Synthetic trends (sandbox demo) + shared insight generators |
-| `src/components/TrendsSection.tsx` | Dashboard trends UI (sparklines, weekly/monthly) |
-| `src/lib/readiness.ts` | Headroom algorithm: calendar scores × wearable capacity, time-aware |
-| `src/lib/wearables/` | Wearable providers (WHOOP, demo) normalized to `WearableActuals` |
-| `src/components/WearableSection.tsx` | Dashboard "Forecast vs Actual" section |
-| `WEARABLES.md` | Wearable integration model, provider setup, schema |
-| `BRAND.md` | Brand color tokens and card design tokens |
-| `PERSONAS.md` | User personas |
+| Path                                     | Purpose                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| `app/page.tsx`                           | Landing page                                                         |
+| `app/dashboard/page.tsx`                 | Dashboard page                                                       |
+| `app/layout.tsx`                         | Root layout                                                          |
+| `src/components/CardContent.tsx`         | Card renderer (single source)                                        |
+| `src/components/LandingPage.tsx`         | Landing page component                                               |
+| `src/components/WorkHealthDashboard.tsx` | Dashboard component                                                  |
+| `src/components/SwipeableQuoteCards.tsx` | Multi-quote card carousel                                            |
+| `src/lib/mood.ts`                        | Mood types, MOODS record, tier logic                                 |
+| `src/lib/mood.test.ts`                   | Mood unit tests                                                      |
+| `src/lib/trends.ts`                      | Real trends built from persisted daily score history                 |
+| `src/lib/generateTrends.ts`              | Synthetic trends (sandbox demo) + shared insight generators          |
+| `src/components/TrendsSection.tsx`       | Dashboard trends UI (sparklines, weekly/monthly)                     |
+| `src/lib/readiness.ts`                   | Readiness algorithm: calendar scores × wearable capacity, time-aware |
+| `src/lib/wearables/`                     | Wearable providers (WHOOP, demo) normalized to `WearableActuals`     |
+| `src/components/WearableSection.tsx`     | Dashboard "Forecast vs Actual" section                               |
+| `WEARABLES.md`                           | Wearable integration model, provider setup, schema                   |
+| `BRAND.md`                               | Brand color tokens and card design tokens                            |
+| `PERSONAS.md`                            | User personas                                                        |
 
 ## Do NOT
 

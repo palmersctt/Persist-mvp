@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useWearable } from '../hooks/useWearable';
+import type { WearableHook } from '../hooks/useWearable';
 import {
-  computeHeadroom,
+  computeReadiness,
   forecastVsActual,
   type DayShape,
   type ForecastScores,
@@ -21,7 +21,7 @@ const PHASE_LABELS: Record<ReadinessState['phase'], string> = {
 };
 
 /**
- * Presentational headroom panel + actuals row. Shared between the
+ * Presentational readiness panel + actuals row. Shared between the
  * authenticated dashboard (live data via useWearable) and the public
  * sandbox preview (synthetic scenarios).
  */
@@ -56,7 +56,7 @@ export function WearablePanel({
 
   return (
     <>
-      {/* Headroom: capacity from the body, taxed by the workday in real time */}
+      {/* Readiness: body capacity taxed by the workday in real time */}
       <div
         className="rounded-xl p-5 mb-2.5"
         style={
@@ -86,7 +86,7 @@ export function WearablePanel({
             {PHASE_LABELS[state.phase]}
           </span>
         </div>
-        {state.headroomNow != null && (
+        {state.readinessNow != null && (
           <div className="flex items-baseline gap-2 mb-1.5">
             <span
               className="text-3xl font-bold"
@@ -97,15 +97,15 @@ export function WearablePanel({
                 lineHeight: 1,
               }}
             >
-              {state.headroomNow}
+              {state.readinessNow}
             </span>
             <span
               className="text-[9px] uppercase tracking-wider font-medium"
               style={{ color: celebrate ? 'rgba(11,11,12,0.55)' : 'var(--text-faint)' }}
             >
-              Headroom
+              Readiness
             </span>
-            {state.phase === 'workday' && state.headroomEndOfDay != null && (
+            {state.phase === 'workday' && state.readinessEndOfDay != null && (
               <span
                 className="text-xs font-semibold"
                 style={{
@@ -114,7 +114,7 @@ export function WearablePanel({
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                → ~{state.headroomEndOfDay} at clear
+                → ~{state.readinessEndOfDay} at clear
               </span>
             )}
           </div>
@@ -189,15 +189,16 @@ export function WearablePanel({
 }
 
 // "Forecast vs Actual" dashboard section. The calendar forecast (Focus/
-// Strain/Balance + event timing) merges with wearable actuals (recovery,
-// sleep, HRV) into one answer: when does the workday unlock, and what are
-// you cleared to do once it does.
+// Strain/Balance + event timing) fuses with wearable actuals (recovery,
+// sleep, HRV) into readiness: what's left to train with, at any hour.
 export default function WearableSection({
   forecast,
   dayShape,
+  wearable,
 }: {
   forecast: ForecastScores;
   dayShape: DayShape | null;
+  wearable: WearableHook;
 }) {
   const {
     connected,
@@ -209,7 +210,7 @@ export default function WearableSection({
     connect,
     connectDemo,
     disconnect,
-  } = useWearable();
+  } = wearable;
   const [notice, setNotice] = useState<string | null>(null);
   const [demoConnecting, setDemoConnecting] = useState(false);
 
@@ -240,7 +241,7 @@ export default function WearableSection({
   }, []);
 
   const state = useMemo(
-    () => computeHeadroom(now, dayShape, forecast, actuals),
+    () => computeReadiness(now, dayShape, forecast, actuals),
     [now, dayShape, forecast, actuals]
   );
 
@@ -265,7 +266,7 @@ export default function WearableSection({
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
             Connect a wearable and Persist fuses recovery, sleep, and HRV with your Focus, Strain,
-            and Balance scores into one number &mdash; headroom &mdash; so whether you train at 6am
+            and Balance scores into one number &mdash; readiness &mdash; so whether you train at 6am
             or 6pm, you know how hard to go.
           </p>
           {notice && (
