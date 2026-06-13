@@ -879,14 +879,13 @@ export default function LandingPage() {
           >
             <div className="lp-eyebrow">For working athletes</div>
             <h1>
-              Your workday, decoded.
+              Some days work is
               <br />
-              <em>Your training, unlocked.</em>
+              <em>the workout.</em>
             </h1>
             <p className="lp-hero-sub">
-              Your calendar is the forecast. Your wearable is the actual. Persist fuses them into
-              one number &mdash; readiness &mdash; so whether you train at 6am or 6pm, you know how
-              hard to go: train hard, keep it easy, or take the recovery day.
+              Until now you&apos;ve guessed how much work took out of you. Persistwork reads your day
+              and answers the only question that matters: how hard to train today.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg
