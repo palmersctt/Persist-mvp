@@ -500,6 +500,59 @@ export default function LandingPage() {
           line-height: 1.6;
         }
 
+        /* AM/PM intelligence strip */
+        .lp-ampm {
+          max-width: 560px;
+          margin: 36px auto 0;
+          text-align: center;
+        }
+        .lp-ampm-lead {
+          font-size: 14px;
+          color: var(--text-muted);
+          line-height: 1.6;
+          margin-bottom: 18px;
+        }
+        .lp-ampm-row {
+          display: inline-flex;
+          align-items: center;
+          gap: 18px;
+        }
+        .lp-ampm-cell {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          background: var(--surface);
+          border: 1px solid var(--rule);
+          border-radius: 12px;
+          padding: 14px 22px;
+          min-width: 118px;
+        }
+        .lp-ampm-time {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--text-faint);
+        }
+        .lp-ampm-num {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 28px;
+          font-weight: 800;
+          color: var(--signal);
+          font-variant-numeric: tabular-nums;
+          line-height: 1;
+        }
+        .lp-ampm-verdict {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .lp-ampm-arrow {
+          color: var(--text-faint);
+          font-size: 18px;
+        }
+
         /* CTA SECTION */
         .lp-cta-section {
           background: var(--ground);
@@ -893,6 +946,27 @@ export default function LandingPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* AM/PM intelligence — same day, two check-ins */}
+            <div className="lp-ampm">
+              <div className="lp-ampm-lead">
+                Same day, two check-ins. Readiness updates as your meetings pass &mdash; so a 6am
+                check and a 6pm check both tell the truth about how hard to train.
+              </div>
+              <div className="lp-ampm-row">
+                <div className="lp-ampm-cell">
+                  <span className="lp-ampm-time">6:00 AM</span>
+                  <span className="lp-ampm-num">88</span>
+                  <span className="lp-ampm-verdict">Train hard</span>
+                </div>
+                <span className="lp-ampm-arrow">&rarr;</span>
+                <div className="lp-ampm-cell">
+                  <span className="lp-ampm-time">6:00 PM</span>
+                  <span className="lp-ampm-num">63</span>
+                  <span className="lp-ampm-verdict">Keep it easy</span>
                 </div>
               </div>
             </div>
