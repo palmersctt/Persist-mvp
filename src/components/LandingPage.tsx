@@ -322,135 +322,191 @@ export default function LandingPage() {
           border-color: rgba(199, 249, 92, 0.6);
         }
 
-        /* INSIGHTS */
-        .lp-insights {
+        /* READINESS MOCK (mirrors the dashboard: card + why breakdown) */
+        .lp-rstack {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          justify-content: space-between;
+          gap: 10px;
         }
-        .lp-insight-card {
-          background: var(--surface-2);
+        .lp-rcard {
+          background: linear-gradient(160deg, var(--surface-2), var(--surface));
           border: 1px solid var(--rule);
-          border-radius: 12px;
-          padding: 14px 16px;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          transition: transform 0.15s;
+          border-radius: 14px;
+          padding: 18px;
         }
-        .lp-insight-card:hover {
-          transform: translateX(3px);
-        }
-        .lp-ic-icon {
-          width: 34px;
-          height: 34px;
-          border-radius: 8px;
+        .lp-rcard-chip {
           display: flex;
           align-items: center;
-          justify-content: center;
-          color: var(--signal);
-          flex-shrink: 0;
-        }
-        .lp-ic-amber {
-          background: var(--signal-soft);
-        }
-        .lp-ic-rose {
-          background: var(--signal-soft);
-        }
-        .lp-ic-sage {
-          background: var(--signal-soft);
-        }
-        .lp-ic-label {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          margin-bottom: 2px;
-        }
-        .lp-label-focus {
-          color: var(--signal);
-        }
-        .lp-label-strain {
-          color: var(--signal);
-        }
-        .lp-label-balance {
-          color: var(--signal);
-        }
-        .lp-ic-text {
-          font-size: 13px;
-          color: var(--text-muted);
-          line-height: 1.4;
-        }
-
-        /* SCORE ROW */
-        .lp-score-row {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
-          margin-top: 12px;
-        }
-        .lp-score-pill {
-          background: var(--surface-2);
-          border: 1px solid var(--rule);
-          border-radius: 10px;
-          padding: 10px 12px;
-          text-align: center;
-          transition: transform 0.15s;
-          cursor: default;
-        }
-        .lp-score-pill:hover {
-          transform: translateY(-2px);
-        }
-        .lp-score-num {
-          font-family: var(--font-geist-mono), ui-monospace, monospace;
-          font-size: 22px;
-          font-weight: 700;
-          letter-spacing: -1px;
-          font-variant-numeric: tabular-nums;
-        }
-        .lp-score-num.lp-amber {
-          color: var(--signal);
-        }
-        .lp-score-num.lp-rose {
-          color: var(--signal);
-        }
-        .lp-score-num.lp-sage {
-          color: var(--signal);
-        }
-        .lp-score-lbl {
-          font-size: 11px;
-          color: var(--text-faint);
-          font-weight: 500;
-          margin-top: 1px;
-        }
-
-        /* MOOD PILL (replaces dark quote card) */
-        .lp-mood-tag-row {
-          display: flex;
-          justify-content: center;
-          margin-top: 16px;
-        }
-        .lp-mood-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 7px 14px;
-          border-radius: 999px;
-          background: var(--surface-2);
-          color: var(--signal);
-          border: 1px solid var(--signal-edge);
+          gap: 6px;
           font-size: 10px;
           font-weight: 700;
-          letter-spacing: 0.18em;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
+          color: var(--signal-dim);
+          margin-bottom: 12px;
         }
-        .lp-mood-tag-dot {
+        .lp-rcard-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
           background: var(--signal);
-          box-shadow: 0 0 8px rgba(199, 249, 92, 0.55);
+          box-shadow: 0 0 10px rgba(199, 249, 92, 0.5);
+        }
+        .lp-rcard-num {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 44px;
+          font-weight: 700;
+          letter-spacing: -2px;
+          line-height: 1;
+          color: var(--signal);
+          font-variant-numeric: tabular-nums;
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+        .lp-rcard-num span {
+          font-family: var(--font-geist-sans), sans-serif;
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-faint);
+        }
+        .lp-rcard-sub {
+          font-size: 11px;
+          color: var(--text-faint);
+          margin-top: 10px;
+        }
+
+        /* equation row */
+        .lp-eq {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: var(--surface);
+          border: 1px solid var(--rule);
+          border-radius: 12px;
+          padding: 12px 16px;
+        }
+        .lp-eq-term {
+          text-align: center;
+        }
+        .lp-eq-num {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--text);
+          font-variant-numeric: tabular-nums;
+          line-height: 1;
+        }
+        .lp-eq-num.lp-eq-muted {
+          color: var(--text-muted);
+        }
+        .lp-eq-num.lp-eq-accent {
+          color: var(--signal);
+        }
+        .lp-eq-lbl {
+          font-size: 8px;
+          font-weight: 500;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--text-faint);
+          margin-top: 5px;
+        }
+        .lp-eq-op {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text-faint);
+        }
+
+        /* why blocks */
+        .lp-why-block {
+          background: var(--surface);
+          border: 1px solid var(--rule);
+          border-radius: 12px;
+          padding: 14px 16px;
+        }
+        .lp-why-h {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--text);
+          margin-bottom: 12px;
+        }
+        .lp-why-tag {
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: var(--signal-soft);
+          color: var(--signal-dim);
+        }
+        .lp-body-row {
+          display: flex;
+          justify-content: space-between;
+        }
+        .lp-body-item {
+          text-align: center;
+        }
+        .lp-body-num {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--signal);
+          font-variant-numeric: tabular-nums;
+        }
+        .lp-body-lbl {
+          font-size: 9px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-faint);
+          margin-top: 2px;
+        }
+        .lp-cost {
+          margin-bottom: 10px;
+        }
+        .lp-cost:last-child {
+          margin-bottom: 0;
+        }
+        .lp-cost-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          margin-bottom: 6px;
+        }
+        .lp-cost-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text);
+        }
+        .lp-cost-val {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 12px;
+          font-weight: 400;
+          color: var(--text-faint);
+        }
+        .lp-cost-pts {
+          font-family: var(--font-geist-mono), ui-monospace, monospace;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--signal);
+        }
+        .lp-cost-bar {
+          width: 100%;
+          height: 4px;
+          border-radius: 999px;
+          background: var(--rule);
+        }
+        .lp-cost-fill {
+          height: 4px;
+          border-radius: 999px;
+          background: var(--signal);
         }
 
         /* HOW IT WORKS */
@@ -858,12 +914,12 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
               <h2>
-                Eight meetings. One break. <em>Intervals at six.</em>
+                Eight meetings. 88% recovery. <em>One number.</em>
               </h2>
               <p>
-                A real kind of Tuesday &mdash; with a session planned for the evening. Persist reads
-                between the lines and scores what the workday will take before you decide
-                what&apos;s left to spend.
+                A real working-athlete Tuesday. The calendar says the workday will cost 25 points;
+                your body showed up with 88. Readiness is what&apos;s left to train on &mdash; and
+                you can see exactly why.
               </p>
             </div>
 
@@ -944,101 +1000,83 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* INSIGHTS SIDE */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div className="lp-insights" style={{ flex: 1 }}>
-                  <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-amber">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="12" cy="12" r="9" />
-                        <circle cx="12" cy="12" r="4" />
-                        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="lp-ic-label lp-label-focus">Focus</div>
-                      <div className="lp-ic-text">
-                        No uninterrupted block longer than 45 minutes. Deep work never had a chance
-                        today.
-                      </div>
-                    </div>
+              {/* READINESS SIDE — mirrors the dashboard: card + why breakdown */}
+              <div className="lp-rstack">
+                {/* Readiness verdict card */}
+                <div className="lp-rcard">
+                  <div className="lp-rcard-chip">
+                    <span className="lp-rcard-dot"></span>Workday clear &middot; Keep it easy
                   </div>
-                  <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-rose">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="lp-ic-label lp-label-strain">Strain</div>
-                      <div className="lp-ic-text">
-                        5 different contexts, back-to-back from 1&ndash;5pm. Your brain is paying
-                        the switching tax all afternoon.
-                      </div>
-                    </div>
+                  <div className="lp-rcard-num">
+                    63<span>Readiness</span>
                   </div>
-                  <div className="lp-insight-card">
-                    <div className="lp-ic-icon lp-ic-sage">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      >
-                        <line x1="18" y1="20" x2="18" y2="10" />
-                        <line x1="12" y1="20" x2="12" y2="4" />
-                        <line x1="6" y1="20" x2="6" y2="14" />
-                      </svg>
+                  <div className="lp-rcard-sub">
+                    Focus 38 &middot; Strain 71 &middot; Balance 46
+                  </div>
+                </div>
+
+                {/* The equation: body − workday = readiness */}
+                <div className="lp-eq">
+                  <div className="lp-eq-term">
+                    <div className="lp-eq-num">88</div>
+                    <div className="lp-eq-lbl">Body</div>
+                  </div>
+                  <span className="lp-eq-op">&minus;</span>
+                  <div className="lp-eq-term">
+                    <div className="lp-eq-num lp-eq-muted">25</div>
+                    <div className="lp-eq-lbl">Workday</div>
+                  </div>
+                  <span className="lp-eq-op">=</span>
+                  <div className="lp-eq-term">
+                    <div className="lp-eq-num lp-eq-accent">63</div>
+                    <div className="lp-eq-lbl">Readiness</div>
+                  </div>
+                </div>
+
+                {/* What your body brought */}
+                <div className="lp-why-block">
+                  <div className="lp-why-h">
+                    <span>What your body brought</span>
+                    <span className="lp-why-tag">WHOOP</span>
+                  </div>
+                  <div className="lp-body-row">
+                    <div className="lp-body-item">
+                      <div className="lp-body-num">88%</div>
+                      <div className="lp-body-lbl">Recovery</div>
                     </div>
-                    <div>
-                      <div className="lp-ic-label lp-label-balance">Balance</div>
-                      <div className="lp-ic-text">
-                        One 30-minute gap in a 7.5-hour day. You needed three. Your future self is
-                        already tired.
-                      </div>
+                    <div className="lp-body-item">
+                      <div className="lp-body-num">7.9h</div>
+                      <div className="lp-body-lbl">Sleep</div>
+                    </div>
+                    <div className="lp-body-item">
+                      <div className="lp-body-num">62ms</div>
+                      <div className="lp-body-lbl">HRV</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="lp-score-row">
-                  <div className="lp-score-pill">
-                    <div className="lp-score-num lp-amber">14</div>
-                    <div className="lp-score-lbl">Focus</div>
+                {/* What your workday is taking */}
+                <div className="lp-why-block">
+                  <div className="lp-why-h">
+                    <span>What your workday is taking</span>
                   </div>
-                  <div className="lp-score-pill">
-                    <div className="lp-score-num lp-rose">88</div>
-                    <div className="lp-score-lbl">Strain</div>
-                  </div>
-                  <div className="lp-score-pill">
-                    <div className="lp-score-num lp-sage">31</div>
-                    <div className="lp-score-lbl">Balance</div>
-                  </div>
-                </div>
-
-                <div className="lp-mood-tag-row">
-                  <div className="lp-mood-tag">
-                    <span className="lp-mood-tag-dot"></span>
-                    Survival Mode
-                  </div>
+                  {[
+                    { label: 'Strain', value: 71, cost: 14, width: 100 },
+                    { label: 'Balance', value: 46, cost: 6, width: 43 },
+                    { label: 'Focus', value: 38, cost: 5, width: 36 },
+                  ].map((m) => (
+                    <div className="lp-cost" key={m.label}>
+                      <div className="lp-cost-head">
+                        <span className="lp-cost-name">
+                          {m.label} <span className="lp-cost-val">{m.value}</span>
+                        </span>
+                        <span className="lp-cost-pts">&minus;{m.cost}</span>
+                      </div>
+                      <div className="lp-cost-bar">
+                        <div className="lp-cost-fill" style={{ width: `${m.width}%` }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
