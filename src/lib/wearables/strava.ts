@@ -100,6 +100,59 @@ interface StravaActivity {
   suffer_score?: number | null;
 }
 
+// ─── Training-load freshness: the capacity proxy ────────────────────────────
+//
+// Strava has no recovery/HRV/sleep, so we estimate how rested the body is
+// from the shape of recent training. Two exponentially-weighted averages of
+// daily load — chronic (fitness, ~42d) and acute (fatigue, ~7d) — give
+// "form" (chronic − acute). Positive form means recent load sits below your
+// baseline: rested and ready. Negative form means you're carrying fatigue.
+// Form maps onto a 0–100 freshness score that stands in for recovery in the
+// readiness equation. A heuristic, not a lab test — but enough to answer
+// "how hard to train today" without a body-state device.
+
+const CTL_DAYS = 42;
+const ATL_DAYS = 7;
+const CTL_DECAY = 1 - Math.exp(-1 / CTL_DAYS);
+const ATL_DECAY = 1 - Math.exp(-1 / ATL_DAYS);
+const DAY_MS = 86400000;
+
+type LoadInput = { start_date?: string; suffer_score?: number | null; moving_time?: number };
+
+/** One activity's training load: relative effort if Strava reports it, else ~1 per minute moved. */
+export function activityLoad(a: LoadInput): number {
+  if (typeof a.suffer_score === 'number' && a.suffer_score > 0) return a.suffer_score;
+  return Math.round((a.moving_time ?? 0) / 60);
+}
+
+/**
+ * Map a trailing window of activities to a 0–100 freshness score for `date`
+ * (YYYY-MM-DD). Buckets load by UTC day, then walks the impulse-response
+ * model day by day, converting the final form (chronic − acute load) to
+ * freshness. Returns null when there's no usable training to read.
+ */
+export function freshnessFromActivities(activities: LoadInput[], date: string): number | null {
+  const byDay = new Map<string, number>();
+  for (const a of activities) {
+    if (!a.start_date) continue;
+    const day = a.start_date.slice(0, 10);
+    byDay.set(day, (byDay.get(day) ?? 0) + activityLoad(a));
+  }
+  if (byDay.size === 0) return null;
+
+  const end = new Date(`${date}T00:00:00Z`).getTime();
+  const start = end - (CTL_DAYS + ATL_DAYS) * DAY_MS;
+  let ctl = 0;
+  let atl = 0;
+  for (let t = start; t <= end; t += DAY_MS) {
+    const load = byDay.get(new Date(t).toISOString().slice(0, 10)) ?? 0;
+    ctl += (load - ctl) * CTL_DECAY;
+    atl += (load - atl) * ATL_DECAY;
+  }
+  const form = ctl - atl;
+  return Math.min(98, Math.max(5, Math.round(50 + form * 1.3)));
+}
+
 /**
  * Fetch the trailing week of activities from Strava and normalize.
  * Throws 'STRAVA_UNAUTHORIZED' if the access token is rejected (caller
@@ -109,10 +162,11 @@ export async function fetchStravaActuals(
   accessToken: string,
   date: string
 ): Promise<WearableActuals | null> {
-  const after = Math.floor((Date.now() - 7 * 24 * 3600 * 1000) / 1000);
+  // Pull enough history to build the chronic-load baseline for freshness.
+  const after = Math.floor((Date.now() - (CTL_DAYS + ATL_DAYS) * DAY_MS) / 1000);
   let activities: StravaActivity[];
   try {
-    const res = await fetch(`${STRAVA_API_BASE}/athlete/activities?after=${after}&per_page=50`, {
+    const res = await fetch(`${STRAVA_API_BASE}/athlete/activities?after=${after}&per_page=200`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!res.ok) {
@@ -152,11 +206,18 @@ export async function fetchStravaActuals(
     .filter((a) => (a.start_date ?? '').startsWith(date))
     .reduce((sum, a) => sum + (a.suffer_score ?? 0), 0);
 
+  // weekActivityCount is the trailing 7 days, even though we fetched ~49.
+  const weekAgo = Date.now() - 7 * DAY_MS;
+  const weekActivityCount = sorted.filter(
+    (a) => a.start_date && new Date(a.start_date).getTime() >= weekAgo
+  ).length;
+
   return {
     date,
     provider: 'strava',
     lastActivity,
-    weekActivityCount: sorted.length,
+    weekActivityCount,
+    freshness: freshnessFromActivities(sorted, date) ?? undefined,
     dayStrain: todayEffort > 0 ? todayEffort : undefined,
   };
 }

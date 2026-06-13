@@ -63,14 +63,19 @@ export const MAINTAIN_THRESHOLD = 40;
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 const clamp100 = (n: number) => Math.round(Math.min(100, Math.max(0, n)));
 
-/** What the body brought today: recovery, penalized for short sleep. */
+/** What the body brought today: recovery (penalized for short sleep), or
+ * training-load freshness when the provider has no body-state signal. */
 export function bodyCapacity(actuals: WearableActuals): number | null {
-  if (actuals.recovery == null) return null;
-  let capacity = actuals.recovery;
-  if (actuals.sleepHours != null && actuals.sleepHours < 6) {
-    capacity -= (6 - actuals.sleepHours) * 8;
+  if (actuals.recovery != null) {
+    let capacity = actuals.recovery;
+    if (actuals.sleepHours != null && actuals.sleepHours < 6) {
+      capacity -= (6 - actuals.sleepHours) * 8;
+    }
+    return clamp100(capacity);
   }
-  return clamp100(capacity);
+  // Activity providers (Strava): training-load freshness stands in for recovery.
+  if (actuals.freshness != null) return clamp100(actuals.freshness);
+  return null;
 }
 
 /** How much of an athlete's capacity this calendar burns, 0..1. */
@@ -180,6 +185,17 @@ export function readinessContributions(
             : actuals.recovery >= 34
               ? 'Yellow — partially recovered.'
               : 'Red — your body needs rest.',
+      });
+    if (actuals.recovery == null && actuals.freshness != null)
+      body.push({
+        label: 'Freshness',
+        value: `${actuals.freshness}`,
+        note:
+          actuals.freshness >= 65
+            ? 'Rested — recent training left you fresh.'
+            : actuals.freshness >= 40
+              ? 'Some fatigue in the legs from recent training.'
+              : 'Heavy recent load — you’re carrying fatigue.',
       });
     if (actuals.sleepHours != null)
       body.push({
@@ -390,8 +406,16 @@ export function computeReadiness(
   const readinessEndOfDay = clamp100(capacity - tax);
   const nowBand = readinessBand(readinessNow);
   const endBand = readinessBand(readinessEndOfDay);
-  const recovery = actuals!.recovery!;
+  const fromRecovery = actuals!.recovery != null;
   const sleepClause = actuals!.sleepHours != null ? `, ${actuals!.sleepHours}h sleep` : '';
+  // Phrase the capacity source for the detail line: recovery % for body
+  // providers, freshness for training-load providers (Strava).
+  const capacityShort = fromRecovery
+    ? `recovery ${actuals!.recovery}%`
+    : `freshness ${actuals!.freshness}`;
+  const capacityClause = fromRecovery
+    ? `recovery ${actuals!.recovery}%${sleepClause}`
+    : `freshness ${actuals!.freshness}`;
 
   let message: Message;
   let band: ReadinessBand;
@@ -405,11 +429,11 @@ export function computeReadiness(
     };
     let detail: string;
     if (nowBand === 'recover') {
-      detail = `Readiness ${readinessNow} (recovery ${recovery}%${sleepClause}). The tank is empty before the workday even starts. Today is about absorbing, not adding.`;
+      detail = `Readiness ${readinessNow} (${capacityClause}). The tank is empty before the workday even starts. Today is about absorbing, not adding.`;
     } else if (endBand !== nowBand) {
-      detail = `Readiness ${readinessNow} now, ~${readinessEndOfDay} after the workday takes its share (recovery ${recovery}%${sleepClause}). If today has a hard session in it, it’s this morning.`;
+      detail = `Readiness ${readinessNow} now, ~${readinessEndOfDay} after the workday takes its share (${capacityClause}). If today has a hard session in it, it’s this morning.`;
     } else {
-      detail = `Readiness ${readinessNow}, and today’s calendar only costs ~${Math.round(tax)} points (recovery ${recovery}%${sleepClause}). Morning or evening — both windows work.`;
+      detail = `Readiness ${readinessNow}, and today’s calendar only costs ~${Math.round(tax)} points (${capacityClause}). Morning or evening — both windows work.`;
     }
     message = { headline: headlineByBand[band], detail };
   } else if (phase === 'workday') {
@@ -430,7 +454,7 @@ export function computeReadiness(
     const messages: Record<ReadinessBand, Message> = {
       prime: {
         headline: 'Workday clear — train hard',
-        detail: `Readiness ${readinessEndOfDay} (recovery ${recovery}%${sleepClause}). The workday barely taxed it. Make today the quality session.`,
+        detail: `Readiness ${readinessEndOfDay} (${capacityClause}). The workday barely taxed it. Make today the quality session.`,
       },
       maintain: {
         headline: 'Workday clear — keep it easy',
@@ -438,7 +462,7 @@ export function computeReadiness(
       },
       recover: {
         headline: 'Workday clear — make it a recovery day',
-        detail: `Readiness ${readinessEndOfDay}. Between recovery ${recovery}% and today’s calendar, the tank is spent. A walk counts; hard training resumes tomorrow.`,
+        detail: `Readiness ${readinessEndOfDay}. Between ${capacityShort} and today’s calendar, the tank is spent. A walk counts; hard training resumes tomorrow.`,
       },
     };
     message = messages[band];

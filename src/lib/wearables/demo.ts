@@ -20,21 +20,23 @@ function seeded(seed: string): number {
 
 export function generateDemoActuals(email: string, date: string): WearableActuals {
   const base = `${email}:${date}`;
-  const recovery = Math.round(30 + seeded(`${base}:recovery`) * 65); // 30–95
-  const sleepHours = Math.round((5.5 + seeded(`${base}:sleep`) * 3) * 10) / 10; // 5.5–8.5
-  const hrvMs = Math.round(40 + seeded(`${base}:hrv`) * 75); // 40–115
-  const restingHr = Math.round(46 + seeded(`${base}:rhr`) * 18); // 46–64
-  const sleepPerformance = Math.min(100, Math.round((sleepHours / 8) * 100));
-  const dayStrain = Math.round(seeded(`${base}:strain`) * 14 * 10) / 10; // 0–14
+  // Strava-shaped: training-load freshness plus the activity factors the
+  // breakdown reads. Deterministic so the dashboard stays stable across a day.
+  const freshness = Math.round(20 + seeded(`${base}:freshness`) * 75); // 20–95
+  const weekActivityCount = Math.round(2 + seeded(`${base}:week`) * 6); // 2–8
+  const durationMin = Math.round(35 + seeded(`${base}:dur`) * 70); // 35–105
+  const distanceKm = Math.round((4 + seeded(`${base}:dist`) * 16) * 10) / 10; // 4.0–20.0
 
   return {
     date,
     provider: 'demo',
-    recovery,
-    sleepHours,
-    sleepPerformance,
-    hrvMs,
-    restingHr,
-    dayStrain,
+    freshness,
+    weekActivityCount,
+    lastActivity: {
+      type: 'Run',
+      startISO: `${date}T06:30:00Z`,
+      durationMin,
+      distanceKm,
+    },
   };
 }

@@ -5,50 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 
-// Static demo week for the trends section — continues the Tuesday story from the demo card.
-const TREND_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const TREND_TUESDAY = 1;
-const TREND_METRICS = [
-  {
-    name: 'Focus',
-    values: [52, 14, 38, 61, 70],
-    insight: 'Tuesday didn’t just cost Tuesday. Focus needed until Thursday to recover.',
-  },
-  {
-    name: 'Strain',
-    values: [44, 88, 71, 50, 38],
-    insight: 'Strain stayed elevated all Wednesday — a stacked day bills you the next morning too.',
-  },
-  {
-    name: 'Balance',
-    values: [58, 31, 46, 60, 67],
-    insight: 'Recovery arrived when the calendar made room for it — not before.',
-  },
-];
-
-const SPARK_W = 280;
-const SPARK_H = 56;
-const SPARK_PX = 10;
-const SPARK_PY = 9;
-
-function sparkPath(values: number[]) {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const step = (SPARK_W - SPARK_PX * 2) / (values.length - 1);
-  const pts = values.map((v, i) => ({
-    x: SPARK_PX + i * step,
-    y: SPARK_PY + (1 - (v - min) / range) * (SPARK_H - SPARK_PY * 2),
-  }));
-  let line = `M${pts[0].x},${pts[0].y}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const cp = step * 0.35;
-    line += ` C${pts[i].x + cp},${pts[i].y} ${pts[i + 1].x - cp},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`;
-  }
-  const area = `${line} L${pts[pts.length - 1].x},${SPARK_H} L${pts[0].x},${SPARK_H} Z`;
-  return { line, area, pts };
-}
-
 export default function LandingPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -544,141 +500,6 @@ export default function LandingPage() {
           line-height: 1.6;
         }
 
-        /* FORECAST VS ACTUAL (verdict examples) */
-        .lp-verdict-section {
-          background: var(--surface);
-          border-top: 1px solid var(--rule);
-          border-bottom: 1px solid var(--rule);
-        }
-        .lp-verdict-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
-          margin-top: 40px;
-        }
-        .lp-verdict-card {
-          background: var(--surface-2);
-          border: 1px solid var(--rule);
-          border-radius: 14px;
-          padding: 20px;
-        }
-        .lp-verdict-card.lp-celebrate {
-          background: linear-gradient(160deg, #c7f95c, #a8de3f);
-          border-color: var(--signal-dim);
-        }
-        .lp-verdict-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--signal-dim);
-          margin-bottom: 10px;
-        }
-        .lp-celebrate .lp-verdict-chip {
-          color: rgba(11, 11, 12, 0.7);
-        }
-        .lp-verdict-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: var(--signal);
-          box-shadow: 0 0 8px rgba(199, 249, 92, 0.5);
-        }
-        .lp-celebrate .lp-verdict-dot {
-          background: rgba(11, 11, 12, 0.75);
-          box-shadow: none;
-        }
-        .lp-verdict-headline {
-          font-size: 17px;
-          font-weight: 800;
-          letter-spacing: -0.3px;
-          color: var(--text);
-          margin-bottom: 6px;
-        }
-        .lp-celebrate .lp-verdict-headline {
-          color: rgba(11, 11, 12, 0.92);
-        }
-        .lp-verdict-metrics {
-          font-family: var(--font-geist-mono), ui-monospace, monospace;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--signal);
-          font-variant-numeric: tabular-nums;
-          margin-bottom: 8px;
-        }
-        .lp-celebrate .lp-verdict-metrics {
-          color: rgba(11, 11, 12, 0.7);
-        }
-        .lp-verdict-text {
-          font-size: 13px;
-          color: var(--text-muted);
-          line-height: 1.55;
-        }
-        .lp-celebrate .lp-verdict-text {
-          color: rgba(11, 11, 12, 0.65);
-        }
-
-        /* TRENDS */
-        .lp-trends-section {
-          background: var(--ground);
-        }
-        .lp-trend-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
-          margin-top: 40px;
-        }
-        .lp-trend-card {
-          background: var(--surface);
-          border: 1px solid var(--rule);
-          border-radius: 14px;
-          padding: 18px 18px 16px;
-        }
-        .lp-trend-head {
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-          margin-bottom: 10px;
-        }
-        .lp-trend-name {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          color: var(--text);
-        }
-        .lp-trend-delta {
-          font-family: var(--font-geist-mono), ui-monospace, monospace;
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--signal);
-          font-variant-numeric: tabular-nums;
-        }
-        .lp-trend-days {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 6px;
-          padding: 0 2px;
-        }
-        .lp-trend-days span {
-          font-size: 10px;
-          font-weight: 500;
-          color: var(--text-faint);
-        }
-        .lp-trend-days span.lp-trend-today {
-          color: var(--signal);
-          font-weight: 800;
-        }
-        .lp-trend-insight {
-          font-size: 12.5px;
-          color: var(--text-muted);
-          line-height: 1.5;
-          margin-top: 12px;
-        }
-
         /* CTA SECTION */
         .lp-cta-section {
           background: var(--ground);
@@ -796,9 +617,7 @@ export default function LandingPage() {
             display: block !important;
           }
           .lp-demo-wrap,
-          .lp-steps,
-          .lp-verdict-grid,
-          .lp-trend-grid {
+          .lp-steps {
             grid-template-columns: 1fr;
           }
           .lp-footer {
@@ -816,7 +635,6 @@ export default function LandingPage() {
             PERSIST<span>WORK</span>
           </div>
           <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
-            <button onClick={() => scrollToSection('verdict')}>The verdict</button>
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={handleGetStarted}>Sign in</button>
             <Link href="/sandbox" className="lp-nav-cta">
@@ -858,7 +676,6 @@ export default function LandingPage() {
         {/* Mobile Menu */}
         <div className={`lp-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="lp-mobile-menu-inner">
-            <button onClick={() => scrollToSection('verdict')}>The verdict</button>
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={handleGetStarted}>Sign in</button>
             <Link
@@ -1077,125 +894,6 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* TRENDS */}
-        <section className="lp-section lp-trends-section" id="trends">
-          <div className="lp-section-inner">
-            <div className="lp-demo-intro">
-              <div className="lp-section-label">The pattern</div>
-              <h2>
-                One day is a score.
-                <br />
-                <em>A week is a pattern.</em>
-              </h2>
-              <p>
-                Here&apos;s that Tuesday in context. A stacked workday doesn&apos;t stay in its lane
-                &mdash; it drags Focus down for days and keeps Strain elevated into the next
-                morning&apos;s session. Trends make the cost visible, and the recovery measurable.
-              </p>
-            </div>
-            <div className="lp-trend-grid">
-              {TREND_METRICS.map(({ name, values, insight }) => {
-                const { line, area, pts } = sparkPath(values);
-                const tue = pts[TREND_TUESDAY];
-                return (
-                  <div className="lp-trend-card" key={name}>
-                    <div className="lp-trend-head">
-                      <span className="lp-trend-name">{name}</span>
-                      <span className="lp-trend-delta">
-                        {values[TREND_TUESDAY]} &rarr; {values[values.length - 1]}
-                      </span>
-                    </div>
-                    <svg
-                      width="100%"
-                      viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
-                      preserveAspectRatio="none"
-                      style={{ display: 'block', color: 'var(--signal)' }}
-                      aria-hidden="true"
-                    >
-                      <path d={area} fill="currentColor" opacity={0.08} />
-                      <path
-                        d={line}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle cx={tue.x} cy={tue.y} r={5} fill="currentColor" opacity={0.15} />
-                      <circle cx={tue.x} cy={tue.y} r={3} fill="currentColor" />
-                    </svg>
-                    <div className="lp-trend-days">
-                      {TREND_DAYS.map((d, i) => (
-                        <span
-                          key={d}
-                          className={i === TREND_TUESDAY ? 'lp-trend-today' : undefined}
-                        >
-                          {d}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="lp-trend-insight">{insight}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* FORECAST VS ACTUAL — the verdict */}
-        <section className="lp-section lp-verdict-section" id="verdict">
-          <div className="lp-section-inner">
-            <div className="lp-demo-intro">
-              <div className="lp-section-label">Forecast vs actual</div>
-              <h2>
-                Your scores meet your training.
-                <br />
-                <em>Readiness is what&apos;s left.</em>
-              </h2>
-              <p>
-                Connect Strava and Persistwork turns your recent training into freshness, then fuses
-                it with your Focus, Strain, and Balance scores into one number: readiness &mdash;
-                what you have left to train with. The workday&apos;s tax lands as meetings pass, so
-                a 6am check and a 6pm check both tell the truth.
-              </p>
-            </div>
-            <div className="lp-verdict-grid">
-              <div className="lp-verdict-card">
-                <div className="lp-verdict-chip">
-                  <span className="lp-verdict-dot"></span>Morning window
-                </div>
-                <div className="lp-verdict-headline">Train hard &mdash; before the chaos</div>
-                <div className="lp-verdict-metrics">Readiness 88 &rarr; ~61 after work</div>
-                <p className="lp-verdict-text">
-                  Freshness 88, but today&apos;s Strain forecast will tax ~27 points. If today has a
-                  hard session in it, it&apos;s this morning.
-                </p>
-              </div>
-              <div className="lp-verdict-card">
-                <div className="lp-verdict-chip">
-                  <span className="lp-verdict-dot"></span>Mid-workday
-                </div>
-                <div className="lp-verdict-headline">Easy evening session ahead</div>
-                <div className="lp-verdict-metrics">Readiness 71 &rarr; ~58 at 4:30 PM</div>
-                <p className="lp-verdict-text">
-                  Two meetings left to absorb. Plan tonight on the projection, not on how you feel
-                  between calls.
-                </p>
-              </div>
-              <div className="lp-verdict-card lp-celebrate">
-                <div className="lp-verdict-chip">
-                  <span className="lp-verdict-dot"></span>Workday clear
-                </div>
-                <div className="lp-verdict-headline">Train hard</div>
-                <div className="lp-verdict-metrics">Readiness 82 &middot; Freshness 88</div>
-                <p className="lp-verdict-text">
-                  A light forecast barely taxed the tank. Make it the quality session.
-                </p>
               </div>
             </div>
           </div>

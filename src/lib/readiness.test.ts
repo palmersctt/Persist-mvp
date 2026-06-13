@@ -64,6 +64,10 @@ describe('bodyCapacity', () => {
   it('is null for activity-only providers with no recovery data', () => {
     expect(bodyCapacity(stravaActuals())).toBeNull();
   });
+
+  it('falls back to training-load freshness when there is no recovery (Strava)', () => {
+    expect(bodyCapacity(stravaActuals({ freshness: 72 }))).toBe(72);
+  });
 });
 
 describe('workdayCost', () => {
@@ -265,6 +269,22 @@ describe('computeReadiness – without recovery data', () => {
   });
 });
 
+describe('computeReadiness – Strava freshness as capacity', () => {
+  it('reads readiness from freshness and verdicts the band, in freshness language', () => {
+    const state = computeReadiness(evening, dayShape, lightDay, stravaActuals({ freshness: 80 }));
+    expect(state.readinessEndOfDay).toBe(80);
+    expect(state.band).toBe('prime');
+    expect(state.detail).toContain('freshness 80');
+    expect(state.detail).not.toContain('recovery');
+  });
+
+  it('downgrades a fresh athlete to easy after a brutal workday', () => {
+    const state = computeReadiness(evening, dayShape, heavyDay, stravaActuals({ freshness: 80 }));
+    expect(state.band).toBe('maintain');
+    expect(state.headline).toContain('keep it easy');
+  });
+});
+
 describe('forecastVsActual', () => {
   it('flags the mismatch when the calendar is heavy and the body is drained', () => {
     expect(forecastVsActual(heavyDay, actuals({ recovery: 20 }))).toContain('disagree');
@@ -333,5 +353,13 @@ describe('readinessContributions', () => {
     const c = readinessContributions(lightDay, stravaActuals());
     expect(c.capacity).toBeNull();
     expect(c.body.map((b) => b.label)).toEqual(expect.arrayContaining(['This week', 'Last out']));
+  });
+
+  it('uses freshness as capacity and lists it alongside activity factors (Strava)', () => {
+    const c = readinessContributions(heavyDay, stravaActuals({ freshness: 80 }));
+    expect(c.capacity).toBe(80);
+    expect(c.body.map((b) => b.label)).toEqual(
+      expect.arrayContaining(['Freshness', 'This week', 'Last out'])
+    );
   });
 });
