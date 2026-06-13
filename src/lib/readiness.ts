@@ -87,6 +87,135 @@ export const VERDICTS: Record<ReadinessBand, string> = {
   recover: 'Recovery day',
 };
 
+// ─── Why: attribute the readiness number to its inputs ──────────────────────
+
+export type MetricKey = 'focus' | 'strain' | 'balance';
+
+export interface WorkdayContribution {
+  metric: MetricKey;
+  label: string;
+  /** The raw 0–100 score. */
+  value: number;
+  /** Points of readiness this metric is costing today (≥ 0). */
+  points: number;
+  note: string;
+}
+
+export interface BodyFactor {
+  label: string;
+  value: string;
+  note: string;
+}
+
+export interface ReadinessContributions {
+  /** Body capacity 0–100, or null without a recovery provider. */
+  capacity: number | null;
+  /** Total points the workday takes off capacity (rounded). */
+  workdayTax: number;
+  /** Per-metric cost, sorted by impact (biggest driver first). */
+  workday: WorkdayContribution[];
+  /** Body-side inputs (recovery/sleep/HRV/RHR, or activity for Strava). */
+  body: BodyFactor[];
+}
+
+const METRIC_LABELS: Record<MetricKey, string> = {
+  focus: 'Focus',
+  strain: 'Strain',
+  balance: 'Balance',
+};
+
+/**
+ * Break the readiness number into its causes: what the body brought
+ * (capacity) and what each workday metric is taking (the tax, split across
+ * Focus/Strain/Balance by their share of demand). This is the "see why".
+ */
+export function readinessContributions(
+  forecast: ForecastScores,
+  actuals: WearableActuals | null
+): ReadinessContributions {
+  const cost = workdayCost(forecast);
+  const tax = MAX_WORKDAY_TAX * cost;
+
+  // Each metric's share of demand → its share of the tax
+  const parts: Record<MetricKey, number> = {
+    strain: 0.5 * forecast.strain,
+    balance: 0.3 * (100 - forecast.balance),
+    focus: 0.2 * (100 - forecast.focus),
+  };
+  const demandTotal = parts.strain + parts.balance + parts.focus;
+
+  const noteFor = (metric: MetricKey): string => {
+    if (metric === 'strain')
+      return forecast.strain >= 60
+        ? 'High cognitive load — the biggest tax on training.'
+        : 'Manageable cognitive load today.';
+    if (metric === 'balance')
+      return forecast.balance <= 45
+        ? 'Few recovery gaps in the day — little time to reset.'
+        : 'Enough breathing room in the schedule.';
+    return forecast.focus >= 60
+      ? 'Protected focus time — the workday isn’t fragmenting you.'
+      : 'Fragmented day — context-switching adds to the cost.';
+  };
+
+  const workday: WorkdayContribution[] = (['strain', 'balance', 'focus'] as MetricKey[])
+    .map((metric) => ({
+      metric,
+      label: METRIC_LABELS[metric],
+      value: forecast[metric],
+      points: demandTotal > 0 ? Math.round((parts[metric] / demandTotal) * tax) : 0,
+      note: noteFor(metric),
+    }))
+    .sort((a, b) => b.points - a.points);
+
+  const body: BodyFactor[] = [];
+  if (actuals) {
+    if (actuals.recovery != null)
+      body.push({
+        label: 'Recovery',
+        value: `${actuals.recovery}%`,
+        note:
+          actuals.recovery >= 67
+            ? 'Green — your body is primed.'
+            : actuals.recovery >= 34
+              ? 'Yellow — partially recovered.'
+              : 'Red — your body needs rest.',
+      });
+    if (actuals.sleepHours != null)
+      body.push({
+        label: 'Sleep',
+        value: `${actuals.sleepHours}h`,
+        note:
+          actuals.sleepHours < 6
+            ? 'Short sleep is docking your capacity.'
+            : 'Enough sleep to back today’s training.',
+      });
+    if (actuals.hrvMs != null)
+      body.push({ label: 'HRV', value: `${actuals.hrvMs}ms`, note: 'Heart-rate variability.' });
+    if (actuals.restingHr != null)
+      body.push({ label: 'RHR', value: `${actuals.restingHr}`, note: 'Resting heart rate.' });
+    if (actuals.weekActivityCount != null)
+      body.push({
+        label: 'This week',
+        value: `${actuals.weekActivityCount}`,
+        note: 'Sessions logged in the last 7 days.',
+      });
+    if (actuals.lastActivity != null)
+      body.push({
+        label: 'Last out',
+        value: `${actuals.lastActivity.durationMin}min`,
+        note: actuals.lastActivity.name || actuals.lastActivity.type,
+      });
+  }
+
+  return {
+    capacity: actuals ? bodyCapacity(actuals) : null,
+    workdayTax: Math.round(tax),
+    workday,
+    body,
+  };
+}
+
 export function readinessBand(readiness: number): ReadinessBand {
   if (readiness >= PRIME_THRESHOLD) return 'prime';
   if (readiness >= MAINTAIN_THRESHOLD) return 'maintain';

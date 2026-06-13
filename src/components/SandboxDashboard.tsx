@@ -13,8 +13,14 @@ import SwipeableQuoteCards from './SwipeableQuoteCards';
 import WhyMood from './WhyMood';
 import PersistLogo from './PersistLogo';
 import SandboxMeetingBuilder, { type MeetingEntry } from './SandboxMeetingBuilder';
-import { WearablePanel } from './WearableSection';
-import { computeReadiness, forecastVsActual, VERDICTS, type DayShape } from '../lib/readiness';
+import ReadinessBreakdown from './ReadinessBreakdown';
+import {
+  computeReadiness,
+  readinessContributions,
+  VERDICTS,
+  type DayShape,
+  type MetricKey,
+} from '../lib/readiness';
 import type { WearableActuals } from '../lib/wearables/types';
 
 function formatFocusTime(focusTimeMinutes: number) {
@@ -747,10 +753,25 @@ export default function SandboxDashboard() {
                       ))}
                     </div>
                     {previewState && (
-                      <WearablePanel
+                      <ReadinessBreakdown
                         state={previewState}
-                        actuals={previewActuals}
-                        insight={forecastVsActual({ focus, strain, balance }, previewActuals)}
+                        contributions={readinessContributions(
+                          { focus, strain, balance },
+                          previewActuals
+                        )}
+                        connected
+                        providerLabel="Demo data"
+                        onMetricClick={(metric: MetricKey) =>
+                          setActiveTab(
+                            (
+                              {
+                                focus: 'performance',
+                                strain: 'resilience',
+                                balance: 'sustainability',
+                              } as const
+                            )[metric]
+                          )
+                        }
                       />
                     )}
                     <p

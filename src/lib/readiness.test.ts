@@ -3,6 +3,7 @@ import {
   bodyCapacity,
   workdayCost,
   readinessBand,
+  readinessContributions,
   spentFraction,
   computeReadiness,
   forecastVsActual,
@@ -297,5 +298,40 @@ describe('forecastVsActual', () => {
         stravaActuals({ weekActivityCount: undefined, lastActivity: undefined })
       )
     ).toBeNull();
+  });
+});
+
+describe('readinessContributions', () => {
+  it('attributes capacity from the wearable and tax to the workday metrics', () => {
+    const c = readinessContributions(heavyDay, actuals({ recovery: 88, sleepHours: 7.9 }));
+    expect(c.capacity).toBe(88);
+    expect(c.workdayTax).toBeGreaterThan(0);
+    // The per-metric points should sum to roughly the total tax
+    const sum = c.workday.reduce((a, w) => a + w.points, 0);
+    expect(Math.abs(sum - c.workdayTax)).toBeLessThanOrEqual(2);
+  });
+
+  it('ranks the biggest driver first (strain on a heavy day)', () => {
+    const c = readinessContributions(heavyDay, actuals());
+    expect(c.workday[0].metric).toBe('strain');
+    expect(c.workday[0].points).toBeGreaterThanOrEqual(c.workday[1].points);
+  });
+
+  it('costs nothing and has null capacity on a light day with no wearable', () => {
+    const c = readinessContributions(lightDay, null);
+    expect(c.capacity).toBeNull();
+    expect(c.workdayTax).toBe(0);
+    expect(c.body).toHaveLength(0);
+  });
+
+  it('lists recovery and sleep as body factors when present', () => {
+    const c = readinessContributions(lightDay, actuals({ recovery: 70, sleepHours: 7 }));
+    expect(c.body.map((b) => b.label)).toEqual(expect.arrayContaining(['Recovery', 'Sleep']));
+  });
+
+  it('surfaces activity factors for an activity-only provider', () => {
+    const c = readinessContributions(lightDay, stravaActuals());
+    expect(c.capacity).toBeNull();
+    expect(c.body.map((b) => b.label)).toEqual(expect.arrayContaining(['This week', 'Last out']));
   });
 });

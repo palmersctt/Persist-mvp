@@ -4,213 +4,29 @@ import { useEffect, useMemo, useState } from 'react';
 import type { WearableHook } from '../hooks/useWearable';
 import {
   computeReadiness,
-  forecastVsActual,
+  readinessContributions,
   type DayShape,
   type ForecastScores,
-  type ReadinessState,
+  type MetricKey,
 } from '../lib/readiness';
 import { trackEvent } from '../lib/trackEvent';
-import type { WearableActuals } from '../lib/wearables/types';
+import ReadinessBreakdown from './ReadinessBreakdown';
 
-const MONO = 'var(--font-geist-mono), ui-monospace, monospace';
-
-const PHASE_LABELS: Record<ReadinessState['phase'], string> = {
-  morning: 'Morning window',
-  workday: 'Mid-workday',
-  clear: 'Workday clear',
-};
-
-/**
- * Presentational readiness panel + actuals row. Shared between the
- * authenticated dashboard (live data via useWearable) and the public
- * sandbox preview (synthetic scenarios).
- */
-export function WearablePanel({
-  state,
-  actuals,
-  insight,
-  stale = false,
-}: {
-  state: ReadinessState;
-  actuals: WearableActuals | null;
-  insight: string | null;
-  stale?: boolean;
-}) {
-  const celebrate = state.phase === 'clear' && state.band === 'prime';
-  const metrics: { label: string; value: string }[] = actuals
-    ? [
-        ...(actuals.recovery != null ? [{ label: 'Recovery', value: `${actuals.recovery}%` }] : []),
-        ...(actuals.sleepHours != null
-          ? [{ label: 'Sleep', value: `${actuals.sleepHours}h` }]
-          : []),
-        ...(actuals.hrvMs != null ? [{ label: 'HRV', value: `${actuals.hrvMs}ms` }] : []),
-        ...(actuals.restingHr != null ? [{ label: 'RHR', value: `${actuals.restingHr}` }] : []),
-        ...(actuals.weekActivityCount != null
-          ? [{ label: 'This week', value: `${actuals.weekActivityCount}` }]
-          : []),
-        ...(actuals.lastActivity != null
-          ? [{ label: 'Last out', value: `${actuals.lastActivity.durationMin}m` }]
-          : []),
-      ]
-    : [];
-
-  return (
-    <>
-      {/* Readiness: body capacity taxed by the workday in real time */}
-      <div
-        className="rounded-xl p-5 mb-2.5"
-        style={
-          celebrate
-            ? {
-                background: 'linear-gradient(160deg, #C7F95C, #A8DE3F)',
-                border: '1px solid var(--signal-dim)',
-              }
-            : { backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }
-        }
-      >
-        <div className="flex items-center gap-2 mb-1.5">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{
-              backgroundColor: celebrate ? 'rgba(11,11,12,0.75)' : 'var(--signal)',
-              boxShadow: celebrate ? 'none' : '0 0 12px rgba(199,249,92,0.35)',
-            }}
-          />
-          <span
-            className="text-[10px] font-bold uppercase"
-            style={{
-              letterSpacing: '0.1em',
-              color: celebrate ? 'rgba(11,11,12,0.7)' : 'var(--signal-dim)',
-            }}
-          >
-            {PHASE_LABELS[state.phase]}
-          </span>
-        </div>
-        {state.readinessNow != null && (
-          <div className="flex items-baseline gap-2 mb-1.5">
-            <span
-              className="text-3xl font-bold"
-              style={{
-                color: celebrate ? 'rgba(11,11,12,0.92)' : 'var(--signal)',
-                fontFamily: MONO,
-                fontVariantNumeric: 'tabular-nums',
-                lineHeight: 1,
-              }}
-            >
-              {state.readinessNow}
-            </span>
-            <span
-              className="text-[9px] uppercase tracking-wider font-medium"
-              style={{ color: celebrate ? 'rgba(11,11,12,0.55)' : 'var(--text-faint)' }}
-            >
-              Readiness
-            </span>
-            {state.phase === 'workday' && state.readinessEndOfDay != null && (
-              <span
-                className="text-xs font-semibold"
-                style={{
-                  color: celebrate ? 'rgba(11,11,12,0.7)' : 'var(--text-muted)',
-                  fontFamily: MONO,
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                → ~{state.readinessEndOfDay} at clear
-              </span>
-            )}
-          </div>
-        )}
-        <p
-          className="text-[15px] font-bold mb-1"
-          style={{ color: celebrate ? 'rgba(11,11,12,0.92)' : 'var(--text)' }}
-        >
-          {state.headline}
-        </p>
-        <p
-          className="text-xs leading-relaxed mb-0"
-          style={{ color: celebrate ? 'rgba(11,11,12,0.65)' : 'var(--text-muted)' }}
-        >
-          {state.detail}
-        </p>
-      </div>
-
-      {/* Today's actuals */}
-      {actuals && (
-        <div
-          className="rounded-xl px-4 py-3.5 mb-2.5"
-          style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
-        >
-          <div className="flex justify-between">
-            {metrics.map((m) => (
-              <div key={m.label} className="text-center">
-                <div
-                  className="text-lg font-bold"
-                  style={{
-                    color: 'var(--signal)',
-                    fontFamily: MONO,
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {m.value}
-                </div>
-                <div
-                  className="text-[9px] uppercase tracking-wider mt-0.5 font-medium"
-                  style={{ color: 'var(--text-faint)' }}
-                >
-                  {m.label}
-                </div>
-              </div>
-            ))}
-          </div>
-          {actuals.lastActivity && (
-            <p className="text-[10px] mt-2 mb-0 text-center" style={{ color: 'var(--text-faint)' }}>
-              Last logged: {actuals.lastActivity.name || actuals.lastActivity.type}
-              {actuals.lastActivity.distanceKm != null
-                ? ` · ${actuals.lastActivity.distanceKm}km`
-                : ''}
-            </p>
-          )}
-          {stale && (
-            <p className="text-[10px] mt-2 mb-0 text-center" style={{ color: 'var(--text-faint)' }}>
-              Showing your last sync ({actuals.date}) &mdash; provider unreachable right now.
-            </p>
-          )}
-          {insight && (
-            <p
-              className="text-[11px] mt-2.5 mb-0 leading-snug"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {insight}
-            </p>
-          )}
-        </div>
-      )}
-    </>
-  );
-}
-
-// "Forecast vs Actual" dashboard section. The calendar forecast (Focus/
-// Strain/Balance + event timing) fuses with wearable actuals (recovery,
-// sleep, HRV) into readiness: what's left to train with, at any hour.
+// Wearable surface for the dashboard: the connect pitch when no wearable is
+// linked, otherwise the readiness breakdown that explains the card's number.
 export default function WearableSection({
   forecast,
   dayShape,
   wearable,
+  onMetricClick,
 }: {
   forecast: ForecastScores;
   dayShape: DayShape | null;
   wearable: WearableHook;
+  onMetricClick?: (metric: MetricKey) => void;
 }) {
-  const {
-    connected,
-    provider,
-    actuals,
-    stale,
-    available,
-    isLoading,
-    connect,
-    connectDemo,
-    disconnect,
-  } = wearable;
+  const { connected, provider, actuals, available, isLoading, connect, connectDemo, disconnect } =
+    wearable;
   const [notice, setNotice] = useState<string | null>(null);
   const [demoConnecting, setDemoConnecting] = useState(false);
 
@@ -331,33 +147,21 @@ export default function WearableSection({
     );
   }
 
-  // --- Connected: unlock state + actuals ---
-  const insight = actuals ? forecastVsActual(forecast, actuals) : null;
+  // --- Connected: the readiness breakdown explains the card's number ---
+  const contributions = readinessContributions(forecast, actuals);
+  const providerLabel = provider === 'demo' ? 'Demo data' : (provider ?? undefined);
 
   return (
     <section className="max-w-xs mx-auto w-full">
-      <div className="flex items-center justify-between mb-3">
-        <h2
-          className="text-[11px] font-bold uppercase"
-          style={{ letterSpacing: '0.12em', color: 'var(--text-faint)' }}
-        >
-          Forecast vs Actual
-        </h2>
-        <span
-          className="text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase"
-          style={{
-            backgroundColor: 'var(--signal-soft)',
-            color: 'var(--signal-dim)',
-            letterSpacing: '0.08em',
-          }}
-        >
-          {provider === 'demo' ? 'Demo data' : provider}
-        </span>
-      </div>
+      <ReadinessBreakdown
+        state={state}
+        contributions={contributions}
+        connected={connected}
+        providerLabel={providerLabel}
+        onMetricClick={onMetricClick}
+      />
 
-      <WearablePanel state={state} actuals={actuals} insight={insight} stale={stale} />
-
-      <div className="text-center">
+      <div className="text-center mt-4">
         <button
           onClick={() => {
             trackEvent('wearable_disconnected', { provider: provider ?? 'unknown' });

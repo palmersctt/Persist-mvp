@@ -12,7 +12,6 @@ import { computeReadiness, VERDICTS } from '../lib/readiness';
 import { useWearable } from '../hooks/useWearable';
 import { trackEvent } from '../lib/trackEvent';
 import { toPng } from 'html-to-image';
-import WhyMood from './WhyMood';
 import TrendsSection from './TrendsSection';
 import WearableSection from './WearableSection';
 
@@ -871,19 +870,6 @@ export default function WorkHealthDashboard() {
                           : 'Share your day \u2192'}
                       </button>
                     </div>
-                    <WhyMood
-                      mood={cardMood!}
-                      narrative={workHealth.ai?.whyNarrative ?? ''}
-                      focus={workHealth.adaptivePerformanceIndex}
-                      strain={workHealth.cognitiveResilience}
-                      balance={workHealth.workRhythmRecovery}
-                      onMetricClick={(metric) => {
-                        setActiveTab(
-                          metric as 'overview' | 'performance' | 'resilience' | 'sustainability'
-                        );
-                        trackEvent('metric_click', { metric, source: 'why_mood' });
-                      }}
-                    />
                   </section>
                 );
               }
@@ -913,19 +899,6 @@ export default function WorkHealthDashboard() {
                         verdict={cardVerdict}
                       />
                     </div>
-                    <WhyMood
-                      mood={cardMood!}
-                      narrative={workHealth.ai?.whyNarrative ?? ''}
-                      focus={workHealth.adaptivePerformanceIndex}
-                      strain={workHealth.cognitiveResilience}
-                      balance={workHealth.workRhythmRecovery}
-                      onMetricClick={(metric) => {
-                        setActiveTab(
-                          metric as 'overview' | 'performance' | 'resilience' | 'sustainability'
-                        );
-                        trackEvent('metric_click', { metric, source: 'why_mood' });
-                      }}
-                    />
                   </section>
                 );
               }
@@ -943,6 +916,18 @@ export default function WorkHealthDashboard() {
                 }}
                 dayShape={workHealth.dayShape ?? null}
                 wearable={wearable}
+                onMetricClick={(metric) => {
+                  // MetricKey (display) → drilldown tab (internal metric name)
+                  const tab = (
+                    {
+                      focus: 'performance',
+                      strain: 'resilience',
+                      balance: 'sustainability',
+                    } as const
+                  )[metric];
+                  setActiveTab(tab);
+                  trackEvent('metric_click', { metric, source: 'readiness_breakdown' });
+                }}
               />
             )}
 
