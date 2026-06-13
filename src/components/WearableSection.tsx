@@ -78,12 +78,12 @@ export default function WearableSection({
           style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
         >
           <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
-            Your calendar is the forecast. Your body is the actual.
+            Your calendar is the forecast. Your training is the actual.
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-            Connect a wearable and Persist fuses recovery, sleep, and HRV with your Focus, Strain,
-            and Balance scores into one number &mdash; readiness &mdash; so whether you train at 6am
-            or 6pm, you know how hard to go.
+            Connect Strava and Persistwork turns your recent training into freshness, then fuses it
+            with your Focus, Strain, and Balance scores into one number &mdash; readiness &mdash; so
+            whether you train at 6am or 6pm, you know how hard to go.
           </p>
           {notice && (
             <p className="text-xs mb-3" style={{ color: 'var(--signal-dim)' }}>
@@ -92,14 +92,14 @@ export default function WearableSection({
           )}
           <button
             onClick={() => {
-              if (!available.whoop) return;
-              trackEvent('wearable_connect_clicked', { provider: 'whoop' });
-              connect('whoop');
+              if (!available.strava) return;
+              trackEvent('wearable_connect_clicked', { provider: 'strava' });
+              connect('strava');
             }}
-            disabled={!available.whoop}
+            disabled={!available.strava}
             className="w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors mb-2"
             style={
-              available.whoop
+              available.strava
                 ? {
                     backgroundColor: 'var(--signal)',
                     color: 'var(--ground)',
@@ -114,11 +114,11 @@ export default function WearableSection({
                   }
             }
           >
-            Connect WHOOP
+            Connect Strava
           </button>
-          {!available.whoop && (
+          {!available.strava && (
             <p className="text-[10px] mb-2 text-center" style={{ color: 'var(--text-faint)' }}>
-              WHOOP isn&apos;t configured in this environment yet &mdash; preview with demo data
+              Strava isn&apos;t configured in this environment yet &mdash; preview with demo data
               below.
             </p>
           )}

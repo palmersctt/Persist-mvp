@@ -127,9 +127,9 @@ export default function ReadinessBreakdown({
         >
           <p className="text-xs mb-0" style={{ color: 'var(--text-muted)' }}>
             <span className="font-semibold" style={{ color: 'var(--signal)' }}>
-              Connect a wearable
+              Connect Strava
             </span>{' '}
-            to factor recovery, sleep, and HRV into your readiness. Until then it&apos;s the workday
+            to factor your recent training into your readiness. Until then it&apos;s the workday
             forecast alone.
           </p>
         </button>
