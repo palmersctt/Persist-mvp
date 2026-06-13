@@ -44,23 +44,55 @@ const EMPTY_SCHEDULE = {
   earlyLateMeetings: 0,
 };
 
-// --- Forecast vs Actual preview (synthetic body scenarios) ---
-type BodyScenario = 'charged' | 'steady' | 'drained';
+// --- Forecast vs Actual preview (synthetic training-freshness scenarios) ---
+type BodyScenario = 'fresh' | 'steady' | 'fatigued';
 
 const BODY_SCENARIOS: { key: BodyScenario; label: string }[] = [
-  { key: 'charged', label: 'Charged' },
+  { key: 'fresh', label: 'Fresh' },
   { key: 'steady', label: 'Steady' },
-  { key: 'drained', label: 'Drained' },
+  { key: 'fatigued', label: 'Fatigued' },
 ];
 
+// Strava-shaped demo actuals: training-load freshness stands in for recovery,
+// plus the activity factors the breakdown shows (This week / Last out).
 function sandboxActuals(scenario: BodyScenario): WearableActuals {
   const date = new Date().toLocaleDateString('sv-SE');
   const presets = {
-    charged: { recovery: 88, sleepHours: 7.9, sleepPerformance: 96, hrvMs: 98, restingHr: 49 },
-    steady: { recovery: 54, sleepHours: 6.7, sleepPerformance: 81, hrvMs: 67, restingHr: 55 },
-    drained: { recovery: 22, sleepHours: 5.1, sleepPerformance: 58, hrvMs: 41, restingHr: 63 },
+    fresh: {
+      freshness: 88,
+      weekActivityCount: 4,
+      lastActivity: {
+        type: 'Run',
+        name: 'Easy shakeout',
+        startISO: `${date}T06:40:00Z`,
+        durationMin: 42,
+        distanceKm: 7.1,
+      },
+    },
+    steady: {
+      freshness: 54,
+      weekActivityCount: 5,
+      lastActivity: {
+        type: 'Ride',
+        name: 'Endurance ride',
+        startISO: `${date}T06:15:00Z`,
+        durationMin: 68,
+        distanceKm: 31.5,
+      },
+    },
+    fatigued: {
+      freshness: 24,
+      weekActivityCount: 7,
+      lastActivity: {
+        type: 'Run',
+        name: 'Threshold session',
+        startISO: `${date}T06:05:00Z`,
+        durationMin: 95,
+        distanceKm: 18.2,
+      },
+    },
   } as const;
-  return { date, provider: 'demo', ...presets[scenario] };
+  return { date, provider: 'strava', ...presets[scenario] };
 }
 
 /** Treat the entered meetings as today's calendar so the unlock is live. */
@@ -99,7 +131,7 @@ export default function SandboxDashboard() {
   const [isScoring, setIsScoring] = useState(false);
   const [trends, setTrends] = useState<GeneratedTrends | null>(null);
   const [trendView, setTrendView] = useState<'weekly' | 'monthly'>('weekly');
-  const [bodyScenario, setBodyScenario] = useState<BodyScenario>('charged');
+  const [bodyScenario, setBodyScenario] = useState<BodyScenario>('fresh');
   const [showTrends, setShowTrends] = useState(false);
   const [scoreTimestamp, setScoreTimestamp] = useState<number>(0);
 
@@ -195,9 +227,9 @@ export default function SandboxDashboard() {
   const focus = customMetrics?.adaptivePerformanceIndex ?? 0;
   const strain = customMetrics?.cognitiveResilience ?? 0;
   const balance = customMetrics?.workRhythmRecovery ?? 0;
-  // One algorithm, one mood: the selected body scenario fuses with the scored
-  // day, and the card's mood/verdict come from the same readiness band shown
-  // in the panel below
+  // One algorithm, one mood: the selected freshness scenario fuses with the
+  // scored day, and the card's mood/verdict come from the same readiness band
+  // shown in the panel below
   const previewActuals = sandboxActuals(bodyScenario);
   const previewState = customMetrics
     ? computeReadiness(
@@ -717,9 +749,9 @@ export default function SandboxDashboard() {
                         margin: '0 0 10px',
                       }}
                     >
-                      Your meetings above are the forecast; the body state is the actual. Readiness
-                      fuses them &mdash; and the card above carries the same number and verdict, so
-                      it's one story.
+                      Your meetings above are the forecast; your recent training is the actual.
+                      Readiness fuses them &mdash; and the card above carries the same number and
+                      verdict, so it&apos;s one story.
                     </p>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                       {BODY_SCENARIOS.map(({ key, label }) => (
@@ -782,7 +814,7 @@ export default function SandboxDashboard() {
                         margin: '2px 0 0',
                       }}
                     >
-                      Demo body data &mdash; the real dashboard connects Strava.
+                      Demo training data &mdash; the real dashboard connects Strava.
                     </p>
                   </section>
 
