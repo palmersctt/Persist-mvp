@@ -25,6 +25,13 @@ export interface WearableActuals {
   provider: WearableProvider;
   /** Recovery / readiness, 0–100. Absent for activity-only providers. */
   recovery?: number;
+  /**
+   * Training-load freshness, 0–100 (activity providers). Derived from the
+   * shape of recent training — chronic fitness minus acute fatigue — and
+   * used as the capacity stand-in for recovery when the provider has no
+   * body-state signal (Strava).
+   */
+  freshness?: number;
   /** Total sleep last night, in hours. */
   sleepHours?: number;
   /** Sleep performance vs. need, 0–100 (when the provider reports it). */

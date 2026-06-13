@@ -12,7 +12,8 @@ train with at any moment. Not a countdown — people train at 6am before the
 chaos as often as 6pm after it, so the algorithm is time-aware:
 
 ```
-capacity    = recovery − 8·max(0, 6 − sleepHours)            (what the body has)
+capacity    = recovery − 8·max(0, 6 − sleepHours)            (body providers: WHOOP/demo)
+            = freshness                                      (activity providers: Strava)
 demand      = 0.5·Strain + 0.3·(100−Balance) + 0.2·(100−Focus)
 cost        = clamp((demand − 20) / 80, 0..1)                (light days cost ~0)
 tax         = 45 · cost                                      (a brutal day takes ≤45 pts)
@@ -57,19 +58,19 @@ src/lib/readiness.ts — computeReadiness / forecastVsActual (pure, tested)
 WearableSection (dashboard "Forecast vs Actual" section)
 ```
 
-| Path                                         | Purpose                                                                           |
-| -------------------------------------------- | --------------------------------------------------------------------------------- |
-| `src/lib/wearables/types.ts`                 | `WearableActuals` — the normalized shape every provider maps into                 |
-| `src/lib/wearables/whoop.ts`                 | WHOOP OAuth + Developer API v2 client (server-side only)                          |
-| `src/lib/wearables/demo.ts`                  | Deterministic demo actuals (no device required)                                   |
-| `src/lib/readiness.ts`                       | Readiness algorithm: `bodyCapacity`, `workdayCost`, `computeReadiness`            |
-| `pages/api/wearables/connect.ts`             | Starts OAuth (whoop) or creates a demo connection                                 |
-| `pages/api/wearables/callback.ts`            | WHOOP OAuth callback (state-checked)                                              |
-| `pages/api/wearables/actuals.ts`             | Returns today's normalized actuals; persists to `wearable_daily`                  |
-| `pages/api/wearables/disconnect.ts`          | Deletes the connection (keeps history)                                            |
-| `src/hooks/useWearable.ts`                   | Client state: connected/provider/actuals + connect/disconnect                     |
-| `src/components/WearableSection.tsx`         | Dashboard UI: readiness panel + actuals row                                       |
-| `supabase/migrations/20260611_wearables.sql` | `wearable_connections` + `wearable_daily`                                         |
+| Path                                         | Purpose                                                                |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| `src/lib/wearables/types.ts`                 | `WearableActuals` — the normalized shape every provider maps into      |
+| `src/lib/wearables/whoop.ts`                 | WHOOP OAuth + Developer API v2 client (server-side only)               |
+| `src/lib/wearables/demo.ts`                  | Deterministic demo actuals (no device required)                        |
+| `src/lib/readiness.ts`                       | Readiness algorithm: `bodyCapacity`, `workdayCost`, `computeReadiness` |
+| `pages/api/wearables/connect.ts`             | Starts OAuth (whoop) or creates a demo connection                      |
+| `pages/api/wearables/callback.ts`            | WHOOP OAuth callback (state-checked)                                   |
+| `pages/api/wearables/actuals.ts`             | Returns today's normalized actuals; persists to `wearable_daily`       |
+| `pages/api/wearables/disconnect.ts`          | Deletes the connection (keeps history)                                 |
+| `src/hooks/useWearable.ts`                   | Client state: connected/provider/actuals + connect/disconnect          |
+| `src/components/WearableSection.tsx`         | Dashboard UI: readiness panel + actuals row                            |
+| `supabase/migrations/20260611_wearables.sql` | `wearable_connections` + `wearable_daily`                              |
 
 The work-health API also returns `dayShape` — event start/end times only (no
 titles) — so the client can compute time-aware readiness without another
@@ -82,22 +83,23 @@ WearableActuals` plus OAuth helpers in `src/lib/wearables/<provider>.ts`,
 branch on it in `connect.ts` and `actuals.ts`, and extend the
 `WearableProvider` union. Nothing downstream of `WearableActuals` changes.
 
-### Provider decision (June 2026, revised): body-first — WHOOP is the story
+### Provider decision (June 2026, revised): training-first — Strava is the story
 
 The product story is ONE sentence: the calendar is the forecast, your
-body is the actual. "Actual" means body capacity (recovery, sleep, HRV),
-and the UI offers exactly one real provider: **WHOOP** (free self-serve
-developer API at developer.whoop.com; recovery vocabulary matches
-Persist's scores one-for-one). The demo provider previews the same
-body-shaped data with zero setup.
+training is the actual. The UI leads with **Strava** — self-serve OAuth,
+no hardware, the provider the most working athletes already have. Strava
+has no recovery/HRV, so we derive **training-load freshness** (chronic
+fitness minus acute fatigue → a 0–100 form score) and feed it into the
+readiness equation as the capacity stand-in. See `freshnessFromActivities`
+in `src/lib/wearables/strava.ts`. The demo provider previews body-shaped
+data with zero setup.
 
-**Strava is integrated but dormant.** It was built as the cheapest
-plumbing test (self-serve OAuth, no hardware — but a Strava subscription
-is now required for API access). Being activity-only it tells a second
-story ("did you actually get out") that muddied the first, so its connect
-button is removed from the UI. The provider, routes, and messaging
-remain in code behind the abstraction; re-enable by adding the button
-back and setting `STRAVA_*` env vars.
+**WHOOP remains in code as the precision tier.** Its recovery/sleep/HRV
+map onto capacity one-for-one and are a truer body read than freshness;
+the provider, OAuth, and routes stay behind the abstraction. Re-expose by
+adding its connect button back and setting `WHOOP_*` env vars. Freshness
+is a heuristic from training shape, not a measured body state — when a
+body-state device is connected, prefer it.
 
 The rest of the body-data field, for when a second provider matters:
 
@@ -116,9 +118,10 @@ The rest of the body-data field, for when a second provider matters:
 
 `WearableActuals` still supports both flavors honestly: recovery
 providers fill `recovery/sleepHours/hrvMs/restingHr`; activity providers
-fill `lastActivity/weekActivityCount` and leave biometrics absent
-(numeric readiness is null and the panel falls back to "go log it /
-already logged" messaging).
+fill `lastActivity/weekActivityCount` plus a derived `freshness` that
+gives them a real readiness number. Only a brand-new Strava account with
+no usable history leaves `freshness` absent — then readiness is null and
+the panel falls back to "go log it / already logged" messaging.
 
 ### WHOOP
 
