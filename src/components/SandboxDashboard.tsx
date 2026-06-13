@@ -782,7 +782,7 @@ export default function SandboxDashboard() {
                         margin: '2px 0 0',
                       }}
                     >
-                      Demo body data &mdash; the real dashboard connects WHOOP.
+                      Demo body data &mdash; the real dashboard connects Strava.
                     </p>
                   </section>
 

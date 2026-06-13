@@ -879,14 +879,13 @@ export default function LandingPage() {
           >
             <div className="lp-eyebrow">For working athletes</div>
             <h1>
-              Your workday, decoded.
+              Some days work is
               <br />
-              <em>Your training, unlocked.</em>
+              <em>the workout.</em>
             </h1>
             <p className="lp-hero-sub">
-              Your calendar is the forecast. Your wearable is the actual. Persist fuses them into
-              one number &mdash; readiness &mdash; so whether you train at 6am or 6pm, you know how
-              hard to go: train hard, keep it easy, or take the recovery day.
+              Until now you&apos;ve guessed how much work took out of you. Persistwork reads your
+              day and answers the only question that matters: how hard to train today.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg
@@ -914,12 +913,12 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
               <h2>
-                Eight meetings. 88% recovery. <em>One number.</em>
+                Eight meetings. Fresh legs. <em>One number.</em>
               </h2>
               <p>
                 A real working-athlete Tuesday. The calendar says the workday will cost 25 points;
-                your body showed up with 88. Readiness is what&apos;s left to train on &mdash; and
-                you can see exactly why.
+                your recent training left you fresh at 88. Readiness is what&apos;s left to train on
+                &mdash; and you can see exactly why.
               </p>
             </div>
 
@@ -1019,7 +1018,7 @@ export default function LandingPage() {
                 <div className="lp-eq">
                   <div className="lp-eq-term">
                     <div className="lp-eq-num">88</div>
-                    <div className="lp-eq-lbl">Body</div>
+                    <div className="lp-eq-lbl">Freshness</div>
                   </div>
                   <span className="lp-eq-op">&minus;</span>
                   <div className="lp-eq-term">
@@ -1033,24 +1032,24 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* What your body brought */}
+                {/* What your training brought */}
                 <div className="lp-why-block">
                   <div className="lp-why-h">
-                    <span>What your body brought</span>
-                    <span className="lp-why-tag">WHOOP</span>
+                    <span>What your training brought</span>
+                    <span className="lp-why-tag">STRAVA</span>
                   </div>
                   <div className="lp-body-row">
                     <div className="lp-body-item">
-                      <div className="lp-body-num">88%</div>
-                      <div className="lp-body-lbl">Recovery</div>
+                      <div className="lp-body-num">88</div>
+                      <div className="lp-body-lbl">Freshness</div>
                     </div>
                     <div className="lp-body-item">
-                      <div className="lp-body-num">7.9h</div>
-                      <div className="lp-body-lbl">Sleep</div>
+                      <div className="lp-body-num">4</div>
+                      <div className="lp-body-lbl">This week</div>
                     </div>
                     <div className="lp-body-item">
-                      <div className="lp-body-num">62ms</div>
-                      <div className="lp-body-lbl">HRV</div>
+                      <div className="lp-body-num">42min</div>
+                      <div className="lp-body-lbl">Last out</div>
                     </div>
                   </div>
                 </div>
@@ -1154,15 +1153,15 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">Forecast vs actual</div>
               <h2>
-                Your scores meet your body.
+                Your scores meet your training.
                 <br />
                 <em>Readiness is what&apos;s left.</em>
               </h2>
               <p>
-                Connect a wearable and Persist fuses recovery, sleep, and HRV with your Focus,
-                Strain, and Balance scores into one number: readiness &mdash; what you have left to
-                train with. The workday&apos;s tax lands as meetings pass, so a 6am check and a 6pm
-                check both tell the truth.
+                Connect Strava and Persistwork turns your recent training into freshness, then fuses
+                it with your Focus, Strain, and Balance scores into one number: readiness &mdash;
+                what you have left to train with. The workday&apos;s tax lands as meetings pass, so
+                a 6am check and a 6pm check both tell the truth.
               </p>
             </div>
             <div className="lp-verdict-grid">
@@ -1173,7 +1172,7 @@ export default function LandingPage() {
                 <div className="lp-verdict-headline">Train hard &mdash; before the chaos</div>
                 <div className="lp-verdict-metrics">Readiness 88 &rarr; ~61 after work</div>
                 <p className="lp-verdict-text">
-                  Recovery 88%, but today&apos;s Strain forecast will tax ~27 points. If today has a
+                  Freshness 88, but today&apos;s Strain forecast will tax ~27 points. If today has a
                   hard session in it, it&apos;s this morning.
                 </p>
               </div>
@@ -1193,7 +1192,7 @@ export default function LandingPage() {
                   <span className="lp-verdict-dot"></span>Workday clear
                 </div>
                 <div className="lp-verdict-headline">Train hard</div>
-                <div className="lp-verdict-metrics">Readiness 82 &middot; Recovery 88%</div>
+                <div className="lp-verdict-metrics">Readiness 82 &middot; Freshness 88</div>
                 <p className="lp-verdict-text">
                   A light forecast barely taxed the tank. Make it the quality session.
                 </p>
@@ -1220,10 +1219,10 @@ export default function LandingPage() {
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">STEP 02</div>
-                <h3>Connect your wearable</h3>
+                <h3>Connect Strava</h3>
                 <p>
-                  WHOOP today, more coming. Recovery, sleep, and HRV become the actual against the
-                  calendar&apos;s forecast. No device? Demo data walks the whole flow.
+                  Your recent training becomes freshness &mdash; how rested your legs are against
+                  the calendar&apos;s forecast. No Strava yet? Demo data walks the whole flow.
                 </p>
               </div>
               <div className="lp-step">
@@ -1231,7 +1230,7 @@ export default function LandingPage() {
                 <h3>Get the verdict</h3>
                 <p>
                   One readiness number, live all day &mdash; your scores set what the workday costs,
-                  your body sets what you have, and the answer is the same at 6am or 6pm: train
+                  your training sets what you have, and the answer is the same at 6am or 6pm: train
                   hard, keep it easy, or recover.
                 </p>
               </div>
@@ -1248,8 +1247,8 @@ export default function LandingPage() {
               <em>Train on the verdict.</em>
             </h2>
             <p>
-              Connect your calendar, add your wearable, and the workday tells you what it left you.
-              Ten seconds of setup.
+              Connect your calendar, add Strava, and the workday tells you what it left you. Ten
+              seconds of setup.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg
