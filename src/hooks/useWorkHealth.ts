@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import type { DailyScore } from '../lib/trends';
-import type { DayShape } from '../lib/readiness';
+import type { DayShape } from '../lib/dayShape';
 
 // AI Insights interfaces
 interface AIInsight {

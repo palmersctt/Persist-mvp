@@ -3,17 +3,10 @@ import { type Mood, MOODS, getMoodTier } from '../lib/mood';
 // ─── score fields ───────────────────────────────────────────────────────────
 
 const SCORE_FIELDS = [
-  { key: 'performance' as const, label: 'FOCUS', prop: 'focus' as const },
-  { key: 'resilience' as const, label: 'STRAIN', prop: 'strain' as const },
-  { key: 'sustainability' as const, label: 'BALANCE', prop: 'balance' as const },
+  { key: 'value' as const, label: 'VALUE' },
+  { key: 'strain' as const, label: 'STRAIN' },
+  { key: 'fill' as const, label: 'FILL' },
 ];
-
-/** Returns which metric keys should pop (amber) for this tier. */
-function getPoppedScores(tier: 'bad' | 'ok' | 'good') {
-  if (tier === 'bad') return { performance: false, resilience: true, sustainability: false };
-  if (tier === 'good') return { performance: true, resilience: false, sustainability: true };
-  return { performance: false, resilience: false, sustainability: false };
-}
 
 // ─── token maps ─────────────────────────────────────────────────────────────
 
@@ -68,16 +61,14 @@ export interface CardContentProps {
   quote: string;
   source: string;
   subtitle: string;
-  focus: number;
+  /** The verdict's three scores. Value leads (the headline). */
+  value: number;
   strain: number;
-  balance: number;
+  fill: number;
   mood: Mood;
-  /** Merged work × wearable readiness (0–100). The card's headline metric when present. */
-  readiness?: number | null;
-  /** Verdict text from the readiness band — shown beside the mood name. */
+  /** Short action label from the verdict — shown beside the mood name. */
   verdict?: string;
   daySummary?: string;
-  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void;
   cardRef?: (el: HTMLDivElement | null) => void;
   forExport?: boolean;
 }
@@ -86,25 +77,19 @@ export default function CardContent({
   quote,
   source,
   subtitle,
-  focus,
+  value,
   strain,
-  balance,
+  fill,
   mood,
-  readiness,
   verdict,
-  onMetricClick,
   cardRef,
   forExport = false,
 }: CardContentProps) {
-  const values = { focus, strain, balance };
+  const values = { value, strain, fill };
   const { gradient, name: moodName, textColor } = MOODS[mood];
   const tier = getMoodTier(mood);
-  // When the merged readiness number is on the card, it carries the emphasis
-  // and the three inputs ghost behind it
-  const popped =
-    readiness != null
-      ? { performance: false, resilience: false, sustainability: false }
-      : getPoppedScores(tier);
+  // Value is the verdict — it always leads; Strain and Fill sit flat beside it.
+  const popped = { value: true, strain: false, fill: false };
   const isLight = textColor === 'dark';
   const isOk = tier === 'ok';
 
@@ -178,80 +163,18 @@ export default function CardContent({
         </p>
       </div>
 
-      {/* Scores — uniform 32px, color-driven emphasis. Readiness (work ×
-          wearable) leads when present; it always pops — it's the verdict. */}
+      {/* Scores — uniform 32px, color-driven emphasis. Value is the verdict,
+          so it always pops; Strain and Fill sit flat beside it. */}
       <div style={{ display: 'flex', gap: 22, marginBottom: 28, position: 'relative' }}>
-        {readiness != null && (
-          <div className="select-none">
-            <div
-              style={{
-                fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-                fontSize: 32,
-                fontWeight: 700,
-                letterSpacing: '-0.04em',
-                color: isOk ? DARK_TOKENS.flatNum : tk.popNum,
-                lineHeight: 1,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {readiness}
-            </div>
-            <div
-              style={{
-                fontSize: 8,
-                fontWeight: 700,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase' as const,
-                color: isOk ? DARK_TOKENS.flatLbl : tk.popLbl,
-                marginTop: 4,
-              }}
-            >
-              READINESS
-            </div>
-          </div>
-        )}
         {SCORE_FIELDS.map((s) => {
           const isPopped = popped[s.key];
-          const numColor = isOk ? DARK_TOKENS.flatNum : isPopped ? tk.popNum : tk.ghostNum;
-          const lblColor = isOk ? DARK_TOKENS.flatLbl : isPopped ? tk.popLbl : tk.ghostLbl;
+          const numColor = isOk ? DARK_TOKENS.flatNum : isPopped ? tk.popNum : tk.flatNum;
+          const lblColor = isOk ? DARK_TOKENS.flatLbl : isPopped ? tk.popLbl : tk.flatLbl;
+          const raw = values[s.key];
+          const display = s.key === 'fill' ? `${raw >= 0 ? '+' : ''}${raw}` : `${raw}`;
 
           return (
-            <div
-              key={s.key}
-              className={`select-none${onMetricClick ? ' cursor-pointer' : ''}`}
-              onClick={onMetricClick ? () => onMetricClick(s.key) : undefined}
-              style={{
-                transition: 'transform 0.1s ease, opacity 0.1s ease',
-                WebkitTapHighlightColor: 'transparent',
-                ...(onMetricClick
-                  ? { padding: '4px 8px', margin: '-4px -8px', borderRadius: 8 }
-                  : {}),
-              }}
-              onPointerDown={
-                onMetricClick
-                  ? (e) => {
-                      e.currentTarget.style.transform = 'scale(0.92)';
-                      e.currentTarget.style.opacity = '0.7';
-                    }
-                  : undefined
-              }
-              onPointerUp={
-                onMetricClick
-                  ? (e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.opacity = '1';
-                    }
-                  : undefined
-              }
-              onPointerLeave={
-                onMetricClick
-                  ? (e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.opacity = '1';
-                    }
-                  : undefined
-              }
-            >
+            <div key={s.key} className="select-none">
               <div
                 style={{
                   fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
@@ -263,7 +186,7 @@ export default function CardContent({
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                {values[s.prop]}
+                {display}
               </div>
               <div
                 style={{

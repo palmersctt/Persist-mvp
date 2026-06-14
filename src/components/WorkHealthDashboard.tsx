@@ -51,7 +51,9 @@ export default function WorkHealthDashboard() {
   // Work no longer produces a second, competing mood.
   const cardModel = workHealth ? dashboardVerdict(workHealth, wearable.actuals) : null;
   const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
-  const cardReadiness = cardModel?.value ?? null;
+  const cardValue = cardModel?.value ?? 0;
+  const cardStrain = cardModel?.strain ?? 0;
+  const cardFill = cardModel?.fill ?? 0;
   const cardVerdict = cardModel ? VERDICT_LABEL[cardModel.verdict] : undefined;
 
   const [connectionExpired, setConnectionExpired] = useState(false);
@@ -803,11 +805,10 @@ export default function WorkHealthDashboard() {
                     {hasValidHeroMessages && heroMsgs!.length > 1 ? (
                       <SwipeableQuoteCards
                         quotes={heroMsgs!}
-                        focus={workHealth.adaptivePerformanceIndex}
-                        strain={workHealth.cognitiveResilience}
-                        balance={workHealth.workRhythmRecovery}
+                        value={cardValue}
+                        strain={cardStrain}
+                        fill={cardFill}
                         mood={cardMood!}
-                        readiness={cardReadiness}
                         verdict={cardVerdict}
                         aiGenerated={aiStatus === 'success'}
                         aiError={workHealth._aiError}
@@ -822,11 +823,10 @@ export default function WorkHealthDashboard() {
                           quote={normalizedHero.quote}
                           source={normalizedHero.source}
                           subtitle={normalizedHero.subtitle}
-                          focus={workHealth.adaptivePerformanceIndex}
-                          strain={workHealth.cognitiveResilience}
-                          balance={workHealth.workRhythmRecovery}
+                          value={cardValue}
+                          strain={cardStrain}
+                          fill={cardFill}
                           mood={cardMood!}
-                          readiness={cardReadiness}
                           verdict={cardVerdict}
                         />
                       </div>
@@ -867,11 +867,10 @@ export default function WorkHealthDashboard() {
                           workHealth.ai?.overview?.message ||
                           `${workHealth.schedule?.meetingCount || 0} meetings today`
                         }
-                        focus={workHealth.adaptivePerformanceIndex}
-                        strain={workHealth.cognitiveResilience}
-                        balance={workHealth.workRhythmRecovery}
+                        value={cardValue}
+                        strain={cardStrain}
+                        fill={cardFill}
                         mood={cardMood!}
-                        readiness={cardReadiness}
                         verdict={cardVerdict}
                       />
                     </div>
