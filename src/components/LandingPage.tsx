@@ -783,12 +783,12 @@ export default function LandingPage() {
             <div className="lp-demo-intro">
               <div className="lp-section-label">See it in action</div>
               <h2>
-                Eight meetings. Fresh legs. <em>One number.</em>
+                Eight meetings. A hard session. <em>One verdict.</em>
               </h2>
               <p>
-                A real working-athlete Tuesday. The calendar says the workday will cost 25 points;
-                your recent training left you fresh at 88. Readiness is what&apos;s left to train on
-                &mdash; and you can see exactly why.
+                A real working-athlete Tuesday. Persistwork weighs the whole day &mdash; work and
+                training &mdash; against what you&apos;re built for, and answers one question: how
+                hard to train today.
               </p>
             </div>
 
@@ -874,72 +874,70 @@ export default function LandingPage() {
                 {/* Readiness verdict card */}
                 <div className="lp-rcard">
                   <div className="lp-rcard-chip">
-                    <span className="lp-rcard-dot"></span>Workday clear &middot; Keep it easy
+                    <span className="lp-rcard-dot"></span>Flow &middot; Train normally
                   </div>
                   <div className="lp-rcard-num">
-                    63<span>Readiness</span>
+                    74<span>Value</span>
                   </div>
-                  <div className="lp-rcard-sub">
-                    Focus 38 &middot; Strain 71 &middot; Balance 46
-                  </div>
+                  <div className="lp-rcard-sub">Value 74 &middot; Strain 38 &middot; Fill +17</div>
                 </div>
 
-                {/* The equation: body − workday = readiness */}
+                {/* The relationship: recent load vs the baseline you're built for */}
                 <div className="lp-eq">
                   <div className="lp-eq-term">
-                    <div className="lp-eq-num">88</div>
-                    <div className="lp-eq-lbl">Freshness</div>
+                    <div className="lp-eq-num">108</div>
+                    <div className="lp-eq-lbl">Recent</div>
                   </div>
-                  <span className="lp-eq-op">&minus;</span>
+                  <span className="lp-eq-op">&divide;</span>
                   <div className="lp-eq-term">
-                    <div className="lp-eq-num lp-eq-muted">25</div>
-                    <div className="lp-eq-lbl">Workday</div>
+                    <div className="lp-eq-num lp-eq-muted">104</div>
+                    <div className="lp-eq-lbl">Baseline</div>
                   </div>
                   <span className="lp-eq-op">=</span>
                   <div className="lp-eq-term">
-                    <div className="lp-eq-num lp-eq-accent">63</div>
-                    <div className="lp-eq-lbl">Readiness</div>
+                    <div className="lp-eq-num lp-eq-accent">1.04&times;</div>
+                    <div className="lp-eq-lbl">In your band</div>
                   </div>
                 </div>
 
-                {/* What your training brought */}
+                {/* Your training — load vs the baseline */}
                 <div className="lp-why-block">
                   <div className="lp-why-h">
-                    <span>What your training brought</span>
+                    <span>Your training</span>
                     <span className="lp-why-tag">STRAVA</span>
                   </div>
                   <div className="lp-body-row">
                     <div className="lp-body-item">
-                      <div className="lp-body-num">88</div>
-                      <div className="lp-body-lbl">Freshness</div>
+                      <div className="lp-body-num">40</div>
+                      <div className="lp-body-lbl">Baseline</div>
                     </div>
                     <div className="lp-body-item">
                       <div className="lp-body-num">4</div>
                       <div className="lp-body-lbl">This week</div>
                     </div>
                     <div className="lp-body-item">
-                      <div className="lp-body-num">42min</div>
-                      <div className="lp-body-lbl">Last out</div>
+                      <div className="lp-body-num">64</div>
+                      <div className="lp-body-lbl">Today</div>
                     </div>
                   </div>
                 </div>
 
-                {/* What your workday is taking */}
+                {/* Your workday — the scores that set your Work Index */}
                 <div className="lp-why-block">
                   <div className="lp-why-h">
-                    <span>What your workday is taking</span>
+                    <span>Your workday</span>
+                    <span className="lp-why-tag">WORK INDEX 59</span>
                   </div>
                   {[
-                    { label: 'Strain', value: 71, cost: 14, width: 100 },
-                    { label: 'Balance', value: 46, cost: 6, width: 43 },
-                    { label: 'Focus', value: 38, cost: 5, width: 36 },
+                    { label: 'Focus', value: 70, width: 70 },
+                    { label: 'Balance', value: 60, width: 60 },
+                    { label: 'Strain', value: 50, width: 50 },
                   ].map((m) => (
                     <div className="lp-cost" key={m.label}>
                       <div className="lp-cost-head">
                         <span className="lp-cost-name">
                           {m.label} <span className="lp-cost-val">{m.value}</span>
                         </span>
-                        <span className="lp-cost-pts">&minus;{m.cost}</span>
                       </div>
                       <div className="lp-cost-bar">
                         <div className="lp-cost-fill" style={{ width: `${m.width}%` }} />
@@ -950,23 +948,24 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* AM/PM intelligence — same day, two check-ins */}
+            {/* Same session, opposite call — read against your baseline */}
             <div className="lp-ampm">
               <div className="lp-ampm-lead">
-                Same day, two check-ins. Readiness updates as your meetings pass &mdash; so a 6am
-                check and a 6pm check both tell the truth about how hard to train.
+                Same hard session today &mdash; opposite verdict. Persistwork reads it against what
+                you&apos;re built for, not a one-size rule. Three hard days only count if they
+                exceed your baseline.
               </div>
               <div className="lp-ampm-row">
                 <div className="lp-ampm-cell">
-                  <span className="lp-ampm-time">6:00 AM</span>
-                  <span className="lp-ampm-num">88</span>
-                  <span className="lp-ampm-verdict">Train hard</span>
+                  <span className="lp-ampm-time">Off the couch</span>
+                  <span className="lp-ampm-num">25</span>
+                  <span className="lp-ampm-verdict">Recover</span>
                 </div>
                 <span className="lp-ampm-arrow">&rarr;</span>
                 <div className="lp-ampm-cell">
-                  <span className="lp-ampm-time">6:00 PM</span>
-                  <span className="lp-ampm-num">63</span>
-                  <span className="lp-ampm-verdict">Keep it easy</span>
+                  <span className="lp-ampm-time">4&ndash;5&times;/week</span>
+                  <span className="lp-ampm-num">74</span>
+                  <span className="lp-ampm-verdict">Train normally</span>
                 </div>
               </div>
             </div>
@@ -993,17 +992,17 @@ export default function LandingPage() {
                 <div className="lp-step-num">STEP 02</div>
                 <h3>Connect Strava</h3>
                 <p>
-                  Your recent training becomes freshness &mdash; how rested your legs are against
-                  the calendar&apos;s forecast. No Strava yet? Demo data walks the whole flow.
+                  Your training history sets your baseline &mdash; what you&apos;re built for
+                  &mdash; so today&apos;s load is judged against it, not a generic rule. No Strava
+                  yet? Demo data walks the whole flow.
                 </p>
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">STEP 03</div>
                 <h3>Get the verdict</h3>
                 <p>
-                  One readiness number, live all day &mdash; your scores set what the workday costs,
-                  your training sets what you have, and the answer is the same at 6am or 6pm: train
-                  hard, keep it easy, or recover.
+                  One verdict from the whole day &mdash; work and training measured against your
+                  baseline. It tells you which it is: go hard, keep it moderate, or recover.
                 </p>
               </div>
             </div>
@@ -1019,8 +1018,8 @@ export default function LandingPage() {
               <em>Train on the verdict.</em>
             </h2>
             <p>
-              Connect your calendar, add Strava, and the workday tells you what it left you. Ten
-              seconds of setup.
+              Connect your calendar, add Strava, and get one honest verdict on how hard to train
+              today. Ten seconds of setup.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>
               <svg

@@ -26,12 +26,16 @@ export function generateDemoActuals(email: string, date: string): WearableActual
   const weekActivityCount = Math.round(2 + seeded(`${base}:week`) * 6); // 2–8
   const durationMin = Math.round(35 + seeded(`${base}:dur`) * 70); // 35–105
   const distanceKm = Math.round((4 + seeded(`${base}:dist`) * 16) * 10) / 10; // 4.0–20.0
+  const trainingBaseline = Math.round(20 + seeded(`${base}:tbase`) * 45); // 20–65
+  const trainingLoadToday = Math.round(seeded(`${base}:tload`) * 90); // 0–90
 
   return {
     date,
     provider: 'demo',
     freshness,
     weekActivityCount,
+    trainingBaseline,
+    trainingLoadToday,
     lastActivity: {
       type: 'Run',
       startISO: `${date}T06:30:00Z`,

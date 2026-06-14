@@ -46,6 +46,13 @@ export interface WearableActuals {
   lastActivity?: ActivitySummary;
   /** Activities logged in the trailing 7 days (activity providers). */
   weekActivityCount?: number;
+  /**
+   * Chronic training-load baseline (daily EWMA) — "what you're built for".
+   * Seeds the readiness model's prior so there's a verdict on day one.
+   */
+  trainingBaseline?: number;
+  /** Today's logged training load (same units as the baseline). */
+  trainingLoadToday?: number;
 }
 
 /** A stored OAuth connection to a wearable provider. */

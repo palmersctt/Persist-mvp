@@ -1,3 +1,5 @@
+import type { Verdict } from './model';
+
 export type Mood =
   | 'survival'
   | 'grinding'
@@ -28,8 +30,8 @@ export const MOODS: Record<Mood, MoodConfig> = {
 export type MoodTier = 'bad' | 'ok' | 'good';
 
 export const MOOD_TIERS: Record<MoodTier, Mood[]> = {
-  bad: ['survival', 'grinding', 'scattered'],
-  ok: ['autopilot', 'coasting'],
+  bad: ['survival', 'scattered'],
+  ok: ['autopilot', 'coasting', 'grinding'],
   good: ['locked-in', 'flow', 'victory'],
 };
 
@@ -40,6 +42,23 @@ export function getMoodTier(mood: Mood): MoodTier {
   }
   return 'ok';
 }
+
+/** The unified verdict → the card's mood + a short action label. Work no
+ * longer produces a separate mood — this is the only verdict. */
+export const VERDICT_MOOD: Record<Verdict, Mood> = {
+  Survival: 'survival',
+  Grinding: 'grinding',
+  Coasting: 'coasting',
+  'Locked In': 'locked-in',
+  Flow: 'flow',
+};
+export const VERDICT_LABEL: Record<Verdict, string> = {
+  Survival: 'Recover',
+  Grinding: 'Keep it moderate',
+  Coasting: 'Optional',
+  'Locked In': 'Go hard',
+  Flow: 'Train normally',
+};
 
 /** Classify scores into a broad tier. */
 function detectTier(focus: number, strain: number, balance: number): MoodTier {

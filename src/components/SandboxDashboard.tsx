@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { toPng } from 'html-to-image';
 import { trackEvent, getSandboxSessionId, resetSandboxSessionId } from '../lib/trackEvent';
-import { detectMood, moodFromReadinessBand } from '../lib/mood';
+import { VERDICT_MOOD } from '../lib/mood';
 import { generateTrendsFromScore } from '../lib/generateTrends';
 import type { GeneratedTrends } from '../lib/generateTrends';
 import type { HeroMessage, WorkHealthMetrics } from '../hooks/useWorkHealth';
@@ -13,14 +13,8 @@ import SwipeableQuoteCards from './SwipeableQuoteCards';
 import WhyMood from './WhyMood';
 import PersistLogo from './PersistLogo';
 import SandboxMeetingBuilder, { type MeetingEntry } from './SandboxMeetingBuilder';
-import ReadinessBreakdown from './ReadinessBreakdown';
-import {
-  computeReadiness,
-  readinessContributions,
-  VERDICTS,
-  type DayShape,
-  type MetricKey,
-} from '../lib/readiness';
+import ReadinessExplain from './ReadinessExplain';
+import { dashboardVerdict } from '../lib/dashboardModel';
 import type { WearableActuals } from '../lib/wearables/types';
 
 function formatFocusTime(focusTimeMinutes: number) {
@@ -53,13 +47,15 @@ const BODY_SCENARIOS: { key: BodyScenario; label: string }[] = [
   { key: 'fatigued', label: 'Fatigued' },
 ];
 
-// Strava-shaped demo actuals: training-load freshness stands in for recovery,
-// plus the activity factors the breakdown shows (This week / Last out).
+// Strava-shaped demo actuals: a training-load baseline + today's load drive
+// the model's training axis (Recent ÷ Baseline). Fresh = rested with a gap,
+// fatigued = a recent spike over what you're built for.
 function sandboxActuals(scenario: BodyScenario): WearableActuals {
   const date = new Date().toLocaleDateString('sv-SE');
   const presets = {
     fresh: {
-      freshness: 88,
+      trainingBaseline: 42,
+      trainingLoadToday: 26,
       weekActivityCount: 4,
       lastActivity: {
         type: 'Run',
@@ -70,7 +66,8 @@ function sandboxActuals(scenario: BodyScenario): WearableActuals {
       },
     },
     steady: {
-      freshness: 54,
+      trainingBaseline: 40,
+      trainingLoadToday: 44,
       weekActivityCount: 5,
       lastActivity: {
         type: 'Ride',
@@ -81,7 +78,8 @@ function sandboxActuals(scenario: BodyScenario): WearableActuals {
       },
     },
     fatigued: {
-      freshness: 24,
+      trainingBaseline: 32,
+      trainingLoadToday: 96,
       weekActivityCount: 7,
       lastActivity: {
         type: 'Run',
@@ -93,28 +91,6 @@ function sandboxActuals(scenario: BodyScenario): WearableActuals {
     },
   } as const;
   return { date, provider: 'strava', ...presets[scenario] };
-}
-
-/** Treat the entered meetings as today's calendar so the unlock is live. */
-function dayShapeFromMeetings(meetings: MeetingEntry[]): DayShape {
-  const events = meetings
-    .filter((m) => m.title.trim())
-    .map((m) => {
-      const s = new Date();
-      s.setHours(m.startHour, m.startMinute, 0, 0);
-      const e = new Date();
-      e.setHours(m.endHour, m.endMinute, 0, 0);
-      return { startISO: s.toISOString(), endISO: e.toISOString() };
-    });
-  return {
-    firstEventStartISO: events.length
-      ? events.reduce((min, ev) => (ev.startISO < min ? ev.startISO : min), events[0].startISO)
-      : null,
-    lastEventEndISO: events.length
-      ? events.reduce((max, ev) => (ev.endISO > max ? ev.endISO : max), events[0].endISO)
-      : null,
-    events,
-  };
 }
 
 // Trend types and generation imported from ../lib/generateTrends
@@ -227,24 +203,11 @@ export default function SandboxDashboard() {
   const focus = customMetrics?.adaptivePerformanceIndex ?? 0;
   const strain = customMetrics?.cognitiveResilience ?? 0;
   const balance = customMetrics?.workRhythmRecovery ?? 0;
-  // One algorithm, one mood: the selected freshness scenario fuses with the
-  // scored day, and the card's mood/verdict come from the same readiness band
-  // shown in the panel below
+  // One model, one verdict: the scored day fuses with the training scenario
+  // into the same verdict shown on the card and explained in the panel below.
   const previewActuals = sandboxActuals(bodyScenario);
-  const previewState = customMetrics
-    ? computeReadiness(
-        new Date(),
-        dayShapeFromMeetings(customMeetings ?? []),
-        { focus, strain, balance },
-        previewActuals
-      )
-    : null;
-  const mood = customMetrics
-    ? previewState?.band
-      ? moodFromReadinessBand(previewState.band, focus, strain, balance)
-      : detectMood(focus, strain, balance)
-    : 'autopilot';
-  const previewVerdict = previewState?.band ? VERDICTS[previewState.band] : undefined;
+  const previewModel = customMetrics ? dashboardVerdict(customMetrics, previewActuals) : null;
+  const mood = previewModel ? VERDICT_MOOD[previewModel.verdict] : 'autopilot';
   const narrative = customMetrics?.ai?.whyNarrative ?? '';
   const s = customMetrics?.schedule ?? EMPTY_SCHEDULE;
   const ft = formatFocusTime(customMetrics?.focusTime ?? 0);
@@ -672,9 +635,9 @@ export default function SandboxDashboard() {
                   <div>
                     <SwipeableQuoteCards
                       quotes={heroMessages}
-                      focus={focus}
-                      strain={strain}
-                      balance={balance}
+                      value={previewModel?.value ?? 0}
+                      strain={previewModel?.strain ?? 0}
+                      fill={previewModel?.fill ?? 0}
                       mood={mood}
                       daySummary={daySummary}
                       activeCardRef={(el) => {
@@ -784,27 +747,8 @@ export default function SandboxDashboard() {
                         </button>
                       ))}
                     </div>
-                    {previewState && (
-                      <ReadinessBreakdown
-                        state={previewState}
-                        contributions={readinessContributions(
-                          { focus, strain, balance },
-                          previewActuals
-                        )}
-                        connected
-                        providerLabel="Demo data"
-                        onMetricClick={(metric: MetricKey) =>
-                          setActiveTab(
-                            (
-                              {
-                                focus: 'performance',
-                                strain: 'resilience',
-                                balance: 'sustainability',
-                              } as const
-                            )[metric]
-                          )
-                        }
-                      />
+                    {previewModel && (
+                      <ReadinessExplain model={previewModel} providerLabel="Demo data" />
                     )}
                     <p
                       style={{

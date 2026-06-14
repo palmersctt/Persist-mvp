@@ -7,8 +7,8 @@ import { useWorkHealth } from '../hooks/useWorkHealth';
 import CardContent from './CardContent';
 import SwipeableQuoteCards from './SwipeableQuoteCards';
 import PersistLogo from './PersistLogo';
-import { detectMood, moodFromReadinessBand } from '../lib/mood';
-import { computeReadiness, VERDICTS } from '../lib/readiness';
+import { VERDICT_MOOD, VERDICT_LABEL } from '../lib/mood';
+import { dashboardVerdict } from '../lib/dashboardModel';
 import { useWearable } from '../hooks/useWearable';
 import { trackEvent } from '../lib/trackEvent';
 import { toPng } from 'html-to-image';
@@ -46,37 +46,15 @@ export default function WorkHealthDashboard() {
   } = useWorkHealth(activeTab);
   const wearable = useWearable();
 
-  // One algorithm, one mood: when the wearable is connected, the readiness
-  // band drives the card's mood and verdict — never a second, calendar-only
-  // opinion sitting above a different verdict below.
-  const readinessState = workHealth
-    ? computeReadiness(
-        new Date(),
-        workHealth.dayShape ?? null,
-        {
-          focus: workHealth.adaptivePerformanceIndex,
-          strain: workHealth.cognitiveResilience,
-          balance: workHealth.workRhythmRecovery,
-        },
-        wearable.actuals
-      )
-    : null;
-  const cardMood = workHealth
-    ? readinessState?.band
-      ? moodFromReadinessBand(
-          readinessState.band,
-          workHealth.adaptivePerformanceIndex,
-          workHealth.cognitiveResilience,
-          workHealth.workRhythmRecovery
-        )
-      : detectMood(
-          workHealth.adaptivePerformanceIndex,
-          workHealth.cognitiveResilience,
-          workHealth.workRhythmRecovery
-        )
-    : null;
-  const cardReadiness = readinessState?.readinessNow ?? null;
-  const cardVerdict = readinessState?.band ? VERDICTS[readinessState.band] : undefined;
+  // One model, one verdict: the unified readiness model (work + training load
+  // vs your baseline, plus Work Index) drives the card's mood and verdict.
+  // Work no longer produces a second, competing mood.
+  const cardModel = workHealth ? dashboardVerdict(workHealth, wearable.actuals) : null;
+  const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
+  const cardValue = cardModel?.value ?? 0;
+  const cardStrain = cardModel?.strain ?? 0;
+  const cardFill = cardModel?.fill ?? 0;
+  const cardVerdict = cardModel ? VERDICT_LABEL[cardModel.verdict] : undefined;
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 
@@ -827,11 +805,10 @@ export default function WorkHealthDashboard() {
                     {hasValidHeroMessages && heroMsgs!.length > 1 ? (
                       <SwipeableQuoteCards
                         quotes={heroMsgs!}
-                        focus={workHealth.adaptivePerformanceIndex}
-                        strain={workHealth.cognitiveResilience}
-                        balance={workHealth.workRhythmRecovery}
+                        value={cardValue}
+                        strain={cardStrain}
+                        fill={cardFill}
                         mood={cardMood!}
-                        readiness={cardReadiness}
                         verdict={cardVerdict}
                         aiGenerated={aiStatus === 'success'}
                         aiError={workHealth._aiError}
@@ -846,11 +823,10 @@ export default function WorkHealthDashboard() {
                           quote={normalizedHero.quote}
                           source={normalizedHero.source}
                           subtitle={normalizedHero.subtitle}
-                          focus={workHealth.adaptivePerformanceIndex}
-                          strain={workHealth.cognitiveResilience}
-                          balance={workHealth.workRhythmRecovery}
+                          value={cardValue}
+                          strain={cardStrain}
+                          fill={cardFill}
                           mood={cardMood!}
-                          readiness={cardReadiness}
                           verdict={cardVerdict}
                         />
                       </div>
@@ -891,11 +867,10 @@ export default function WorkHealthDashboard() {
                           workHealth.ai?.overview?.message ||
                           `${workHealth.schedule?.meetingCount || 0} meetings today`
                         }
-                        focus={workHealth.adaptivePerformanceIndex}
-                        strain={workHealth.cognitiveResilience}
-                        balance={workHealth.workRhythmRecovery}
+                        value={cardValue}
+                        strain={cardStrain}
+                        fill={cardFill}
                         mood={cardMood!}
-                        readiness={cardReadiness}
                         verdict={cardVerdict}
                       />
                     </div>
@@ -906,30 +881,8 @@ export default function WorkHealthDashboard() {
               return null;
             })()}
 
-            {/* Forecast vs actual — wearable actuals merged with the calendar forecast */}
-            {workHealth && !isLoading && (
-              <WearableSection
-                forecast={{
-                  focus: workHealth.adaptivePerformanceIndex,
-                  strain: workHealth.cognitiveResilience,
-                  balance: workHealth.workRhythmRecovery,
-                }}
-                dayShape={workHealth.dayShape ?? null}
-                wearable={wearable}
-                onMetricClick={(metric) => {
-                  // MetricKey (display) → drilldown tab (internal metric name)
-                  const tab = (
-                    {
-                      focus: 'performance',
-                      strain: 'resilience',
-                      balance: 'sustainability',
-                    } as const
-                  )[metric];
-                  setActiveTab(tab);
-                  trackEvent('metric_click', { metric, source: 'readiness_breakdown' });
-                }}
-              />
-            )}
+            {/* Why your readiness — explains the card's verdict (same model) */}
+            {workHealth && !isLoading && <WearableSection model={cardModel} wearable={wearable} />}
 
             {/* Real trends — from persisted daily score history */}
             {workHealth && !isLoading && <TrendsSection history={scoreHistory} />}

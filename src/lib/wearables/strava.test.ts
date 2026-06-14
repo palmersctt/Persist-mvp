@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { activityLoad, freshnessFromActivities } from './strava';
+import { activityLoad, freshnessFromActivities, trainingLoadProfile } from './strava';
 
 const BASE = '2026-06-11';
 const DAY_MS = 86400000;
@@ -17,6 +17,25 @@ function dailySessions(from: number, to: number, movingMin: number) {
   }
   return out;
 }
+
+describe('trainingLoadProfile', () => {
+  it('builds a chronic baseline and reports today’s load', () => {
+    // five weeks of daily hour-long sessions, plus a session today
+    const activities = [
+      ...dailySessions(1, 35, 60),
+      { start_date: `${BASE}T06:30:00Z`, moving_time: 75 * 60 },
+    ];
+    const p = trainingLoadProfile(activities, BASE);
+    expect(p.baseline).toBeGreaterThan(0);
+    expect(p.today).toBe(75); // today's session load
+  });
+
+  it('reports zero today when nothing is logged today', () => {
+    const p = trainingLoadProfile(dailySessions(1, 35, 60), BASE);
+    expect(p.today).toBe(0);
+    expect(p.baseline).toBeGreaterThan(0);
+  });
+});
 
 describe('activityLoad', () => {
   it('prefers relative effort when Strava reports it', () => {

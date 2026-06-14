@@ -9,16 +9,14 @@ import type { HeroMessage } from '../hooks/useWorkHealth';
 
 interface SwipeableQuoteCardsProps {
   quotes: HeroMessage[];
-  focus: number;
+  value: number;
   strain: number;
-  balance: number;
+  fill: number;
   mood: Mood;
-  readiness?: number | null;
   verdict?: string;
   daySummary?: string;
   aiGenerated?: boolean;
   aiError?: string;
-  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void;
   activeCardRef?: (el: HTMLDivElement | null) => void;
   onEngagement?: (
     quote: string,
@@ -34,27 +32,23 @@ const SWIPE_COOLDOWN_MS = 500;
 
 function DraggableCard({
   quote,
-  focus,
+  value,
   strain,
-  balance,
+  fill,
   mood,
-  readiness,
   verdict,
   daySummary,
-  onMetricClick,
   onSwipeComplete,
   canSwipe,
   cardRef,
 }: {
   quote: HeroMessage;
-  focus: number;
+  value: number;
   strain: number;
-  balance: number;
+  fill: number;
   mood: Mood;
-  readiness?: number | null;
   verdict?: string;
   daySummary?: string;
-  onMetricClick?: (metric: 'performance' | 'resilience' | 'sustainability') => void;
   onSwipeComplete: (direction: number) => void;
   canSwipe: boolean;
   cardRef?: (el: HTMLDivElement | null) => void;
@@ -100,14 +94,12 @@ function DraggableCard({
         quote={quote.quote}
         source={quote.source}
         subtitle={quote.subtitle}
-        focus={focus}
+        value={value}
         strain={strain}
-        balance={balance}
+        fill={fill}
         mood={mood}
-        readiness={readiness}
         verdict={verdict}
         daySummary={daySummary}
-        onMetricClick={onMetricClick}
         cardRef={cardRef}
       />
     </motion.div>
@@ -116,16 +108,14 @@ function DraggableCard({
 
 export default function SwipeableQuoteCards({
   quotes,
-  focus,
+  value,
   strain,
-  balance,
+  fill,
   mood,
-  readiness,
   verdict,
   daySummary,
   aiGenerated,
   aiError,
-  onMetricClick,
   activeCardRef,
   onEngagement,
 }: SwipeableQuoteCardsProps) {
@@ -174,14 +164,12 @@ export default function SwipeableQuoteCards({
         <DraggableCard
           key={currentIndex}
           quote={quotes[currentIndex]}
-          focus={focus}
+          value={value}
           strain={strain}
-          balance={balance}
+          fill={fill}
           mood={mood}
-          readiness={readiness}
           verdict={verdict}
           daySummary={daySummary}
-          onMetricClick={onMetricClick}
           onSwipeComplete={handleSwipeComplete}
           canSwipe={canSwipe}
           cardRef={activeCardRef}

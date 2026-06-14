@@ -1,69 +1,45 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { WearableHook } from '../hooks/useWearable';
-import {
-  computeReadiness,
-  readinessContributions,
-  type DayShape,
-  type ForecastScores,
-  type MetricKey,
-} from '../lib/readiness';
+import type { DashboardVerdict } from '../lib/dashboardModel';
 import { trackEvent } from '../lib/trackEvent';
-import ReadinessBreakdown from './ReadinessBreakdown';
+import ReadinessExplain from './ReadinessExplain';
 
-// Wearable surface for the dashboard: the connect pitch when no wearable is
-// linked, otherwise the readiness breakdown that explains the card's number.
+// Wearable surface for the dashboard: the connect pitch when no activity
+// provider is linked, otherwise the panel that EXPLAINS the card's verdict
+// (the same unified model — never a second, competing readiness number).
 export default function WearableSection({
-  forecast,
-  dayShape,
+  model,
   wearable,
-  onMetricClick,
 }: {
-  forecast: ForecastScores;
-  dayShape: DayShape | null;
+  model: DashboardVerdict | null;
   wearable: WearableHook;
-  onMetricClick?: (metric: MetricKey) => void;
 }) {
-  const { connected, provider, actuals, available, isLoading, connect, connectDemo, disconnect } =
-    wearable;
+  const { connected, provider, available, isLoading, connect, connectDemo, disconnect } = wearable;
   const [notice, setNotice] = useState<string | null>(null);
   const [demoConnecting, setDemoConnecting] = useState(false);
-
-  // Tick every 30s so the countdown to "clear" stays honest
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(id);
-  }, []);
 
   // Surface the OAuth redirect outcome once, then clean the URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const result = params.get('wearable');
     if (!result) return;
-    if (result === 'whoop-unavailable') {
-      setNotice('WHOOP isn’t configured in this environment yet — try demo data.');
-    } else if (result === 'strava-unavailable') {
+    if (result === 'strava-unavailable') {
       setNotice('Strava isn’t configured in this environment yet — try demo data.');
     } else if (result === 'denied') {
       setNotice('The connection was declined. You can try again anytime.');
     } else if (result === 'error') {
-      setNotice('Something went wrong connecting your wearable. Try again.');
+      setNotice('Something went wrong connecting Strava. Try again.');
     }
     params.delete('wearable');
     const query = params.toString();
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
   }, []);
 
-  const state = useMemo(
-    () => computeReadiness(now, dayShape, forecast, actuals),
-    [now, dayShape, forecast, actuals]
-  );
-
   if (isLoading) return null;
 
-  // --- Not connected: the pitch + connect actions ---
+  // --- Not connected: the verdict already reads your calendar; Strava sharpens it ---
   if (!connected) {
     return (
       <section className="max-w-xs mx-auto w-full">
@@ -71,19 +47,19 @@ export default function WearableSection({
           className="text-[11px] font-bold uppercase mb-3"
           style={{ letterSpacing: '0.12em', color: 'var(--text-faint)' }}
         >
-          Forecast vs Actual
+          Sharpen your readiness
         </h2>
         <div
           className="rounded-xl p-5"
           style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
         >
           <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
-            Your calendar is the forecast. Your training is the actual.
+            Add your training load.
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-            Connect Strava and Persistwork turns your recent training into freshness, then fuses it
-            with your Focus, Strain, and Balance scores into one number &mdash; readiness &mdash; so
-            whether you train at 6am or 6pm, you know how hard to go.
+            Your verdict above reads your calendar today. Connect Strava and Persistwork weighs what
+            you&apos;re built for against what you&apos;ve done lately &mdash; so the call knows the
+            difference between a hard week and being off the couch.
           </p>
           {notice && (
             <p className="text-xs mb-3" style={{ color: 'var(--signal-dim)' }}>
@@ -147,21 +123,14 @@ export default function WearableSection({
     );
   }
 
-  // --- Connected: the readiness breakdown explains the card's number ---
-  const contributions = readinessContributions(forecast, actuals);
+  // --- Connected: explain the card's verdict (the same model) ---
   const providerLabel = provider === 'demo' ? 'Demo data' : (provider ?? undefined);
 
   return (
     <section className="max-w-xs mx-auto w-full">
-      <ReadinessBreakdown
-        state={state}
-        contributions={contributions}
-        connected={connected}
-        providerLabel={providerLabel}
-        onMetricClick={onMetricClick}
-      />
+      {model && <ReadinessExplain model={model} providerLabel={providerLabel} />}
 
-      <div className="text-center mt-4">
+      <div className="text-center mt-5">
         <button
           onClick={() => {
             trackEvent('wearable_disconnected', { provider: provider ?? 'unknown' });

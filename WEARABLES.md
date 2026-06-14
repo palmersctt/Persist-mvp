@@ -50,27 +50,27 @@ provider APIs (WHOOP / demo)
         │
         ▼
 useWearable (client hook)
-        │            ┌── dayShape (event times) from /api/work-health
+        │            ┌── work-health scores from /api/work-health
         ▼            ▼
-src/lib/readiness.ts — computeReadiness / forecastVsActual (pure, tested)
+src/lib/model.ts + dashboardModel.ts — the unified readiness verdict (pure, tested)
         │
         ▼
-WearableSection (dashboard "Forecast vs Actual" section)
+WearableSection / ReadinessExplain (dashboard "Why your readiness" panel)
 ```
 
-| Path                                         | Purpose                                                                |
-| -------------------------------------------- | ---------------------------------------------------------------------- |
-| `src/lib/wearables/types.ts`                 | `WearableActuals` — the normalized shape every provider maps into      |
-| `src/lib/wearables/whoop.ts`                 | WHOOP OAuth + Developer API v2 client (server-side only)               |
-| `src/lib/wearables/demo.ts`                  | Deterministic demo actuals (no device required)                        |
-| `src/lib/readiness.ts`                       | Readiness algorithm: `bodyCapacity`, `workdayCost`, `computeReadiness` |
-| `pages/api/wearables/connect.ts`             | Starts OAuth (whoop) or creates a demo connection                      |
-| `pages/api/wearables/callback.ts`            | WHOOP OAuth callback (state-checked)                                   |
-| `pages/api/wearables/actuals.ts`             | Returns today's normalized actuals; persists to `wearable_daily`       |
-| `pages/api/wearables/disconnect.ts`          | Deletes the connection (keeps history)                                 |
-| `src/hooks/useWearable.ts`                   | Client state: connected/provider/actuals + connect/disconnect          |
-| `src/components/WearableSection.tsx`         | Dashboard UI: readiness panel + actuals row                            |
-| `supabase/migrations/20260611_wearables.sql` | `wearable_connections` + `wearable_daily`                              |
+| Path                                         | Purpose                                                              |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| `src/lib/wearables/types.ts`                 | `WearableActuals` — the normalized shape every provider maps into    |
+| `src/lib/wearables/whoop.ts`                 | WHOOP OAuth + Developer API v2 client (server-side only)             |
+| `src/lib/wearables/demo.ts`                  | Deterministic demo actuals (no device required)                      |
+| `src/lib/model.ts` / `dashboardModel.ts`     | Unified readiness model: load vs baseline + Work Index → one verdict |
+| `pages/api/wearables/connect.ts`             | Starts OAuth (whoop) or creates a demo connection                    |
+| `pages/api/wearables/callback.ts`            | WHOOP OAuth callback (state-checked)                                 |
+| `pages/api/wearables/actuals.ts`             | Returns today's normalized actuals; persists to `wearable_daily`     |
+| `pages/api/wearables/disconnect.ts`          | Deletes the connection (keeps history)                               |
+| `src/hooks/useWearable.ts`                   | Client state: connected/provider/actuals + connect/disconnect        |
+| `src/components/WearableSection.tsx`         | Dashboard UI: readiness panel + actuals row                          |
+| `supabase/migrations/20260611_wearables.sql` | `wearable_connections` + `wearable_daily`                            |
 
 The work-health API also returns `dayShape` — event start/end times only (no
 titles) — so the client can compute time-aware readiness without another
