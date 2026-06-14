@@ -900,30 +900,8 @@ export default function WorkHealthDashboard() {
               return null;
             })()}
 
-            {/* Forecast vs actual — wearable actuals merged with the calendar forecast */}
-            {workHealth && !isLoading && (
-              <WearableSection
-                forecast={{
-                  focus: workHealth.adaptivePerformanceIndex,
-                  strain: workHealth.cognitiveResilience,
-                  balance: workHealth.workRhythmRecovery,
-                }}
-                dayShape={workHealth.dayShape ?? null}
-                wearable={wearable}
-                onMetricClick={(metric) => {
-                  // MetricKey (display) → drilldown tab (internal metric name)
-                  const tab = (
-                    {
-                      focus: 'performance',
-                      strain: 'resilience',
-                      balance: 'sustainability',
-                    } as const
-                  )[metric];
-                  setActiveTab(tab);
-                  trackEvent('metric_click', { metric, source: 'readiness_breakdown' });
-                }}
-              />
-            )}
+            {/* Why your readiness — explains the card's verdict (same model) */}
+            {workHealth && !isLoading && <WearableSection model={cardModel} wearable={wearable} />}
 
             {/* Real trends — from persisted daily score history */}
             {workHealth && !isLoading && <TrendsSection history={scoreHistory} />}
