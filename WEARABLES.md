@@ -2,39 +2,49 @@
 
 ## The model
 
-Persist decodes the **forecast**: your calendar tells it what today is
-going to demand (Focus / Strain / Balance). A wearable supplies the
-**actual**: what your body brought to the day (recovery, sleep, HRV, resting
-HR) and what it has left.
-
-The two fuse into **readiness** (0–100): what a working athlete has left to
-train with at any moment. Not a countdown — people train at 6am before the
-chaos as often as 6pm after it, so the algorithm is time-aware:
+Persist reads the **forecast** from your calendar — Focus / Strain / Balance,
+aggregated into a 0–100 **Work Index** (the _shape_ of the workday) — and the
+**actual** from Strava (training load). Work and training share one load
+currency, and the model answers a single question: **how hard to train
+today.**
 
 ```
-capacity    = recovery − 8·max(0, 6 − sleepHours)            (body providers: WHOOP/demo)
-            = freshness                                      (activity providers: Strava)
-demand      = 0.5·Strain + 0.3·(100−Balance) + 0.2·(100−Focus)
-cost        = clamp((demand − 20) / 80, 0..1)                (light days cost ~0)
-tax         = 45 · cost                                      (a brutal day takes ≤45 pts)
-readiness(t) = capacity − tax · spentFraction(t)              (tax lands as meetings elapse)
+load      = workLoad + trainingLoad                    (one shared currency)
+baseline  = 21-day EWMA, SEEDED FROM A PRIOR           (backfill, not a wait)
+recent    = 7-day EWMA
+ACWR      = recent / baseline                          (more than you're built for?)
+fill      = slow EWMA of signed restoration            (filling or draining?)
+Value     = 0.45·fit + 0.45·fill + sleep nudge         (the headline 0–100)
 ```
 
-`spentFraction` is the share of the day's meeting minutes already elapsed
-(in-progress meetings count partially). Bands map readiness to verdicts:
-**≥65 train hard · 40–64 keep it easy · <40 recovery day**. Three phases
-shape the message:
+The baseline is **seeded from a prior** (the trailing weeks Strava/Calendar
+hand us at connect, or an onboarding default) instead of accumulated over
+time — so there's a real verdict on **day one**. As days log, the EWMA drifts
+the baseline off the prior toward what you actually do; that's where trends
+sharpen it.
 
-- **morning** (before the first meeting) — full capacity; if the day ahead
-  is expensive and the projection drops a band, the algorithm points at the
-  morning window: "if today has a hard session in it, it's this morning."
-- **mid-workday** — shows readiness now → projected at clear; the evening
-  session is planned on the projection, not the moment.
-- **clear** — the final verdict on what's left.
+A single **verdict** falls out — Survival / Grinding / Coasting / Locked In /
+Flow — which drives the card's mood, tier, and action (recover · keep it
+moderate · optional · go hard · train normally). Three scores show on the
+card:
 
-All constants (45-pt max tax, 8 pts/missing sleep hour, band thresholds,
-demand weights) are v1 heuristics in `src/lib/readiness.ts`, unit-tested
-and meant to be tuned against real worn data.
+- **Value** — the headline. `0.45·fit + 0.45·fill + sleep nudge`, where
+  `fit` rewards an ACWR near 1.0 (in your band) and is discounted when fill
+  is negative. High = training in your band _and_ the days are net-filling.
+- **Strain** — how hard recent load is pressing over your baseline (ACWR
+  driven; a slump reads low, a spike reads high).
+- **Fill** — the restoration balance: positive fills, negative drains,
+  regardless of how heavy the day was.
+
+**Work Index** = `0.30·Focus + 0.30·Balance + 0.40·(100−Strain)` — an
+objective read of the workday's shape, independent of its _volume_ (that's
+workLoad). It's the work half of fill, so a heavy-but-deep day can still
+read as filling.
+
+Constants (EWMA windows, ACWR bands, the Value and Work Index weights) are v1
+heuristics in `src/lib/model.ts` + `dashboardModel.ts`, unit-tested and meant
+to be tuned against real data. `trainingFeel` and `sleep` have no signal yet,
+so they're held neutral — fill currently leans on Work Index.
 
 Vocabulary is deliberately sport-agnostic: workday, readiness, recovery,
 session, train hard / keep it easy / recovery day. No trail/ride/run
@@ -73,8 +83,8 @@ WearableSection / ReadinessExplain (dashboard "Why your readiness" panel)
 | `supabase/migrations/20260611_wearables.sql` | `wearable_connections` + `wearable_daily`                            |
 
 The work-health API also returns `dayShape` — event start/end times only (no
-titles) — so the client can compute time-aware readiness without another
-calendar round-trip.
+titles) — alongside the schedule stats (`durationHours`, etc.) the model
+reads for work load.
 
 ## Providers
 
@@ -88,23 +98,23 @@ branch on it in `connect.ts` and `actuals.ts`, and extend the
 The product story is ONE sentence: the calendar is the forecast, your
 training is the actual. The UI leads with **Strava** — self-serve OAuth,
 no hardware, the provider the most working athletes already have. Strava
-has no recovery/HRV, so we derive **training-load freshness** (chronic
-fitness minus acute fatigue → a 0–100 form score) and feed it into the
-readiness equation as the capacity stand-in. See `freshnessFromActivities`
-in `src/lib/wearables/strava.ts`. The demo provider previews body-shaped
-data with zero setup.
+has no recovery/HRV, so we read **training load** instead — a chronic
+baseline ("what you're built for") plus today's load — and judge today
+against it. See `trainingLoadProfile` in `src/lib/wearables/strava.ts`.
+The demo provider previews the same shape with zero setup.
 
-**WHOOP remains in code as the precision tier.** Its recovery/sleep/HRV
-map onto capacity one-for-one and are a truer body read than freshness;
-the provider, OAuth, and routes stay behind the abstraction. Re-expose by
-adding its connect button back and setting `WHOOP_*` env vars. Freshness
-is a heuristic from training shape, not a measured body state — when a
-body-state device is connected, prefer it.
+**WHOOP remains in code as the precision tier.** Its recovery/sleep/HRV are
+a truer body read than training-load inference and could feed the model's
+fill/recovery axis directly; the provider, OAuth, and routes stay behind the
+abstraction. Re-expose by adding its connect button back and setting
+`WHOOP_*` env vars. Training load is a heuristic from what you've logged,
+not a measured body state — when a body-state device is connected, prefer it.
 
 The rest of the body-data field, for when a second provider matters:
 
-- **Oura** — free self-serve OAuth2; its readiness score maps 1:1 onto our
-  capacity input. The natural second provider if users skew ring.
+- **Oura** — free self-serve OAuth2; its readiness score would feed the
+  model's recovery/fill axis directly. The natural second provider if users
+  skew ring.
 - **COROS** — the API _does_ carry body data (nightly sleep stages, HRV,
   recovery %, EvoLab training load), and COROS even ships an official MCP
   server — but access is a partner application, not self-serve. Worth
@@ -118,10 +128,10 @@ The rest of the body-data field, for when a second provider matters:
 
 `WearableActuals` still supports both flavors honestly: recovery
 providers fill `recovery/sleepHours/hrvMs/restingHr`; activity providers
-fill `lastActivity/weekActivityCount` plus a derived `freshness` that
-gives them a real readiness number. Only a brand-new Strava account with
-no usable history leaves `freshness` absent — then readiness is null and
-the panel falls back to "go log it / already logged" messaging.
+fill `lastActivity/weekActivityCount` plus `trainingBaseline` and
+`trainingLoadToday` — the load profile the model judges today against. A
+brand-new account with no training history just leans on the prior baseline,
+so there's still a verdict on day one.
 
 ### WHOOP
 
