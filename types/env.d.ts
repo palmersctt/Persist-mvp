@@ -8,5 +8,11 @@ declare namespace NodeJS {
     NEXTAUTH_URL: string;
     NEXTAUTH_SECRET: string;
     ANTHROPIC_API_KEY: string;
+    // Wearable providers — optional. When unset, the provider's connect
+    // button is disabled and the demo provider is used instead.
+    STRAVA_CLIENT_ID?: string;
+    STRAVA_CLIENT_SECRET?: string;
+    WHOOP_CLIENT_ID?: string;
+    WHOOP_CLIENT_SECRET?: string;
   }
 }

@@ -12,6 +12,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? '✅ Set' : '❌ Missing',
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? '✅ Set' : '❌ Missing',
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? '✅ Set' : '❌ Missing',
+    // Wearable providers — unset means the connect button stays disabled.
+    STRAVA_CLIENT_ID: process.env.STRAVA_CLIENT_ID ? '✅ Set' : '❌ Missing',
+    STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET ? '✅ Set' : '❌ Missing',
+    WHOOP_CLIENT_ID: process.env.WHOOP_CLIENT_ID ? '✅ Set' : '❌ Missing',
+    WHOOP_CLIENT_SECRET: process.env.WHOOP_CLIENT_SECRET ? '✅ Set' : '❌ Missing',
   };
 
   res.status(200).json(envStatus);
