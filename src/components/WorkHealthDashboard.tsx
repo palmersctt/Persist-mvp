@@ -7,13 +7,31 @@ import { useWorkHealth } from '../hooks/useWorkHealth';
 import CardContent from './CardContent';
 import SwipeableQuoteCards from './SwipeableQuoteCards';
 import PersistLogo from './PersistLogo';
-import { detectMood, moodFromReadinessBand } from '../lib/mood';
-import { computeReadiness, VERDICTS } from '../lib/readiness';
+import type { Mood } from '../lib/mood';
+import { dashboardVerdict } from '../lib/dashboardModel';
+import type { Verdict } from '../lib/model';
 import { useWearable } from '../hooks/useWearable';
 import { trackEvent } from '../lib/trackEvent';
 import { toPng } from 'html-to-image';
 import TrendsSection from './TrendsSection';
 import WearableSection from './WearableSection';
+
+// The unified verdict maps onto the card's mood + a short action label. Work
+// no longer produces a separate mood — this is the only verdict on the card.
+const VERDICT_MOOD: Record<Verdict, Mood> = {
+  Survival: 'survival',
+  Grinding: 'grinding',
+  Coasting: 'coasting',
+  'Locked In': 'locked-in',
+  Flow: 'flow',
+};
+const VERDICT_LABEL: Record<Verdict, string> = {
+  Survival: 'Recover',
+  Grinding: 'Keep it moderate',
+  Coasting: 'Optional',
+  'Locked In': 'Go hard',
+  Flow: 'Train normally',
+};
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -46,37 +64,13 @@ export default function WorkHealthDashboard() {
   } = useWorkHealth(activeTab);
   const wearable = useWearable();
 
-  // One algorithm, one mood: when the wearable is connected, the readiness
-  // band drives the card's mood and verdict — never a second, calendar-only
-  // opinion sitting above a different verdict below.
-  const readinessState = workHealth
-    ? computeReadiness(
-        new Date(),
-        workHealth.dayShape ?? null,
-        {
-          focus: workHealth.adaptivePerformanceIndex,
-          strain: workHealth.cognitiveResilience,
-          balance: workHealth.workRhythmRecovery,
-        },
-        wearable.actuals
-      )
-    : null;
-  const cardMood = workHealth
-    ? readinessState?.band
-      ? moodFromReadinessBand(
-          readinessState.band,
-          workHealth.adaptivePerformanceIndex,
-          workHealth.cognitiveResilience,
-          workHealth.workRhythmRecovery
-        )
-      : detectMood(
-          workHealth.adaptivePerformanceIndex,
-          workHealth.cognitiveResilience,
-          workHealth.workRhythmRecovery
-        )
-    : null;
-  const cardReadiness = readinessState?.readinessNow ?? null;
-  const cardVerdict = readinessState?.band ? VERDICTS[readinessState.band] : undefined;
+  // One model, one verdict: the unified readiness model (work + training load
+  // vs your baseline, plus Work Index) drives the card's mood and verdict.
+  // Work no longer produces a second, competing mood.
+  const cardModel = workHealth ? dashboardVerdict(workHealth, wearable.actuals) : null;
+  const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
+  const cardReadiness = cardModel?.value ?? null;
+  const cardVerdict = cardModel ? VERDICT_LABEL[cardModel.verdict] : undefined;
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 
