@@ -7,31 +7,13 @@ import { useWorkHealth } from '../hooks/useWorkHealth';
 import CardContent from './CardContent';
 import SwipeableQuoteCards from './SwipeableQuoteCards';
 import PersistLogo from './PersistLogo';
-import type { Mood } from '../lib/mood';
+import { VERDICT_MOOD, VERDICT_LABEL } from '../lib/mood';
 import { dashboardVerdict } from '../lib/dashboardModel';
-import type { Verdict } from '../lib/model';
 import { useWearable } from '../hooks/useWearable';
 import { trackEvent } from '../lib/trackEvent';
 import { toPng } from 'html-to-image';
 import TrendsSection from './TrendsSection';
 import WearableSection from './WearableSection';
-
-// The unified verdict maps onto the card's mood + a short action label. Work
-// no longer produces a separate mood — this is the only verdict on the card.
-const VERDICT_MOOD: Record<Verdict, Mood> = {
-  Survival: 'survival',
-  Grinding: 'grinding',
-  Coasting: 'coasting',
-  'Locked In': 'locked-in',
-  Flow: 'flow',
-};
-const VERDICT_LABEL: Record<Verdict, string> = {
-  Survival: 'Recover',
-  Grinding: 'Keep it moderate',
-  Coasting: 'Optional',
-  'Locked In': 'Go hard',
-  Flow: 'Train normally',
-};
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();

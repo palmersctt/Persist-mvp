@@ -108,9 +108,9 @@ describe('MOOD_TIERS', () => {
     expect(allTiered.sort()).toEqual(allMoods.sort());
   });
 
-  it('bad tier has 3, ok has 2, good has 3 moods', () => {
-    expect(MOOD_TIERS.bad).toHaveLength(3);
-    expect(MOOD_TIERS.ok).toHaveLength(2);
+  it('groups the 8 moods across the three tiers (grinding reads as ok)', () => {
+    expect(MOOD_TIERS.bad).toEqual(['survival', 'scattered']);
+    expect(MOOD_TIERS.ok).toEqual(['autopilot', 'coasting', 'grinding']);
     expect(MOOD_TIERS.good).toHaveLength(3);
   });
 });
