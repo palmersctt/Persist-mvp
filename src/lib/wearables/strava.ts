@@ -154,6 +154,30 @@ export function freshnessFromActivities(activities: LoadInput[], date: string): 
 }
 
 /**
+ * Training-load profile for `date`: the chronic baseline (the daily EWMA of
+ * load — "what you're built for") and today's logged load. Feeds the
+ * readiness model's prior and today's training input.
+ */
+export function trainingLoadProfile(
+  activities: LoadInput[],
+  date: string
+): { baseline: number; today: number } {
+  const byDay = new Map<string, number>();
+  for (const a of activities) {
+    if (!a.start_date) continue;
+    const day = a.start_date.slice(0, 10);
+    byDay.set(day, (byDay.get(day) ?? 0) + activityLoad(a));
+  }
+  const end = new Date(`${date}T00:00:00Z`).getTime();
+  const start = end - (CTL_DAYS + ATL_DAYS) * DAY_MS;
+  let ctl = 0;
+  for (let t = start; t <= end; t += DAY_MS) {
+    ctl += ((byDay.get(new Date(t).toISOString().slice(0, 10)) ?? 0) - ctl) * CTL_DECAY;
+  }
+  return { baseline: Math.round(ctl), today: Math.round(byDay.get(date) ?? 0) };
+}
+
+/**
  * Fetch the trailing week of activities from Strava and normalize.
  * Throws 'STRAVA_UNAUTHORIZED' if the access token is rejected (caller
  * should refresh and retry).
@@ -212,12 +236,16 @@ export async function fetchStravaActuals(
     (a) => a.start_date && new Date(a.start_date).getTime() >= weekAgo
   ).length;
 
+  const profile = trainingLoadProfile(sorted, date);
+
   return {
     date,
     provider: 'strava',
     lastActivity,
     weekActivityCount,
     freshness: freshnessFromActivities(sorted, date) ?? undefined,
+    trainingBaseline: profile.baseline,
+    trainingLoadToday: profile.today,
     dayStrain: todayEffort > 0 ? todayEffort : undefined,
   };
 }
