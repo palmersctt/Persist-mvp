@@ -3,9 +3,9 @@ import { type Mood, MOODS, getMoodTier } from '../lib/mood';
 // ─── score fields ───────────────────────────────────────────────────────────
 
 const SCORE_FIELDS = [
-  { key: 'value' as const, label: 'VALUE' },
-  { key: 'strain' as const, label: 'STRAIN' },
-  { key: 'fill' as const, label: 'FILL' },
+  { key: 'readiness' as const, label: 'READINESS' },
+  { key: 'load' as const, label: 'LOAD' },
+  { key: 'balance' as const, label: 'BALANCE' },
 ];
 
 // ─── token maps ─────────────────────────────────────────────────────────────
@@ -61,10 +61,10 @@ export interface CardContentProps {
   quote: string;
   source: string;
   subtitle: string;
-  /** The verdict's three scores. Value leads (the headline). */
-  value: number;
-  strain: number;
-  fill: number;
+  /** The verdict's three scores. Readiness leads (the headline). */
+  readiness: number;
+  load: number;
+  balance: number;
   mood: Mood;
   /** Short action label from the verdict — shown beside the mood name. */
   verdict?: string;
@@ -77,19 +77,19 @@ export default function CardContent({
   quote,
   source,
   subtitle,
-  value,
-  strain,
-  fill,
+  readiness,
+  load,
+  balance,
   mood,
   verdict,
   cardRef,
   forExport = false,
 }: CardContentProps) {
-  const values = { value, strain, fill };
+  const values = { readiness, load, balance };
   const { gradient, name: moodName, textColor } = MOODS[mood];
   const tier = getMoodTier(mood);
-  // Value is the verdict — it always leads; Strain and Fill sit flat beside it.
-  const popped = { value: true, strain: false, fill: false };
+  // Readiness is the verdict — it always leads; Load and Balance sit flat beside it.
+  const popped = { readiness: true, load: false, balance: false };
   const isLight = textColor === 'dark';
   const isOk = tier === 'ok';
 
@@ -163,15 +163,15 @@ export default function CardContent({
         </p>
       </div>
 
-      {/* Scores — uniform 32px, color-driven emphasis. Value is the verdict,
-          so it always pops; Strain and Fill sit flat beside it. */}
+      {/* Scores — uniform 32px, color-driven emphasis. Readiness is the verdict,
+          so it always pops; Load and Balance sit flat beside it. */}
       <div style={{ display: 'flex', gap: 22, marginBottom: 28, position: 'relative' }}>
         {SCORE_FIELDS.map((s) => {
           const isPopped = popped[s.key];
           const numColor = isOk ? DARK_TOKENS.flatNum : isPopped ? tk.popNum : tk.flatNum;
           const lblColor = isOk ? DARK_TOKENS.flatLbl : isPopped ? tk.popLbl : tk.flatLbl;
           const raw = values[s.key];
-          const display = s.key === 'fill' ? `${raw >= 0 ? '+' : ''}${raw}` : `${raw}`;
+          const display = s.key === 'balance' ? `${raw >= 0 ? '+' : ''}${raw}` : `${raw}`;
 
           return (
             <div key={s.key} className="select-none">

@@ -75,7 +75,7 @@ describe('runModel — day-1 verdicts (the money cases)', () => {
     );
     expect(r.verdict).toBe('Grinding');
     expect(r.tier).toBe('ok');
-    expect(r.fill).toBeLessThan(0);
+    expect(r.balance).toBeLessThan(0);
   });
 
   it('charged + genuinely light → Flow', () => {
@@ -85,7 +85,7 @@ describe('runModel — day-1 verdicts (the money cases)', () => {
       day({ workLoad: 30, wv: 0.4, trainingLoad: 42, trainingFeel: 0.4, sleep: 78 })
     );
     expect(r.verdict).toBe('Flow');
-    expect(r.value).toBeGreaterThan(66);
+    expect(r.readiness).toBeGreaterThan(66);
   });
 
   it('flat load and feel in-band → Coasting', () => {

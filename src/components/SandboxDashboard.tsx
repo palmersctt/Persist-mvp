@@ -635,9 +635,9 @@ export default function SandboxDashboard() {
                   <div>
                     <SwipeableQuoteCards
                       quotes={heroMessages}
-                      value={previewModel?.value ?? 0}
-                      strain={previewModel?.strain ?? 0}
-                      fill={previewModel?.fill ?? 0}
+                      readiness={previewModel?.readiness ?? 0}
+                      load={previewModel?.load ?? 0}
+                      balance={previewModel?.balance ?? 0}
                       mood={mood}
                       daySummary={daySummary}
                       activeCardRef={(el) => {

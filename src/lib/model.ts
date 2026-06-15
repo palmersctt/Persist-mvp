@@ -8,10 +8,12 @@
 //   baseline  = 21-day EWMA, SEEDED FROM A PRIOR           (backfill, not waiting)
 //   recent    = 7-day EWMA
 //   ACWR      = recent / baseline                          (am I doing more than I'm built for?)
-//   fill      = slow EWMA of signed restoration            (is it filling or draining me?)
+//   balance   = slow EWMA of signed restoration            (is it filling or draining me?)
 //
-// Work no longer produces a mood — it produces a Work Index (an objective
-// aggregate of Focus/Balance/Strain) that becomes the work half of fill.
+// The three card scores are Readiness (headline), Load (recent vs baseline),
+// and Balance (restoration). Work no longer produces a mood — it produces a
+// Work Index (an objective aggregate of Focus/Balance/Strain) that becomes the
+// work half of Balance.
 
 export type Verdict = 'Survival' | 'Grinding' | 'Coasting' | 'Locked In' | 'Flow';
 export type Tier = 'bad' | 'ok' | 'good';
@@ -76,9 +78,9 @@ export interface TracePoint {
 }
 
 export interface ModelResult {
-  value: number;
-  strain: number;
-  fill: number;
+  readiness: number;
+  load: number;
+  balance: number;
   acwr: number;
   trainingAcwr: number;
   feel: number;
@@ -107,22 +109,22 @@ export function runModel(prior: Prior, history: DayInputs[], today: DayInputs): 
   const trace: TracePoint[] = [];
 
   for (const d of days) {
-    const load = d.workLoad + d.trainingLoad;
+    const dayLoad = d.workLoad + d.trainingLoad;
     const restore = (d.workLoad * workValence(d) + d.trainingLoad * d.trainingFeel) / 100;
     if (!started) {
       // baseline stays = prior; recent + feel jump to the first real day
-      acute = load;
+      acute = dayLoad;
       tAcute = d.trainingLoad;
       feel = restore;
       started = true;
     } else {
-      chronic = lerp(chronic, load, L_CHRONIC);
-      acute = lerp(acute, load, L_ACUTE);
+      chronic = lerp(chronic, dayLoad, L_CHRONIC);
+      acute = lerp(acute, dayLoad, L_ACUTE);
       tChronic = lerp(tChronic, d.trainingLoad, L_CHRONIC);
       tAcute = lerp(tAcute, d.trainingLoad, L_ACUTE);
       feel = lerp(feel, restore, L_FEEL);
     }
-    trace.push({ load, restore, chronic, acute, feel });
+    trace.push({ load: dayLoad, restore, chronic, acute, feel });
   }
 
   const acwr = chronic > 2 ? acute / chronic : 1.0;
@@ -137,19 +139,19 @@ export function runModel(prior: Prior, history: DayInputs[], today: DayInputs): 
   const feelScore = clamp(50 + feel * 78, 0, 100);
   // being "adapted" to a draining routine isn't good — discount fit when feel<0
   const effFit = fit * (1 + Math.min(0, feel) * 0.7);
-  const value = Math.round(
+  const readiness = Math.round(
     clamp(0.45 * effFit + 0.45 * feelScore + (today.sleep - SLEEP_NEUTRAL) * 0.35, 0, 100)
   );
-  const strain = Math.round(
+  const load = Math.round(
     clamp((acwr - 0.7) * 120 - (feel > 0 ? feel * 18 : 0) + (feel < 0 ? -feel * 22 : 0), 0, 100)
   );
-  const fill = Math.round(feel * 100);
+  const balance = Math.round(feel * 100);
 
-  const { verdict, rec, why } = recommend(acwr, trainingAcwr, value, feel, days.length);
+  const { verdict, rec, why } = recommend(acwr, trainingAcwr, readiness, feel, days.length);
   return {
-    value,
-    strain,
-    fill,
+    readiness,
+    load,
+    balance,
     acwr,
     trainingAcwr,
     feel,
@@ -176,7 +178,7 @@ function recommend(
       why:
         a > 1.32
           ? `Recent load is ${a.toFixed(2)}× your baseline — a real spike relative to what you're built for, not just a busy day. Ease off until it settles back toward your usual.`
-          : `Value is low and the days have drained more than they've given back. Take the stimulus off; the budget's spent.`,
+          : `Readiness is low and the days have drained more than they've given back. Take the stimulus off; the budget's spent.`,
     };
   }
   if (ta < 0.82 && v >= 58) {
@@ -189,8 +191,8 @@ function recommend(
   if (feel < -0.16) {
     return {
       verdict: 'Grinding',
-      rec: 'Keep it moderate — protect your fill.',
-      why: `Load is in your band but the week has skewed draining (fill ${Math.round(feel * 100)}). A light, chosen session beats a hard one right now, even though nothing looks heavy.`,
+      rec: 'Keep it moderate — protect your balance.',
+      why: `Load is in your band but the week has skewed draining (balance ${Math.round(feel * 100)}). A light, chosen session beats a hard one right now, even though nothing looks heavy.`,
     };
   }
   if (v >= 66 || feel > 0.12) {
@@ -207,6 +209,6 @@ function recommend(
   return {
     verdict: 'Coasting',
     rec: 'Train if you want — nothing’s pushing either way.',
-    why: `Load and fill are both flat — in your band, but nothing's forcing a hard call. A normal session fits; so does a rest day.`,
+    why: `Load and balance are both flat — in your band, but nothing's forcing a hard call. A normal session fits; so does a rest day.`,
   };
 }

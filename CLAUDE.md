@@ -20,8 +20,8 @@ Routing: `app/` directory (Next.js App Router). Shared layout in `app/layout.tsx
 
 - **`src/lib/model.ts`** — the unified readiness engine: one shared load
   currency (work + training), a 21-day baseline **seeded from a prior** (a
-  real verdict on day one), the Work Index, and a single verdict → **Value /
-  Strain / Fill**.
+  real verdict on day one), the Work Index, and a single verdict → **Readiness
+  / Load / Balance**.
 - **`src/lib/dashboardModel.ts`** — maps real calendar + Strava signals into
   the model. **`src/components/ReadinessExplain.tsx`** renders the "why" panel.
 - ONE verdict drives the card: the model's verdict → mood + tier + action.
@@ -55,11 +55,11 @@ The active verdict set is five: **Survival** (bad), **Grinding** + **Coasting**
 
 The card shows the unified model's three scores (`src/lib/model.ts`):
 
-| Card score | Meaning                                                |
-| ---------- | ------------------------------------------------------ |
-| **Value**  | Headline 0–100: load-vs-baseline fit blended with Fill |
-| **Strain** | How hard recent load presses over your baseline        |
-| **Fill**   | Restoration balance (+ fills / − drains)               |
+| Card score    | Meaning                                                   |
+| ------------- | --------------------------------------------------------- |
+| **Readiness** | Headline 0–100: load-vs-baseline fit blended with Balance |
+| **Load**      | How hard recent load presses over your baseline           |
+| **Balance**   | Restoration balance (+ fills / − drains)                  |
 
 The calendar's work-health scores are now **inputs** (they aggregate into the
 Work Index), not card labels:
@@ -70,7 +70,7 @@ Work Index), not card labels:
 | `resilience` / `cognitiveResilience`       | Strain            |
 | `sustainability` / `workRhythmRecovery`    | Balance           |
 
-All scores render at uniform 32px. Color-only emphasis — Value leads/pops.
+All scores render at uniform 32px. Color-only emphasis — Readiness leads/pops.
 
 ## Key Files
 
@@ -92,7 +92,7 @@ All scores render at uniform 32px. Color-only emphasis — Value leads/pops.
 | `src/lib/dashboardModel.ts`              | Maps real calendar + Strava signals into the model                       |
 | `src/lib/wearables/`                     | Wearable providers (Strava, demo, WHOOP) normalized to `WearableActuals` |
 | `src/components/WearableSection.tsx`     | Dashboard connect pitch + "Why your readiness" panel                     |
-| `src/components/ReadinessExplain.tsx`    | Shared verdict panel (Value/Strain/Fill + why + drivers)                 |
+| `src/components/ReadinessExplain.tsx`    | Shared verdict panel (Readiness/Load/Balance + why + drivers)            |
 | `WEARABLES.md`                           | Wearable integration model, provider setup, schema                       |
 | `BRAND.md`                               | Brand color tokens and card design tokens                                |
 | `PERSONAS.md`                            | User personas                                                            |
@@ -106,5 +106,5 @@ All scores render at uniform 32px. Color-only emphasis — Value leads/pops.
 - Do NOT re-introduce cream/amber/Lora-italic styling — the brand is dark + lime + Geist (Direction A).
 - Do NOT use italic-for-emphasis — emphasis is color (`--signal`) or weight only.
 - Do NOT add new tiers — there are exactly three: bad, ok, good.
-- Do NOT rename the card's scores (Value, Strain, Fill) or the verdict set (Survival/Grinding/Coasting/Locked In/Flow) without explicit instruction.
+- Do NOT rename the card's scores (Readiness, Load, Balance) or the verdict set (Survival/Grinding/Coasting/Locked In/Flow) without explicit instruction.
 - Do NOT re-introduce "comic relief" branding — the brand is now "Persist" / "Persistwork".
