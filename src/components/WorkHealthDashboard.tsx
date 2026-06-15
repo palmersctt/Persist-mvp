@@ -354,11 +354,11 @@ export default function WorkHealthDashboard() {
                     style={{ backgroundColor: 'rgba(199,249,92,0.12)' }}
                   >
                     <span className="text-sm font-bold" style={{ color: '#C7F95C' }}>
-                      B
+                      R
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1 text-[#F5F5F5]">Balance</h3>
+                    <h3 className="font-semibold mb-1 text-[#F5F5F5]">Rhythm</h3>
                     <p className="text-[#9B9DA3] text-sm">
                       How long until your body sends you an out-of-office
                     </p>
@@ -751,7 +751,7 @@ export default function WorkHealthDashboard() {
                           style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '30%' }}
                         />
                         <div className="flex justify-center gap-8">
-                          {['FOCUS', 'STRAIN', 'BALANCE'].map((label) => (
+                          {['READINESS', 'LOAD', 'BALANCE'].map((label) => (
                             <div key={label} className="text-center">
                               <div
                                 className="text-xl font-bold"

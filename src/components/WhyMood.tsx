@@ -1,65 +1,81 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface Props {
-  mood: string
-  narrative: string
-  focus: number
-  strain: number
-  balance: number
-  onMetricClick: (metric: string) => void
-  defaultOpen?: boolean
+  mood: string;
+  narrative: string;
+  focus: number;
+  strain: number;
+  balance: number;
+  onMetricClick: (metric: string) => void;
+  defaultOpen?: boolean;
 }
 
-export default function WhyMood({ mood, narrative, focus, strain, balance, onMetricClick, defaultOpen }: Props) {
-  const isFirstVisit = typeof window !== 'undefined' && !localStorage.getItem('persist-why-mood-seen')
-  const [open, setOpen] = useState(defaultOpen ?? isFirstVisit)
+export default function WhyMood({
+  mood,
+  narrative,
+  focus,
+  strain,
+  balance,
+  onMetricClick,
+  defaultOpen,
+}: Props) {
+  const isFirstVisit =
+    typeof window !== 'undefined' && !localStorage.getItem('persist-why-mood-seen');
+  const [open, setOpen] = useState(defaultOpen ?? isFirstVisit);
 
   const metrics = [
-    { key: 'performance',    label: 'Focus',   val: focus },
-    { key: 'resilience',     label: 'Strain',  val: strain },
-    { key: 'sustainability', label: 'Balance', val: balance },
-  ]
+    { key: 'performance', label: 'Focus', val: focus },
+    { key: 'resilience', label: 'Strain', val: strain },
+    { key: 'sustainability', label: 'Rhythm', val: balance },
+  ];
 
   return (
     <div className="max-w-xs mx-auto w-full mt-2 mb-6">
-
       {narrative ? (
         <>
           <button
             onClick={() => {
               if (typeof window !== 'undefined') {
-                localStorage.setItem('persist-why-mood-seen', 'true')
+                localStorage.setItem('persist-why-mood-seen', 'true');
               }
-              setOpen(o => !o)
+              setOpen((o) => !o);
             }}
             className="w-full flex justify-between items-center py-2 bg-transparent border-none cursor-pointer"
             style={{ color: '#9B9DA3', borderRadius: '6px', transition: 'background 150ms ease' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
-            <span style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <span
+              style={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+            >
               Why {mood}?
             </span>
-            <span style={{
-              fontSize: '0.7rem',
-              display: 'inline-block',
-              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s',
-              color: '#9B9DA3'
-            }}>{open ? '↑' : '›'}</span>
+            <span
+              style={{
+                fontSize: '0.7rem',
+                display: 'inline-block',
+                transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.3s',
+                color: '#9B9DA3',
+              }}
+            >
+              {open ? '↑' : '›'}
+            </span>
           </button>
 
           {open && (
-            <p style={{
-              fontSize: '0.78rem',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.7,
-              marginBottom: '1rem',
-              paddingBottom: '0.75rem',
-              borderBottom: '1px solid #23252B'
-            }}>
+            <p
+              style={{
+                fontSize: '0.78rem',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.7,
+                marginBottom: '1rem',
+                paddingBottom: '0.75rem',
+                borderBottom: '1px solid #23252B',
+              }}
+            >
               {narrative}
             </p>
           )}
@@ -72,32 +88,68 @@ export default function WhyMood({ mood, narrative, focus, strain, balance, onMet
             key={key}
             onClick={() => onMetricClick(key)}
             className="w-full flex items-center bg-transparent border-none cursor-pointer"
-            style={{ padding: '14px 4px', margin: '0 -4px', borderBottom: '1px solid #23252B', gap: '12px', borderRadius: '6px', transition: 'background 150ms ease' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-            onPointerDown={(e) => { e.currentTarget.style.background = 'var(--surface)' }}
-            onPointerUp={(e) => { e.currentTarget.style.background = 'transparent' }}
-            onPointerCancel={(e) => { e.currentTarget.style.background = 'transparent' }}
+            style={{
+              padding: '14px 4px',
+              margin: '0 -4px',
+              borderBottom: '1px solid #23252B',
+              gap: '12px',
+              borderRadius: '6px',
+              transition: 'background 150ms ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--surface)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+            onPointerDown={(e) => {
+              e.currentTarget.style.background = 'var(--surface)';
+            }}
+            onPointerUp={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+            onPointerCancel={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: '90px' }}>
               <span style={{ fontSize: '0.75rem', color: '#9B9DA3', letterSpacing: '0.02em' }}>
                 {label}
               </span>
-              <span style={{
-                fontSize: '1.25rem', fontWeight: 300, color: key === 'resilience' ? '#9B9DA3' : 'var(--text-primary)',
-                fontFeatureSettings: '"tnum"', letterSpacing: '-0.03em'
-              }}>
+              <span
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 300,
+                  color: key === 'resilience' ? '#9B9DA3' : 'var(--text-primary)',
+                  fontFeatureSettings: '"tnum"',
+                  letterSpacing: '-0.03em',
+                }}
+              >
                 {val}
               </span>
             </div>
-            <div style={{ flex: 1, height: '3px', background: 'rgba(245,245,245,0.08)', borderRadius: '2px' }}>
-              <div style={{ height: '3px', width: `${val}%`, background: '#C7F95C', borderRadius: '2px', transition: 'width 0.6s ease' }} />
+            <div
+              style={{
+                flex: 1,
+                height: '3px',
+                background: 'rgba(245,245,245,0.08)',
+                borderRadius: '2px',
+              }}
+            >
+              <div
+                style={{
+                  height: '3px',
+                  width: `${val}%`,
+                  background: '#C7F95C',
+                  borderRadius: '2px',
+                  transition: 'width 0.6s ease',
+                }}
+              />
             </div>
             <span style={{ fontSize: '0.85rem', color: '#C7F95C' }}>›</span>
           </button>
         ))}
       </div>
-
     </div>
-  )
+  );
 }

@@ -12,7 +12,7 @@
 //
 // The three card scores are Readiness (headline), Load (recent vs baseline),
 // and Balance (restoration). Work no longer produces a mood — it produces a
-// Work Index (an objective aggregate of Focus/Balance/Strain) that becomes the
+// Work Index (an objective aggregate of Focus/Rhythm/Strain) that becomes the
 // work half of Balance.
 
 export type Verdict = 'Survival' | 'Grinding' | 'Coasting' | 'Locked In' | 'Flow';
@@ -39,7 +39,7 @@ const SLEEP_NEUTRAL = 62;
 export interface DayInputs {
   /** Work volume from the calendar (meeting load), ~0..120. */
   workLoad: number;
-  /** Objective 0–100 aggregate of Focus/Balance/Strain (see workIndex). */
+  /** Objective 0–100 aggregate of Focus/Rhythm/Strain (see workIndex). */
   workIndex: number;
   /** Training load (Strava relative effort or duration proxy). */
   trainingLoad: number;
@@ -58,10 +58,10 @@ export interface Prior {
 /**
  * Work Index: an objective 0–100 read of the workday's shape. Independent of
  * volume (that's workLoad) — it answers "good-heavy or bad-heavy". Polarity:
- * Focus↑ good, Balance↑ good, Strain↑ bad.
+ * Focus↑ good, Rhythm↑ good, Strain↑ bad.
  */
-export function workIndex(focus: number, balance: number, strain: number): number {
-  return clamp(0.3 * focus + 0.3 * balance + 0.4 * (100 - strain), 0, 100);
+export function workIndex(focus: number, rhythm: number, strain: number): number {
+  return clamp(0.3 * focus + 0.3 * rhythm + 0.4 * (100 - strain), 0, 100);
 }
 
 /** Work Index (0–100) → restoration valence in −1..+1. */

@@ -68,7 +68,7 @@ Work Index), not card labels:
 | ------------------------------------------ | ----------------- |
 | `performance` / `adaptivePerformanceIndex` | Focus             |
 | `resilience` / `cognitiveResilience`       | Strain            |
-| `sustainability` / `workRhythmRecovery`    | Balance           |
+| `sustainability` / `workRhythmRecovery`    | Rhythm            |
 
 All scores render at uniform 32px. Color-only emphasis — Readiness leads/pops.
 

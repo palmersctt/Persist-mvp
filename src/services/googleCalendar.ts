@@ -11,21 +11,20 @@ export interface CalendarEvent {
   category?: MeetingCategory;
 }
 
-export type MeetingCategory = 
-  | 'BENEFICIAL' 
-  | 'NEUTRAL' 
-  | 'FOCUS_WORK' 
-  | 'LIGHT_MEETINGS' 
-  | 'HEAVY_MEETINGS' 
+export type MeetingCategory =
+  | 'BENEFICIAL'
+  | 'NEUTRAL'
+  | 'FOCUS_WORK'
+  | 'LIGHT_MEETINGS'
+  | 'HEAVY_MEETINGS'
   | 'COLLABORATIVE';
-
 
 export interface WorkHealthMetrics {
   // New intelligent metrics
   adaptivePerformanceIndex: number; // Main metric: 0-100
   cognitiveResilience: number; // Secondary metric: 0-100
   workRhythmRecovery: number; // Tertiary metric: 0-100
-  
+
   status: string;
   schedule: {
     meetingCount: number;
@@ -48,7 +47,7 @@ export interface WorkHealthMetrics {
     contributors: string[];
     primaryFactors: string[];
   };
-  
+
   // Legacy fields for backward compatibility
   readiness: number;
   cognitiveAvailability: number;
@@ -59,46 +58,153 @@ export interface WorkHealthMetrics {
 class GoogleCalendarService {
   private calendar: calendar_v3.Calendar | null = null;
   private userTimezone: string = 'America/Los_Angeles'; // Default timezone
-  
+
   // Meeting categorization keywords
   private readonly BENEFICIAL_KEYWORDS = [
-    'workout', 'gym', 'exercise', 'walk', 'run', 'yoga', 'meditation', 'break',
-    'lunch', 'eat', 'personal', 'doctor', 'dentist', 'therapy', 'massage', 'health',
-    'family', 'kids', 'school pickup', 'school drop', 'date night', 'self-care',
-    'nap', 'rest', 'recovery', 'hobby', 'read', 'journal', 'breathe', 'stretch',
-    'swim', 'hike', 'bike', 'sport', 'game', 'play', 'volunteer', 'church',
-    'prayer', 'worship', 'social', 'friends', 'happy hour', 'dinner',
-    'basketball', 'football', 'soccer', 'baseball', 'tennis', 'golf',
-    'hockey', 'volleyball', 'softball', 'lacrosse', 'wrestling', 'track',
-    'gymnastics', 'karate', 'ballet', 'dance', 'cheer', 'practice'
+    'workout',
+    'gym',
+    'exercise',
+    'walk',
+    'run',
+    'yoga',
+    'meditation',
+    'break',
+    'lunch',
+    'eat',
+    'personal',
+    'doctor',
+    'dentist',
+    'therapy',
+    'massage',
+    'health',
+    'family',
+    'kids',
+    'school pickup',
+    'school drop',
+    'date night',
+    'self-care',
+    'nap',
+    'rest',
+    'recovery',
+    'hobby',
+    'read',
+    'journal',
+    'breathe',
+    'stretch',
+    'swim',
+    'hike',
+    'bike',
+    'sport',
+    'game',
+    'play',
+    'volunteer',
+    'church',
+    'prayer',
+    'worship',
+    'social',
+    'friends',
+    'happy hour',
+    'dinner',
+    'basketball',
+    'football',
+    'soccer',
+    'baseball',
+    'tennis',
+    'golf',
+    'hockey',
+    'volleyball',
+    'softball',
+    'lacrosse',
+    'wrestling',
+    'track',
+    'gymnastics',
+    'karate',
+    'ballet',
+    'dance',
+    'cheer',
+    'practice',
   ];
 
   private readonly NEUTRAL_KEYWORDS = [
-    'commute', 'travel', 'vacation', 'holiday', 'sick', 'pto', 'personal day',
-    'out of office', 'not available', 'busy', 'blocked', 'unavailable',
-    'appointment', 'errand', 'pickup', 'drop off', 'buffer', 'hold',
-    'tentative', 'maybe', 'optional'
+    'commute',
+    'travel',
+    'vacation',
+    'holiday',
+    'sick',
+    'pto',
+    'personal day',
+    'out of office',
+    'not available',
+    'busy',
+    'blocked',
+    'unavailable',
+    'appointment',
+    'errand',
+    'pickup',
+    'drop off',
+    'buffer',
+    'hold',
+    'tentative',
+    'maybe',
+    'optional',
   ];
-  
+
   private readonly FOCUS_KEYWORDS = [
-    'focus', 'deep work', 'coding', 'writing', 'research', 'analysis', 'strategy',
-    'no meetings', 'focus block', 'maker time', 'thinking time', 'planning', 'prep'
+    'focus',
+    'deep work',
+    'coding',
+    'writing',
+    'research',
+    'analysis',
+    'strategy',
+    'no meetings',
+    'focus block',
+    'maker time',
+    'thinking time',
+    'planning',
+    'prep',
   ];
-  
+
   private readonly LIGHT_KEYWORDS = [
-    '1:1', 'one-on-one', 'check-in', 'sync', 'standup', 'coffee chat',
-    'quick sync', 'brief update', 'touch base', 'catch up'
+    '1:1',
+    'one-on-one',
+    'check-in',
+    'sync',
+    'standup',
+    'coffee chat',
+    'quick sync',
+    'brief update',
+    'touch base',
+    'catch up',
   ];
-  
+
   private readonly HEAVY_KEYWORDS = [
-    'presentation', 'demo', 'review', 'interview', 'all-hands', 'town hall',
-    'board meeting', 'client presentation', 'quarterly review', 'training',
-    'workshop', 'seminar', 'conference'
+    'presentation',
+    'demo',
+    'review',
+    'interview',
+    'all-hands',
+    'town hall',
+    'board meeting',
+    'client presentation',
+    'quarterly review',
+    'training',
+    'workshop',
+    'seminar',
+    'conference',
   ];
-  
+
   private readonly COLLABORATIVE_KEYWORDS = [
-    'brainstorm', 'planning', 'team meeting', 'retrospective', 'working session',
-    'design review', 'project meeting', 'scrum', 'sprint', 'kickoff'
+    'brainstorm',
+    'planning',
+    'team meeting',
+    'retrospective',
+    'working session',
+    'design review',
+    'project meeting',
+    'scrum',
+    'sprint',
+    'kickoff',
   ];
 
   // Compound patterns checked BEFORE single-keyword matching.
@@ -107,42 +213,39 @@ class GoogleCalendarService {
   private readonly COMPOUND_OVERRIDES: Array<[string, MeetingCategory]> = [
     // "work through lunch", "working lunch", "skip lunch", "lunch and learn" → not self-care
     ['work through lunch', 'COLLABORATIVE'],
-    ['working lunch',      'COLLABORATIVE'],
-    ['skip lunch',         'HEAVY_MEETINGS'],
-    ['lunch and learn',    'COLLABORATIVE'],
-    ['lunch & learn',      'COLLABORATIVE'],
-    ['working dinner',     'COLLABORATIVE'],
+    ['working lunch', 'COLLABORATIVE'],
+    ['skip lunch', 'HEAVY_MEETINGS'],
+    ['lunch and learn', 'COLLABORATIVE'],
+    ['lunch & learn', 'COLLABORATIVE'],
+    ['working dinner', 'COLLABORATIVE'],
     // "sprint planning", "sprint review", "sprint retro" → collaborative ceremonies, not focus
-    ['sprint planning',    'COLLABORATIVE'],
-    ['sprint review',      'COLLABORATIVE'],
-    ['sprint retro',       'COLLABORATIVE'],
+    ['sprint planning', 'COLLABORATIVE'],
+    ['sprint review', 'COLLABORATIVE'],
+    ['sprint retro', 'COLLABORATIVE'],
     // "prep for" something is usually meeting prep, not solo focus
-    ['prep for',           'LIGHT_MEETINGS'],
+    ['prep for', 'LIGHT_MEETINGS'],
   ];
 
   async initialize(accessToken: string): Promise<void> {
     const auth = new google.auth.OAuth2();
     auth.setCredentials({ access_token: accessToken });
-    
+
     this.calendar = google.calendar({ version: 'v3', auth });
   }
 
   private matchesKeywords(title: string, keywords: string[]): boolean {
     const lowercaseTitle = title.toLowerCase();
-    return keywords.some(keyword => 
-      lowercaseTitle.includes(keyword.toLowerCase())
-    );
+    return keywords.some((keyword) => lowercaseTitle.includes(keyword.toLowerCase()));
   }
 
   // Simplified helper method - NO additional timezone conversion
   private parseCalendarDateTime(dateTimeString: string, _userTimezone: string): Date {
     // Google Calendar API returns ISO 8601 strings with timezone info
     // e.g., "2025-09-15T16:00:00-07:00" or "2025-09-15T23:00:00Z"
-    
+
     try {
       const parsed = new Date(dateTimeString);
       return parsed;
-      
     } catch (error) {
       console.error('Error parsing calendar dateTime:', dateTimeString, error);
       return new Date();
@@ -160,7 +263,7 @@ class GoogleCalendarService {
     const timeInUserTZ = date.toLocaleString('en-US', {
       timeZone: timezone,
       hour12: false,
-      hour: 'numeric'
+      hour: 'numeric',
     });
 
     return parseInt(timeInUserTZ);
@@ -195,11 +298,14 @@ class GoogleCalendarService {
     }
 
     // Use provided timezone (from client-side) or fallback to server detection (which will be UTC in production)
-    const userTimezone = providedUserTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles';
+    const userTimezone =
+      providedUserTimezone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone ||
+      'America/Los_Angeles';
 
     // Store timezone for use in other methods
     this.userTimezone = userTimezone;
-    
+
     // Get today's date string in user's timezone (YYYY-MM-DD format)
     const now = new Date();
     const todayInUserTZ = now.toLocaleDateString('sv-SE', { timeZone: userTimezone });
@@ -223,7 +329,7 @@ class GoogleCalendarService {
 
     const timeMin = startOfDay.toISOString();
     const timeMax = endOfDay.toISOString();
-    
+
     try {
       // Force fresh data with aggressive cache-busting for production
       const response = await this.calendar.events.list({
@@ -265,12 +371,13 @@ class GoogleCalendarService {
 
   private calculateCognitiveAvailability(events: CalendarEvent[]): number {
     // Filter out beneficial and neutral events for cognitive calculation
-    const actualMeetings = events.filter(event => 
-      event.category !== 'BENEFICIAL' && 
-      event.category !== 'NEUTRAL' && 
-      event.category !== 'FOCUS_WORK'
+    const actualMeetings = events.filter(
+      (event) =>
+        event.category !== 'BENEFICIAL' &&
+        event.category !== 'NEUTRAL' &&
+        event.category !== 'FOCUS_WORK'
     );
-    
+
     if (actualMeetings.length === 0) return 95; // Higher score with no actual meetings
 
     let cognitiveDepletion = 10; // Lower base depletion for categorized system
@@ -287,9 +394,9 @@ class GoogleCalendarService {
     } else {
       cognitiveDepletion += 3; // Very light meetings
     }
-    
+
     // Apply category-specific cognitive load
-    actualMeetings.forEach(event => {
+    actualMeetings.forEach((event) => {
       switch (event.category) {
         case 'HEAVY_MEETINGS':
           cognitiveDepletion += 8; // Heavy cognitive load
@@ -302,9 +409,9 @@ class GoogleCalendarService {
           break;
       }
     });
-    
+
     // Bonus for beneficial events
-    const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
+    const beneficialEvents = events.filter((e) => e.category === 'BENEFICIAL');
     cognitiveDepletion -= beneficialEvents.length * 3; // Reduce depletion for self-care
 
     // Back-to-back meetings reduce cognitive availability (only count actual meetings)
@@ -331,11 +438,13 @@ class GoogleCalendarService {
     }
 
     // Large meetings reduce cognitive availability (only actual meetings)
-    const largeMeetings = actualMeetings.filter(event => event.attendees && event.attendees >= 8);
+    const largeMeetings = actualMeetings.filter((event) => event.attendees && event.attendees >= 8);
     cognitiveDepletion += largeMeetings.length * 3;
 
     // Time of day factor - afternoon meetings more taxing (only actual meetings)
-    const afternoonMeetings = actualMeetings.filter(event => this.getTimezoneAwareHours(event.start, this.userTimezone) >= 13);
+    const afternoonMeetings = actualMeetings.filter(
+      (event) => this.getTimezoneAwareHours(event.start, this.userTimezone) >= 13
+    );
     if (afternoonMeetings.length >= 3) {
       cognitiveDepletion += 5;
     }
@@ -351,8 +460,9 @@ class GoogleCalendarService {
       const currentEnd = events[i].end.getTime();
       const nextStart = events[i + 1].start.getTime();
       const gap = (nextStart - currentEnd) / (1000 * 60); // Gap in minutes
-      
-      if (gap <= 15) { // 15 minutes or less gap = back-to-back
+
+      if (gap <= 15) {
+        // 15 minutes or less gap = back-to-back
         count++;
       }
     }
@@ -383,7 +493,7 @@ class GoogleCalendarService {
         return {
           hours: date.getHours(),
           minutes: date.getMinutes(),
-          totalHours: date.getHours() + (date.getMinutes() / 60)
+          totalHours: date.getHours() + date.getMinutes() / 60,
         };
       }
 
@@ -392,7 +502,7 @@ class GoogleCalendarService {
         timeZone: timezone,
         hour12: false,
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
 
       const [hourStr, minuteStr] = timeInUserTZ.split(':');
@@ -402,7 +512,7 @@ class GoogleCalendarService {
       return {
         hours,
         minutes,
-        totalHours: hours + (minutes / 60)
+        totalHours: hours + minutes / 60,
       };
     };
 
@@ -414,13 +524,14 @@ class GoogleCalendarService {
       const morningGapHours = firstMeetingTime.totalHours - workStart;
       const morningGapMinutes = morningGapHours * 60;
 
-      if (morningGapMinutes >= 30) { // 30+ minute blocks count as some focus time
+      if (morningGapMinutes >= 30) {
+        // 30+ minute blocks count as some focus time
         totalFocusTime += morningGapMinutes;
-        if (morningGapMinutes >= 90) { // 90+ minute blocks are quality focus time
+        if (morningGapMinutes >= 90) {
+          // 90+ minute blocks are quality focus time
           qualityFocusTime += morningGapMinutes;
         }
       }
-
     }
 
     // Check gaps between meetings (time difference calculation is timezone-agnostic)
@@ -429,13 +540,14 @@ class GoogleCalendarService {
       const nextStart = events[i + 1].start;
       const gapMinutes = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60);
 
-      if (gapMinutes >= 30) { // 30+ minute gaps count as focus time
+      if (gapMinutes >= 30) {
+        // 30+ minute gaps count as focus time
         totalFocusTime += gapMinutes;
-        if (gapMinutes >= 90) { // 90+ minute gaps are quality focus time
+        if (gapMinutes >= 90) {
+          // 90+ minute gaps are quality focus time
           qualityFocusTime += gapMinutes;
         }
       }
-
     }
 
     // Check time after last meeting
@@ -450,7 +562,6 @@ class GoogleCalendarService {
           qualityFocusTime += eveningGapMinutes;
         }
       }
-
     }
 
     // Weight quality focus time more heavily
@@ -459,9 +570,12 @@ class GoogleCalendarService {
     // ENHANCED SAFEGUARD: Use more realistic logic
     // Focus time should never exceed theoretical maximum (workday - meetings)
     const maxRealisticFocusTime = Math.min(480, theoreticalMaxFocus); // Cap at theoretical max or 8 hours
-    const minFocusTime = 0;   // Can't have negative focus time
+    const minFocusTime = 0; // Can't have negative focus time
 
-    const safeFocusTime = Math.max(minFocusTime, Math.min(maxRealisticFocusTime, Math.round(effectiveFocusTime)));
+    const safeFocusTime = Math.max(
+      minFocusTime,
+      Math.min(maxRealisticFocusTime, Math.round(effectiveFocusTime))
+    );
 
     // ALTERNATIVE CALCULATION: Use simpler, more accurate approach
     // If the complex calculation seems wrong, use theoretical maximum
@@ -487,14 +601,14 @@ class GoogleCalendarService {
       const currentEnd = events[i].end;
       const nextStart = events[i + 1].start;
       const gapMinutes = (nextStart.getTime() - currentEnd.getTime()) / (1000 * 60);
-      
+
       if (gapMinutes >= 90) qualityGaps++;
       else if (gapMinutes >= 30) qualityGaps += 0.5;
     }
 
     // Base score from focus time ratio
     let score = focusTimeRatio * 60;
-    
+
     // Bonus for quality gaps
     score += (qualityGaps / events.length) * 40;
 
@@ -507,13 +621,14 @@ class GoogleCalendarService {
 
   private calculateAdaptivePerformanceIndex(events: CalendarEvent[]): number {
     // Filter events by type
-    const actualMeetings = events.filter(event =>
-      event.category !== 'BENEFICIAL' &&
-      event.category !== 'NEUTRAL' &&
-      event.category !== 'FOCUS_WORK'
+    const actualMeetings = events.filter(
+      (event) =>
+        event.category !== 'BENEFICIAL' &&
+        event.category !== 'NEUTRAL' &&
+        event.category !== 'FOCUS_WORK'
     );
-    const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
-    const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
+    const focusWorkEvents = events.filter((event) => event.category === 'FOCUS_WORK');
+    const beneficialEvents = events.filter((event) => event.category === 'BENEFICIAL');
 
     // No meetings: day off or clear calendar — positive, not punitive.
     // Intentional structure (focus blocks) earns a higher score.
@@ -531,16 +646,24 @@ class GoogleCalendarService {
 
     // Weighted meeting load — a board presentation ≠ a standup
     let weightedMeetingLoad = 0;
-    actualMeetings.forEach(event => {
+    actualMeetings.forEach((event) => {
       const durationHours = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
-      const durationWeight = durationHours >= 1.5 ? 1.5 : durationHours >= 1 ? 1.2 : durationHours >= 0.5 ? 1.0 : 0.6;
-      const categoryWeight = event.category === 'HEAVY_MEETINGS' ? 1.6
-        : event.category === 'COLLABORATIVE' ? 1.1
-        : event.category === 'LIGHT_MEETINGS' ? 0.6
-        : 1.0;
-      const attendeeWeight = (event.attendees && event.attendees >= 10) ? 1.3
-        : (event.attendees && event.attendees >= 5) ? 1.1
-        : 1.0;
+      const durationWeight =
+        durationHours >= 1.5 ? 1.5 : durationHours >= 1 ? 1.2 : durationHours >= 0.5 ? 1.0 : 0.6;
+      const categoryWeight =
+        event.category === 'HEAVY_MEETINGS'
+          ? 1.6
+          : event.category === 'COLLABORATIVE'
+            ? 1.1
+            : event.category === 'LIGHT_MEETINGS'
+              ? 0.6
+              : 1.0;
+      const attendeeWeight =
+        event.attendees && event.attendees >= 10
+          ? 1.3
+          : event.attendees && event.attendees >= 5
+            ? 1.1
+            : 1.0;
       weightedMeetingLoad += durationWeight * categoryWeight * attendeeWeight;
     });
 
@@ -578,8 +701,12 @@ class GoogleCalendarService {
     // Afternoon-heavy days are draining (1pm+ counts as afternoon).
     // Cap at 90: even balanced timing has natural energy dips (post-lunch,
     // late-afternoon) that prevent a truly perfect timing score.
-    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 13).length;
-    const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
+    const afternoonMeetings = actualMeetings.filter(
+      (e) => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 13
+    ).length;
+    const morningMeetings = actualMeetings.filter(
+      (e) => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12
+    ).length;
     let timingScore = 90;
     if (afternoonMeetings >= 4) timingScore = 40;
     else if (afternoonMeetings > morningMeetings * 1.5) timingScore = 55;
@@ -589,8 +716,10 @@ class GoogleCalendarService {
     // Cap at 90: even low meeting ratios carry scheduling overhead —
     // the meeting still fragments your mental model of the day.
     let recoveryScore = 90;
-    const totalMeetingHours = actualMeetings.reduce((sum, event) =>
-      sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60), 0);
+    const totalMeetingHours = actualMeetings.reduce(
+      (sum, event) => sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60),
+      0
+    );
     const workHours = 8;
     const meetingRatio = totalMeetingHours / workHours;
     if (meetingRatio > 0.75) recoveryScore = 8;
@@ -605,26 +734,27 @@ class GoogleCalendarService {
     bonusPoints += Math.min(beneficialEvents.length, 2) * 2;
 
     // Weighted calculation
-    const adaptiveIndex = (
+    const adaptiveIndex =
       densityScore * 0.25 +
-      fragmentationScore * 0.30 +
-      transitionScore * 0.20 +
-      timingScore * 0.10 +
-      recoveryScore * 0.15
-    ) + bonusPoints;
+      fragmentationScore * 0.3 +
+      transitionScore * 0.2 +
+      timingScore * 0.1 +
+      recoveryScore * 0.15 +
+      bonusPoints;
 
     const finalScore = Math.round(Math.min(100, Math.max(0, adaptiveIndex)));
     return finalScore;
   }
-  
+
   private calculateCognitiveResilience(events: CalendarEvent[]): number {
     // Separate by type
-    const actualMeetings = events.filter(event =>
-      event.category !== 'BENEFICIAL' &&
-      event.category !== 'NEUTRAL' &&
-      event.category !== 'FOCUS_WORK'
+    const actualMeetings = events.filter(
+      (event) =>
+        event.category !== 'BENEFICIAL' &&
+        event.category !== 'NEUTRAL' &&
+        event.category !== 'FOCUS_WORK'
     );
-    const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
+    const beneficialEvents = events.filter((e) => e.category === 'BENEFICIAL');
 
     // No meetings: low strain but not zero — ambient cognitive load always exists
     // (email triage, Slack monitoring, context maintenance, prioritization decisions).
@@ -635,7 +765,7 @@ class GoogleCalendarService {
     }
 
     // Context switching — unique topics drain mental bandwidth
-    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
+    const uniqueContexts = new Set(actualMeetings.map((e) => e.summary?.toLowerCase().trim())).size;
     const contextSwitchingLoad = Math.min(100, uniqueContexts * 18);
 
     // Decision fatigue — weighted by type, time of day, attendees, and duration
@@ -644,17 +774,36 @@ class GoogleCalendarService {
       const hourOfDay = this.getTimezoneAwareHours(event.start, this.userTimezone);
       const durationHours = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
       const timeFactor = hourOfDay >= 15 ? 1.8 : hourOfDay >= 13 ? 1.4 : 1;
-      const attendeeFactor = (event.attendees && event.attendees >= 10) ? 1.6
-        : (event.attendees && event.attendees >= 5) ? 1.3
-        : (event.attendees && event.attendees >= 3) ? 1.1
-        : 1;
-      const categoryFactor = event.category === 'HEAVY_MEETINGS' ? 1.8
-        : event.category === 'COLLABORATIVE' ? 1.2
-        : event.category === 'LIGHT_MEETINGS' ? 0.7
-        : 1.0;
+      const attendeeFactor =
+        event.attendees && event.attendees >= 10
+          ? 1.6
+          : event.attendees && event.attendees >= 5
+            ? 1.3
+            : event.attendees && event.attendees >= 3
+              ? 1.1
+              : 1;
+      const categoryFactor =
+        event.category === 'HEAVY_MEETINGS'
+          ? 1.8
+          : event.category === 'COLLABORATIVE'
+            ? 1.2
+            : event.category === 'LIGHT_MEETINGS'
+              ? 0.7
+              : 1.0;
       // Long meetings are exponentially more draining — a 6hr workshop isn't 4x a 1.5hr meeting
-      const durationFactor = durationHours >= 4 ? 4.0 : durationHours >= 3 ? 3.0 : durationHours >= 2 ? 2.2 : durationHours >= 1.5 ? 1.6 : durationHours >= 1 ? 1.2 : 1.0;
-      decisionFatigue += (10 * timeFactor * attendeeFactor * categoryFactor * durationFactor);
+      const durationFactor =
+        durationHours >= 4
+          ? 4.0
+          : durationHours >= 3
+            ? 3.0
+            : durationHours >= 2
+              ? 2.2
+              : durationHours >= 1.5
+                ? 1.6
+                : durationHours >= 1
+                  ? 1.2
+                  : 1.0;
+      decisionFatigue += 10 * timeFactor * attendeeFactor * categoryFactor * durationFactor;
     });
     decisionFatigue = Math.min(100, decisionFatigue);
 
@@ -682,12 +831,15 @@ class GoogleCalendarService {
     const recoveryBoost = Math.min(beneficialEvents.length, 3) * 5;
 
     // Calculate resilience score (internal: higher = more resilient)
-    const resilienceScore = Math.max(0,
-      100 - contextSwitchingLoad * 0.30
-      - decisionFatigue * 0.35
-      + cognitiveReserve * 0.20
-      - energyDepletion * 0.15
-    ) + recoveryBoost;
+    const resilienceScore =
+      Math.max(
+        0,
+        100 -
+          contextSwitchingLoad * 0.3 -
+          decisionFatigue * 0.35 +
+          cognitiveReserve * 0.2 -
+          energyDepletion * 0.15
+      ) + recoveryBoost;
 
     // Convert resilience → strain (higher = more cognitive load on the day).
     // Cap resilience at 92: even the lightest meeting day carries ambient strain
@@ -695,16 +847,17 @@ class GoogleCalendarService {
     const strainScore = 100 - Math.min(92, Math.max(0, resilienceScore));
     return Math.round(strainScore);
   }
-  
+
   private calculateWorkRhythmRecovery(events: CalendarEvent[]): number {
     // Separate by type
-    const actualMeetings = events.filter(event =>
-      event.category !== 'BENEFICIAL' &&
-      event.category !== 'NEUTRAL' &&
-      event.category !== 'FOCUS_WORK'
+    const actualMeetings = events.filter(
+      (event) =>
+        event.category !== 'BENEFICIAL' &&
+        event.category !== 'NEUTRAL' &&
+        event.category !== 'FOCUS_WORK'
     );
-    const beneficialEvents = events.filter(e => e.category === 'BENEFICIAL');
-    const focusWorkEvents = events.filter(e => e.category === 'FOCUS_WORK');
+    const beneficialEvents = events.filter((e) => e.category === 'BENEFICIAL');
+    const focusWorkEvents = events.filter((e) => e.category === 'FOCUS_WORK');
 
     if (actualMeetings.length === 0) {
       const hasFocusBlocks = focusWorkEvents.length > 0;
@@ -724,39 +877,43 @@ class GoogleCalendarService {
     }
 
     // Work rhythm balance — lopsided days feel worse
-    const morningBlock = actualMeetings.filter(e => {
+    const morningBlock = actualMeetings.filter((e) => {
       const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
       return hour >= 6 && hour < 12;
     }).length;
-    const afternoonBlock = actualMeetings.filter(e => {
+    const afternoonBlock = actualMeetings.filter((e) => {
       const hour = this.getTimezoneAwareHours(e.start, this.userTimezone);
       return hour >= 12 && hour < 18;
     }).length;
     const rhythmBalance = Math.abs(morningBlock - afternoonBlock);
-    let rhythmScore = 100 - (rhythmBalance * 20);
+    let rhythmScore = 100 - rhythmBalance * 20;
     rhythmScore = Math.max(10, rhythmScore);
 
     // Recovery adequacy — beneficial events count as real breaks
     const gaps = this.calculateGapsBetweenMeetings(actualMeetings);
-    const adequateBreaks = gaps.filter(g => g >= 30).length;
-    const shortBreaks = gaps.filter(g => g >= 15 && g < 30).length;
+    const adequateBreaks = gaps.filter((g) => g >= 30).length;
+    const shortBreaks = gaps.filter((g) => g >= 15 && g < 30).length;
     // Walks, exercise, lunch etc. are actual recovery
     const beneficialBreaks = beneficialEvents.length;
     let recoveryScore = 0;
     if (adequateBreaks === 0 && shortBreaks === 0 && beneficialBreaks === 0) recoveryScore = 5;
     else {
-      recoveryScore = (adequateBreaks * 18) + (shortBreaks * 8) + (beneficialBreaks * 15);
+      recoveryScore = adequateBreaks * 18 + shortBreaks * 8 + beneficialBreaks * 15;
     }
     recoveryScore = Math.min(100, recoveryScore);
 
     // Intensity sustainability — weighted by meeting type, not just raw hours
     let weightedIntensityHours = 0;
-    actualMeetings.forEach(event => {
+    actualMeetings.forEach((event) => {
       const durationHours = (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
-      const typeWeight = event.category === 'HEAVY_MEETINGS' ? 1.5
-        : event.category === 'COLLABORATIVE' ? 1.1
-        : event.category === 'LIGHT_MEETINGS' ? 0.7
-        : 1.0;
+      const typeWeight =
+        event.category === 'HEAVY_MEETINGS'
+          ? 1.5
+          : event.category === 'COLLABORATIVE'
+            ? 1.1
+            : event.category === 'LIGHT_MEETINGS'
+              ? 0.7
+              : 1.0;
       weightedIntensityHours += durationHours * typeWeight;
     });
     let sustainabilityScore = 100;
@@ -768,55 +925,61 @@ class GoogleCalendarService {
     else sustainabilityScore = 92;
 
     // Boundary violations — early/late meetings hurt, no floor
-    const earlyMorningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 7).length;
-    const lateMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 17).length;
-    let alignmentScore = 100 - (earlyMorningMeetings * 30) - (lateMeetings * 25);
+    const earlyMorningMeetings = actualMeetings.filter(
+      (e) => this.getTimezoneAwareHours(e.start, this.userTimezone) < 7
+    ).length;
+    const lateMeetings = actualMeetings.filter(
+      (e) => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 17
+    ).length;
+    let alignmentScore = 100 - earlyMorningMeetings * 30 - lateMeetings * 25;
     alignmentScore = Math.max(0, alignmentScore);
 
     // Combined score
-    const combinedScore = (
-      rhythmScore * 0.20 +
-      recoveryScore * 0.30 +
-      sustainabilityScore * 0.30 +
-      alignmentScore * 0.20
-    );
+    const combinedScore =
+      rhythmScore * 0.2 + recoveryScore * 0.3 + sustainabilityScore * 0.3 + alignmentScore * 0.2;
 
     const finalScore = Math.round(Math.min(100, Math.max(0, combinedScore)));
     return finalScore;
   }
-  
+
   private findLongestConsecutiveStretch(events: CalendarEvent[]): number {
     if (events.length === 0) return 0;
-    
+
     let maxStretch = 1;
     let currentStretch = 1;
-    
+
     for (let i = 1; i < events.length; i++) {
-      const gap = (events[i].start.getTime() - events[i-1].end.getTime()) / (1000 * 60);
-      if (gap <= 30) { // Less than 30 minutes between meetings
+      const gap = (events[i].start.getTime() - events[i - 1].end.getTime()) / (1000 * 60);
+      if (gap <= 30) {
+        // Less than 30 minutes between meetings
         currentStretch++;
         maxStretch = Math.max(maxStretch, currentStretch);
       } else {
         currentStretch = 1;
       }
     }
-    
+
     return maxStretch;
   }
-  
+
   private calculateGapsBetweenMeetings(events: CalendarEvent[]): number[] {
     const gaps: number[] = [];
     for (let i = 1; i < events.length; i++) {
-      const gap = (events[i].start.getTime() - events[i-1].end.getTime()) / (1000 * 60);
+      const gap = (events[i].start.getTime() - events[i - 1].end.getTime()) / (1000 * 60);
       if (gap > 0) gaps.push(gap);
     }
     return gaps;
   }
 
-  private calculatePerformanceIndex(cognitiveAvailability: number, focusTime: number, meetingCount: number, backToBackCount: number): number {
+  private calculatePerformanceIndex(
+    cognitiveAvailability: number,
+    focusTime: number,
+    meetingCount: number,
+    backToBackCount: number
+  ): number {
     // New tiered performance assessment
     const baseScore = 50;
-    
+
     // Meeting density scoring - much more generous for low counts
     let meetingScore = 0;
     if (meetingCount === 0) meetingScore = 100;
@@ -827,7 +990,7 @@ class GoogleCalendarService {
     else if (meetingCount <= 5) meetingScore = 65;
     else if (meetingCount <= 6) meetingScore = 55;
     else meetingScore = 40;
-    
+
     // Focus time scoring - recognizes excellent focus availability
     let focusScore = 0;
     const focusHours = focusTime / 60;
@@ -837,58 +1000,67 @@ class GoogleCalendarService {
     else if (focusHours >= 2) focusScore = 70;
     else if (focusHours >= 1) focusScore = 55;
     else focusScore = 30;
-    
+
     // Cognitive availability scoring - direct relationship
     const cognitiveScore = cognitiveAvailability;
-    
+
     // Back-to-back penalty
     let backToBackPenalty = 0;
     if (backToBackCount >= 3) backToBackPenalty = 15;
     else if (backToBackCount >= 2) backToBackPenalty = 10;
     else if (backToBackCount >= 1) backToBackPenalty = 5;
-    
+
     // Weighted performance calculation
-    const performanceIndex = (
-      meetingScore * 0.35 +           // Meeting density is key factor
-      focusScore * 0.35 +            // Focus time equally important
-      cognitiveScore * 0.25 +        // Cognitive load support factor
-      baseScore * 0.05               // Small base score
-    ) - backToBackPenalty;
-    
+    const performanceIndex =
+      meetingScore * 0.35 + // Meeting density is key factor
+      focusScore * 0.35 + // Focus time equally important
+      cognitiveScore * 0.25 + // Cognitive load support factor
+      baseScore * 0.05 - // Small base score
+      backToBackPenalty;
+
     return Math.min(100, Math.max(15, Math.round(performanceIndex)));
   }
 
-  async analyzeWorkHealth(userTimezone?: string, preloadedEvents?: CalendarEvent[]): Promise<WorkHealthMetrics> {
-    const events = preloadedEvents || await this.getTodaysEvents(userTimezone);
-    
+  async analyzeWorkHealth(
+    userTimezone?: string,
+    preloadedEvents?: CalendarEvent[]
+  ): Promise<WorkHealthMetrics> {
+    const events = preloadedEvents || (await this.getTodaysEvents(userTimezone));
+
     // Separate different types of events for analysis
-    const actualMeetings = events.filter(event => 
-      event.category !== 'BENEFICIAL' && 
-      event.category !== 'NEUTRAL' && 
-      event.category !== 'FOCUS_WORK'
+    const actualMeetings = events.filter(
+      (event) =>
+        event.category !== 'BENEFICIAL' &&
+        event.category !== 'NEUTRAL' &&
+        event.category !== 'FOCUS_WORK'
     );
-    const focusWorkEvents = events.filter(event => event.category === 'FOCUS_WORK');
-    const beneficialEvents = events.filter(event => event.category === 'BENEFICIAL');
-    
+    const focusWorkEvents = events.filter((event) => event.category === 'FOCUS_WORK');
+    const beneficialEvents = events.filter((event) => event.category === 'BENEFICIAL');
+
     const meetingCount = actualMeetings.length; // Only count actual meetings
     const backToBackCount = this.countBackToBackMeetings(actualMeetings);
     const cognitiveAvailability = this.calculateCognitiveAvailability(events);
     const focusTime = this.calculateFocusTime(events, this.userTimezone);
     const fragmentationScore = this.calculateFragmentationScore(events);
-    
+
     const totalDuration = actualMeetings.reduce((sum, event) => {
       return sum + (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
     }, 0);
 
-    const bufferTime = Math.max(0, (12 * 60) - (totalDuration * 60) - (meetingCount * 15)); // Account for transitions
-    
+    const bufferTime = Math.max(0, 12 * 60 - totalDuration * 60 - meetingCount * 15); // Account for transitions
+
     // Calculate new intelligent metrics
     const adaptivePerformanceIndex = this.calculateAdaptivePerformanceIndex(events);
     const cognitiveResilience = this.calculateCognitiveResilience(events);
     const workRhythmRecovery = this.calculateWorkRhythmRecovery(events);
-    
+
     // Legacy calculation for backward compatibility
-    const readiness = this.calculatePerformanceIndex(cognitiveAvailability, focusTime, meetingCount, backToBackCount);
+    const readiness = this.calculatePerformanceIndex(
+      cognitiveAvailability,
+      focusTime,
+      meetingCount,
+      backToBackCount
+    );
 
     // Determine status based on adaptive performance index
     let status: string;
@@ -902,18 +1074,24 @@ class GoogleCalendarService {
     const contributors = [
       `Focus: ${adaptivePerformanceIndex}%${adaptivePerformanceIndex >= 85 ? ' (Optimal)' : adaptivePerformanceIndex >= 75 ? ' (Excellent)' : adaptivePerformanceIndex >= 65 ? ' (Good)' : adaptivePerformanceIndex >= 50 ? ' (Moderate)' : ' (Needs Attention)'}`,
       `Strain: ${cognitiveResilience}%${cognitiveResilience <= 20 ? ' (Low)' : cognitiveResilience <= 40 ? ' (Moderate)' : cognitiveResilience <= 60 ? ' (High)' : ' (Very High)'}`,
-      `Balance: ${workRhythmRecovery}%${workRhythmRecovery >= 80 ? ' (Excellent)' : workRhythmRecovery >= 60 ? ' (Good)' : workRhythmRecovery >= 40 ? ' (Moderate)' : ' (Needs Attention)'}`
+      `Rhythm: ${workRhythmRecovery}%${workRhythmRecovery >= 80 ? ' (Excellent)' : workRhythmRecovery >= 60 ? ' (Good)' : workRhythmRecovery >= 40 ? ' (Moderate)' : ' (Needs Attention)'}`,
     ];
 
     const primaryFactors = [];
-    
+
     // Enhanced primary factors considering event categories
     if (meetingCount === 0 && focusWorkEvents.length > 0) {
-      primaryFactors.push(`Perfect conditions: ${focusWorkEvents.length} focus work block${focusWorkEvents.length > 1 ? 's' : ''} scheduled with no meetings`);
+      primaryFactors.push(
+        `Perfect conditions: ${focusWorkEvents.length} focus work block${focusWorkEvents.length > 1 ? 's' : ''} scheduled with no meetings`
+      );
     } else if (meetingCount <= 2 && focusTime >= 240) {
-      primaryFactors.push('Excellent work health conditions with minimal meeting load and abundant focus time');
+      primaryFactors.push(
+        'Excellent work health conditions with minimal meeting load and abundant focus time'
+      );
     } else if (meetingCount <= 3 && focusTime >= 180) {
-      primaryFactors.push('Good work health balance with light meeting schedule and adequate focus periods');
+      primaryFactors.push(
+        'Good work health balance with light meeting schedule and adequate focus periods'
+      );
     } else if (adaptivePerformanceIndex >= 85) {
       primaryFactors.push('Optimal cognitive resources and work capacity available');
     } else if (cognitiveResilience >= 60) {
@@ -923,33 +1101,45 @@ class GoogleCalendarService {
     } else {
       primaryFactors.push('Balanced workload with manageable cognitive demands');
     }
-    
+
     // Add positive factors for beneficial events
     if (beneficialEvents.length > 0) {
-      primaryFactors.push(`${beneficialEvents.length} wellness/self-care block${beneficialEvents.length > 1 ? 's' : ''} supporting cognitive recovery`);
+      primaryFactors.push(
+        `${beneficialEvents.length} wellness/self-care block${beneficialEvents.length > 1 ? 's' : ''} supporting cognitive recovery`
+      );
     }
 
     if (backToBackCount >= 3) {
-      primaryFactors.push(`${backToBackCount} back-to-back meetings creating significant mental switching costs`);
+      primaryFactors.push(
+        `${backToBackCount} back-to-back meetings creating significant mental switching costs`
+      );
     } else if (backToBackCount >= 1) {
-      primaryFactors.push(`${backToBackCount} back-to-back session${backToBackCount > 1 ? 's' : ''} requiring transition management`);
+      primaryFactors.push(
+        `${backToBackCount} back-to-back session${backToBackCount > 1 ? 's' : ''} requiring transition management`
+      );
     }
 
     // Compute per-metric breakdown data
-    const morningMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12).length;
-    const afternoonMeetings = actualMeetings.filter(e => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14).length;
+    const morningMeetings = actualMeetings.filter(
+      (e) => this.getTimezoneAwareHours(e.start, this.userTimezone) < 12
+    ).length;
+    const afternoonMeetings = actualMeetings.filter(
+      (e) => this.getTimezoneAwareHours(e.start, this.userTimezone) >= 14
+    ).length;
     const meetingRatio = totalDuration / 8;
-    const uniqueContexts = new Set(actualMeetings.map(e => e.summary?.toLowerCase().trim())).size;
+    const uniqueContexts = new Set(actualMeetings.map((e) => e.summary?.toLowerCase().trim())).size;
     const longestStretch = this.findLongestConsecutiveStretch(actualMeetings);
     const gaps = this.calculateGapsBetweenMeetings(actualMeetings);
     // With 0-1 meetings, gaps array is empty but the day is mostly free — reflect that
-    const adequateBreaks = actualMeetings.length <= 1
-      ? (actualMeetings.length === 0 ? 4 : 3)
-      : gaps.filter(g => g >= 30).length;
-    const shortBreaks = actualMeetings.length <= 1
-      ? 0
-      : gaps.filter(g => g >= 15 && g < 30).length;
-    const earlyLateMeetings = actualMeetings.filter(e => {
+    const adequateBreaks =
+      actualMeetings.length <= 1
+        ? actualMeetings.length === 0
+          ? 4
+          : 3
+        : gaps.filter((g) => g >= 30).length;
+    const shortBreaks =
+      actualMeetings.length <= 1 ? 0 : gaps.filter((g) => g >= 15 && g < 30).length;
+    const earlyLateMeetings = actualMeetings.filter((e) => {
       const h = this.getTimezoneAwareHours(e.start, this.userTimezone);
       return h < 7 || h >= 17;
     }).length;
@@ -974,19 +1164,19 @@ class GoogleCalendarService {
         longestStretch,
         adequateBreaks,
         shortBreaks,
-        earlyLateMeetings
+        earlyLateMeetings,
       },
       breakdown: {
         source: 'calendar',
         contributors,
-        primaryFactors
+        primaryFactors,
       },
-      
+
       // Legacy fields for backward compatibility
       readiness,
       cognitiveAvailability,
       focusTime: Math.round(focusTime), // Keep as minutes internally for calculations
-      meetingDensity: meetingCount
+      meetingDensity: meetingCount,
     };
   }
 }

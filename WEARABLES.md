@@ -2,7 +2,7 @@
 
 ## The model
 
-Persist reads the **forecast** from your calendar — Focus / Strain / Balance,
+Persist reads the **forecast** from your calendar — Focus / Strain / Rhythm,
 aggregated into a 0–100 **Work Index** (the _shape_ of the workday) — and the
 **actual** from Strava (training load). Work and training share one load
 currency, and the model answers a single question: **how hard to train
@@ -36,7 +36,7 @@ card:
 - **Balance** — the restoration balance: positive fills, negative drains,
   regardless of how heavy the day was.
 
-**Work Index** = `0.30·Focus + 0.30·Balance + 0.40·(100−Strain)` — an
+**Work Index** = `0.30·Focus + 0.30·Rhythm + 0.40·(100−Strain)` — an
 objective read of the workday's shape, independent of its _volume_ (that's
 workLoad). It's the work half of Balance, so a heavy-but-deep day can still
 read as filling.
