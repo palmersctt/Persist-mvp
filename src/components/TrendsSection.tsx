@@ -67,7 +67,7 @@ export default function TrendsSection({ history }: { history: DailyScore[] }) {
   const metrics = [
     { key: 'focus' as const, label: 'Focus', getValue: (d: (typeof items)[0]) => d.focus },
     { key: 'strain' as const, label: 'Strain', getValue: (d: (typeof items)[0]) => d.strain },
-    { key: 'balance' as const, label: 'Balance', getValue: (d: (typeof items)[0]) => d.balance },
+    { key: 'balance' as const, label: 'Rhythm', getValue: (d: (typeof items)[0]) => d.balance },
   ];
 
   return (

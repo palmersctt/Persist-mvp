@@ -970,7 +970,7 @@ export default function SandboxDashboard() {
                           },
                           {
                             key: 'balance' as const,
-                            label: 'Balance',
+                            label: 'Rhythm',
                             color: '#C7F95C',
                             getValue: (d: (typeof items)[0]) => d.balance,
                             current: balance,

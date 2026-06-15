@@ -932,7 +932,7 @@ export default function LandingPage() {
                   </div>
                   {[
                     { label: 'Focus', value: 70, width: 70 },
-                    { label: 'Balance', value: 60, width: 60 },
+                    { label: 'Rhythm', value: 60, width: 60 },
                     { label: 'Strain', value: 50, width: 50 },
                   ].map((m) => (
                     <div className="lp-cost" key={m.label}>

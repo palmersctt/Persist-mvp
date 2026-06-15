@@ -31,8 +31,8 @@ export function dashboardVerdict(
 ): DashboardVerdict {
   const focus = work.adaptivePerformanceIndex;
   const strain = work.cognitiveResilience;
-  const balance = work.workRhythmRecovery;
-  const wi = workIndex(focus, balance, strain);
+  const rhythm = work.workRhythmRecovery;
+  const wi = workIndex(focus, rhythm, strain);
 
   const meetingHours = work.schedule?.durationHours ?? 0;
   const workLoad = clamp(Math.round(meetingHours * WORK_LOAD_PER_HOUR), 0, 120);
