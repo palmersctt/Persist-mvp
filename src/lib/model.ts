@@ -90,6 +90,9 @@ export interface ModelResult {
   why: string;
   trace: TracePoint[];
   days: number;
+  /** Final recent (acute) and baseline (chronic) total load — for the breakdown. */
+  recent: number;
+  baseline: number;
 }
 
 /**
@@ -161,6 +164,8 @@ export function runModel(prior: Prior, history: DayInputs[], today: DayInputs): 
     why,
     trace,
     days: days.length,
+    recent: Math.round(acute),
+    baseline: Math.round(chronic),
   };
 }
 

@@ -19,6 +19,13 @@ const DEFAULT_TRAINING_BASELINE = 30;
 export interface DashboardVerdict extends ModelResult {
   workLoad: number;
   workIndexValue: number;
+  // Work-health inputs + training actuals, for the breakdown panel.
+  focus: number;
+  rhythm: number;
+  strain: number;
+  trainingBaseline: number | null;
+  weekActivityCount: number | null;
+  trainingLoadToday: number | null;
 }
 
 /**
@@ -55,5 +62,15 @@ export function dashboardVerdict(
     sleep: 62, // neutral — no sleep source on Strava
   };
 
-  return { ...runModel(prior, [], today), workLoad, workIndexValue: wi };
+  return {
+    ...runModel(prior, [], today),
+    workLoad,
+    workIndexValue: wi,
+    focus,
+    rhythm,
+    strain,
+    trainingBaseline: actuals?.trainingBaseline ?? null,
+    weekActivityCount: actuals?.weekActivityCount ?? null,
+    trainingLoadToday: actuals?.trainingLoadToday ?? null,
+  };
 }
