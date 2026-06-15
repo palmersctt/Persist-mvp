@@ -877,9 +877,11 @@ export default function LandingPage() {
                     <span className="lp-rcard-dot"></span>Flow &middot; Train normally
                   </div>
                   <div className="lp-rcard-num">
-                    74<span>Value</span>
+                    74<span>Readiness</span>
                   </div>
-                  <div className="lp-rcard-sub">Value 74 &middot; Strain 38 &middot; Fill +17</div>
+                  <div className="lp-rcard-sub">
+                    Readiness 74 &middot; Load 38 &middot; Balance +17
+                  </div>
                 </div>
 
                 {/* The relationship: recent load vs the baseline you're built for */}

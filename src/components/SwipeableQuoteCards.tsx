@@ -9,9 +9,9 @@ import type { HeroMessage } from '../hooks/useWorkHealth';
 
 interface SwipeableQuoteCardsProps {
   quotes: HeroMessage[];
-  value: number;
-  strain: number;
-  fill: number;
+  readiness: number;
+  load: number;
+  balance: number;
   mood: Mood;
   verdict?: string;
   daySummary?: string;
@@ -32,9 +32,9 @@ const SWIPE_COOLDOWN_MS = 500;
 
 function DraggableCard({
   quote,
-  value,
-  strain,
-  fill,
+  readiness,
+  load,
+  balance,
   mood,
   verdict,
   daySummary,
@@ -43,9 +43,9 @@ function DraggableCard({
   cardRef,
 }: {
   quote: HeroMessage;
-  value: number;
-  strain: number;
-  fill: number;
+  readiness: number;
+  load: number;
+  balance: number;
   mood: Mood;
   verdict?: string;
   daySummary?: string;
@@ -94,9 +94,9 @@ function DraggableCard({
         quote={quote.quote}
         source={quote.source}
         subtitle={quote.subtitle}
-        value={value}
-        strain={strain}
-        fill={fill}
+        readiness={readiness}
+        load={load}
+        balance={balance}
         mood={mood}
         verdict={verdict}
         daySummary={daySummary}
@@ -108,9 +108,9 @@ function DraggableCard({
 
 export default function SwipeableQuoteCards({
   quotes,
-  value,
-  strain,
-  fill,
+  readiness,
+  load,
+  balance,
   mood,
   verdict,
   daySummary,
@@ -164,9 +164,9 @@ export default function SwipeableQuoteCards({
         <DraggableCard
           key={currentIndex}
           quote={quotes[currentIndex]}
-          value={value}
-          strain={strain}
-          fill={fill}
+          readiness={readiness}
+          load={load}
+          balance={balance}
           mood={mood}
           verdict={verdict}
           daySummary={daySummary}

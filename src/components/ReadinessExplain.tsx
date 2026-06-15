@@ -4,7 +4,7 @@ import type { DashboardVerdict } from '../lib/dashboardModel';
 
 const MONO = 'var(--font-geist-mono), ui-monospace, monospace';
 
-// Explains a unified verdict: Value/Strain/Fill, the rec + why, and the
+// Explains a unified verdict: Readiness/Load/Balance, the rec + why, and the
 // drivers (Recent ÷ Baseline, Work Index). Shared by the dashboard's
 // "Why your readiness" panel and the sandbox preview — one renderer.
 export default function ReadinessExplain({
@@ -45,9 +45,9 @@ export default function ReadinessExplain({
         className="rounded-xl px-4 py-3.5 mb-2.5 flex items-center justify-between"
         style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
       >
-        <Score label="Value" value={`${model.value}`} accent />
-        <Score label="Strain" value={`${model.strain}`} />
-        <Score label="Fill" value={`${model.fill >= 0 ? '+' : ''}${model.fill}`} />
+        <Score label="Readiness" value={`${model.readiness}`} accent />
+        <Score label="Load" value={`${model.load}`} />
+        <Score label="Balance" value={`${model.balance >= 0 ? '+' : ''}${model.balance}`} />
       </div>
 
       {/* The verdict's reasoning */}

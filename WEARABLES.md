@@ -13,8 +13,8 @@ load      = workLoad + trainingLoad                    (one shared currency)
 baseline  = 21-day EWMA, SEEDED FROM A PRIOR           (backfill, not a wait)
 recent    = 7-day EWMA
 ACWR      = recent / baseline                          (more than you're built for?)
-fill      = slow EWMA of signed restoration            (filling or draining?)
-Value     = 0.45·fit + 0.45·fill + sleep nudge         (the headline 0–100)
+balance   = slow EWMA of signed restoration            (filling or draining?)
+Readiness = 0.45·fit + 0.45·balance + sleep nudge      (the headline 0–100)
 ```
 
 The baseline is **seeded from a prior** (the trailing weeks Strava/Calendar
@@ -28,23 +28,23 @@ Flow — which drives the card's mood, tier, and action (recover · keep it
 moderate · optional · go hard · train normally). Three scores show on the
 card:
 
-- **Value** — the headline. `0.45·fit + 0.45·fill + sleep nudge`, where
-  `fit` rewards an ACWR near 1.0 (in your band) and is discounted when fill
-  is negative. High = training in your band _and_ the days are net-filling.
-- **Strain** — how hard recent load is pressing over your baseline (ACWR
+- **Readiness** — the headline. `0.45·fit + 0.45·balance + sleep nudge`,
+  where `fit` rewards an ACWR near 1.0 (in your band) and is discounted when
+  balance is negative. High = training in your band _and_ net-filling days.
+- **Load** — how hard recent load is pressing over your baseline (ACWR
   driven; a slump reads low, a spike reads high).
-- **Fill** — the restoration balance: positive fills, negative drains,
+- **Balance** — the restoration balance: positive fills, negative drains,
   regardless of how heavy the day was.
 
 **Work Index** = `0.30·Focus + 0.30·Balance + 0.40·(100−Strain)` — an
 objective read of the workday's shape, independent of its _volume_ (that's
-workLoad). It's the work half of fill, so a heavy-but-deep day can still
+workLoad). It's the work half of Balance, so a heavy-but-deep day can still
 read as filling.
 
-Constants (EWMA windows, ACWR bands, the Value and Work Index weights) are v1
-heuristics in `src/lib/model.ts` + `dashboardModel.ts`, unit-tested and meant
-to be tuned against real data. `trainingFeel` and `sleep` have no signal yet,
-so they're held neutral — fill currently leans on Work Index.
+Constants (EWMA windows, ACWR bands, the Readiness and Work Index weights) are
+v1 heuristics in `src/lib/model.ts` + `dashboardModel.ts`, unit-tested and
+meant to be tuned against real data. `trainingFeel` and `sleep` have no signal
+yet, so they're held neutral — Balance currently leans on Work Index.
 
 Vocabulary is deliberately sport-agnostic: workday, readiness, recovery,
 session, train hard / keep it easy / recovery day. No trail/ride/run
