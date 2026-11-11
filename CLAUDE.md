@@ -9,6 +9,17 @@ Next.js app with two surfaces:
 
 Routing: `app/` directory (Next.js App Router). Shared layout in `app/layout.tsx`.
 
+## Software Factory
+
+Non-trivial work goes through the pipeline in `FACTORY.md`: questions →
+research → design → outline → plan → implement → validate, one fresh session
+per step, each writing one file under `thoughts/shared/`.
+
+- Commands are in `.claude/commands/`, research sub-agents in `.claude/agents/`.
+- Gate for every phase and for CI: `npm run verify` (lint + typecheck + tests).
+- Research documents the code as it is. Opinions belong in the design step.
+- Never skip, weaken or delete a test to get a check to pass.
+
 ## Card System
 
 - **`src/components/CardContent.tsx`** — the single card renderer. All cards go through this component.
@@ -96,6 +107,8 @@ All scores render at uniform 32px. Color-only emphasis — Readiness leads/pops.
 | `WEARABLES.md`                           | Wearable integration model, provider setup, schema                       |
 | `BRAND.md`                               | Brand color tokens and card design tokens                                |
 | `PERSONAS.md`                            | User personas                                                            |
+| `FACTORY.md`                             | Software factory: the step-by-step pipeline for agent-built changes      |
+| `thoughts/shared/`                       | Pipeline documents (tickets, research, designs, outlines, plans)         |
 
 ## Do NOT
 
