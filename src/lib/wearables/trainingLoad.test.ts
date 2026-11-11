@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { activityLoad, freshnessFromActivities, trainingLoadProfile } from './strava';
+import { activityLoad, freshnessFromActivities, trainingLoadProfile } from './trainingLoad';
 
 const BASE = '2026-06-11';
 const DAY_MS = 86400000;

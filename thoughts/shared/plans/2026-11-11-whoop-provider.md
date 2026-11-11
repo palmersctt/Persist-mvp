@@ -59,7 +59,7 @@ None.
 
 ### Automated checks
 
-- [ ] `npm run verify`
+- [x] `npm run verify`
 
 ### Manual checks
 

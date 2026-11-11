@@ -62,4 +62,64 @@ describe('whoopToActuals', () => {
     expect(a?.sleepHours).toBeUndefined();
     expect(a?.sleepPerformance).toBeUndefined();
   });
+
+  describe('training load from workouts', () => {
+    const DAY_MS = 86400000;
+    /** A workout of `minutes`, `daysAgo` days before DATE, at 17:00 UTC. */
+    const workout = (daysAgo: number, minutes: number, extra: Record<string, unknown> = {}) => {
+      const start = new Date(`${DATE}T17:00:00Z`).getTime() - daysAgo * DAY_MS;
+      return {
+        start: new Date(start).toISOString(),
+        end: new Date(start + minutes * 60000).toISOString(),
+        ...extra,
+      };
+    };
+    const fiveWeeks = Array.from({ length: 35 }, (_, i) => workout(i + 1, 60));
+
+    it('leaves training absent when there are no workouts', () => {
+      const a = whoopToActuals(records({ workouts: [] }), DATE);
+      expect(a?.trainingBaseline).toBeUndefined();
+      expect(a?.trainingLoadToday).toBeUndefined();
+      expect(a?.weekActivityCount).toBeUndefined();
+    });
+
+    it('builds a baseline and today’s load from minutes moved', () => {
+      const a = whoopToActuals(records({ workouts: [...fiveWeeks, workout(0, 75)] }), DATE);
+      expect(a?.trainingLoadToday).toBe(75);
+      expect(a?.trainingBaseline).toBeGreaterThan(0);
+      expect(a?.trainingBaseline).toBeLessThan(60); // an EWMA of hour-long days
+      expect(a?.freshness).toBeGreaterThanOrEqual(5);
+    });
+
+    it('counts the trailing seven days and reports the latest workout', () => {
+      const a = whoopToActuals(
+        records({
+          workouts: [
+            ...fiveWeeks,
+            workout(0, 42, { sport_name: 'running', score: { distance_meter: 8040 } }),
+          ],
+        }),
+        DATE
+      );
+      expect(a?.weekActivityCount).toBe(7); // today + the six days before
+      expect(a?.lastActivity).toMatchObject({ type: 'running', durationMin: 42, distanceKm: 8 });
+    });
+
+    it('ignores workouts without a usable start and end', () => {
+      const a = whoopToActuals(
+        records({ workouts: [{ start: 'nope', end: 'nope' }, { score: {} }] }),
+        DATE
+      );
+      expect(a?.trainingBaseline).toBeUndefined();
+    });
+
+    it('returns training-only actuals when there is no recovery or sleep yet', () => {
+      const a = whoopToActuals(
+        records({ recovery: null, sleep: null, workouts: [workout(0, 30)] }),
+        DATE
+      );
+      expect(a?.trainingLoadToday).toBe(30);
+      expect(a?.recovery).toBeUndefined();
+    });
+  });
 });

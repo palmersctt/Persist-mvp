@@ -1,4 +1,12 @@
-import type { WearableActuals } from './types';
+import type { ActivitySummary, WearableActuals } from './types';
+import {
+  CTL_DAYS,
+  ATL_DAYS,
+  DAY_MS,
+  freshnessFromActivities,
+  trainingLoadProfile,
+  type LoadInput,
+} from './trainingLoad';
 
 // Server-side WHOOP API client (OAuth 2.0 + Developer API v2).
 // Requires a registered app at developer.whoop.com with redirect URI
@@ -10,7 +18,18 @@ const WHOOP_AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
 const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v2';
 
-const WHOOP_SCOPES = ['read:recovery', 'read:sleep', 'read:cycles', 'read:profile', 'offline'];
+const WHOOP_SCOPES = [
+  'read:recovery',
+  'read:sleep',
+  'read:cycles',
+  'read:workout',
+  'read:profile',
+  'offline',
+];
+
+/** Workouts per page (WHOOP's maximum) and a cap on pages per fetch. */
+const WORKOUT_PAGE_SIZE = 25;
+const WORKOUT_MAX_PAGES = 8;
 
 export function isWhoopConfigured(): boolean {
   return !!process.env.WHOOP_CLIENT_ID && !!process.env.WHOOP_CLIENT_SECRET;
@@ -108,6 +127,8 @@ export interface WhoopRecords {
   recovery: WhoopRecord | null;
   sleep: WhoopRecord | null;
   cycle: WhoopRecord | null;
+  /** Workouts over the trailing training window, any order. */
+  workouts?: WhoopRecord[];
 }
 
 function latestRecord(collection: Record<string, unknown> | null): WhoopRecord | null {
@@ -126,7 +147,8 @@ const num = (v: unknown): number | undefined =>
  */
 export function whoopToActuals(records: WhoopRecords, date: string): WearableActuals | null {
   const { recovery, sleep, cycle } = records;
-  if (!recovery && !sleep) return null;
+  const training = trainingFromWorkouts(records.workouts ?? [], date);
+  if (!recovery && !sleep && !training) return null;
 
   const recoveryScore = recovery?.score;
   const sleepScore = sleep?.score;
@@ -160,11 +182,78 @@ export function whoopToActuals(records: WhoopRecords, date: string): WearableAct
     hrvMs: round(recoveryScore?.hrv_rmssd_milli),
     restingHr: round(recoveryScore?.resting_heart_rate),
     dayStrain: strain === undefined ? undefined : Math.round(strain * 10) / 10,
+    ...training,
   };
 }
 
+type TrainingFields = Pick<
+  WearableActuals,
+  'lastActivity' | 'weekActivityCount' | 'freshness' | 'trainingBaseline' | 'trainingLoadToday'
+>;
+
 /**
- * Fetch the latest recovery, sleep, and cycle from WHOOP and normalize.
+ * Training load from WHOOP workouts, in the shared load currency: ~1 per
+ * minute moved (workout end minus start). WHOOP strain is deliberately not
+ * used — it sits on a 0–21 curve with no honest mapping onto that currency.
+ * Returns null when there are no usable workouts, so training stays neutral.
+ */
+function trainingFromWorkouts(workouts: WhoopRecord[], date: string): TrainingFields | null {
+  const sessions: Array<LoadInput & { start_date: string; record: WhoopRecord }> = [];
+  for (const w of workouts) {
+    if (typeof w.start !== 'string' || typeof w.end !== 'string') continue;
+    const ms = new Date(w.end).getTime() - new Date(w.start).getTime();
+    if (!Number.isFinite(ms) || ms <= 0) continue;
+    sessions.push({ start_date: w.start, moving_time: Math.round(ms / 1000), record: w });
+  }
+  if (sessions.length === 0) return null;
+
+  // Most recent first
+  sessions.sort((a, b) => b.start_date.localeCompare(a.start_date));
+  const latest = sessions[0];
+  const distanceM = num(latest.record.score?.distance_meter);
+  const lastActivity: ActivitySummary = {
+    type: typeof latest.record.sport_name === 'string' ? latest.record.sport_name : 'Workout',
+    startISO: latest.start_date,
+    durationMin: Math.round((latest.moving_time ?? 0) / 60),
+    distanceKm: distanceM === undefined ? undefined : Math.round(distanceM / 100) / 10,
+  };
+
+  // Trailing 7 days, counted back from the end of `date`
+  const weekStart = new Date(`${date}T00:00:00Z`).getTime() - 6 * DAY_MS;
+  const weekActivityCount = sessions.filter(
+    (s) => new Date(s.start_date).getTime() >= weekStart
+  ).length;
+
+  const profile = trainingLoadProfile(sessions, date);
+  return {
+    lastActivity,
+    weekActivityCount,
+    freshness: freshnessFromActivities(sessions, date) ?? undefined,
+    trainingBaseline: profile.baseline,
+    trainingLoadToday: profile.today,
+  };
+}
+
+/** Workouts since `sinceISO`, following WHOOP's pagination. */
+async function fetchWorkouts(accessToken: string, sinceISO: string): Promise<WhoopRecord[]> {
+  const out: WhoopRecord[] = [];
+  let nextToken: string | undefined;
+  for (let page = 0; page < WORKOUT_MAX_PAGES; page++) {
+    const params = new URLSearchParams({ limit: String(WORKOUT_PAGE_SIZE), start: sinceISO });
+    if (nextToken) params.set('nextToken', nextToken);
+    const res = await whoopGet(`/activity/workout?${params}`, accessToken);
+    const records = res?.records;
+    if (!Array.isArray(records)) break;
+    out.push(...(records as WhoopRecord[]));
+    nextToken = typeof res?.next_token === 'string' && res.next_token ? res.next_token : undefined;
+    if (!nextToken) break;
+  }
+  return out;
+}
+
+/**
+ * Fetch the latest recovery, sleep and cycle, plus the trailing window of
+ * workouts, from WHOOP and normalize.
  * Throws 'WHOOP_UNAUTHORIZED' if the access token is rejected (caller should
  * refresh and retry); returns null only if WHOOP has no data at all.
  */
@@ -172,10 +261,13 @@ export async function fetchWhoopActuals(
   accessToken: string,
   date: string
 ): Promise<WearableActuals | null> {
-  const [recoveryRes, sleepRes, cycleRes] = await Promise.all([
+  // Enough history to build the chronic-load baseline.
+  const since = new Date(Date.now() - (CTL_DAYS + ATL_DAYS) * DAY_MS).toISOString();
+  const [recoveryRes, sleepRes, cycleRes, workouts] = await Promise.all([
     whoopGet('/recovery?limit=1', accessToken),
     whoopGet('/activity/sleep?limit=1', accessToken),
     whoopGet('/cycle?limit=1', accessToken),
+    fetchWorkouts(accessToken, since),
   ]);
 
   return whoopToActuals(
@@ -183,6 +275,7 @@ export async function fetchWhoopActuals(
       recovery: latestRecord(recoveryRes),
       sleep: latestRecord(sleepRes),
       cycle: latestRecord(cycleRes),
+      workouts,
     },
     date
   );
