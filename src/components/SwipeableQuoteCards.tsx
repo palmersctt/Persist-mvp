@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion';
 import { type Mood } from '../lib/mood';
 import { trackEvent } from '../lib/trackEvent';
+import { useCountUp } from '../hooks/useCountUp';
 import CardContent from './CardContent';
 import type { HeroMessage } from '../hooks/useWorkHealth';
 
@@ -125,6 +126,12 @@ export default function SwipeableQuoteCards({
   const dwellStartRef = useRef<number>(Date.now());
   const n = quotes.length;
 
+  // Scores count up once when the verdict lands (and tween when it changes).
+  // Held here rather than in the card so swiping quotes doesn't replay it.
+  const shownReadiness = useCountUp(readiness, { delay: 250 });
+  const shownLoad = useCountUp(load, { delay: 250 });
+  const shownBalance = useCountUp(balance, { delay: 250 });
+
   useEffect(() => {
     return () => {
       if (cooldownRef.current) clearTimeout(cooldownRef.current);
@@ -164,9 +171,9 @@ export default function SwipeableQuoteCards({
         <DraggableCard
           key={currentIndex}
           quote={quotes[currentIndex]}
-          readiness={readiness}
-          load={load}
-          balance={balance}
+          readiness={shownReadiness}
+          load={shownLoad}
+          balance={shownBalance}
           mood={mood}
           verdict={verdict}
           daySummary={daySummary}

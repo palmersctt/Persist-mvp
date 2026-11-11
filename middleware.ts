@@ -6,7 +6,8 @@ export default withAuth(
     const token = req.nextauth.token
     const isAuth = !!token
     const isAuthPage = req.nextUrl.pathname === "/" ||
-                       req.nextUrl.pathname.startsWith("/auth")
+                       req.nextUrl.pathname.startsWith("/auth") ||
+                       req.nextUrl.pathname.startsWith("/sandbox")
     const isPublicPage = req.nextUrl.pathname.startsWith("/positioning")
 
     if (isPublicPage) {
@@ -32,5 +33,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/positioning/:path*", "/"]
+  matcher: ["/dashboard/:path*", "/positioning/:path*", "/sandbox/:path*", "/"]
 }

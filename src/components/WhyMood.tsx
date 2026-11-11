@@ -137,6 +137,7 @@ export default function WhyMood({
               }}
             >
               <div
+                className="bar-grow"
                 style={{
                   height: '3px',
                   width: `${val}%`,

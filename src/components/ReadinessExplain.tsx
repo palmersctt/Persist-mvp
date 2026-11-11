@@ -189,7 +189,7 @@ function Bar({ label, value }: { label: string; value: number }) {
       </div>
       <div className="w-full rounded-full" style={{ height: 4, backgroundColor: 'var(--rule)' }}>
         <div
-          className="rounded-full"
+          className="rounded-full bar-grow"
           style={{
             height: 4,
             width: `${Math.max(0, Math.min(100, value))}%`,

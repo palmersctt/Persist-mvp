@@ -172,6 +172,8 @@ export default function SandboxDashboard() {
       if (!res.ok) throw new Error('Scoring failed');
       const data: WorkHealthMetrics = await res.json();
       setCustomMetrics(data);
+      // The form is replaced by the results — start the reveal from the top.
+      window.scrollTo({ top: 0 });
       setTrends(
         generateTrendsFromScore(
           data.adaptivePerformanceIndex,
@@ -347,6 +349,9 @@ export default function SandboxDashboard() {
           border-radius: 6px;
         }
         .sb-nav-cta {
+          display: none;
+          flex-shrink: 0;
+          white-space: nowrap;
           background: var(--signal);
           color: var(--ground);
           border: none;
@@ -359,6 +364,12 @@ export default function SandboxDashboard() {
           transition:
             transform 0.15s,
             box-shadow 0.15s;
+        }
+        /* On phones the sticky bottom CTA does this job. */
+        @media (min-width: 640px) {
+          .sb-nav-cta {
+            display: inline-block;
+          }
         }
         .sb-nav-cta:hover {
           transform: translateY(-1px);
@@ -531,6 +542,7 @@ export default function SandboxDashboard() {
                 <>
                   {/* Edit & re-score — top of results */}
                   <button
+                    className="reveal-up"
                     onClick={() => {
                       setCustomMetrics(null);
                       setTrends(null);
@@ -556,7 +568,10 @@ export default function SandboxDashboard() {
                   </button>
 
                   {/* Calendar preview of entered meetings */}
-                  <div style={{ marginTop: 16 }}>
+                  <div
+                    className="reveal-up"
+                    style={{ marginTop: 16, '--d': '0.05s' } as React.CSSProperties}
+                  >
                     <p
                       style={{
                         fontSize: 11,
@@ -593,7 +608,16 @@ export default function SandboxDashboard() {
                   </div>
 
                   {/* Transition line */}
-                  <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+                  <div
+                    className="reveal-up"
+                    style={
+                      {
+                        textAlign: 'center',
+                        padding: '24px 0 16px',
+                        '--d': '0.15s',
+                      } as React.CSSProperties
+                    }
+                  >
                     <div
                       style={{
                         width: 32,
@@ -631,8 +655,8 @@ export default function SandboxDashboard() {
                     </p>
                   </div>
 
-                  {/* Card */}
-                  <div>
+                  {/* Card — the payoff: lands after the day, scores count up */}
+                  <div className="reveal-card" style={{ '--d': '0.3s' } as React.CSSProperties}>
                     <SwipeableQuoteCards
                       quotes={heroMessages}
                       readiness={previewModel?.readiness ?? 0}
@@ -647,30 +671,37 @@ export default function SandboxDashboard() {
                   </div>
 
                   {/* Share button */}
-                  <button
-                    className="sb-share-btn"
-                    onClick={handleShare}
-                    disabled={shareState === 'generating'}
-                    style={{ opacity: shareState === 'generating' ? 0.6 : 1 }}
-                  >
-                    {shareState === 'generating' ? 'Generating...' : 'Share your card \u2192'}
-                  </button>
+                  <div className="reveal-up" style={{ '--d': '0.6s' } as React.CSSProperties}>
+                    <button
+                      className="sb-share-btn"
+                      onClick={handleShare}
+                      disabled={shareState === 'generating'}
+                      style={{ opacity: shareState === 'generating' ? 0.6 : 1 }}
+                    >
+                      {shareState === 'generating' ? 'Generating...' : 'Share your card \u2192'}
+                    </button>
+                  </div>
 
                   {/* Why this mood + metric bars */}
-                  <WhyMood
-                    mood={mood}
-                    narrative={narrative}
-                    focus={focus}
-                    strain={strain}
-                    balance={balance}
-                    onMetricClick={(metric) => {
-                      setActiveTab(metric as 'performance' | 'resilience' | 'sustainability');
-                    }}
-                    defaultOpen
-                  />
+                  <div className="reveal-up" style={{ '--d': '0.7s' } as React.CSSProperties}>
+                    <WhyMood
+                      mood={mood}
+                      narrative={narrative}
+                      focus={focus}
+                      strain={strain}
+                      balance={balance}
+                      onMetricClick={(metric) => {
+                        setActiveTab(metric as 'performance' | 'resilience' | 'sustainability');
+                      }}
+                      defaultOpen
+                    />
+                  </div>
 
                   {/* Forecast vs Actual preview — synthetic body data merged with the entered meetings */}
-                  <section style={{ marginTop: 24 }}>
+                  <section
+                    className="reveal-up"
+                    style={{ marginTop: 24, '--d': '0.8s' } as React.CSSProperties}
+                  >
                     <div
                       style={{
                         display: 'flex',
