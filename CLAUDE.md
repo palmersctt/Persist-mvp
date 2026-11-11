@@ -9,6 +9,46 @@ Next.js app with two surfaces:
 
 Routing: `app/` directory (Next.js App Router). Shared layout in `app/layout.tsx`.
 
+## Software Factory
+
+The pipeline in `FACTORY.md` runs **automatically**. Do not wait to be asked
+for it, and do not ask the user to type the step commands.
+
+**When it starts.** Any request to change code starts the pipeline, unless:
+
+- it is a question, an explanation, or a review (answer it directly);
+- it is a trivial edit: copy, a typo, a rename, a one-file fix with an obvious
+  cause (make the change, run `npm run verify`);
+- the user says to skip it ("quick", "just do it", "skip the factory").
+
+A change touching the readiness model (`src/lib/model.ts`,
+`dashboardModel.ts`), the card system, auth, or the database always takes the
+full pipeline, however small it looks. When unsure which side a request falls
+on, take the pipeline and say so in one line.
+
+**How it runs.** Follow the step prompts in `.claude/commands/` in order,
+writing each step's file under `thoughts/shared/`. Where a step prompt says
+to stop and hand the next command to the user, carry on to the next step
+instead, except at the two gates below.
+
+1. Questions, then research. Give the research sub-agents
+   (`.claude/agents/`) the questions only, never the ticket.
+2. Design. **Gate: stop.** Present the decisions and open questions, and wait
+   for the user's answers.
+3. Outline. **Gate: stop.** Present the slices, and wait for approval.
+4. Plan, then implement every phase. Commit each phase once `npm run verify`
+   passes. On a mismatch between plan and code, stop and report it.
+5. Validate with a sub-agent that has not seen the implementation session,
+   then report: what was built, check results, anything outside the plan, and
+   the manual checks the user still owes. The user reads the code and merges.
+
+**Rules.**
+
+- Gate for every phase and for CI: `npm run verify` (lint + typecheck + tests).
+- Research documents the code as it is. Opinions belong in the design step.
+- Never skip, weaken or delete a test to get a check to pass.
+- Never treat an unanswered gate as approval.
+
 ## Card System
 
 - **`src/components/CardContent.tsx`** — the single card renderer. All cards go through this component.
@@ -96,6 +136,8 @@ All scores render at uniform 32px. Color-only emphasis — Readiness leads/pops.
 | `WEARABLES.md`                           | Wearable integration model, provider setup, schema                       |
 | `BRAND.md`                               | Brand color tokens and card design tokens                                |
 | `PERSONAS.md`                            | User personas                                                            |
+| `FACTORY.md`                             | Software factory: the step-by-step pipeline for agent-built changes      |
+| `thoughts/shared/`                       | Pipeline documents (tickets, research, designs, outlines, plans)         |
 
 ## Do NOT
 
