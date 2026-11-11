@@ -46,6 +46,14 @@ previous step's file. To skip the line for one request, say so ("quick",
 Research never sees the ticket. It answers neutral questions about the code
 as it is, so it reports facts and does not argue for a solution.
 
+## Unattended runs
+
+`/factory_queue` takes the oldest ticket in `thoughts/shared/tickets/` that
+has no design yet, runs questions, research and design on a `factory/<slug>`
+branch, pushes it, and stops at the design gate. It changes no product code.
+Use it from a scheduled run or a child session, so decisions are waiting
+when you sit down. To queue work, commit a ticket file to `main`.
+
 ## Sizing
 
 Not every change needs the whole line.
