@@ -82,8 +82,8 @@ None.
 
 ### Automated checks
 
-- [ ] `npm run verify`
-- [ ] `grep -ril strava app src/components src/hooks/useWearable.ts` lists
+- [x] `npm run verify`
+- [x] `grep -ril strava app src/components src/hooks/useWearable.ts` lists
       only `src/hooks/useWearable.ts` (the `available` shape, kept until
       phase 4)
 

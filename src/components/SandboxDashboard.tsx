@@ -47,7 +47,7 @@ const BODY_SCENARIOS: { key: BodyScenario; label: string }[] = [
   { key: 'fatigued', label: 'Fatigued' },
 ];
 
-// Strava-shaped demo actuals: a training-load baseline + today's load drive
+// Demo training actuals: a training-load baseline + today's load drive
 // the model's training axis (Recent ÷ Baseline). Fresh = rested with a gap,
 // fatigued = a recent spike over what you're built for.
 function sandboxActuals(scenario: BodyScenario): WearableActuals {
@@ -90,7 +90,7 @@ function sandboxActuals(scenario: BodyScenario): WearableActuals {
       },
     },
   } as const;
-  return { date, provider: 'strava', ...presets[scenario] };
+  return { date, provider: 'demo', ...presets[scenario] };
 }
 
 // Trend types and generation imported from ../lib/generateTrends
@@ -758,7 +758,7 @@ export default function SandboxDashboard() {
                         margin: '2px 0 0',
                       }}
                     >
-                      Demo training data &mdash; the real dashboard connects Strava.
+                      Demo training data &mdash; the real dashboard connects WHOOP.
                     </p>
                   </section>
 

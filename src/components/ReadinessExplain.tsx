@@ -1,6 +1,7 @@
 'use client';
 
 import type { DashboardVerdict } from '../lib/dashboardModel';
+import type { WearableActuals } from '../lib/wearables/types';
 
 const MONO = 'var(--font-geist-mono), ui-monospace, monospace';
 const SURFACE = { backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' } as const;
@@ -8,12 +9,16 @@ const SURFACE = { backgroundColor: 'var(--surface)', border: '1px solid var(--ru
 // The dashboard's readiness breakdown — mirrors the landing demo: the
 // Recent ÷ Baseline equation, your training (load vs baseline), and your
 // workday (the scores that set the Work Index). Shared with the sandbox.
+// `body` adds a recovery provider's readings — shown for context; only sleep
+// enters the score (via the model), recovery/HRV/resting HR never do.
 export default function ReadinessExplain({
   model,
   providerLabel,
+  body,
 }: {
   model: DashboardVerdict;
   providerLabel?: string;
+  body?: Pick<WearableActuals, 'recovery' | 'sleepPerformance' | 'hrvMs' | 'restingHr'> | null;
 }) {
   const acwrWord =
     model.acwr > 1.3 ? 'over your usual' : model.acwr < 0.85 ? 'under your usual' : 'in your band';
@@ -22,6 +27,13 @@ export default function ReadinessExplain({
     { label: 'Rhythm', value: model.rhythm },
     { label: 'Strain', value: model.strain },
   ];
+
+  const bodyStats = [
+    { l: 'Recovery', n: body?.recovery, unit: '%' },
+    { l: 'Sleep', n: body?.sleepPerformance, unit: '%' },
+    { l: 'HRV', n: body?.hrvMs, unit: '' },
+    { l: 'Resting HR', n: body?.restingHr, unit: '' },
+  ].filter((s): s is { l: string; n: number; unit: string } => typeof s.n === 'number');
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -42,6 +54,18 @@ export default function ReadinessExplain({
             <Stat n={`${model.trainingBaseline}`} l="Baseline" />
             <Stat n={`${model.weekActivityCount ?? 0}`} l="This week" />
             <Stat n={`${model.trainingLoadToday ?? 0}`} l="Today" />
+          </div>
+        </div>
+      )}
+
+      {/* Your body — a recovery provider's readings */}
+      {bodyStats.length > 0 && (
+        <div className="rounded-xl px-4 py-3.5" style={SURFACE}>
+          <Header title="Your body" tag={providerLabel} />
+          <div className="flex justify-between mt-3">
+            {bodyStats.map((s) => (
+              <Stat key={s.l} n={`${s.n}${s.unit}`} l={s.l} />
+            ))}
           </div>
         </div>
       )}

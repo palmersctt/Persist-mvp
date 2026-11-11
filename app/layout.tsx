@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'PERSISTWORK — Some days work is the workout.',
   description:
-    'For working athletes: your calendar is the forecast, your Strava training the actual. Persistwork fuses them into one number — readiness — and answers the only question that matters: how hard to train today.',
+    'For working athletes: your calendar is the forecast, your WHOOP training the actual. Persistwork fuses them into one number — readiness — and answers the only question that matters: how hard to train today.',
   openGraph: {
     title: 'PERSISTWORK — Some days work is the workout.',
     description:
-      'For working athletes: your calendar is the forecast, your Strava training the actual. Persistwork fuses them into one number — readiness — and answers the only question that matters: how hard to train today.',
+      'For working athletes: your calendar is the forecast, your WHOOP training the actual. Persistwork fuses them into one number — readiness — and answers the only question that matters: how hard to train today.',
     url: 'https://www.persistwork.com',
     siteName: 'PERSISTWORK',
     type: 'website',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'PERSISTWORK — Some days work is the workout.',
     description:
-      'For working athletes: your calendar is the forecast, your Strava training the actual. Persistwork fuses them into one number — readiness — and answers the only question that matters: how hard to train today.',
+      'For working athletes: your calendar is the forecast, your WHOOP training the actual. Persistwork fuses them into one number — readiness — and answers the only question that matters: how hard to train today.',
   },
   appleWebApp: {
     capable: true,

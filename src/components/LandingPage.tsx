@@ -906,7 +906,7 @@ export default function LandingPage() {
                 <div className="lp-why-block">
                   <div className="lp-why-h">
                     <span>Your training</span>
-                    <span className="lp-why-tag">STRAVA</span>
+                    <span className="lp-why-tag">WHOOP</span>
                   </div>
                   <div className="lp-body-row">
                     <div className="lp-body-item">
@@ -992,10 +992,10 @@ export default function LandingPage() {
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">STEP 02</div>
-                <h3>Connect Strava</h3>
+                <h3>Connect WHOOP</h3>
                 <p>
                   Your training history sets your baseline &mdash; what you&apos;re built for
-                  &mdash; so today&apos;s load is judged against it, not a generic rule. No Strava
+                  &mdash; so today&apos;s load is judged against it, not a generic rule. No WHOOP
                   yet? Demo data walks the whole flow.
                 </p>
               </div>
@@ -1020,7 +1020,7 @@ export default function LandingPage() {
               <em>Train on the verdict.</em>
             </h2>
             <p>
-              Connect your calendar, add Strava, and get one honest verdict on how hard to train
+              Connect your calendar, add WHOOP, and get one honest verdict on how hard to train
               today. Ten seconds of setup.
             </p>
             <button className="lp-hero-cta" onClick={handleGetStarted}>

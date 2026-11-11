@@ -16,7 +16,8 @@ export default function WearableSection({
   model: DashboardVerdict | null;
   wearable: WearableHook;
 }) {
-  const { connected, provider, available, isLoading, connect, connectDemo, disconnect } = wearable;
+  const { connected, provider, actuals, available, isLoading, connect, connectDemo, disconnect } =
+    wearable;
   const [notice, setNotice] = useState<string | null>(null);
   const [demoConnecting, setDemoConnecting] = useState(false);
 
@@ -25,12 +26,12 @@ export default function WearableSection({
     const params = new URLSearchParams(window.location.search);
     const result = params.get('wearable');
     if (!result) return;
-    if (result === 'strava-unavailable') {
-      setNotice('Strava isn’t configured in this environment yet — try demo data.');
+    if (result === 'whoop-unavailable') {
+      setNotice('WHOOP isn’t configured in this environment yet — try demo data.');
     } else if (result === 'denied') {
       setNotice('The connection was declined. You can try again anytime.');
     } else if (result === 'error') {
-      setNotice('Something went wrong connecting Strava. Try again.');
+      setNotice('Something went wrong connecting WHOOP. Try again.');
     }
     params.delete('wearable');
     const query = params.toString();
@@ -39,7 +40,7 @@ export default function WearableSection({
 
   if (isLoading) return null;
 
-  // --- Not connected: the verdict already reads your calendar; Strava sharpens it ---
+  // --- Not connected: the verdict already reads your calendar; WHOOP sharpens it ---
   if (!connected) {
     return (
       <section className="max-w-xs mx-auto w-full">
@@ -54,12 +55,12 @@ export default function WearableSection({
           style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--rule)' }}
         >
           <p className="text-sm font-bold mb-1" style={{ color: 'var(--text)' }}>
-            Add your training load.
+            Add your body and training.
           </p>
           <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-            Your verdict above reads your calendar today. Connect Strava and Persistwork weighs what
-            you&apos;re built for against what you&apos;ve done lately &mdash; so the call knows the
-            difference between a hard week and being off the couch.
+            Your verdict above reads your calendar today. Connect WHOOP and Persistwork weighs how
+            you slept and what you&apos;re built for against what you&apos;ve done lately &mdash; so
+            the call knows the difference between a hard week and being off the couch.
           </p>
           {notice && (
             <p className="text-xs mb-3" style={{ color: 'var(--signal-dim)' }}>
@@ -68,14 +69,14 @@ export default function WearableSection({
           )}
           <button
             onClick={() => {
-              if (!available.strava) return;
-              trackEvent('wearable_connect_clicked', { provider: 'strava' });
-              connect('strava');
+              if (!available.whoop) return;
+              trackEvent('wearable_connect_clicked', { provider: 'whoop' });
+              connect('whoop');
             }}
-            disabled={!available.strava}
+            disabled={!available.whoop}
             className="w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors mb-2"
             style={
-              available.strava
+              available.whoop
                 ? {
                     backgroundColor: 'var(--signal)',
                     color: 'var(--ground)',
@@ -90,11 +91,11 @@ export default function WearableSection({
                   }
             }
           >
-            Connect Strava
+            Connect WHOOP
           </button>
-          {!available.strava && (
+          {!available.whoop && (
             <p className="text-[10px] mb-2 text-center" style={{ color: 'var(--text-faint)' }}>
-              Strava isn&apos;t configured in this environment yet &mdash; preview with demo data
+              WHOOP isn&apos;t configured in this environment yet &mdash; preview with demo data
               below.
             </p>
           )}
@@ -124,11 +125,12 @@ export default function WearableSection({
   }
 
   // --- Connected: explain the card's verdict (the same model) ---
-  const providerLabel = provider === 'demo' ? 'Demo data' : (provider ?? undefined);
+  const providerName = provider === 'whoop' ? 'WHOOP' : provider;
+  const providerLabel = provider === 'demo' ? 'Demo data' : (providerName ?? undefined);
 
   return (
     <section className="max-w-xs mx-auto w-full">
-      {model && <ReadinessExplain model={model} providerLabel={providerLabel} />}
+      {model && <ReadinessExplain model={model} providerLabel={providerLabel} body={actuals} />}
 
       <div className="text-center mt-5">
         <button
@@ -144,7 +146,7 @@ export default function WearableSection({
             cursor: 'pointer',
           }}
         >
-          Disconnect {provider === 'demo' ? 'demo data' : provider}
+          Disconnect {provider === 'demo' ? 'demo data' : providerName}
         </button>
       </div>
     </section>
