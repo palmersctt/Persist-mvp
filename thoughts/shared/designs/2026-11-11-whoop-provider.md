@@ -3,7 +3,7 @@ date: 2026-11-11
 git_commit: 9686622
 ticket: thoughts/shared/tickets/2026-11-11-whoop-provider.md
 research: thoughts/shared/research/2026-11-11-whoop-provider.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: WHOOP as a wearable provider
@@ -77,21 +77,37 @@ the button is disabled, as Strava's is.
 - Split `fetchWhoopActuals` into the network calls and a pure
   `whoopToActuals(records, date)`, and test the pure part with fixtures.
 
-## Open questions for the human
+### D6. Strava leaves the product
 
-1. **Do you have a WHOOP developer app and a WHOOP account to test with?**
-   The client was written without access to the live API, and nothing here
-   can confirm its endpoints. Without a real connection the work can be
-   built and unit-tested, but not proven.
-2. **D1:** are you content for WHOOP users' Readiness to differ from Strava
-   users' because of sleep?
-3. **D2:** minutes moved, or do you want strain used despite the scaling
-   guess?
+Added after the user's instruction: "adjust product to not reference Strava
+anymore as we moved to WHOOP".
+
+- **Options:** (a) remove Strava from what users see (button, notices,
+  landing copy, page metadata, sandbox note) and keep the provider code;
+  (b) also remove the Strava client, its route branches, the `'strava'`
+  union member and its documentation.
+- **Recommend (b), as the last slice.** The generic load maths in
+  `strava.ts` (`activityLoad`, `trainingLoadProfile`,
+  `freshnessFromActivities`) is kept, moved to a provider-neutral file with
+  its tests, because D2 reuses it.
+- **Consequence:** an existing Strava connection row is treated as not
+  connected, and that user sees the WHOOP pitch. Rows are left in the
+  database.
+
+## Answers
+
+The user replied "continue with the above", taken as agreement to the
+recommendations: D1 (a), D2 (a) with minutes moved, D3 (a), D4, D5.
+
+Still unanswered: whether a WHOOP developer app and account are available
+for a live test. The work is built and unit-tested without one; the live
+connection stays a manual check owed by the user.
 
 ## Out of scope
 
 - A recovery input in the model.
 - Combining two providers.
+- Deleting existing Strava rows from the database.
 - Storing training fields in `wearable_daily` (the stale fallback loses
   them for Strava too; a migration of its own).
 - Bringing `WEARABLES.md` fully in line with the code, beyond the WHOOP
