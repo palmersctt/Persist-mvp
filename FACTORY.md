@@ -34,8 +34,14 @@ smaller steps, and the 12-factor-agents principles.
 | I    | `/implement_plan`     | plan                  | code, one commit per phase  | manual checks per phase  |
 | V    | `/validate_plan`      | plan + diff           | a report                    | **read the code**, merge |
 
-Start a new session between steps (`/clear`), and pass the path of the
-previous step's file as the argument.
+The line runs automatically: `CLAUDE.md` tells every session to start it for
+any real code change and to carry on from step to step, stopping only at the
+two gates in bold (design and outline) and at the final report. Research and
+validation run in sub-agents, so they start from a clean context.
+
+Each step can also be run by hand with its command, passing the path of the
+previous step's file. To skip the line for one request, say so ("quick",
+"skip the factory").
 
 Research never sees the ticket. It answers neutral questions about the code
 as it is, so it reports facts and does not argue for a solution.
