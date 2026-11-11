@@ -101,12 +101,66 @@ async function whoopGet(
   }
 }
 
-type WhoopRecord = Record<string, unknown> & { score?: Record<string, unknown> };
+export type WhoopRecord = Record<string, unknown> & { score?: Record<string, unknown> };
+
+/** The latest WHOOP records for a user, as the API returned them. */
+export interface WhoopRecords {
+  recovery: WhoopRecord | null;
+  sleep: WhoopRecord | null;
+  cycle: WhoopRecord | null;
+}
 
 function latestRecord(collection: Record<string, unknown> | null): WhoopRecord | null {
   const records = collection?.records;
   if (!Array.isArray(records) || records.length === 0) return null;
   return records[0] as WhoopRecord;
+}
+
+const num = (v: unknown): number | undefined =>
+  typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+
+/**
+ * Normalize WHOOP records into actuals. Pure — no network. A value WHOOP did
+ * not send stays absent (never 0), so downstream can tell "no data" from a
+ * real zero. Returns null when WHOOP has nothing to say.
+ */
+export function whoopToActuals(records: WhoopRecords, date: string): WearableActuals | null {
+  const { recovery, sleep, cycle } = records;
+  if (!recovery && !sleep) return null;
+
+  const recoveryScore = recovery?.score;
+  const sleepScore = sleep?.score;
+  const cycleScore = cycle?.score;
+
+  // Actual sleep = time in bed minus awake time (stage_summary), falling
+  // back to the start/end span (time in bed) when stages are unavailable
+  let sleepHours: number | undefined;
+  const stages = sleepScore?.stage_summary as Record<string, unknown> | undefined;
+  const inBedMs = num(stages?.total_in_bed_time_milli);
+  if (inBedMs !== undefined) {
+    const asleepMs = inBedMs - (num(stages?.total_awake_time_milli) ?? 0);
+    sleepHours = Math.max(0, Math.round((asleepMs / 3600000) * 10) / 10);
+  } else if (typeof sleep?.start === 'string' && typeof sleep?.end === 'string') {
+    const ms = new Date(sleep.end).getTime() - new Date(sleep.start).getTime();
+    if (Number.isFinite(ms)) sleepHours = Math.max(0, Math.round((ms / 3600000) * 10) / 10);
+  }
+
+  const round = (v: unknown) => {
+    const n = num(v);
+    return n === undefined ? undefined : Math.round(n);
+  };
+  const strain = num(cycleScore?.strain);
+
+  return {
+    date,
+    provider: 'whoop',
+    recovery: round(recoveryScore?.recovery_score),
+    sleepHours,
+    sleepPerformance: round(sleepScore?.sleep_performance_percentage),
+    hrvMs: round(recoveryScore?.hrv_rmssd_milli),
+    restingHr: round(recoveryScore?.resting_heart_rate),
+    dayStrain: strain === undefined ? undefined : Math.round(strain * 10) / 10,
+  };
 }
 
 /**
@@ -124,45 +178,12 @@ export async function fetchWhoopActuals(
     whoopGet('/cycle?limit=1', accessToken),
   ]);
 
-  const recovery = latestRecord(recoveryRes);
-  const sleep = latestRecord(sleepRes);
-  const cycle = latestRecord(cycleRes);
-  if (!recovery && !sleep) return null;
-
-  const recoveryScore = recovery?.score as Record<string, number> | undefined;
-  const sleepScore = sleep?.score as Record<string, unknown> | undefined;
-  const cycleScore = cycle?.score as Record<string, number> | undefined;
-
-  // Actual sleep = time in bed minus awake time (stage_summary), falling
-  // back to the start/end span (time in bed) when stages are unavailable
-  let sleepHours = 0;
-  const stages = sleepScore?.stage_summary as Record<string, number> | undefined;
-  if (typeof stages?.total_in_bed_time_milli === 'number') {
-    const asleepMs = stages.total_in_bed_time_milli - (stages.total_awake_time_milli ?? 0);
-    sleepHours = Math.max(0, Math.round((asleepMs / 3600000) * 10) / 10);
-  } else if (sleep?.start && sleep?.end) {
-    const ms = new Date(sleep.end as string).getTime() - new Date(sleep.start as string).getTime();
-    sleepHours = Math.max(0, Math.round((ms / 3600000) * 10) / 10);
-  }
-
-  return {
-    date,
-    provider: 'whoop',
-    recovery: Math.round(recoveryScore?.recovery_score ?? 0),
-    sleepHours,
-    sleepPerformance:
-      typeof sleepScore?.sleep_performance_percentage === 'number'
-        ? Math.round(sleepScore.sleep_performance_percentage)
-        : undefined,
-    hrvMs:
-      typeof recoveryScore?.hrv_rmssd_milli === 'number'
-        ? Math.round(recoveryScore.hrv_rmssd_milli)
-        : undefined,
-    restingHr:
-      typeof recoveryScore?.resting_heart_rate === 'number'
-        ? Math.round(recoveryScore.resting_heart_rate)
-        : undefined,
-    dayStrain:
-      typeof cycleScore?.strain === 'number' ? Math.round(cycleScore.strain * 10) / 10 : undefined,
-  };
+  return whoopToActuals(
+    {
+      recovery: latestRecord(recoveryRes),
+      sleep: latestRecord(sleepRes),
+      cycle: latestRecord(cycleRes),
+    },
+    date
+  );
 }

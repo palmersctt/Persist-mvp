@@ -56,4 +56,33 @@ describe('dashboardVerdict', () => {
     expect(r.workLoad).toBe(44); // 4h × 11
     expect(r.workIndexValue).toBe(56); // 0.3·60 + 0.3·60 + 0.4·50
   });
+
+  describe('sleep from a recovery provider', () => {
+    const whoop = (sleepPerformance?: number): WearableActuals => ({
+      date: '2026-06-11',
+      provider: 'whoop',
+      sleepPerformance,
+    });
+    const day = work(60, 50, 60, 4);
+
+    it('absent sleep reads the same as no provider', () => {
+      expect(dashboardVerdict(day, whoop()).readiness).toBe(dashboardVerdict(day, null).readiness);
+    });
+
+    it('good sleep raises Readiness, poor sleep lowers it', () => {
+      const neutral = dashboardVerdict(day, null).readiness;
+      expect(dashboardVerdict(day, whoop(90)).readiness).toBeGreaterThan(neutral);
+      expect(dashboardVerdict(day, whoop(40)).readiness).toBeLessThan(neutral);
+    });
+
+    it('clamps an out-of-range sleep value', () => {
+      expect(dashboardVerdict(day, whoop(140)).readiness).toBe(
+        dashboardVerdict(day, whoop(100)).readiness
+      );
+    });
+
+    it('sleep alone never invents a training gap', () => {
+      expect(dashboardVerdict(day, whoop(90)).trainingAcwr).toBeCloseTo(1.0, 1);
+    });
+  });
 });

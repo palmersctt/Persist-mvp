@@ -2,10 +2,11 @@ import { runModel, workIndex, type DayInputs, type ModelResult, type Prior } fro
 import type { WorkHealthMetrics } from '../hooks/useWorkHealth';
 import type { WearableActuals } from './wearables/types';
 
-// Maps the dashboard's real signals — calendar work-health + Strava training
-// load — into the readiness model, in day-1 mode (no per-day history yet, so
-// the prior carries the baseline). trainingFeel and sleep have no real signal
-// yet, so they're held neutral.
+// Maps the dashboard's real signals — calendar work-health + a wearable's
+// training load and sleep — into the readiness model, in day-1 mode (no
+// per-day history yet, so the prior carries the baseline). trainingFeel has
+// no real signal yet, so it's held neutral; sleep is neutral without a
+// provider that reports it.
 
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 
@@ -15,6 +16,8 @@ const WORK_LOAD_PER_HOUR = 11;
 const DEFAULT_WORK_BASELINE = 55;
 /** Training baseline assumed when no activity provider is connected. */
 const DEFAULT_TRAINING_BASELINE = 30;
+/** Sleep input when no provider reports sleep — the model's neutral point. */
+const NEUTRAL_SLEEP = 62;
 
 export interface DashboardVerdict extends ModelResult {
   workLoad: number;
@@ -30,7 +33,8 @@ export interface DashboardVerdict extends ModelResult {
 
 /**
  * Compute the readiness verdict from live dashboard data. Works with calendar
- * alone (training held neutral) or with Strava (real training load + baseline).
+ * alone (training and sleep held neutral) or with a wearable (real training
+ * load + baseline, and sleep when the provider reports it).
  */
 export function dashboardVerdict(
   work: WorkHealthMetrics,
@@ -50,6 +54,11 @@ export function dashboardVerdict(
   const trainingBaseline = actuals?.trainingBaseline ?? DEFAULT_TRAINING_BASELINE;
   const trainingLoadToday = hasTraining ? (actuals?.trainingLoadToday ?? 0) : trainingBaseline;
 
+  // Sleep: a recovery provider's sleep performance (0–100), else neutral.
+  const sleepPerformance = actuals?.sleepPerformance;
+  const sleep =
+    typeof sleepPerformance === 'number' ? clamp(sleepPerformance, 0, 100) : NEUTRAL_SLEEP;
+
   const prior: Prior = {
     load: DEFAULT_WORK_BASELINE + trainingBaseline,
     trainingLoad: trainingBaseline,
@@ -59,7 +68,7 @@ export function dashboardVerdict(
     workIndex: wi,
     trainingLoad: trainingLoadToday,
     trainingFeel: 0, // no per-session feel signal yet
-    sleep: 62, // neutral — no sleep source on Strava
+    sleep,
   };
 
   return {
