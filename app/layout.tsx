@@ -4,6 +4,7 @@ import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import SessionProvider from '../src/components/SessionProvider';
 import VisitTracker from '../src/components/VisitTracker';
+import StyledJsxRegistry from '../src/components/StyledJsxRegistry';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -56,11 +57,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SessionProvider>
-          <VisitTracker />
-          {children}
-          <Analytics />
-        </SessionProvider>
+        <StyledJsxRegistry>
+          <SessionProvider>
+            <VisitTracker />
+            {children}
+            <Analytics />
+          </SessionProvider>
+        </StyledJsxRegistry>
       </body>
     </html>
   );

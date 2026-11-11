@@ -141,14 +141,6 @@ body {
     min-width: 44px;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-
   .touch-manipulation:active {
     transform: scale(0.98);
     transition: transform 0.1s ease;
@@ -341,4 +333,72 @@ body {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ─── Motion utilities ────────────────────────────────────────────
+   Shared entrance motion. Stagger with the --d custom property,
+   e.g. style={{ '--d': '0.2s' }}. */
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes revealCard {
+  from { opacity: 0; transform: translateY(18px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.reveal-up {
+  animation: revealUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.reveal-card {
+  animation: revealCard 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* Progress-bar fill that grows from the left on first paint. */
+.bar-grow {
+  transform-origin: left center;
+  animation: barGrow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* Loading placeholder block with a passing highlight. */
+.skeleton-bar {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(245, 245, 245, 0.07);
+}
+
+.skeleton-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(245, 245, 245, 0.06) 50%, transparent 100%);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

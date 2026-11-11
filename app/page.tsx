@@ -1,42 +1,28 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import LandingPage from '../src/components/LandingPage'
-import PersistLogo from '../src/components/PersistLogo'
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import LandingPage from '../src/components/LandingPage';
+import DashboardSkeleton from '../src/components/DashboardSkeleton';
 
 export default function Home() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    // If user is logged in, redirect to dashboard
-    if (status === 'authenticated' && session) {
-      router.push('/dashboard')
+    if (status === 'authenticated') {
+      router.push('/dashboard');
     }
-  }, [session, status, router])
+  }, [status, router]);
 
-  // While session is resolving, show blank cream background (no flash)
-  if (status === 'loading') {
-    return <div className="min-h-screen" style={{ backgroundColor: '#0B0B0C' }} />
+  // Signed-in visitors are normally redirected by middleware before this
+  // renders; if one gets here, hold the dashboard's shape while we redirect.
+  if (status === 'authenticated') {
+    return <DashboardSkeleton />;
   }
 
-  // Show landing page for non-authenticated users
-  if (status === 'unauthenticated') {
-    return <LandingPage />
-  }
-
-  // Authenticated: show loading state while redirecting to dashboard
-  return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0B0B0C' }}>
-      <div className="text-center flex flex-col items-center">
-        <div className="flex items-center gap-2 mb-3">
-          <PersistLogo size={28} variant="dark" />
-          <span className="text-2xl font-semibold text-[#F5F5F5]" style={{ letterSpacing: '1.5px' }}>PERSIST<span style={{ color: '#C7F95C' }}>WORK</span></span>
-        </div>
-        <div className="text-[#5F6168] text-sm">Loading...</div>
-      </div>
-    </div>
-  )
+  // Render the landing page straight away (including on the server) rather
+  // than waiting on the session check — no blank first paint.
+  return <LandingPage />;
 }
