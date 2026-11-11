@@ -35,7 +35,13 @@ export default function LandingPage() {
   // A drag ends with a pointer-up that also reads as a tap; this tells them apart.
   const didDrag = useRef(false);
 
-  const settle = () => animate(dragX, 0, { type: 'spring', stiffness: 400, damping: 32 });
+  const settle = () => {
+    const reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) dragX.set(0);
+    else animate(dragX, 0, { type: 'spring', stiffness: 400, damping: 32 });
+  };
   const showCard = (index: number) => {
     setFront(index);
     settle();
@@ -50,6 +56,11 @@ export default function LandingPage() {
 
   // Swiping left brings the next card forward; right brings the previous back.
   const handleDeckDragEnd = (_: unknown, info: PanInfo) => {
+    // A few pixels of jitter is a tap, not a swipe.
+    if (Math.abs(info.offset.x) < 10) {
+      stepCard(1);
+      return;
+    }
     const committed = Math.abs(info.offset.x) > 60 || Math.abs(info.velocity.x) > 300;
     if (committed) stepCard(info.offset.x < 0 ? 1 : -1);
     else settle();
@@ -181,14 +192,13 @@ export default function LandingPage() {
             </div>
 
             {/* The product itself: one card per verdict, swipeable */}
-            <div className="lp-hero-deck">
+            <div className="lp-hero-deck" onKeyDown={handleDeckKey}>
               <div
                 className={`lp-hero-visual${fanned ? ' is-fanned' : ''}`}
                 role="group"
                 aria-roledescription="carousel"
                 aria-label="Example Persistwork cards. Swipe, tap, or use the arrow keys to see the next."
                 tabIndex={0}
-                onKeyDown={handleDeckKey}
               >
                 {HERO_DECK.map((c, i) => {
                   const slot = deckSlot(i, front, HERO_DECK.length);
@@ -203,6 +213,7 @@ export default function LandingPage() {
                     >
                       <motion.div
                         className="lp-hero-card-inner"
+                        tabIndex={-1}
                         style={isFront ? { x: dragX, rotate: dragRotate } : undefined}
                         drag={isFront ? 'x' : false}
                         dragConstraints={{ left: 0, right: 0 }}
@@ -233,8 +244,6 @@ export default function LandingPage() {
               </div>
               <p className="sr-only" aria-live="polite">
                 Card {front + 1} of {HERO_DECK.length}: {frontCard.verdict}, {frontCard.label}.
-                Readiness {frontCard.readiness}, Load {frontCard.load}, Balance {frontCard.balance}.{' '}
-                {frontCard.quote} {frontCard.source}.
               </p>
               <div className="lp-hero-dots">
                 {HERO_DECK.map((c, i) => (
