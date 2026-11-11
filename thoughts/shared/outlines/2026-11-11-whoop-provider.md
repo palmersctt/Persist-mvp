@@ -1,7 +1,7 @@
 ---
 date: 2026-11-11
 design: thoughts/shared/designs/2026-11-11-whoop-provider.md
-status: awaiting approval
+status: approved (phases 1-3); phase 4 deferred
 ---
 
 # Outline: WHOOP in, Strava out
@@ -64,3 +64,10 @@ Four slices. Each leaves the app working and `npm run verify` green.
 
 Phase 4 removes the only provider proven against a live API. It should run
 only after the Phase 3 manual check has passed.
+
+## Approval
+
+The user replied "your call for MVP", and has no WHOOP developer account or
+device yet. Decision: build phases 1 to 3. Phase 4 is deferred until a live
+WHOOP connection has been proven, so the Strava client stays in the code,
+unreachable from the UI, and existing Strava connections keep working.
