@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { whoopToActuals, type WhoopRecords } from './whoop';
+import { latestMainSleep, whoopToActuals, type WhoopRecords } from './whoop';
 
 const DATE = '2026-06-11';
 
@@ -113,6 +113,17 @@ describe('whoopToActuals', () => {
       expect(a?.trainingBaseline).toBeUndefined();
     });
 
+    it('buckets an evening workout by the wearer’s local day', () => {
+      // 17:30 in Los Angeles is 00:30 UTC the next day
+      const evening = {
+        start: '2026-06-12T00:30:00.000Z',
+        end: '2026-06-12T01:15:00.000Z',
+        timezone_offset: '-07:00',
+      };
+      const a = whoopToActuals(records({ workouts: [evening] }), DATE);
+      expect(a?.trainingLoadToday).toBe(45);
+    });
+
     it('returns training-only actuals when there is no recovery or sleep yet', () => {
       const a = whoopToActuals(
         records({ recovery: null, sleep: null, workouts: [workout(0, 30)] }),
@@ -121,5 +132,25 @@ describe('whoopToActuals', () => {
       expect(a?.trainingLoadToday).toBe(30);
       expect(a?.recovery).toBeUndefined();
     });
+  });
+});
+
+describe('latestMainSleep', () => {
+  const NOW = new Date('2026-06-11T15:00:00Z').getTime();
+  const night = { nap: false, end: '2026-06-11T06:30:00.000Z' };
+  const nap = { nap: true, end: '2026-06-11T14:00:00.000Z' };
+
+  it('skips a nap and returns last night', () => {
+    expect(latestMainSleep({ records: [nap, night] }, NOW)).toBe(night);
+  });
+
+  it('ignores a sleep that ended more than 36 hours ago', () => {
+    const old = { nap: false, end: '2026-06-04T06:30:00.000Z' };
+    expect(latestMainSleep({ records: [nap, old] }, NOW)).toBeNull();
+  });
+
+  it('returns null for an empty or failed response', () => {
+    expect(latestMainSleep({ records: [] }, NOW)).toBeNull();
+    expect(latestMainSleep(null, NOW)).toBeNull();
   });
 });

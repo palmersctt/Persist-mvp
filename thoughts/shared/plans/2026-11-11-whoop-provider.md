@@ -3,7 +3,7 @@ date: 2026-11-11
 git_commit: a54757b
 design: thoughts/shared/designs/2026-11-11-whoop-provider.md
 outline: thoughts/shared/outlines/2026-11-11-whoop-provider.md
-status: ready
+status: implemented (phases 1-3), validated
 ---
 
 # Plan: WHOOP in, Strava off screen
@@ -95,3 +95,19 @@ None.
       and the "Your body" and "Your training" blocks show real values.
 - [ ] Register redirect `${NEXTAUTH_URL}/api/wearables/callback` and the
       scope `read:workout` on the WHOOP app.
+
+## After validation
+
+An independent pass found defects, fixed in a follow-up commit:
+
+- The latest WHOOP sleep could be a nap or a week-old night. Naps are now
+  skipped and a sleep older than 36 hours is ignored (`latestMainSleep`).
+- Stale actuals (provider unreachable) were scored. They are now displayed
+  but not scored (`WorkHealthDashboard.tsx`).
+- Workouts were bucketed by UTC day. They now use WHOOP's `timezone_offset`.
+- A failed or truncated workout fetch looked like "no workouts" or a short
+  history. It now reports unknown, and training stays neutral.
+
+Left as is: `fetchWorkouts` and `fetchWhoopActuals` have no tests (network
+code, as with Strava); an existing Strava connection still shows the label
+"strava" in the panel.

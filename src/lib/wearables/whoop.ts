@@ -137,6 +137,39 @@ function latestRecord(collection: Record<string, unknown> | null): WhoopRecord |
   return records[0] as WhoopRecord;
 }
 
+/** A night's sleep older than this is not "last night" and is not used. */
+const SLEEP_MAX_AGE_MS = 36 * 3600000;
+
+/**
+ * The most recent main sleep from a WHOOP sleep collection: naps are skipped,
+ * and a sleep that ended more than 36h before `nowMs` is ignored (strap off,
+ * no sync), so an old night or an afternoon nap never scores as last night.
+ */
+export function latestMainSleep(
+  collection: Record<string, unknown> | null,
+  nowMs: number
+): WhoopRecord | null {
+  const records = collection?.records;
+  if (!Array.isArray(records)) return null;
+  for (const r of records as WhoopRecord[]) {
+    if (r.nap === true) continue;
+    if (typeof r.end !== 'string') continue;
+    const end = new Date(r.end).getTime();
+    if (!Number.isFinite(end) || nowMs - end > SLEEP_MAX_AGE_MS) return null;
+    return r;
+  }
+  return null;
+}
+
+/** Shift a WHOOP timestamp into the wearer's local time using its `timezone_offset` ("-07:00"). */
+function localISO(iso: string, offset: unknown): string {
+  const m = typeof offset === 'string' ? /^([+-])(\d{2}):(\d{2})$/.exec(offset) : null;
+  const t = new Date(iso).getTime();
+  if (!m || !Number.isFinite(t)) return iso;
+  const shift = (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) * 60000;
+  return new Date(t + shift).toISOString();
+}
+
 const num = (v: unknown): number | undefined =>
   typeof v === 'number' && Number.isFinite(v) ? v : undefined;
 
@@ -203,7 +236,12 @@ function trainingFromWorkouts(workouts: WhoopRecord[], date: string): TrainingFi
     if (typeof w.start !== 'string' || typeof w.end !== 'string') continue;
     const ms = new Date(w.end).getTime() - new Date(w.start).getTime();
     if (!Number.isFinite(ms) || ms <= 0) continue;
-    sessions.push({ start_date: w.start, moving_time: Math.round(ms / 1000), record: w });
+    // Bucket by the wearer's local day, so an evening session counts today.
+    sessions.push({
+      start_date: localISO(w.start, w.timezone_offset),
+      moving_time: Math.round(ms / 1000),
+      record: w,
+    });
   }
   if (sessions.length === 0) return null;
 
@@ -213,7 +251,8 @@ function trainingFromWorkouts(workouts: WhoopRecord[], date: string): TrainingFi
   const distanceM = num(latest.record.score?.distance_meter);
   const lastActivity: ActivitySummary = {
     type: typeof latest.record.sport_name === 'string' ? latest.record.sport_name : 'Workout',
-    startISO: latest.start_date,
+    // the true instant, not the local-day bucket key
+    startISO: typeof latest.record.start === 'string' ? latest.record.start : latest.start_date,
     durationMin: Math.round((latest.moving_time ?? 0) / 60),
     distanceKm: distanceM === undefined ? undefined : Math.round(distanceM / 100) / 10,
   };
@@ -234,8 +273,12 @@ function trainingFromWorkouts(workouts: WhoopRecord[], date: string): TrainingFi
   };
 }
 
-/** Workouts since `sinceISO`, following WHOOP's pagination. */
-async function fetchWorkouts(accessToken: string, sinceISO: string): Promise<WhoopRecord[]> {
+/**
+ * Workouts since `sinceISO`, following WHOOP's pagination. Returns null when
+ * any page fails or the page cap is hit — a partial history would understate
+ * the baseline, so "unknown" is reported instead and training stays neutral.
+ */
+async function fetchWorkouts(accessToken: string, sinceISO: string): Promise<WhoopRecord[] | null> {
   const out: WhoopRecord[] = [];
   let nextToken: string | undefined;
   for (let page = 0; page < WORKOUT_MAX_PAGES; page++) {
@@ -243,12 +286,12 @@ async function fetchWorkouts(accessToken: string, sinceISO: string): Promise<Who
     if (nextToken) params.set('nextToken', nextToken);
     const res = await whoopGet(`/activity/workout?${params}`, accessToken);
     const records = res?.records;
-    if (!Array.isArray(records)) break;
+    if (!Array.isArray(records)) return null;
     out.push(...(records as WhoopRecord[]));
     nextToken = typeof res?.next_token === 'string' && res.next_token ? res.next_token : undefined;
-    if (!nextToken) break;
+    if (!nextToken) return out;
   }
-  return out;
+  return null;
 }
 
 /**
@@ -265,7 +308,7 @@ export async function fetchWhoopActuals(
   const since = new Date(Date.now() - (CTL_DAYS + ATL_DAYS) * DAY_MS).toISOString();
   const [recoveryRes, sleepRes, cycleRes, workouts] = await Promise.all([
     whoopGet('/recovery?limit=1', accessToken),
-    whoopGet('/activity/sleep?limit=1', accessToken),
+    whoopGet('/activity/sleep?limit=5', accessToken),
     whoopGet('/cycle?limit=1', accessToken),
     fetchWorkouts(accessToken, since),
   ]);
@@ -273,9 +316,9 @@ export async function fetchWhoopActuals(
   return whoopToActuals(
     {
       recovery: latestRecord(recoveryRes),
-      sleep: latestRecord(sleepRes),
+      sleep: latestMainSleep(sleepRes, Date.now()),
       cycle: latestRecord(cycleRes),
-      workouts,
+      workouts: workouts ?? undefined,
     },
     date
   );

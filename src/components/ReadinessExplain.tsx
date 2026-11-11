@@ -31,8 +31,8 @@ export default function ReadinessExplain({
   const bodyStats = [
     { l: 'Recovery', n: body?.recovery, unit: '%' },
     { l: 'Sleep', n: body?.sleepPerformance, unit: '%' },
-    { l: 'HRV', n: body?.hrvMs, unit: '' },
-    { l: 'Resting HR', n: body?.restingHr, unit: '' },
+    { l: 'HRV ms', n: body?.hrvMs, unit: '' },
+    { l: 'Rest bpm', n: body?.restingHr, unit: '' },
   ].filter((s): s is { l: string; n: number; unit: string } => typeof s.n === 'number');
 
   return (

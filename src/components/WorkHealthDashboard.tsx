@@ -49,7 +49,11 @@ export default function WorkHealthDashboard() {
   // One model, one verdict: the unified readiness model (work + training load
   // vs your baseline, plus Work Index) drives the card's mood and verdict.
   // Work no longer produces a second, competing mood.
-  const cardModel = workHealth ? dashboardVerdict(workHealth, wearable.actuals) : null;
+  // Stale actuals (provider unreachable, an earlier day's row) are shown but
+  // never scored — yesterday's sleep must not move today's verdict.
+  const cardModel = workHealth
+    ? dashboardVerdict(workHealth, wearable.stale ? null : wearable.actuals)
+    : null;
   const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
   const cardReadiness = cardModel?.readiness ?? 0;
   const cardLoad = cardModel?.load ?? 0;
