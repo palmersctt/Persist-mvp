@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
+import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import CardContent from './CardContent';
 import { useCountUp } from '../hooks/useCountUp';
+import { HERO_DECK, HERO_FRONT_INDEX, deckSlot, stepDeck } from '../lib/heroDeck';
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -13,10 +15,57 @@ export default function LandingPage() {
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Hero card scores — the same verdict the demo below arrives at.
-  const heroReadiness = useCountUp(74, { delay: 500 });
-  const heroLoad = useCountUp(38, { delay: 500 });
-  const heroBalance = useCountUp(17, { delay: 500 });
+  // Hero deck: one example card per verdict. Flow opens in front (the same
+  // verdict the demo below arrives at) and its scores count up once.
+  const flow = HERO_DECK[HERO_FRONT_INDEX];
+  const heroReadiness = useCountUp(flow.readiness, { delay: 500 });
+  const heroLoad = useCountUp(flow.load, { delay: 500 });
+  const heroBalance = useCountUp(flow.balance, { delay: 500 });
+  const [front, setFront] = useState(HERO_FRONT_INDEX);
+  const [fanned, setFanned] = useState(false);
+  const dragX = useMotionValue(0);
+  const dragRotate = useTransform(dragX, [-200, 200], [-8, 8]);
+
+  // Fan the back cards out just after first paint.
+  useEffect(() => {
+    const t = setTimeout(() => setFanned(true), 450);
+    return () => clearTimeout(t);
+  }, []);
+
+  // A drag ends with a pointer-up that also reads as a tap; this tells them apart.
+  const didDrag = useRef(false);
+
+  const settle = () => animate(dragX, 0, { type: 'spring', stiffness: 400, damping: 32 });
+  const showCard = (index: number) => {
+    setFront(index);
+    settle();
+  };
+  const stepCard = (direction: 1 | -1) => {
+    setFront((f) => stepDeck(f, direction, HERO_DECK.length));
+    settle();
+  };
+  const handleDeckTap = () => {
+    if (!didDrag.current) stepCard(1);
+  };
+
+  // Swiping left brings the next card forward; right brings the previous back.
+  const handleDeckDragEnd = (_: unknown, info: PanInfo) => {
+    const committed = Math.abs(info.offset.x) > 60 || Math.abs(info.velocity.x) > 300;
+    if (committed) stepCard(info.offset.x < 0 ? 1 : -1);
+    else settle();
+  };
+
+  const handleDeckKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      stepCard(1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      stepCard(-1);
+    }
+  };
+
+  const frontCard = HERO_DECK[front];
 
   useEffect(() => {
     if (session) {
@@ -131,48 +180,75 @@ export default function LandingPage() {
               <p className="lp-hero-note">We only read event titles &amp; times</p>
             </div>
 
-            {/* The product itself: the three tiers, today's verdict in front */}
-            <div
-              className="lp-hero-visual"
-              role="img"
-              aria-label="Example Persistwork card: Flow, train normally. Readiness 74, Load 38, Balance plus 17."
-            >
-              <div className="lp-hero-card lp-hero-card-back lp-hero-card-left">
-                <CardContent
-                  quote="Not great, Bob!"
-                  source="Pete Campbell · Mad Men"
-                  subtitle="Back-to-backs all day on top of a heavy week. Recover."
-                  readiness={25}
-                  load={88}
-                  balance={-21}
-                  mood="survival"
-                  verdict="Recover"
-                />
+            {/* The product itself: one card per verdict, swipeable */}
+            <div className="lp-hero-deck">
+              <div
+                className={`lp-hero-visual${fanned ? ' is-fanned' : ''}`}
+                role="group"
+                aria-roledescription="carousel"
+                aria-label="Example Persistwork cards. Swipe, tap, or use the arrow keys to see the next."
+                tabIndex={0}
+                onKeyDown={handleDeckKey}
+              >
+                {HERO_DECK.map((c, i) => {
+                  const slot = deckSlot(i, front, HERO_DECK.length);
+                  const isFront = slot === 'front';
+                  const counting = i === HERO_FRONT_INDEX;
+                  return (
+                    <div
+                      key={c.verdict}
+                      className={`lp-hero-card is-${slot}`}
+                      aria-hidden={!isFront}
+                      onClick={isFront || slot === 'hidden' ? undefined : () => showCard(i)}
+                    >
+                      <motion.div
+                        className="lp-hero-card-inner"
+                        style={isFront ? { x: dragX, rotate: dragRotate } : undefined}
+                        drag={isFront ? 'x' : false}
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.7}
+                        onPointerDown={() => {
+                          didDrag.current = false;
+                        }}
+                        onDragStart={() => {
+                          didDrag.current = true;
+                        }}
+                        onDragEnd={isFront ? handleDeckDragEnd : undefined}
+                        onTap={isFront ? handleDeckTap : undefined}
+                      >
+                        <CardContent
+                          quote={c.quote}
+                          source={c.source}
+                          subtitle={c.subtitle}
+                          readiness={counting ? heroReadiness : c.readiness}
+                          load={counting ? heroLoad : c.load}
+                          balance={counting ? heroBalance : c.balance}
+                          mood={c.mood}
+                          verdict={c.label}
+                        />
+                      </motion.div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="lp-hero-card lp-hero-card-back lp-hero-card-right">
-                <CardContent
-                  quote="It's a living."
-                  source="Every Hanna-Barbera character ever"
-                  subtitle="A steady day inside your usual range. Keep it moderate."
-                  readiness={52}
-                  load={55}
-                  balance={4}
-                  mood="coasting"
-                  verdict="Keep it moderate"
-                />
+              <p className="sr-only" aria-live="polite">
+                Card {front + 1} of {HERO_DECK.length}: {frontCard.verdict}, {frontCard.label}.
+                Readiness {frontCard.readiness}, Load {frontCard.load}, Balance {frontCard.balance}.{' '}
+                {frontCard.quote} {frontCard.source}.
+              </p>
+              <div className="lp-hero-dots">
+                {HERO_DECK.map((c, i) => (
+                  <button
+                    key={c.verdict}
+                    type="button"
+                    className={`lp-hero-dot${i === front ? ' is-active' : ''}`}
+                    aria-label={`Show the ${c.verdict} card`}
+                    aria-current={i === front ? 'true' : undefined}
+                    onClick={() => showCard(i)}
+                  />
+                ))}
               </div>
-              <div className="lp-hero-card lp-hero-card-front">
-                <CardContent
-                  quote="Clear eyes, full hearts, can't lose."
-                  source="Coach Taylor · Friday Night Lights"
-                  subtitle="Eight meetings and intervals at six, still inside your band."
-                  readiness={heroReadiness}
-                  load={heroLoad}
-                  balance={heroBalance}
-                  mood="flow"
-                  verdict="Train normally"
-                />
-              </div>
+              <p className="lp-hero-swipe">Swipe for the other days</p>
             </div>
           </div>
         </section>

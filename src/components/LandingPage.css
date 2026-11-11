@@ -72,45 +72,123 @@ html {
   animation: revealUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Hero card stack — real cards, one per tier, today's verdict in front */
-.lp-hero-visual {
-  position: relative;
-  text-align: left;
+/* Hero deck — real cards, one per verdict. The front card can be swiped,
+   tapped or keyed away; its neighbours fan out behind it. */
+.lp-hero-deck {
   width: 300px;
   max-width: 100%;
   margin: 0 auto;
 }
-.lp-hero-card {
-  border-radius: 16px;
-}
-.lp-hero-card-back {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  animation: lpFan 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
-}
-.lp-hero-card-left {
-  --fan: translate(-52px, 14px) rotate(-8deg);
-}
-.lp-hero-card-right {
-  --fan: translate(54px, -4px) rotate(7deg);
-}
-.lp-hero-card-front {
+.lp-hero-visual {
+  --fan-next: translate(54px, -4px) rotate(7deg);
+  --fan-previous: translate(-52px, 14px) rotate(-8deg);
   position: relative;
+  display: grid;
+  text-align: left;
+  border-radius: 16px;
+  animation: revealCard 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+.lp-hero-visual:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 10px;
+}
+.lp-hero-card {
+  grid-area: 1 / 1;
+  border-radius: 16px;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease;
+}
+.lp-hero-card-inner {
+  display: flex;
+  height: 100%;
+  border-radius: 16px;
+  touch-action: pan-y;
+}
+.lp-hero-card.is-front {
+  z-index: 3;
+  cursor: grab;
+}
+.lp-hero-card.is-front .lp-hero-card-inner {
   box-shadow:
     0 28px 70px rgba(11, 11, 12, 0.7),
     0 0 80px rgba(199, 249, 92, 0.14);
-  animation: revealCard 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
-@keyframes lpFan {
-  from {
-    opacity: 0;
-    transform: none;
-  }
-  to {
-    opacity: 1;
-    transform: var(--fan);
-  }
+.lp-hero-card.is-front:active {
+  cursor: grabbing;
+}
+.lp-hero-card.is-next,
+.lp-hero-card.is-previous {
+  cursor: pointer;
+  opacity: 0;
+}
+.lp-hero-card.is-next {
+  z-index: 2;
+}
+.lp-hero-card.is-previous {
+  z-index: 1;
+}
+.lp-hero-visual.is-fanned .lp-hero-card.is-next {
+  opacity: 1;
+  transform: var(--fan-next);
+}
+.lp-hero-visual.is-fanned .lp-hero-card.is-previous {
+  opacity: 1;
+  transform: var(--fan-previous);
+}
+.lp-hero-card.is-hidden {
+  z-index: 0;
+  opacity: 0;
+  transform: scale(0.94);
+  pointer-events: none;
+}
+.lp-hero-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 28px;
+}
+.lp-hero-dot {
+  /* a 24px target around a 6px dot */
+  width: 24px;
+  height: 24px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+.lp-hero-dot::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--rule);
+  transition:
+    width 0.3s ease,
+    left 0.3s ease,
+    background-color 0.3s ease;
+}
+.lp-hero-dot.is-active::after {
+  left: 4px;
+  width: 16px;
+  background: var(--signal);
+}
+.lp-hero-dot:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -4px;
+  border-radius: 6px;
+}
+.lp-hero-swipe {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
 }
 .lp-eyebrow {
   display: inline-block;
@@ -710,13 +788,11 @@ html {
   .lp-hero-sub {
     margin: 0 auto 36px;
   }
-  .lp-hero-visual {
+  .lp-hero-deck {
     width: 280px;
   }
-  .lp-hero-card-left {
-    --fan: translate(-30px, 12px) rotate(-7deg);
-  }
-  .lp-hero-card-right {
-    --fan: translate(32px, -4px) rotate(6deg);
+  .lp-hero-visual {
+    --fan-next: translate(32px, -4px) rotate(6deg);
+    --fan-previous: translate(-30px, 12px) rotate(-7deg);
   }
 }

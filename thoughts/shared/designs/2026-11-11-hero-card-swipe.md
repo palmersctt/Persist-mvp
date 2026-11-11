@@ -3,7 +3,7 @@ date: 2026-11-11
 git_commit: aa2e3bb
 ticket: thoughts/shared/tickets/2026-11-11-hero-card-swipe.md
 research: thoughts/shared/research/2026-11-11-hero-card-swipe.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: a swipeable hero deck
@@ -42,20 +42,26 @@ visitor controls it, and nothing moves under reduced motion beyond the swap.
 
 ### D4. The quotes
 
-| Verdict   | Quote                                               | Attribution                        | Line under it                                                          |
-| --------- | --------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| Survival  | "Not great, Bob!"                                   | Pete Campbell · Mad Men            | Back-to-backs all day on a heavy week. Today the couch is the workout. |
-| Grinding  | "Sounds like somebody's got a case of the Mondays." | Office Space                       | Six meetings that could have been emails. Keep the run easy.           |
-| Coasting  | "The Dude abides."                                  | The Dude · The Big Lebowski        | Quiet calendar, nothing to prove. Train if you feel like it.           |
-| Locked In | "I feel the need... the need for speed."            | Maverick · Top Gun                 | Clear afternoon, rested legs. This is the day you were saving it for.  |
-| Flow      | "Clear eyes, full hearts, can't lose."              | Coach Taylor · Friday Night Lights | Eight meetings and intervals at six, still inside your band.           |
+The first set (Mad Men, Office Space, The Big Lebowski, Top Gun, Friday Night
+Lights) was rejected as too old. The user asked for recent comedy at the
+level of Ted Lasso and The Office, from a variety of shows, and approved:
+
+| Verdict   | Quote                                                                         | Attribution                       |
+| --------- | ----------------------------------------------------------------------------- | --------------------------------- |
+| Survival  | "I'm trying very hard not to connect with people right now."                  | David Rose · Schitt's Creek       |
+| Grinding  | "The work is mysterious and important."                                       | Mark S. · Severance               |
+| Coasting  | "I am running away from my responsibilities. And it feels good."              | Michael Scott · The Office        |
+| Locked In | "Don't you dare settle for fine."                                             | Roy Kent · Ted Lasso              |
+| Flow      | "I have no idea what I'm doing, but I know I'm doing it really, really well." | Andy Dwyer · Parks and Recreation |
+
+Wording was checked against published quote collections. The Andy Dwyer
+line appears in three variants; the most common is used.
 
 Scores per card are illustrative and sit inside each verdict's tier.
 
-## Open questions for the human
+## Answers
 
-1. Are these five quotes right, or do you want any swapped?
-2. Five cards, or keep three?
+Five cards, with the quotes above. Design and outline approved together.
 
 ## Out of scope
 
