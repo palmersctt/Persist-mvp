@@ -1,6 +1,15 @@
-import { runModel, workIndex, type DayInputs, type ModelResult, type Prior } from './model';
+import {
+  VERDICT_TIER,
+  runModel,
+  workIndex,
+  type DayInputs,
+  type ModelResult,
+  type Prior,
+} from './model';
+import { sessionCall, type PlannedDay, type WeekDay } from './weekPlan';
 import type { WorkHealthMetrics } from '../hooks/useWorkHealth';
 import type { WearableActuals } from './wearables/types';
+import type { WeekDayHours } from './weekAhead';
 
 // Maps the dashboard's real signals — calendar work-health + a wearable's
 // training load and sleep — into the readiness model, in day-1 mode (no
@@ -29,7 +38,16 @@ export interface DashboardVerdict extends ModelResult {
   trainingBaseline: number | null;
   weekActivityCount: number | null;
   trainingLoadToday: number | null;
+  /** The card's short action label for this verdict, e.g. "Go long". */
+  label: string;
+  /** The days ahead with their key sessions placed; null without a forecast. */
+  plan: PlannedDay[] | null;
+  /** Whether the provider reports which recent sessions were hard or long. */
+  knowsTraining: boolean;
 }
+
+const toWorkLoad = (meetingHours: number) =>
+  clamp(Math.round(meetingHours * WORK_LOAD_PER_HOUR), 0, 120);
 
 /**
  * Compute the readiness verdict from live dashboard data. Works with calendar
@@ -38,7 +56,8 @@ export interface DashboardVerdict extends ModelResult {
  */
 export function dashboardVerdict(
   work: WorkHealthMetrics,
-  actuals: WearableActuals | null
+  actuals: WearableActuals | null,
+  weekAhead: WeekDayHours[] | null = null
 ): DashboardVerdict {
   const focus = work.adaptivePerformanceIndex;
   const strain = work.cognitiveResilience;
@@ -46,7 +65,7 @@ export function dashboardVerdict(
   const wi = workIndex(focus, rhythm, strain);
 
   const meetingHours = work.schedule?.durationHours ?? 0;
-  const workLoad = clamp(Math.round(meetingHours * WORK_LOAD_PER_HOUR), 0, 120);
+  const workLoad = toWorkLoad(meetingHours);
 
   // Training: real load + baseline from an activity provider, else neutral so
   // the verdict leans on work alone instead of flagging a phantom training gap.
@@ -71,8 +90,40 @@ export function dashboardVerdict(
     sleep,
   };
 
+  const model = runModel(prior, [], today);
+
+  // The session call: the model's read, taken to the level of the week.
+  const week: WeekDay[] | null =
+    weekAhead && weekAhead.length > 0
+      ? weekAhead.map((d, i) => ({
+          date: d.date,
+          // today's forecast is the day already analysed
+          workLoad: i === 0 ? workLoad : toWorkLoad(d.meetingHours),
+        }))
+      : null;
+  const trainingSpike =
+    hasTraining &&
+    trainingLoadToday > trainingBaseline * 1.5 &&
+    trainingLoadToday - trainingBaseline > 20;
+  const call = sessionCall({
+    model,
+    workLoad,
+    sleep: typeof sleepPerformance === 'number' ? sleep : undefined,
+    recovery: actuals?.recovery,
+    trainingSpike,
+    week,
+    past: actuals?.keySessions ?? null,
+  });
+
   return {
-    ...runModel(prior, [], today),
+    ...model,
+    verdict: call.verdict,
+    tier: VERDICT_TIER[call.verdict],
+    rec: call.rec,
+    why: call.why,
+    label: call.label,
+    plan: call.plan,
+    knowsTraining: actuals?.keySessions != null,
     workLoad,
     workIndexValue: wi,
     focus,

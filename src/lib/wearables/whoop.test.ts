@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { latestMainSleep, whoopToActuals, type WhoopRecords } from './whoop';
+import { classifyWorkout, latestMainSleep, whoopToActuals, type WhoopRecords } from './whoop';
 
 const DATE = '2026-06-11';
 
@@ -152,5 +152,65 @@ describe('latestMainSleep', () => {
   it('returns null for an empty or failed response', () => {
     expect(latestMainSleep({ records: [] }, NOW)).toBeNull();
     expect(latestMainSleep(null, NOW)).toBeNull();
+  });
+});
+
+describe('classifyWorkout', () => {
+  const zones = (upperMinutes: number) => ({
+    score: { zone_durations: { zone_four_milli: upperMinutes * 60000, zone_five_milli: 0 } },
+  });
+
+  it('calls a session hard on time in the upper zones, whatever its length', () => {
+    expect(classifyWorkout(zones(14), 50, 55)).toBe('hard');
+    expect(classifyWorkout(zones(14), 150, 55)).toBe('hard'); // long and intense → hard
+  });
+
+  it('calls a session long on duration, not intensity', () => {
+    expect(classifyWorkout(zones(2), 130, 55)).toBe('long');
+    expect(classifyWorkout({ score: { strain: 16 } }, 130, 55)).toBe('long');
+  });
+
+  it('judges long against what is typical for the athlete', () => {
+    // a 100-minute run is ordinary for someone who usually goes 80
+    expect(classifyWorkout(zones(0), 100, 80)).toBeNull();
+    expect(classifyWorkout(zones(0), 100, 50)).toBe('long');
+  });
+
+  it('falls back to strain for a shorter session without zone data', () => {
+    expect(classifyWorkout({ score: { strain: 15.2 } }, 45, 55)).toBe('hard');
+    expect(classifyWorkout({ score: { strain: 9 } }, 45, 55)).toBeNull();
+  });
+
+  it('leaves an easy session unclassified', () => {
+    expect(classifyWorkout(zones(3), 45, 55)).toBeNull();
+  });
+});
+
+describe('key sessions from workouts', () => {
+  const DAY = 86400000;
+  const at = (daysAgo: number, minutes: number, upperMinutes = 0) => {
+    const start = new Date(`${DATE}T17:00:00Z`).getTime() - daysAgo * DAY;
+    return {
+      start: new Date(start).toISOString(),
+      end: new Date(start + minutes * 60000).toISOString(),
+      score: { zone_durations: { zone_four_milli: upperMinutes * 60000 } },
+    };
+  };
+
+  it('reports hard and long sessions of the last week, most recent first', () => {
+    const workouts = [at(1, 50), at(2, 55, 16), at(3, 45), at(5, 140), at(9, 150), at(12, 50, 20)];
+    const a = whoopToActuals({ recovery: null, sleep: null, cycle: null, workouts }, DATE);
+    expect(a?.keySessions).toEqual([
+      { daysAgo: 2, kind: 'hard' },
+      { daysAgo: 5, kind: 'long' },
+    ]);
+  });
+
+  it('reports an empty list when the week held only easy sessions', () => {
+    const a = whoopToActuals(
+      { recovery: null, sleep: null, cycle: null, workouts: [at(1, 45), at(3, 50)] },
+      DATE
+    );
+    expect(a?.keySessions).toEqual([]);
   });
 });

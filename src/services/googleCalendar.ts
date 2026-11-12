@@ -1,4 +1,5 @@
 import { google, calendar_v3 } from 'googleapis';
+import { localDate, meetingHoursByDay, weekDates, type WeekDayHours } from '../lib/weekAhead';
 // getServerSession and authOptions available if needed for server-side auth
 
 export interface CalendarEvent {
@@ -366,6 +367,49 @@ class GoogleCalendarService {
     } catch (error) {
       console.error('Error fetching calendar events:', error);
       throw new Error('Failed to fetch calendar events');
+    }
+  }
+
+  /**
+   * Meeting hours per local day for today and the days ahead — the forecast
+   * the week plan places key sessions against. Counts the same events the
+   * daily analysis treats as meetings. Never throws: a failed fetch returns
+   * null and the day's analysis carries on without a week.
+   */
+  async getWeekAhead(providedUserTimezone?: string, days = 7): Promise<WeekDayHours[] | null> {
+    if (!this.calendar) return null;
+    const userTimezone = providedUserTimezone || this.userTimezone;
+    try {
+      const now = new Date();
+      const dates = weekDates(localDate(now, userTimezone), days);
+      // A day of slack either side covers any UTC offset; events are filed by
+      // their local start day, so anything outside the window is dropped.
+      const timeMin = new Date(`${dates[0]}T00:00:00Z`).getTime() - 86400000;
+      const timeMax = new Date(`${dates[dates.length - 1]}T00:00:00Z`).getTime() + 2 * 86400000;
+      const response = await this.calendar.events.list({
+        calendarId: 'primary',
+        timeMin: new Date(timeMin).toISOString(),
+        timeMax: new Date(timeMax).toISOString(),
+        timeZone: userTimezone,
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 2500,
+        showDeleted: false,
+      });
+      const meetings = (response.data.items || [])
+        .filter((event: calendar_v3.Schema$Event) => event.start?.dateTime && event.end?.dateTime)
+        .filter((event: calendar_v3.Schema$Event) => {
+          const category = this.categorizeEvent(event.summary || 'No title');
+          return category !== 'BENEFICIAL' && category !== 'NEUTRAL' && category !== 'FOCUS_WORK';
+        })
+        .map((event: calendar_v3.Schema$Event) => ({
+          start: new Date(event.start!.dateTime!),
+          end: new Date(event.end!.dateTime!),
+        }));
+      return meetingHoursByDay(meetings, dates, userTimezone);
+    } catch (error) {
+      console.error('Error fetching the week ahead:', error);
+      return null;
     }
   }
 

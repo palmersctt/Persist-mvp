@@ -57,6 +57,59 @@ describe('dashboardVerdict', () => {
     expect(r.workIndexValue).toBe(56); // 0.3·60 + 0.3·60 + 0.4·50
   });
 
+  describe('the session call', () => {
+    // today first: a light Thursday, then Friday, a free weekend, and a busy start to next week
+    const weekAhead = [2, 4.5, 0, 0, 5, 6, 5.5].map((meetingHours, i) => ({
+      date: new Date(Date.UTC(2026, 5, 11 + i)).toISOString().slice(0, 10),
+      meetingHours,
+    }));
+    const athlete = (keySessions: WearableActuals['keySessions']): WearableActuals => ({
+      date: '2026-06-11',
+      provider: 'whoop',
+      trainingBaseline: 40,
+      trainingLoadToday: 0,
+      keySessions,
+    });
+    const lightDay = work(70, 35, 70, 2);
+
+    it('a heavy work day says easy only, not recover', () => {
+      const r = dashboardVerdict(work(50, 50, 50, 8), null);
+      expect(r.verdict).toBe('Grinding');
+      expect(r.label).toBe('Easy only');
+      expect(r.tier).toBe('ok');
+    });
+
+    it('goes hard on the lightest day when a hard session is due', () => {
+      const r = dashboardVerdict(lightDay, athlete([{ daysAgo: 4, kind: 'long' }]), weekAhead);
+      expect(r.verdict).toBe('Locked In');
+      expect(r.label).toBe('Go hard');
+      expect(r.plan?.[0].role).toBe('hard');
+    });
+
+    it('stays easy the day after a hard session', () => {
+      const r = dashboardVerdict(lightDay, athlete([{ daysAgo: 1, kind: 'hard' }]), weekAhead);
+      expect(r.verdict).toBe('Flow');
+      expect(r.plan?.[0].role).toBe('easy');
+    });
+
+    it('plans the week from the calendar alone, without claiming a session is due', () => {
+      const r = dashboardVerdict(lightDay, null, weekAhead);
+      expect(r.verdict).not.toBe('Locked In');
+      expect(r.knowsTraining).toBe(false);
+      expect(r.plan).toHaveLength(7);
+      expect(r.plan?.filter((d) => d.role === 'long')).toHaveLength(1);
+    });
+
+    it('uses today’s analysed load for the first day of the plan', () => {
+      const r = dashboardVerdict(work(50, 50, 50, 3), null, weekAhead);
+      expect(r.plan?.[0].workLoad).toBe(r.workLoad);
+    });
+
+    it('has no plan without a forecast', () => {
+      expect(dashboardVerdict(lightDay, null).plan).toBeNull();
+    });
+  });
+
   describe('an open calendar', () => {
     // No meetings: neutral work-health scores, zero meeting hours.
     const open = work(50, 50, 50, 0);

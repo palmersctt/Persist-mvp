@@ -1,4 +1,4 @@
-import type { ActivitySummary, WearableActuals } from './types';
+import type { ActivitySummary, KeySession, WearableActuals } from './types';
 import {
   CTL_DAYS,
   ATL_DAYS,
@@ -221,8 +221,53 @@ export function whoopToActuals(records: WhoopRecords, date: string): WearableAct
 
 type TrainingFields = Pick<
   WearableActuals,
-  'lastActivity' | 'weekActivityCount' | 'freshness' | 'trainingBaseline' | 'trainingLoadToday'
+  | 'lastActivity'
+  | 'weekActivityCount'
+  | 'freshness'
+  | 'trainingBaseline'
+  | 'trainingLoadToday'
+  | 'keySessions'
 >;
+
+// What makes a workout a key session. Provisional — to be tuned on real data.
+/** Minutes in heart-rate zones 4–5 that make a session "hard". */
+const HARD_ZONE_MINUTES = 10;
+/** Without zone data: WHOOP strain (0–21) that makes a shorter session "hard". */
+const HARD_STRAIN = 14;
+/** A session is "long" at 90 minutes, or 1.75× the athlete's typical session if that is more. */
+const LONG_MINUTES = 90;
+const LONG_VS_TYPICAL = 1.75;
+
+const median = (values: number[]): number => {
+  const v = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(v.length / 2);
+  return v.length === 0 ? 0 : v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
+};
+
+/**
+ * Hard and long are different things. Hard = intensity (time in the upper
+ * heart-rate zones, or high strain in a shorter session). Long = duration
+ * against what is typical for this athlete. A long session that is also
+ * intense counts as hard — the costlier of the two.
+ */
+export function classifyWorkout(
+  workout: WhoopRecord,
+  minutes: number,
+  typicalMinutes: number
+): KeySession['kind'] | null {
+  const score = workout.score;
+  const zones = (score?.zone_durations ?? score?.zone_duration) as
+    | Record<string, unknown>
+    | undefined;
+  const long = minutes >= Math.max(LONG_MINUTES, typicalMinutes * LONG_VS_TYPICAL);
+  if (zones) {
+    const upperMs = (num(zones.zone_four_milli) ?? 0) + (num(zones.zone_five_milli) ?? 0);
+    if (upperMs / 60000 >= HARD_ZONE_MINUTES) return 'hard';
+  } else if (!long && (num(score?.strain) ?? 0) >= HARD_STRAIN) {
+    return 'hard';
+  }
+  return long ? 'long' : null;
+}
 
 /**
  * Training load from WHOOP workouts, in the shared load currency: ~1 per
@@ -263,8 +308,24 @@ function trainingFromWorkouts(workouts: WhoopRecord[], date: string): TrainingFi
     (s) => new Date(s.start_date).getTime() >= weekStart
   ).length;
 
+  // Key sessions of the last six days and today, by the wearer's local day.
+  const typical = median(sessions.map((s) => (s.moving_time ?? 0) / 60));
+  const todayMs = new Date(`${date}T00:00:00Z`).getTime();
+  const byDay = new Map<number, KeySession['kind']>();
+  for (const s of sessions) {
+    const dayMs = new Date(`${s.start_date.slice(0, 10)}T00:00:00Z`).getTime();
+    const daysAgo = Math.round((todayMs - dayMs) / DAY_MS);
+    if (daysAgo < 0 || daysAgo > 6) continue;
+    const kind = classifyWorkout(s.record, (s.moving_time ?? 0) / 60, typical);
+    // hard outranks long when a day holds both
+    if (kind && byDay.get(daysAgo) !== 'hard') byDay.set(daysAgo, kind);
+  }
+  const keySessions = [...byDay].map(([daysAgo, kind]) => ({ daysAgo, kind }));
+  keySessions.sort((a, b) => a.daysAgo - b.daysAgo);
+
   const profile = trainingLoadProfile(sessions, date);
   return {
+    keySessions,
     lastActivity,
     weekActivityCount,
     freshness: freshnessFromActivities(sessions, date) ?? undefined,

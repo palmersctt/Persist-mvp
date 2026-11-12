@@ -93,6 +93,9 @@ interface WorkHealthMetrics {
   // Event timing (no titles) for the wearable forecast-vs-actual merge
   dayShape?: DayShape;
 
+  // Meeting hours per local day, today first — the forecast for the week plan
+  week?: { date: string; meetingHours: number }[];
+
   // Legacy fields for backward compatibility
   readiness: number;
   cognitiveAvailability: number;

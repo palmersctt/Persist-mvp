@@ -3,7 +3,7 @@ date: 2026-11-12
 git_commit: 4833341
 ticket: thoughts/shared/tickets/2026-11-12-training-logic.md
 research: thoughts/shared/research/2026-11-12-training-logic.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: from "hard day, train easy" to a session call
@@ -81,15 +81,20 @@ Pass the model's verdict into quote generation so a Recover card cannot carry
 a triumphant quote, and strip markdown asterisks from the line.
 **Recommend**, as its own small slice.
 
-## Open questions for the human
+## Answers
 
-1. D1 to D4 are the heart of it. Agree?
-2. D4 needs the week's calendar. Are you content for the app to read the
-   next seven days, not just today?
-3. Do you train to a plan with fixed hard days, or should the app choose
-   them?
-4. Is a goal race and its date in scope now (Koop's "least specific first,
-   most specific last"), or later? I recommend later.
+The user approved D1 to D4 and added two things:
+
+- **Hard days are flexible.** The app chooses them from the week; there are
+  no fixed training days.
+- **Hard and long are different things.** Hard is intensity; long is
+  duration. They are separate key sessions with separate weekly limits (two
+  hard, one long) and a shared spacing rule (no two key sessions on
+  consecutive days). The card says "Go hard" or "Go long".
+
+Reading the next seven days of calendar is accepted. A goal race, the
+one-tap feel input (D7) and the quote following the verdict (D8) are left
+for later.
 
 ## Out of scope
 

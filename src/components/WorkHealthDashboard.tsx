@@ -8,7 +8,7 @@ import CardContent from './CardContent';
 import DashboardSkeleton, { CardSkeleton } from './DashboardSkeleton';
 import SwipeableQuoteCards from './SwipeableQuoteCards';
 import PersistLogo from './PersistLogo';
-import { VERDICT_MOOD, VERDICT_LABEL } from '../lib/mood';
+import { VERDICT_MOOD } from '../lib/mood';
 import { dashboardVerdict } from '../lib/dashboardModel';
 import { useWearable } from '../hooks/useWearable';
 import { trackEvent } from '../lib/trackEvent';
@@ -53,13 +53,17 @@ export default function WorkHealthDashboard() {
   // Stale actuals (provider unreachable, an earlier day's row) are shown but
   // never scored — yesterday's sleep must not move today's verdict.
   const cardModel = workHealth
-    ? dashboardVerdict(workHealth, wearable.stale ? null : wearable.actuals)
+    ? dashboardVerdict(
+        workHealth,
+        wearable.stale ? null : wearable.actuals,
+        workHealth.week ?? null
+      )
     : null;
   const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
   const cardReadiness = cardModel?.readiness ?? 0;
   const cardLoad = cardModel?.load ?? 0;
   const cardBalance = cardModel?.balance ?? 0;
-  const cardVerdict = cardModel ? VERDICT_LABEL[cardModel.verdict] : undefined;
+  const cardVerdict = cardModel?.label;
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 
