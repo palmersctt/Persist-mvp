@@ -63,3 +63,30 @@ and plan are recorded here together.
 - [ ] With WHOOP connected, a day after a hard workout stays easy, and hard
       and long sessions are recognised correctly. The thresholds need tuning
       against real workouts.
+
+## After validation
+
+An independent pass found defects in the first build, fixed in a follow-up
+commit:
+
+- An ordinary run counted as a training spike and read "Recover". The daily
+  baseline includes rest days, so a spike is now 4x the baseline and 45 over.
+- Doing the long run the card asked for read "Recover". A key session done
+  today is now checked first and reads "Key session done".
+- "Save it for Thursday, the lightest day ahead" named the earliest key day,
+  which is not always the lightest. The claim is gone.
+- Without training history the wording still implied a session was due. It
+  is now a suggestion ("If you have a hard session this week...").
+- "Go hard" could sit beside low readiness or a day already trained on. A key
+  session now needs Readiness of 58 and an untrained day, else it moves.
+- A cached forecast from an earlier day shifted every label. The forecast is
+  aligned to today's date, or dropped.
+- The week block had no text alternative. It has one now.
+
+Known and left:
+
+- The sandbox passes no week, so it shows no plan and cannot reach "Go hard".
+- Label wording stayed "Train normally" (the design said "Train as usual").
+- One poor night gates intensity; the design said two.
+- The outline was not presented as a separate gate. "Do 1-4" was taken as
+  approval to build.

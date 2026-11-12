@@ -18,7 +18,7 @@ const weekAhead = [2, 4.5, 0, 0, 5, 6, 5.5].map((meetingHours, i) => ({
 
 describe('ReadinessExplain', () => {
   it('shows the week with its key sessions when there is a forecast', () => {
-    render(<ReadinessExplain model={dashboardVerdict(work, null, weekAhead)} />);
+    render(<ReadinessExplain model={dashboardVerdict(work, null, weekAhead, '2026-06-11')} />);
     expect(screen.getByText('Your week')).toBeTruthy();
     expect(screen.getByText('Best days')).toBeTruthy(); // no training history
     expect(screen.getByText('Today')).toBeTruthy();

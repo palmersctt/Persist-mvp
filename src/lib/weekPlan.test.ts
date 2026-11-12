@@ -138,6 +138,24 @@ describe('sessionCall', () => {
     expect(c).toMatchObject({ verdict: 'Grinding', label: 'Easy only' });
     expect(c.plan?.[0].role).toBe('easy');
     expect(c.why).toMatch(/Save the (hard session|long run) for/);
+    expect(c.why).not.toContain('lightest');
+  });
+
+  it('without training history, later days are suggestions, never a session that is due', () => {
+    const gated = call({ workLoad: 88, week: week([88, 30, 40, 40, 40, 0, 0]), past: null });
+    expect(gated.verdict).toBe('Grinding');
+    expect(gated.why).toContain('If you have a');
+    expect(gated.why).not.toContain('Save the');
+    const easy = call({ week: week([40, 0, 40, 40, 40, 40, 0]), past: null });
+    expect(easy.why).not.toContain('Your next');
+  });
+
+  it('holds a key session back when readiness is middling or the day is already trained on', () => {
+    const past = [{ daysAgo: 4, kind: 'long' as const }];
+    const tired = call({ model: { ...base.model, readiness: 50 }, week: THU, past });
+    expect(tired.verdict).not.toBe('Locked In');
+    expect(tired.plan?.[0].role).toBe('easy');
+    expect(call({ trainedToday: true, week: THU, past }).verdict).not.toBe('Locked In');
   });
 
   it('short sleep or low recovery alone gates intensity', () => {

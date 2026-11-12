@@ -27,6 +27,10 @@ const DEFAULT_WORK_BASELINE = 55;
 const DEFAULT_TRAINING_BASELINE = 30;
 /** Sleep input when no provider reports sleep — the model's neutral point. */
 const NEUTRAL_SLEEP = 62;
+/** Today's training counts as a spike past this multiple of the daily baseline… */
+const SPIKE_VS_BASELINE = 4;
+/** …and this many load units (≈ minutes) over it. */
+const SPIKE_MIN_EXCESS = 45;
 
 export interface DashboardVerdict extends ModelResult {
   workLoad: number;
@@ -57,7 +61,9 @@ const toWorkLoad = (meetingHours: number) =>
 export function dashboardVerdict(
   work: WorkHealthMetrics,
   actuals: WearableActuals | null,
-  weekAhead: WeekDayHours[] | null = null
+  weekAhead: WeekDayHours[] | null = null,
+  /** The user's local date (YYYY-MM-DD); the forecast is aligned to it. */
+  todayDate: string = new Date().toLocaleDateString('sv-SE')
 ): DashboardVerdict {
   const focus = work.adaptivePerformanceIndex;
   const strain = work.cognitiveResilience;
@@ -93,24 +99,31 @@ export function dashboardVerdict(
   const model = runModel(prior, [], today);
 
   // The session call: the model's read, taken to the level of the week.
+  // A cached forecast may start on an earlier day: drop the days already past,
+  // and use no plan at all if the forecast does not reach today.
+  const ahead = (weekAhead ?? []).filter((d) => d.date >= todayDate);
   const week: WeekDay[] | null =
-    weekAhead && weekAhead.length > 0
-      ? weekAhead.map((d, i) => ({
+    ahead.length > 0 && ahead[0].date === todayDate
+      ? ahead.map((d, i) => ({
           date: d.date,
           // today's forecast is the day already analysed
           workLoad: i === 0 ? workLoad : toWorkLoad(d.meetingHours),
         }))
       : null;
+  // A spike is training far beyond what the athlete is built for. The baseline
+  // is a daily average that includes rest days, so an ordinary session sits at
+  // two to three times it; a spike is well past that.
   const trainingSpike =
     hasTraining &&
-    trainingLoadToday > trainingBaseline * 1.5 &&
-    trainingLoadToday - trainingBaseline > 20;
+    trainingLoadToday > trainingBaseline * SPIKE_VS_BASELINE &&
+    trainingLoadToday - trainingBaseline > SPIKE_MIN_EXCESS;
   const call = sessionCall({
     model,
     workLoad,
     sleep: typeof sleepPerformance === 'number' ? sleep : undefined,
     recovery: actuals?.recovery,
     trainingSpike,
+    trainedToday: hasTraining && trainingLoadToday > 0,
     week,
     past: actuals?.keySessions ?? null,
   });

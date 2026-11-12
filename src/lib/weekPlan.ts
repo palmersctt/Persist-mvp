@@ -13,6 +13,7 @@ import type { ModelResult, Verdict } from './model';
 //   · Key sessions go where life is light — the lightest eligible work days.
 //   · A heavy or draining day gates INTENSITY, not volume: keep the easy run,
 //     move the key session. It is not a reason to rest.
+//   · A key session needs real readiness, and a day not already trained on.
 //   · Rest is called on evidence (a training spike, a truly draining day,
 //     poor recovery), never on an empty calendar or missing data.
 
@@ -110,6 +111,8 @@ export interface CallInputs {
   recovery?: number;
   /** Today's logged training is far over the training baseline. */
   trainingSpike: boolean;
+  /** A session has already been logged today. */
+  trainedToday?: boolean;
   /** The days ahead (index 0 = today); null when there is no forecast. */
   week: WeekDay[] | null;
   /** Key sessions of the last six days and today; null when unknown. */
@@ -131,6 +134,8 @@ const DEEPLY_DRAINED = -0.35;
 const SHORT_SLEEP = 50;
 const VERY_SHORT_SLEEP = 35;
 const LOW_RECOVERY = 34;
+/** Readiness a key session needs; below it the session moves to a later day. */
+const KEY_SESSION_READINESS = 58;
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -141,13 +146,19 @@ export function dayName(plan: WeekDay[], index: number): string {
   return Number.isNaN(d.getTime()) ? `in ${index} days` : WEEKDAYS[d.getUTCDay()];
 }
 
-/** Where the next key session of each kind sits after today, e.g. "the hard session to Thursday". */
-function movedTo(plan: PlannedDay[] | null): string {
+/**
+ * Where the next key session sits after today. With training history it is a
+ * call ("Save the hard session for Thursday."); without, a suggestion.
+ */
+function nextKeyNote(plan: PlannedDay[] | null, knowsTraining: boolean, moved: boolean): string {
   if (!plan) return '';
   const next = plan.findIndex((d, i) => i > 0 && d.role !== 'easy');
   if (next < 0) return '';
   const kind = plan[next].role === 'long' ? 'long run' : 'hard session';
-  return ` Save the ${kind} for ${dayName(plan, next)}, the lightest day ahead.`;
+  const when = next === 1 ? 'tomorrow' : dayName(plan, next);
+  const on = next === 1 ? when : `on ${when}`;
+  if (!knowsTraining) return ` If you have a ${kind} this week, it fits best ${on}.`;
+  return moved ? ` Save the ${kind} for ${when}.` : ` Your next ${kind} fits best ${on}.`;
 }
 
 /**
@@ -155,7 +166,16 @@ function movedTo(plan: PlannedDay[] | null): string {
  * first, then the intensity gate, then the week's plan, then an ordinary day.
  */
 export function sessionCall(input: CallInputs): SessionCall {
-  const { model, workLoad, sleep, recovery, trainingSpike, week, past } = input;
+  const {
+    model,
+    workLoad,
+    sleep,
+    recovery,
+    trainingSpike,
+    trainedToday = false,
+    week,
+    past,
+  } = input;
   const knowsTraining = past !== null;
   const lowRecovery = typeof recovery === 'number' && recovery < LOW_RECOVERY;
   const shortSleep = typeof sleep === 'number' && sleep < SHORT_SLEEP;
@@ -175,38 +195,52 @@ export function sessionCall(input: CallInputs): SessionCall {
       verdict: 'Survival',
       label: 'Recover',
       rec: 'Recover — easy or full rest.',
-      why: recoverWhy + movedTo(plan),
+      why: recoverWhy + nextKeyNote(plan, knowsTraining, true),
       plan,
     };
   }
 
-  // 2. Easy only — the day gates intensity, not volume.
-  const heavyDay = workLoad >= HEAVY_WORK_LOAD || model.verdict === 'Survival';
+  // 2. Today's key session is already done — nothing more is asked.
+  if (past?.some((s) => s.daysAgo === 0)) {
+    return {
+      verdict: 'Coasting',
+      label: 'Optional',
+      rec: 'Key session done — anything more is optional.',
+      why: 'You have already done today’s key session. Easy movement is fine; more intensity is not the point.',
+      plan: week ? planWeek(week, past) : null,
+    };
+  }
+
+  // 3. Easy only — the day gates intensity, not volume.
   const gateWhy =
     model.feel < DRAINED
       ? 'The day is draining more than it gives back.'
-      : heavyDay
+      : workLoad >= HEAVY_WORK_LOAD
         ? 'Work is heavy today.'
-        : shortSleep
-          ? 'Sleep was short.'
-          : lowRecovery
-            ? 'Recovery is low.'
-            : null;
+        : model.verdict === 'Survival'
+          ? 'Today’s total load is well over your usual.'
+          : shortSleep
+            ? 'Sleep was short.'
+            : lowRecovery
+              ? 'Recovery is low.'
+              : null;
   if (gateWhy) {
     const plan = week ? planWeek(week, past ?? [], { blockToday: true }) : null;
     return {
       verdict: 'Grinding',
       label: 'Easy only',
       rec: 'Easy only — keep the miles, skip the intensity.',
-      why: `${gateWhy} That costs you intensity, not volume: an easy run still counts.${movedTo(plan)}`,
+      why: `${gateWhy} That costs you intensity, not volume: an easy run still counts.${nextKeyNote(plan, knowsTraining, true)}`,
       plan,
     };
   }
 
-  // 3. The week's plan.
-  const plan = week ? planWeek(week, past ?? []) : null;
+  // 4. The week's plan. A key session needs real readiness and a day that has
+  // not already been trained on; otherwise it moves to a later day.
+  const keyFitsToday = model.readiness >= KEY_SESSION_READINESS && !trainedToday;
+  const plan = week ? planWeek(week, past ?? [], { blockToday: !keyFitsToday }) : null;
   const today = plan?.[0];
-  if (today && today.role !== 'easy' && !today.done) {
+  if (today && today.role !== 'easy') {
     const long = today.role === 'long';
     const session = long ? 'long run' : 'hard session';
     if (knowsTraining) {
@@ -228,28 +262,13 @@ export function sessionCall(input: CallInputs): SessionCall {
       verdict: 'Flow',
       label: 'Train normally',
       rec: `Train normally — and if you have a ${session} this week, today is the day for it.`,
-      why: `Today is the lightest day ahead on your calendar. Connect a wearable and the call will know what you have already done this week.`,
+      why: 'Today is the lightest day ahead on your calendar. Without knowing which of your recent sessions were hard or long, this is a suggestion, not a call.',
       plan,
     };
   }
 
-  // 4. An ordinary day.
-  if (today?.done) {
-    return {
-      verdict: 'Coasting',
-      label: 'Optional',
-      rec: 'Key session done — anything more is optional.',
-      why: 'You have already done today’s key session. Easy movement is fine; more intensity is not the point.',
-      plan,
-    };
-  }
-  const nextKey = plan ? plan.findIndex((d, i) => i > 0 && d.role !== 'easy') : -1;
-  const ahead =
-    plan && nextKey > 0
-      ? ` Your next ${plan[nextKey].role === 'long' ? 'long run' : 'hard session'} fits best ${
-          nextKey === 1 ? 'tomorrow' : `on ${dayName(plan, nextKey)}`
-        }.`
-      : '';
+  // 5. An ordinary day.
+  const ahead = nextKeyNote(plan, knowsTraining, false);
   if (model.readiness >= 66 || model.feel > 0.12) {
     return {
       verdict: 'Flow',

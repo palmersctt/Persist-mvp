@@ -75,11 +75,31 @@ export default function ReadinessExplain({
       {model.plan && model.plan.length > 1 && (
         <div className="rounded-xl px-4 py-3.5" style={SURFACE}>
           <Header title="Your week" tag={model.knowsTraining ? 'Key sessions' : 'Best days'} />
-          <div className="flex justify-between items-end mt-3" style={{ gap: 6 }}>
+          <div
+            className="flex justify-between items-end mt-3"
+            style={{ gap: 6 }}
+            aria-hidden="true"
+          >
             {model.plan.map((day, i) => (
               <WeekDayColumn key={day.date} day={day} today={i === 0} />
             ))}
           </div>
+          <p className="sr-only">
+            {model.plan
+              .map((day, i) => {
+                const name =
+                  i === 0
+                    ? 'Today'
+                    : new Date(`${day.date}T12:00:00Z`).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        timeZone: 'UTC',
+                      });
+                const role =
+                  day.role === 'easy' ? 'easy' : `${day.role}${day.done ? ', done' : ''}`;
+                return `${name}: ${day.heavy ? 'heavy work day, ' : ''}${role}.`;
+              })
+              .join(' ')}
+          </p>
           <p className="text-[10px] mt-3 leading-relaxed" style={{ color: 'var(--text-faint)' }}>
             Bars are meeting load. Hard and long sessions go on the lightest days, never back to
             back.

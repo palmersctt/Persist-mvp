@@ -71,6 +71,7 @@ describe('dashboardVerdict', () => {
       keySessions,
     });
     const lightDay = work(70, 35, 70, 2);
+    const TODAY = '2026-06-11';
 
     it('a heavy work day says easy only, not recover', () => {
       const r = dashboardVerdict(work(50, 50, 50, 8), null);
@@ -80,20 +81,30 @@ describe('dashboardVerdict', () => {
     });
 
     it('goes hard on the lightest day when a hard session is due', () => {
-      const r = dashboardVerdict(lightDay, athlete([{ daysAgo: 4, kind: 'long' }]), weekAhead);
+      const r = dashboardVerdict(
+        lightDay,
+        athlete([{ daysAgo: 4, kind: 'long' }]),
+        weekAhead,
+        TODAY
+      );
       expect(r.verdict).toBe('Locked In');
       expect(r.label).toBe('Go hard');
       expect(r.plan?.[0].role).toBe('hard');
     });
 
     it('stays easy the day after a hard session', () => {
-      const r = dashboardVerdict(lightDay, athlete([{ daysAgo: 1, kind: 'hard' }]), weekAhead);
+      const r = dashboardVerdict(
+        lightDay,
+        athlete([{ daysAgo: 1, kind: 'hard' }]),
+        weekAhead,
+        TODAY
+      );
       expect(r.verdict).toBe('Flow');
       expect(r.plan?.[0].role).toBe('easy');
     });
 
     it('plans the week from the calendar alone, without claiming a session is due', () => {
-      const r = dashboardVerdict(lightDay, null, weekAhead);
+      const r = dashboardVerdict(lightDay, null, weekAhead, TODAY);
       expect(r.verdict).not.toBe('Locked In');
       expect(r.knowsTraining).toBe(false);
       expect(r.plan).toHaveLength(7);
@@ -101,8 +112,52 @@ describe('dashboardVerdict', () => {
     });
 
     it('uses today’s analysed load for the first day of the plan', () => {
-      const r = dashboardVerdict(work(50, 50, 50, 3), null, weekAhead);
+      const r = dashboardVerdict(work(50, 50, 50, 3), null, weekAhead, TODAY);
       expect(r.plan?.[0].workLoad).toBe(r.workLoad);
+    });
+
+    it('an ordinary run for a three-day-a-week runner is not a spike', () => {
+      // daily baseline 19 ≈ three 45-minute runs a week
+      const r = dashboardVerdict(work(70, 35, 70, 2), {
+        ...athlete([]),
+        trainingBaseline: 19,
+        trainingLoadToday: 45,
+      });
+      expect(r.verdict).not.toBe('Survival');
+    });
+
+    it('doing the long run the card asked for reads as done, not recover', () => {
+      const r = dashboardVerdict(
+        lightDay,
+        {
+          ...athlete([{ daysAgo: 0, kind: 'long' }]),
+          trainingBaseline: 49,
+          trainingLoadToday: 140,
+        },
+        weekAhead,
+        TODAY
+      );
+      expect(r.verdict).toBe('Coasting');
+      expect(r.rec).toContain('Key session done');
+      expect(r.plan?.[0]).toMatchObject({ role: 'long', done: true });
+    });
+
+    it('does not ask for a key session on a day already trained on', () => {
+      const r = dashboardVerdict(
+        lightDay,
+        { ...athlete([]), trainingLoadToday: 50 },
+        weekAhead,
+        TODAY
+      );
+      expect(r.verdict).not.toBe('Locked In');
+      expect(r.plan?.[0].role).toBe('easy');
+    });
+
+    it('drops a cached forecast that starts on an earlier day', () => {
+      const aligned = dashboardVerdict(lightDay, null, weekAhead, '2026-06-12');
+      expect(aligned.plan?.[0].date).toBe('2026-06-12');
+      expect(aligned.plan).toHaveLength(6);
+      expect(dashboardVerdict(lightDay, null, weekAhead, '2026-07-01').plan).toBeNull();
     });
 
     it('has no plan without a forecast', () => {
