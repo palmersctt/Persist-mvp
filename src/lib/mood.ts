@@ -54,7 +54,7 @@ export const VERDICT_MOOD: Record<Verdict, Mood> = {
 };
 export const VERDICT_LABEL: Record<Verdict, string> = {
   Survival: 'Recover',
-  Grinding: 'Keep it moderate',
+  Grinding: 'Easy only',
   Coasting: 'Optional',
   'Locked In': 'Go hard',
   Flow: 'Train normally',

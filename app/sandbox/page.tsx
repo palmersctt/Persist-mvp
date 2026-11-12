@@ -15,7 +15,8 @@ export default function SandboxPage() {
     }
   }, [session, status, router])
 
-  if (status === 'loading') return null
+  // Signed-in visitors are redirected by middleware; render the sandbox
+  // immediately for everyone else instead of waiting on the session check.
   if (status === 'authenticated') return null
 
   return <SandboxDashboard />

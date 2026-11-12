@@ -53,6 +53,18 @@ export interface WearableActuals {
   trainingBaseline?: number;
   /** Today's logged training load (same units as the baseline). */
   trainingLoadToday?: number;
+  /**
+   * Key sessions of the last six days and today, when the provider can tell
+   * them apart. Hard = intensity; long = duration. Absent = unknown, which is
+   * different from an empty list (known: none).
+   */
+  keySessions?: KeySession[];
+}
+
+/** A key session already done. daysAgo 0 = earlier today. */
+export interface KeySession {
+  daysAgo: number;
+  kind: 'hard' | 'long';
 }
 
 /** A stored OAuth connection to a wearable provider. */

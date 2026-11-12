@@ -39,8 +39,11 @@ const attemptCalendarFetch = async (accessToken: string, userTimezone: string) =
   const svc = new GoogleCalendarService();
   await svc.initialize(accessToken);
   const events = await svc.getTodaysEvents(userTimezone);
-  const workHealthData = await svc.analyzeWorkHealth(userTimezone, events);
-  return { events, workHealthData };
+  const [workHealthData, week] = await Promise.all([
+    svc.analyzeWorkHealth(userTimezone, events),
+    svc.getWeekAhead(userTimezone),
+  ]);
+  return { events, workHealthData, week };
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -98,11 +101,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let events;
     let workHealthData;
+    // Meeting hours per day for the week ahead (null if that fetch failed).
+    let week: Awaited<ReturnType<typeof attemptCalendarFetch>>['week'] = null;
 
     try {
       const result = await attemptCalendarFetch(session.accessToken!, userTimezone);
       events = result.events;
       workHealthData = result.workHealthData;
+      week = result.week;
     } catch (calError) {
       const msg = calError instanceof Error ? calError.message : String(calError);
       const isAuthError = msg.includes('401') || msg.includes('403') || msg.includes('invalid_grant');
@@ -127,6 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const result = await attemptCalendarFetch(tokens.access_token, userTimezone);
             events = result.events;
             workHealthData = result.workHealthData;
+            week = result.week;
           } else {
             throw calError;
           }
@@ -160,6 +167,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Create enhanced response with backward compatibility
     interface EnhancedWorkHealthResponse extends WorkHealthMetrics {
+      week?: { date: string; meetingHours: number }[];
       dayShape?: {
         firstEventStartISO: string | null;
         lastEventEndISO: string | null;
@@ -179,6 +187,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const enhancedResponse: EnhancedWorkHealthResponse = { ...workHealthData };
+    if (week) enhancedResponse.week = week;
 
     // Event timing only (no titles) — lets the client compute when the
     // workday unlocks and merge the calendar forecast with wearable actuals

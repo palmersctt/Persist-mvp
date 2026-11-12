@@ -20,7 +20,7 @@ function seeded(seed: string): number {
 
 export function generateDemoActuals(email: string, date: string): WearableActuals {
   const base = `${email}:${date}`;
-  // Strava-shaped: training-load freshness plus the activity factors the
+  // Activity-shaped: training-load freshness plus the activity factors the
   // breakdown reads. Deterministic so the dashboard stays stable across a day.
   const freshness = Math.round(20 + seeded(`${base}:freshness`) * 75); // 20–95
   const weekActivityCount = Math.round(2 + seeded(`${base}:week`) * 6); // 2–8
@@ -29,9 +29,17 @@ export function generateDemoActuals(email: string, date: string): WearableActual
   const trainingBaseline = Math.round(20 + seeded(`${base}:tbase`) * 45); // 20–65
   const trainingLoadToday = Math.round(seeded(`${base}:tload`) * 90); // 0–90
 
+  // A plausible recent week: one long run and one hard session, never adjacent.
+  const longAgo = 3 + Math.round(seeded(`${base}:long`) * 3); // 3–6 days ago
+  const hardAgo = 1 + Math.round(seeded(`${base}:hard`)); // 1–2 days ago, at least a day off the long run
+
   return {
     date,
     provider: 'demo',
+    keySessions: [
+      { daysAgo: hardAgo, kind: 'hard' },
+      { daysAgo: longAgo + (longAgo - hardAgo < 2 ? 1 : 0), kind: 'long' },
+    ],
     freshness,
     weekActivityCount,
     trainingBaseline,

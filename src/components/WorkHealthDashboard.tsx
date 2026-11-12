@@ -5,9 +5,10 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useWorkHealth } from '../hooks/useWorkHealth';
 import CardContent from './CardContent';
+import DashboardSkeleton, { CardSkeleton } from './DashboardSkeleton';
 import SwipeableQuoteCards from './SwipeableQuoteCards';
 import PersistLogo from './PersistLogo';
-import { VERDICT_MOOD, VERDICT_LABEL } from '../lib/mood';
+import { VERDICT_MOOD } from '../lib/mood';
 import { dashboardVerdict } from '../lib/dashboardModel';
 import { useWearable } from '../hooks/useWearable';
 import { trackEvent } from '../lib/trackEvent';
@@ -49,12 +50,20 @@ export default function WorkHealthDashboard() {
   // One model, one verdict: the unified readiness model (work + training load
   // vs your baseline, plus Work Index) drives the card's mood and verdict.
   // Work no longer produces a second, competing mood.
-  const cardModel = workHealth ? dashboardVerdict(workHealth, wearable.actuals) : null;
+  // Stale actuals (provider unreachable, an earlier day's row) are shown but
+  // never scored — yesterday's sleep must not move today's verdict.
+  const cardModel = workHealth
+    ? dashboardVerdict(
+        workHealth,
+        wearable.stale ? null : wearable.actuals,
+        workHealth.week ?? null
+      )
+    : null;
   const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
   const cardReadiness = cardModel?.readiness ?? 0;
   const cardLoad = cardModel?.load ?? 0;
   const cardBalance = cardModel?.balance ?? 0;
-  const cardVerdict = cardModel ? VERDICT_LABEL[cardModel.verdict] : undefined;
+  const cardVerdict = cardModel?.label;
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 
@@ -263,25 +272,7 @@ export default function WorkHealthDashboard() {
   }, [shareState]);
 
   if (status === 'loading') {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: '#0B0B0C' }}
-      >
-        <div className="text-center flex flex-col items-center">
-          <div className="flex items-center gap-2 mb-3">
-            <PersistLogo size={28} variant="dark" />
-            <span
-              className="text-2xl font-semibold text-[#F5F5F5]"
-              style={{ letterSpacing: '1.5px' }}
-            >
-              PERSIST<span style={{ color: '#C7F95C' }}>WORK</span>
-            </span>
-          </div>
-          <div className="text-[#5F6168] text-sm">Loading...</div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!session) {
@@ -702,83 +693,7 @@ export default function WorkHealthDashboard() {
               if (stillLoading) {
                 return (
                   <section className="max-w-xs mx-auto">
-                    <style>{`
-                      @keyframes shimmer {
-                        0% { transform: translateX(-100%); }
-                        100% { transform: translateX(100%); }
-                      }
-                      .skeleton-bar {
-                        position: relative;
-                        overflow: hidden;
-                      }
-                      .skeleton-bar::after {
-                        content: '';
-                        position: absolute;
-                        inset: 0;
-                        background: linear-gradient(90deg, transparent 0%, rgba(245,245,245,0.05) 50%, transparent 100%);
-                        animation: shimmer 1.8s ease-in-out infinite;
-                      }
-                    `}</style>
-                    <div
-                      className="w-full rounded-2xl overflow-hidden"
-                      style={{
-                        background: 'linear-gradient(to bottom, #23252B, #15161A)',
-                        padding: '32px 24px 20px',
-                      }}
-                    >
-                      <div
-                        className="skeleton-bar h-6 rounded-lg mx-auto mb-2"
-                        style={{ backgroundColor: 'rgba(245,245,245,0.08)', maxWidth: '85%' }}
-                      />
-                      <div
-                        className="skeleton-bar h-6 rounded-lg mx-auto mb-4"
-                        style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '60%' }}
-                      />
-                      <div
-                        className="skeleton-bar h-3 rounded mx-auto mb-4"
-                        style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '40%' }}
-                      />
-                      <div
-                        className="skeleton-bar h-3 rounded mx-auto mb-6"
-                        style={{ backgroundColor: 'rgba(245,245,245,0.04)', maxWidth: '55%' }}
-                      />
-                      <div
-                        className="rounded-2xl px-5 py-4"
-                        style={{ backgroundColor: 'rgba(245,245,245,0.05)' }}
-                      >
-                        <div
-                          className="skeleton-bar h-2 rounded mx-auto mb-3"
-                          style={{ backgroundColor: 'rgba(245,245,245,0.06)', maxWidth: '30%' }}
-                        />
-                        <div className="flex justify-center gap-8">
-                          {['READINESS', 'LOAD', 'BALANCE'].map((label) => (
-                            <div key={label} className="text-center">
-                              <div
-                                className="text-xl font-bold"
-                                style={{ color: 'rgba(245,245,245,0.12)', lineHeight: 1 }}
-                              >
-                                --
-                              </div>
-                              <div
-                                className="text-[9px] uppercase tracking-wider mt-1.5 font-medium"
-                                style={{ color: 'rgba(245,245,245,0.12)' }}
-                              >
-                                {label}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-center gap-1.5 mt-3">
-                        <PersistLogo size={12} variant="dark" />
-                        <span
-                          className="text-[9px] tracking-widest"
-                          style={{ color: 'rgba(245,245,245,0.15)' }}
-                        >
-                          PERSIST<span style={{ color: 'rgba(199,249,92,0.3)' }}>WORK</span>.com
-                        </span>
-                      </div>
-                    </div>
+                    <CardSkeleton />
                     <p
                       className="text-sm font-medium text-center mt-5 tracking-wide"
                       style={{
