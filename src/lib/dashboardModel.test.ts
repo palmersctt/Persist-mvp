@@ -57,6 +57,28 @@ describe('dashboardVerdict', () => {
     expect(r.workIndexValue).toBe(56); // 0.3·60 + 0.3·60 + 0.4·50
   });
 
+  describe('an open calendar', () => {
+    // No meetings: neutral work-health scores, zero meeting hours.
+    const open = work(50, 50, 50, 0);
+
+    it('never reads as recover', () => {
+      const r = dashboardVerdict(open, null);
+      expect(r.verdict).not.toBe('Survival');
+      expect(r.tier).not.toBe('bad');
+      expect(r.readiness).toBeGreaterThanOrEqual(60);
+      expect(r.load).toBe(0);
+    });
+
+    it('a lighter day never scores below a heavier one, all else equal', () => {
+      const readiness = [0, 2, 4, 6].map(
+        (h) => dashboardVerdict(work(50, 50, 50, h), null).readiness
+      );
+      for (let i = 1; i < readiness.length; i++) {
+        expect(readiness[i]).toBeLessThanOrEqual(readiness[i - 1]);
+      }
+    });
+  });
+
   describe('sleep from a recovery provider', () => {
     const whoop = (sleepPerformance?: number): WearableActuals => ({
       date: '2026-06-11',

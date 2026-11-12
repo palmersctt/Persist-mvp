@@ -133,11 +133,11 @@ export function runModel(prior: Prior, history: DayInputs[], today: DayInputs): 
   const acwr = chronic > 2 ? acute / chronic : 1.0;
   const trainingAcwr = tChronic > 2 ? tAcute / tChronic : 1.0;
 
-  // baseline-fit: reward ACWR near 1.0; penalize spike (>1.15) and slump (<0.85)
-  let fit: number;
-  if (acwr >= 0.85 && acwr <= 1.15) fit = 100;
-  else if (acwr > 1.15) fit = clamp(100 - (acwr - 1.15) * 160, 5, 100);
-  else fit = clamp(100 - (0.85 - acwr) * 120, 25, 100);
+  // baseline-fit: only a spike (>1.15) costs readiness. Being UNDER your usual
+  // load is headroom, not fatigue — an open calendar must never read as
+  // "recover". (Long-run detraining is a training-plan concern, not a reason
+  // to rest today.)
+  const fit = acwr > 1.15 ? clamp(100 - (acwr - 1.15) * 160, 5, 100) : 100;
 
   const feelScore = clamp(50 + feel * 78, 0, 100);
   // being "adapted" to a draining routine isn't good — discount fit when feel<0
@@ -203,8 +203,12 @@ function recommend(
   if (v >= 66 || feel > 0.12) {
     return {
       verdict: 'Flow',
-      rec: 'Train normally — you’re in your band.',
-      why: `You're at ${a.toFixed(2)}× your baseline — trained for the life you're living. ${
+      rec: a < 0.85 ? 'Train normally — the day is open.' : 'Train normally — you’re in your band.',
+      why: `You're at ${a.toFixed(2)}× your baseline — ${
+        a < 0.85
+          ? 'under your usual load, so there is room in the day and nothing here says back off.'
+          : "trained for the life you're living."
+      } ${
         days <= 1
           ? 'The read holds on day one because the baseline came from your history, not from waiting.'
           : "Steady days at this level don't dig a hole — your baseline absorbs them."
