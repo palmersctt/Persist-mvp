@@ -65,3 +65,17 @@ export const GOLDEN_DAYS: Record<string, CalendarEvent[]> = {
     ev('team meeting', [11, 0], [12, 0], 'COLLABORATIVE', 3),
   ],
 };
+
+/** Google events as the API returns them, for the placeholder-title day. */
+export const BUSY_GOOGLE_EVENTS = [
+  ['Busy', 9, 10],
+  ['Blocked', 10, 11],
+  ['Tentative', 11, 12],
+  ['Private event', 13, 14],
+  ['busy', 14, 15],
+].map(([summary, s, e], i) => ({
+  id: `busy-${i}`,
+  summary: summary as string,
+  start: { dateTime: la(s as number).toISOString() },
+  end: { dateTime: la(e as number).toISOString() },
+}));

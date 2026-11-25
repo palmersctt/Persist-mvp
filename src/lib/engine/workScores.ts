@@ -1037,8 +1037,20 @@ export function meaningfulTitle(title: string | undefined): string | undefined {
 }
 
 /**
+ * Title → category for any source. Empty and placeholder titles ("Busy",
+ * "Tentative", "Private event"…) say only that a block exists, so they
+ * count as a meeting (COLLABORATIVE, the unmatched default); real titles go
+ * through the keyword categorizer.
+ */
+export function categorizeTitle(title: string | undefined): MeetingCategory {
+  const t = meaningfulTitle(title);
+  return t ? categorizeMeeting(t) : 'COLLABORATIVE';
+}
+
+/**
  * A caller's meeting → the event the maths scores. (The Google service maps
- * its own events and keeps its long-standing title handling.)
+ * its own events with the same categorizeTitle, but keeps its long-standing
+ * shared context for untitled events.)
  */
 export function toWorkEvent(m: EngineMeeting, index: number): WorkEvent {
   const title = meaningfulTitle(m.title);
@@ -1047,7 +1059,7 @@ export function toWorkEvent(m: EngineMeeting, index: number): WorkEvent {
     end: new Date(m.end),
     // Google counts an event with no attendee list as just you.
     attendees: m.attendees ?? 1,
-    category: m.category ?? (title ? categorizeMeeting(title) : 'COLLABORATIVE'),
+    category: m.category ?? categorizeTitle(title),
     // Without a title each meeting is its own topic: real days rarely repeat
     // a meeting, so this is the closest read of context switching.
     contextKey: title ? title.toLowerCase() : `untitled:${index}`,

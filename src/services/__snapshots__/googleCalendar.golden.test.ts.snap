@@ -79,6 +79,46 @@ exports[`analyzeWorkHealth golden days > bored standup 1`] = `
 }
 `;
 
+exports[`analyzeWorkHealth golden days > busy placeholders 1`] = `
+{
+  "adaptivePerformanceIndex": 54,
+  "breakdown": {
+    "contributors": [
+      "Focus: 54% (Moderate)",
+      "Strain: 40% (Moderate)",
+      "Rhythm: 53% (Moderate)",
+    ],
+    "primaryFactors": [
+      "Balanced workload with manageable cognitive demands",
+      "3 back-to-back meetings creating significant mental switching costs",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 33,
+  "cognitiveResilience": 40,
+  "focusTime": 402,
+  "meetingDensity": 5,
+  "readiness": 54,
+  "schedule": {
+    "adequateBreaks": 1,
+    "afternoonMeetings": 1,
+    "backToBackCount": 3,
+    "bufferTime": 345,
+    "durationHours": 5,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 38,
+    "longestStretch": 3,
+    "meetingCount": 5,
+    "meetingRatio": 0.63,
+    "morningMeetings": 3,
+    "shortBreaks": 0,
+    "uniqueContexts": 4,
+  },
+  "status": "MODERATE",
+  "workRhythmRecovery": 53,
+}
+`;
+
 exports[`analyzeWorkHealth golden days > early and late 1`] = `
 {
   "adaptivePerformanceIndex": 75,

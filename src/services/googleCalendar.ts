@@ -2,7 +2,7 @@ import { google, calendar_v3 } from 'googleapis';
 import { localDate, meetingHoursByDay, weekDates, type WeekDayHours } from '../lib/weekAhead';
 import {
   analyzeWorkDay,
-  categorizeMeeting,
+  categorizeTitle,
   isActualMeeting,
   type MeetingCategory,
 } from '../lib/engine/workScores';
@@ -56,6 +56,24 @@ export interface WorkHealthMetrics {
   meetingDensity: number;
 }
 
+/**
+ * A timed Google Calendar event → the event the scoring reads. Missing titles
+ * become 'No title'; placeholder titles like "Busy" count as meetings
+ * (categorizeTitle), so a free/busy-only calendar doesn't read as empty.
+ */
+export function toCalendarEvent(event: calendar_v3.Schema$Event): CalendarEvent {
+  const summary = event.summary || 'No title';
+  return {
+    id: event.id!,
+    summary,
+    start: new Date(event.start!.dateTime!),
+    end: new Date(event.end!.dateTime!),
+    attendees: event.attendees?.length || 1,
+    isRecurring: !!event.recurringEventId,
+    category: categorizeTitle(summary),
+  };
+}
+
 class GoogleCalendarService {
   private calendar: calendar_v3.Calendar | null = null;
   private userTimezone: string = 'America/Los_Angeles'; // Default timezone
@@ -65,20 +83,6 @@ class GoogleCalendarService {
     auth.setCredentials({ access_token: accessToken });
 
     this.calendar = google.calendar({ version: 'v3', auth });
-  }
-
-  // Simplified helper method - NO additional timezone conversion
-  private parseCalendarDateTime(dateTimeString: string, _userTimezone: string): Date {
-    // Google Calendar API returns ISO 8601 strings with timezone info
-    // e.g., "2025-09-15T16:00:00-07:00" or "2025-09-15T23:00:00Z"
-
-    try {
-      const parsed = new Date(dateTimeString);
-      return parsed;
-    } catch (error) {
-      console.error('Error parsing calendar dateTime:', dateTimeString, error);
-      return new Date();
-    }
   }
 
   async getTodaysEvents(providedUserTimezone?: string): Promise<CalendarEvent[]> {
@@ -136,22 +140,7 @@ class GoogleCalendarService {
 
       return events
         .filter((event: calendar_v3.Schema$Event) => event.start?.dateTime && event.end?.dateTime)
-        .map((event: calendar_v3.Schema$Event, _index: number) => {
-          const summary = event.summary || 'No title';
-          const startDate = this.parseCalendarDateTime(event.start!.dateTime!, userTimezone);
-          const endDate = this.parseCalendarDateTime(event.end!.dateTime!, userTimezone);
-
-          const calendarEvent: CalendarEvent = {
-            id: event.id!,
-            summary,
-            start: startDate,
-            end: endDate,
-            attendees: event.attendees?.length || 1,
-            isRecurring: !!event.recurringEventId,
-            category: categorizeMeeting(summary),
-          };
-          return calendarEvent;
-        });
+        .map(toCalendarEvent);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
       throw new Error('Failed to fetch calendar events');
@@ -187,7 +176,7 @@ class GoogleCalendarService {
       const meetings = (response.data.items || [])
         .filter((event: calendar_v3.Schema$Event) => event.start?.dateTime && event.end?.dateTime)
         .filter((event: calendar_v3.Schema$Event) => {
-          return isActualMeeting({ category: categorizeMeeting(event.summary || 'No title') });
+          return isActualMeeting({ category: categorizeTitle(event.summary || undefined) });
         })
         .map((event: calendar_v3.Schema$Event) => ({
           start: new Date(event.start!.dateTime!),
