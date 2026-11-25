@@ -2,7 +2,7 @@
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-daily-feel-checkin.md
 outline: thoughts/shared/outlines/2026-11-25-daily-feel-checkin.md
-status: in progress
+status: implemented
 ---
 
 # Plan: one-tap feel rating
@@ -37,7 +37,12 @@ Feeding the rating into the verdict; reminders; the assistant tool (ticket 5).
 - `src/components/FeelCheckin.tsx` under the hero card; `useDayHistory`
   exposes `feel` and `rate(date, rating)`.
 ### Automated checks
-- [ ] `FeelCheckin.test.tsx`
-- [ ] `npm run verify`
+- [x] `FeelCheckin.test.tsx`
+- [x] `npm run verify`
+### Notes from implementation
+- The rating is optimistic and reverts if the save fails (for example a tap
+  in the second before today's row is first written).
+- Chips are a radio group, 44px tall, lime when selected (existing tokens).
+
 ### Manual checks
 - [ ] Tap a rating, reload, it's still selected.

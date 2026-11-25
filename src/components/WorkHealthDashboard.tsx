@@ -16,6 +16,7 @@ import { trackEvent } from '../lib/trackEvent';
 import { toPng } from 'html-to-image';
 import TrendsSection from './TrendsSection';
 import WearableSection from './WearableSection';
+import FeelCheckin from './FeelCheckin';
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -814,6 +815,14 @@ export default function WorkHealthDashboard() {
 
               return null;
             })()}
+
+            {/* How did today actually feel? — stored for calibration only */}
+            {cardModel && !isLoading && dayHistory.loaded && (
+              <FeelCheckin
+                rating={dayHistory.feel[dayHistory.today]}
+                onRate={(rating) => void dayHistory.rate(dayHistory.today, rating)}
+              />
+            )}
 
             {/* Why your readiness — explains the card's verdict (same model) */}
             {workHealth && !isLoading && <WearableSection model={cardModel} wearable={wearable} />}
