@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 const getServerSession = vi.fn();
 vi.mock('next-auth', () => ({ getServerSession: (...a: unknown[]) => getServerSession(...a) }));
-vi.mock('../auth/[...nextauth]', () => ({ authOptions: {} }));
+vi.mock('../../pages/api/auth/[...nextauth]', () => ({ authOptions: {} }));
 
 // Records every Supabase call; resolves to `result`.
 const calls: { method: string; args: unknown[] }[] = [];
@@ -18,7 +18,7 @@ const query = () => {
   q.then = (resolve: (v: unknown) => unknown) => resolve(result);
   return q;
 };
-vi.mock('../../../lib/supabase', () => ({
+vi.mock('../../lib/supabase', () => ({
   supabaseAdmin: {
     from: vi.fn((t: string) => {
       calls.push({ method: 'from', args: [t] });
@@ -27,7 +27,7 @@ vi.mock('../../../lib/supabase', () => ({
   },
 }));
 
-import handler from '../day-inputs';
+import handler from '../../pages/api/day-inputs';
 
 const TZ = 'America/New_York';
 const today = new Date().toLocaleDateString('sv-SE', { timeZone: TZ });

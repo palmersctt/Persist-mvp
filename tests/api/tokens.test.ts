@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 const getServerSession = vi.fn();
 vi.mock('next-auth', () => ({ getServerSession: (...a: unknown[]) => getServerSession(...a) }));
-vi.mock('../auth/[...nextauth]', () => ({ authOptions: {} }));
+vi.mock('../../pages/api/auth/[...nextauth]', () => ({ authOptions: {} }));
 
 const calls: { method: string; args: unknown[] }[] = [];
 let results: { data: unknown; error: unknown }[] = [];
@@ -18,10 +18,10 @@ const query = () => {
     resolve(results.shift() ?? { data: [], error: null });
   return q;
 };
-vi.mock('../../../lib/supabase', () => ({ supabaseAdmin: { from: vi.fn(() => query()) } }));
+vi.mock('../../lib/supabase', () => ({ supabaseAdmin: { from: vi.fn(() => query()) } }));
 
-import handler from '../tokens';
-import { hashToken } from '../../../src/lib/assistant/tokens';
+import handler from '../../pages/api/tokens';
+import { hashToken } from '../../src/lib/assistant/tokens';
 
 function call(req: Partial<NextApiRequest>) {
   const out: { status?: number; body?: Record<string, unknown> } = {};

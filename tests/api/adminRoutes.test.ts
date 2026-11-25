@@ -5,7 +5,7 @@ const getServerSession = vi.fn();
 vi.mock('next-auth/next', () => ({
   getServerSession: (...a: unknown[]) => getServerSession(...a),
 }));
-vi.mock('../auth/[...nextauth]', () => ({ authOptions: {} }));
+vi.mock('../../pages/api/auth/[...nextauth]', () => ({ authOptions: {} }));
 
 // A chainable Supabase query stub that resolves to { data, error }.
 const rows = [{ id: 1, email: 'someone@else.com', created_at: '2026-11-01' }];
@@ -15,8 +15,8 @@ const query = () => {
   q.then = (resolve: (v: unknown) => unknown) => resolve({ data: rows, error: null });
   return q;
 };
-vi.mock('../../../lib/supabase', () => ({ supabaseAdmin: { from: vi.fn(() => query()) } }));
-vi.mock('../../../src/services/claudeAI', () => ({
+vi.mock('../../lib/supabase', () => ({ supabaseAdmin: { from: vi.fn(() => query()) } }));
+vi.mock('../../src/services/claudeAI', () => ({
   default: class {
     getHealthStatus() {
       return 'healthy';
@@ -24,9 +24,9 @@ vi.mock('../../../src/services/claudeAI', () => ({
   },
 }));
 
-import usersHandler from '../analytics/users';
-import eventsHandler from '../analytics/events';
-import aiHealthHandler from '../ai-health';
+import usersHandler from '../../pages/api/analytics/users';
+import eventsHandler from '../../pages/api/analytics/events';
+import aiHealthHandler from '../../pages/api/ai-health';
 
 function call(
   handler: (req: NextApiRequest, res: NextApiResponse) => unknown,
