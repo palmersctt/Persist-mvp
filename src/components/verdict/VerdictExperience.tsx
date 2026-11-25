@@ -19,6 +19,7 @@ import { browserDay } from '../../lib/verdict/localTime';
 import { cardQuotes, type CardQuote } from '../../lib/verdict/quotes';
 import { receipt, revealLines } from '../../lib/verdict/story';
 import { shareCard } from '../../lib/verdict/share';
+import { getVisitorId, trackEvent } from '../../lib/trackEvent';
 
 interface Scored {
   input: DayInput;
@@ -41,7 +42,7 @@ export default function VerdictExperience({
   doors,
 }: {
   /** Extra ways in (assistant paste, sketch), rendered above the examples. */
-  doors?: (score: (input: DayInput) => void) => React.ReactNode;
+  doors?: (score: (input: DayInput, door: string) => void) => React.ReactNode;
 }) {
   const [scored, setScored] = useState<Scored | null>(null);
   const [stage, setStage] = useState<'choose' | 'reveal' | 'result'>('choose');
@@ -51,8 +52,21 @@ export default function VerdictExperience({
   const day = useMemo(() => browserDay(), []);
 
   const score = useCallback(
-    (input: DayInput) => {
-      setScored(scoreInBrowser(withChips(input, chips)));
+    (input: DayInput, door: string) => {
+      const s = scoreInBrowser(withChips(input, chips));
+      // Anonymous funnel: which door and what tier — never the day itself.
+      trackEvent('verdict_door_chosen', { door }, getVisitorId());
+      trackEvent(
+        'verdict_scored',
+        {
+          door,
+          tier: s.result.tier,
+          confidence: s.result.confidence.level,
+          chips: Object.keys(chips),
+        },
+        getVisitorId()
+      );
+      setScored(s);
       setStage('reveal');
       window.scrollTo?.({ top: 0 });
     },
@@ -64,7 +78,8 @@ export default function VerdictExperience({
     if (!cardRef.current || shareState === 'busy') return;
     setShareState('busy');
     try {
-      await shareCard(cardRef.current);
+      const how = await shareCard(cardRef.current);
+      trackEvent('verdict_shared', { how }, getVisitorId());
     } finally {
       setShareState('idle');
     }
@@ -84,7 +99,10 @@ export default function VerdictExperience({
         </Link>
         <button
           type="button"
-          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+          onClick={() => {
+            trackEvent('verdict_signin_clicked', { from: 'header' }, getVisitorId());
+            signIn('google', { callbackUrl: '/dashboard' });
+          }}
           className="text-xs font-medium"
           style={{ color: 'var(--text-muted)' }}
         >
@@ -125,7 +143,7 @@ export default function VerdictExperience({
                 <button
                   key={e.id}
                   type="button"
-                  onClick={() => score(e.build(day.date, day.timezone))}
+                  onClick={() => score(e.build(day.date, day.timezone), `example:${e.id}`)}
                   className="reveal-up text-left rounded-xl px-4 py-3.5 transition-colors hover:border-[var(--signal-edge)]"
                   style={
                     {
@@ -190,7 +208,10 @@ export default function VerdictExperience({
           >
             <button
               type="button"
-              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+              onClick={() => {
+                trackEvent('verdict_signin_clicked', { from: 'result' }, getVisitorId());
+                signIn('google', { callbackUrl: '/dashboard' });
+              }}
               className="w-full rounded-xl py-3.5 text-sm font-semibold"
               style={{ backgroundColor: 'var(--signal)', color: 'var(--ground)' }}
             >

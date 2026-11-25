@@ -1,5 +1,5 @@
 // Work scores: calendar meetings → Focus, Strain, Rhythm and the day's
-// schedule stats. Pure and provider-neutral: Google Calendar, the sandbox and
+// schedule stats. Pure and provider-neutral: Google Calendar, /verdict and
 // any outside caller (an assistant sending raw meeting times) all score
 // through here. Moved verbatim from GoogleCalendarService; the golden test
 // (src/services/googleCalendar.golden.test.ts) pins the numbers.

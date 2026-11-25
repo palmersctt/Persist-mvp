@@ -15,7 +15,7 @@ const toMeetings = (name: string): EngineMeeting[] =>
     category: e.category,
   }));
 
-// Google returns events in start order; the sandbox day is the one fixture
+// Google returns events in start order; the 'unsorted sandbox input' day is the one fixture
 // that is deliberately out of order, so it is compared separately.
 const SORTED_DAYS = Object.keys(GOLDEN_DAYS).filter((n) => n !== 'unsorted sandbox input');
 

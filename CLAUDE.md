@@ -130,7 +130,10 @@ All scores render at uniform 32px. Color-only emphasis — Readiness leads/pops.
 | `src/lib/mood.ts`                        | Mood types, MOODS record, tier logic                                     |
 | `src/lib/mood.test.ts`                   | Mood unit tests                                                          |
 | `src/lib/trends.ts`                      | Real trends built from persisted daily score history                     |
-| `src/lib/generateTrends.ts`              | Synthetic trends (sandbox demo) + shared insight generators              |
+| `src/lib/generateTrends.ts`              | Shared trend insight generators (weekly/monthly)                         |
+| `app/verdict/`, `src/components/verdict/`, `src/lib/verdict/` | Get your verdict: no-signup demo scored in the browser (assistant paste, sketch, examples) |
+| `pages/api/mcp.ts`, `src/lib/assistant/` | MCP server for assistants (tokens, OAuth 2.1, tools over `day_inputs`)   |
+| `pages/api/day-inputs.ts`                | Per-day model inputs + feel rating (the engine's history)                |
 | `src/components/TrendsSection.tsx`       | Dashboard trends UI (sparklines, weekly/monthly)                         |
 | `src/lib/model.ts`                       | Unified readiness engine (load vs baseline + Work Index → verdict)       |
 | `src/lib/dashboardModel.ts`              | Maps real calendar + Strava signals into the model                       |

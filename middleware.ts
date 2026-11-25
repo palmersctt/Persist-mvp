@@ -1,28 +1,26 @@
-import { withAuth } from "next-auth/middleware"
-import { NextResponse } from "next/server"
+import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token
-    const isAuth = !!token
-    const isAuthPage = req.nextUrl.pathname === "/" ||
-                       req.nextUrl.pathname.startsWith("/auth") ||
-                       req.nextUrl.pathname.startsWith("/sandbox")
-    const isPublicPage = req.nextUrl.pathname.startsWith("/positioning")
+    const token = req.nextauth.token;
+    const isAuth = !!token;
+    const isAuthPage = req.nextUrl.pathname === '/' || req.nextUrl.pathname.startsWith('/auth');
+    const isPublicPage = req.nextUrl.pathname.startsWith('/positioning');
 
     if (isPublicPage) {
-      return null
+      return null;
     }
 
     if (isAuthPage) {
       if (isAuth) {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
+        return NextResponse.redirect(new URL('/dashboard', req.url));
       }
-      return null
+      return null;
     }
 
     if (!isAuth) {
-      return NextResponse.redirect(new URL("/", req.url))
+      return NextResponse.redirect(new URL('/', req.url));
     }
   },
   {
@@ -30,8 +28,8 @@ export default withAuth(
       authorized: ({ token: _token }) => true,
     },
   }
-)
+);
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/positioning/:path*", "/sandbox/:path*", "/"]
-}
+  matcher: ['/dashboard/:path*', '/positioning/:path*', '/'],
+};

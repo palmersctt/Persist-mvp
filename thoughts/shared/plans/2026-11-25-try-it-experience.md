@@ -2,7 +2,7 @@
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-try-it-experience.md
 outline: thoughts/shared/outlines/2026-11-25-try-it-experience.md
-status: in progress
+status: implemented
 ---
 
 # Plan: Get your verdict
@@ -67,4 +67,24 @@ model or the engine; the waitlist (ticket 12); card italics (ticket 11).
 - [ ] Build a day by thumb on a phone.
 
 ## Phase 4: funnel and clean-up
-- [ ] `visitor-` analytics funnel; delete the sandbox; docs; verify
+### Changes
+- `trackEvent`: `visitor-` ids (`getVisitorId`), `verdict_*` events; the
+  `sandbox_*` types and `sandbox-` ids are gone. Server allow-list: visitors
+  may log only `verdict_*` events with a well-formed `visitor-` id.
+- Funnel wired: door chosen, prompt copied, paste failed, scored (door,
+  tier, confidence, chip names), shared, sign-in clicked. No times, titles
+  or inputs in metadata (tested).
+- Deleted: `SandboxDashboard`, `SandboxMeetingBuilder`, `WhyMood`,
+  `app/sandbox/`, `/api/sandbox-score`, `estimateScores.ts`,
+  `sandbox-personas.ts`, `generateTrendsFromScore` and its helpers.
+  `/sandbox` removed from middleware (the 308 redirect stays).
+- Docs: CLAUDE.md key files; engine README/comments.
+### Automated checks
+- [x] `tests/api/visitorEvents.test.ts`; funnel test in
+      `VerdictExperience.test.tsx`
+- [x] `npm run verify`; `next build`
+### Notes from implementation
+- The server allow-list still omits the five dashboard events found in
+  research (trends_*, wearable_*); unchanged, out of scope.
+### Manual checks
+- none beyond phases 1–3

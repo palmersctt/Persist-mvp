@@ -2,49 +2,46 @@ type EventType =
   | 'card_swipe'
   | 'metric_click'
   | 'card_share'
-  | 'sandbox_trend_viewed'
-  | 'sandbox_trend_toggle'
-  | 'sandbox_custom_selected'
-  | 'sandbox_custom_scored'
-  | 'sandbox_custom_reset'
-  | 'sandbox_metric_tab_viewed'
-  | 'sandbox_metric_components_viewed'
-  | 'sandbox_metric_tab_exited'
-  | 'sandbox_metric_time_spent'
-  | 'sandbox_trends_button_viewed'
-  | 'sandbox_trends_expanded'
-  | 'sandbox_trend_toggled'
-  | 'sandbox_trend_sparkline_viewed'
-  | 'sandbox_trend_insights_expanded'
   | 'trends_view_toggled'
   | 'trends_insights_expanded'
   | 'wearable_connect_clicked'
   | 'wearable_disconnected'
-  | 'sandbox_wearable_scenario_toggled'
+  // Get your verdict (signed-out funnel)
+  | 'verdict_door_chosen'
+  | 'verdict_prompt_copied'
+  | 'verdict_paste_failed'
+  | 'verdict_scored'
+  | 'verdict_shared'
+  | 'verdict_signin_clicked';
 
-export function trackEvent(eventType: EventType, metadata: Record<string, unknown> = {}, sandboxSessionId?: string) {
-  const payload: Record<string, unknown> = { eventType, metadata }
-  if (sandboxSessionId) {
-    payload.sandboxSessionId = sandboxSessionId
-  }
+/**
+ * Fire-and-forget analytics. Signed-in events are tied to the session;
+ * signed-out visitors pass an anonymous `visitorId` (see getVisitorId).
+ * Never put a visitor's day (times, titles, scores of their inputs) in
+ * metadata — only which door, which tier, and the like.
+ */
+export function trackEvent(
+  eventType: EventType,
+  metadata: Record<string, unknown> = {},
+  visitorId?: string
+) {
+  const payload: Record<string, unknown> = { eventType, metadata };
+  if (visitorId) payload.visitorId = visitorId;
   fetch('/api/analytics/events', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).catch(() => {
     // fire-and-forget: silently ignore errors
-  })
+  });
 }
 
-let _sandboxSessionId: string | null = null
+let _visitorId: string | null = null;
 
-export function getSandboxSessionId(): string {
-  if (!_sandboxSessionId) {
-    _sandboxSessionId = `sandbox-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+/** An anonymous id for this page view, e.g. visitor-1732500000000-ab12cd. */
+export function getVisitorId(): string {
+  if (!_visitorId) {
+    _visitorId = `visitor-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
-  return _sandboxSessionId
-}
-
-export function resetSandboxSessionId(): void {
-  _sandboxSessionId = null
+  return _visitorId;
 }

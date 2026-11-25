@@ -1,5 +1,5 @@
 // The engine's public input types. Provider-neutral: Google Calendar, the
-// sandbox, and outside callers (an AI assistant with its own calendar access)
+// /verdict page, and outside callers (an AI assistant with its own calendar access)
 // all describe a day in these shapes. See README.md in this folder.
 
 import type { MeetingCategory } from './workScores';

@@ -1,7 +1,7 @@
 # Readiness engine
 
 One path from a day's signals to the card's verdict, whatever the source:
-Google Calendar, the sandbox, or an outside caller such as an AI assistant
+Google Calendar, Get your verdict (`/verdict`, in the browser), or an outside caller such as an AI assistant
 that already has the user's calendar.
 
 | Entry point                  | Takes                        | Used by                            |

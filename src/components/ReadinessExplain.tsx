@@ -10,7 +10,7 @@ const SURFACE = { backgroundColor: 'var(--surface)', border: '1px solid var(--ru
 
 // The dashboard's readiness breakdown — mirrors the landing demo: the
 // Recent ÷ Baseline equation, your training (load vs baseline), and your
-// workday (the scores that set the Work Index). Shared with the sandbox.
+// workday (the scores that set the Work Index). Shared with Get your verdict.
 // `body` adds a recovery provider's readings — shown for context; only sleep
 // enters the score (via the model), recovery/HRV/resting HR never do.
 export default function ReadinessExplain({

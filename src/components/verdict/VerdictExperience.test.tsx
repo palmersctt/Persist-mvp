@@ -2,7 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('next-auth/react', () => ({ signIn: vi.fn() }));
-vi.mock('../../lib/trackEvent', () => ({ trackEvent: vi.fn() }));
+const trackEvent = vi.fn();
+vi.mock('../../lib/trackEvent', () => ({
+  trackEvent: (...a: unknown[]) => trackEvent(...a),
+  getVisitorId: () => 'visitor-test',
+}));
 
 import VerdictExperience from './VerdictExperience';
 
@@ -30,5 +34,24 @@ describe('Get your verdict', () => {
     fireEvent.click(screen.getByLabelText('Skip to your verdict'));
     fireEvent.click(screen.getByText('Score another day'));
     expect(screen.getByText('Try an example')).toBeTruthy();
+  });
+
+  it('logs an anonymous funnel without the day itself', () => {
+    trackEvent.mockClear();
+    render(<VerdictExperience />);
+    fireEvent.click(screen.getByText('Busy blocks only'));
+    expect(trackEvent).toHaveBeenCalledWith(
+      'verdict_door_chosen',
+      { door: 'example:busy-only' },
+      'visitor-test'
+    );
+    const scored = trackEvent.mock.calls.find((c) => c[0] === 'verdict_scored');
+    expect(scored?.[1]).toEqual({
+      door: 'example:busy-only',
+      tier: expect.any(String),
+      confidence: 'low',
+      chips: [],
+    });
+    expect(JSON.stringify(trackEvent.mock.calls)).not.toMatch(/T\d\d:\d\d/); // no meeting times
   });
 });
