@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import type { DayInputs } from '../lib/model';
+import type { DayInputs, Verdict } from '../lib/model';
 import { historyFrom, NO_HISTORY, type DayRow, type PastDays } from '../lib/engine/history';
 
 // The signed-in user's logged days (from /api/day-inputs) as the engine's
@@ -34,10 +34,13 @@ export function useDayHistory() {
     [rows, today]
   );
 
-  /** Save today's inputs; identical repeats are skipped. Failures are quiet. */
+  /**
+   * Save today's inputs and the verdict shown; identical repeats are skipped.
+   * Failures are quiet.
+   */
   const save = useCallback(
-    (inputs: DayInputs) => {
-      const body = JSON.stringify({ date: today, ...inputs });
+    (inputs: DayInputs, shown?: { verdict: Verdict; readiness: number }) => {
+      const body = JSON.stringify({ date: today, ...inputs, ...shown });
       if (body === lastSaved.current) return;
       lastSaved.current = body;
       fetch(`/api/day-inputs?timezone=${encodeURIComponent(timezone)}`, {

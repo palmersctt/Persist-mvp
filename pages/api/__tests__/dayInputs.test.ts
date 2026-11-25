@@ -10,7 +10,7 @@ const calls: { method: string; args: unknown[] }[] = [];
 let result: { data: unknown; error: unknown } = { data: [], error: null };
 const query = () => {
   const q: Record<string, unknown> = {};
-  for (const m of ['select', 'eq', 'gte', 'lt', 'order', 'upsert'])
+  for (const m of ['select', 'eq', 'gte', 'lt', 'lte', 'order', 'upsert', 'update'])
     q[m] = vi.fn((...args: unknown[]) => {
       calls.push({ method: m, args });
       return q;
@@ -107,7 +107,7 @@ describe('/api/day-inputs', () => {
     result = { data: null, error: { message: 'relation "day_inputs" does not exist' } };
     const out = await call({});
     expect(out.status).toBe(200);
-    expect(out.body).toEqual({ rows: [], available: false });
+    expect(out.body).toEqual({ rows: [], feel: {}, available: false });
   });
 
   it("POST upserts today's row under my email", async () => {
@@ -138,5 +138,51 @@ describe('/api/day-inputs', () => {
     const out = await call({ method: 'POST', body: row });
     expect(out.status).toBe(202);
     expect(out.body).toEqual({ stored: false });
+  });
+
+  it('POST saves the verdict and readiness shown', async () => {
+    await call({ method: 'POST', body: { ...row, verdict: 'Grinding', readiness: 48 } });
+    const upsert = calls.find((c) => c.method === 'upsert');
+    expect(upsert?.args[0]).toMatchObject({ verdict: 'Grinding', readiness: 48 });
+  });
+
+  describe('PATCH (feel rating)', () => {
+    const yesterday = new Date(Date.parse(`${today}T00:00:00Z`) - 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    it("rates today's row, mine only", async () => {
+      result = { data: [{ date: today }], error: null };
+      const out = await call({ method: 'PATCH', body: { date: today, rating: 4 } });
+      expect(out.body).toEqual({ stored: true });
+      const update = calls.find((c) => c.method === 'update');
+      expect(update?.args[0]).toMatchObject({ feel_rating: 4 });
+      expect(calls).toContainEqual({ method: 'eq', args: ['user_email', 'me@example.com'] });
+      expect(calls).toContainEqual({ method: 'eq', args: ['date', today] });
+    });
+
+    it('allows yesterday', async () => {
+      result = { data: [{ date: yesterday }], error: null };
+      expect((await call({ method: 'PATCH', body: { date: yesterday, rating: 2 } })).status).toBe(
+        200
+      );
+    });
+
+    it('rejects two days ago and bad ratings', async () => {
+      const twoAgo = new Date(Date.parse(`${today}T00:00:00Z`) - 2 * 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+      expect((await call({ method: 'PATCH', body: { date: twoAgo, rating: 3 } })).status).toBe(400);
+      expect((await call({ method: 'PATCH', body: { date: today, rating: 6 } })).status).toBe(400);
+      expect((await call({ method: 'PATCH', body: { date: today, rating: 2.5 } })).status).toBe(
+        400
+      );
+      expect(calls.find((c) => c.method === 'update')).toBeUndefined();
+    });
+
+    it('404s when that day was never scored', async () => {
+      result = { data: [], error: null };
+      expect((await call({ method: 'PATCH', body: { date: today, rating: 3 } })).status).toBe(404);
+    });
   });
 });

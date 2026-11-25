@@ -72,12 +72,15 @@ export default function WorkHealthDashboard() {
   // Log today's model inputs as history once the day's signals are in: the
   // calendar and the wearable have both loaded, and the history read is
   // back (so a slow read can't race the write).
-  const todaysInputs =
-    cardModel && !wearable.isLoading && dayHistory.loaded ? cardModel.inputs : null;
+  const ready = cardModel && !wearable.isLoading && dayHistory.loaded;
+  const todaysInputs = ready ? cardModel.inputs : null;
+  const shownVerdict = ready ? cardModel.verdict : null;
+  const shownReadiness = ready ? cardModel.readiness : null;
   const saveDay = dayHistory.save;
   useEffect(() => {
-    if (todaysInputs) saveDay(todaysInputs);
-  }, [todaysInputs, saveDay]);
+    if (todaysInputs && shownVerdict && shownReadiness != null)
+      saveDay(todaysInputs, { verdict: shownVerdict, readiness: shownReadiness });
+  }, [todaysInputs, shownVerdict, shownReadiness, saveDay]);
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 

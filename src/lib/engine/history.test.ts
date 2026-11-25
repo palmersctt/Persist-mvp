@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { historyFrom, parseDayRow, type DayRow } from './history';
+import { dayBefore, historyFrom, parseDayRow, parseFeel, type DayRow } from './history';
 
 const row = (date: string, workLoad = 40): DayRow => ({
   date,
@@ -72,5 +72,38 @@ describe('parseDayRow', () => {
   it('drops unknown fields', () => {
     const r = parseDayRow({ ...row(TODAY), userEmail: 'x@y.com' }, TODAY);
     expect(r.ok && r.row).not.toHaveProperty('userEmail');
+  });
+});
+
+describe('parseDayRow verdict fields', () => {
+  it('accepts a known verdict and readiness', () => {
+    const r = parseDayRow({ ...row(TODAY), verdict: 'Flow', readiness: 71.6 }, TODAY);
+    expect(r.ok && r.row).toMatchObject({ verdict: 'Flow', readiness: 72 });
+  });
+  it('rejects an unknown verdict', () => {
+    expect(parseDayRow({ ...row(TODAY), verdict: 'Victory' }, TODAY).ok).toBe(false);
+  });
+});
+
+describe('parseFeel', () => {
+  it('accepts today and yesterday, 1–5', () => {
+    expect(parseFeel({ date: TODAY, rating: 5 }, TODAY)).toEqual({
+      ok: true,
+      date: TODAY,
+      rating: 5,
+    });
+    expect(parseFeel({ date: dayBefore(TODAY), rating: 1 }, TODAY).ok).toBe(true);
+  });
+  it.each([
+    [{ date: daysAgo(2), rating: 3 }],
+    [{ date: TODAY, rating: 0 }],
+    [{ date: TODAY, rating: 6 }],
+    [{ date: TODAY, rating: 3.5 }],
+    [{ date: TODAY }],
+  ])('rejects %j', (body) => {
+    expect(parseFeel(body, TODAY).ok).toBe(false);
+  });
+  it('knows the day before across a month boundary', () => {
+    expect(dayBefore('2026-12-01')).toBe('2026-11-30');
   });
 });

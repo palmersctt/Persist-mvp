@@ -2,14 +2,19 @@
 // the verdict is measured against the user's own recent normal instead of
 // the default prior. Pure; storage lives in /api/day-inputs.
 
-import type { DayInputs } from '../model';
+import type { DayInputs, Verdict } from '../model';
 import { PERSONAL_BASELINE_DAYS } from './confidence';
 
 /** One saved day: the model's inputs, dated. */
 export interface DayRow extends DayInputs {
   /** The user's local date, YYYY-MM-DD. */
   date: string;
+  /** What the card showed that day (saved for calibration; not scored). */
+  verdict?: Verdict;
+  readiness?: number;
 }
+
+const VERDICTS: readonly Verdict[] = ['Survival', 'Grinding', 'Coasting', 'Locked In', 'Flow'];
 
 /** History handed to the engine alongside today. */
 export interface PastDays {
@@ -73,6 +78,10 @@ export function parseDayRow(raw: unknown, today: string): ParseRowResult {
   if (!inRange(r.trainingLoad, 0, 1000)) errors.push('trainingLoad must be 0–1000');
   if (!inRange(r.trainingFeel, -1, 1)) errors.push('trainingFeel must be −1 to 1');
   if (!inRange(r.sleep, 0, 100)) errors.push('sleep must be 0–100');
+  if (r.verdict !== undefined && !VERDICTS.includes(r.verdict as Verdict))
+    errors.push(`verdict must be one of ${VERDICTS.join(', ')}`);
+  if (r.readiness !== undefined && !inRange(r.readiness, 0, 100))
+    errors.push('readiness must be 0–100');
   if (errors.length > 0) return { ok: false, errors };
   return {
     ok: true,
@@ -83,6 +92,43 @@ export function parseDayRow(raw: unknown, today: string): ParseRowResult {
       trainingLoad: r.trainingLoad as number,
       trainingFeel: r.trainingFeel as number,
       sleep: r.sleep as number,
+      ...(r.verdict !== undefined ? { verdict: r.verdict as Verdict } : {}),
+      ...(r.readiness !== undefined ? { readiness: Math.round(r.readiness as number) } : {}),
     },
   };
+}
+
+/** The 1–5 answer to "How did today actually feel?". */
+export type FeelRating = 1 | 2 | 3 | 4 | 5;
+
+export const FEEL_LABELS: Record<FeelRating, string> = {
+  1: 'Drained',
+  2: 'Heavy',
+  3: 'OK',
+  4: 'Good',
+  5: 'Great',
+};
+
+/** The day before a YYYY-MM-DD date. */
+export const dayBefore = (date: string) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10);
+
+export type ParseFeelResult =
+  | { ok: true; date: string; rating: FeelRating }
+  | { ok: false; errors: string[] };
+
+/** Validate a rating. Only today and yesterday can be rated. */
+export function parseFeel(raw: unknown, today: string): ParseFeelResult {
+  if (typeof raw !== 'object' || raw === null)
+    return { ok: false, errors: ['body must be an object'] };
+  const r = raw as Record<string, unknown>;
+  const errors: string[] = [];
+  if (r.date !== today && r.date !== dayBefore(today))
+    errors.push(`date must be today (${today}) or yesterday (${dayBefore(today)})`);
+  if (
+    !(typeof r.rating === 'number' && Number.isInteger(r.rating) && r.rating >= 1 && r.rating <= 5)
+  )
+    errors.push('rating must be a whole number 1–5');
+  if (errors.length > 0) return { ok: false, errors };
+  return { ok: true, date: r.date as string, rating: r.rating as FeelRating };
 }
