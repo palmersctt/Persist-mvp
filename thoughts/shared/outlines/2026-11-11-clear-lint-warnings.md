@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-11-clear-lint-warnings.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: zero lint warnings (lint ticket)

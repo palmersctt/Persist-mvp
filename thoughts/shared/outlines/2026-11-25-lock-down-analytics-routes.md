@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-lock-down-analytics-routes.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: lock down leaking routes (ticket 8)

@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-daily-feel-checkin.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: one-tap feel rating (ticket 4; after ticket 3)

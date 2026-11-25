@@ -17,8 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const environmentInfo = {
       nodeEnv: process.env.NODE_ENV,
       hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
-      anthropicKeyLength: process.env.ANTHROPIC_API_KEY?.length || 0,
-      anthropicKeyPrefix: process.env.ANTHROPIC_API_KEY?.slice(0, 7) || 'none',
       timestamp: new Date().toISOString()
     };
 
@@ -46,8 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       environment: {
         nodeEnv: process.env.NODE_ENV,
         hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
-        anthropicKeyLength: process.env.ANTHROPIC_API_KEY?.length || 0,
-        anthropicKeyPrefix: process.env.ANTHROPIC_API_KEY?.slice(0, 7) || 'none',
         timestamp: new Date().toISOString()
       },
       error: error instanceof Error ? error.message : 'Unknown error',

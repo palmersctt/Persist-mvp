@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-try-it-experience.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: Get your verdict at /verdict (ticket 7)

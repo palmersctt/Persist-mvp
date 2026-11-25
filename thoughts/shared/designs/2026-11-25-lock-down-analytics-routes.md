@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: ab2cca4
 ticket: thoughts/shared/tickets/2026-11-25-8-lock-down-analytics-routes.md
 research: thoughts/shared/research/2026-11-25-assistant-scoring-engine.md (Q2, Q6), thoughts/shared/research/2026-11-25-daily-feel-checkin.md (Q7)
-status: proposed with the outlines
+status: agreed
 ---
 
 # Design: lock down routes that leak other users' data

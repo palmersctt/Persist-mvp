@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-assistant-scoring-engine.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: assistants call Persist (ticket 5; after tickets 3, 4, 8)

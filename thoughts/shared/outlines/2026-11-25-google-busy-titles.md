@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-google-busy-titles.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: Google "Busy" blocks count as meetings (ticket 6)

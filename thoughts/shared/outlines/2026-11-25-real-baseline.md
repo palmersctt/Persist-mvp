@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-real-baseline.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: verdicts against your own history (ticket 3)

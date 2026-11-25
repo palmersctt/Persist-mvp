@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
 import { supabaseAdmin } from '../../../lib/supabase'
+import { isAdmin } from '../../../src/lib/admin'
 
 const VALID_EVENT_TYPES = [
   'card_swipe', 'metric_click', 'card_share',
@@ -50,6 +51,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
       if (!session) {
         return res.status(401).json({ message: 'Unauthorized' })
+      }
+      // Every user's events: admins only (ADMIN_EMAILS).
+      if (!isAdmin(session.user?.email)) {
+        return res.status(403).json({ message: 'Forbidden' })
       }
       const { event_type, start_date, end_date } = req.query
 
