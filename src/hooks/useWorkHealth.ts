@@ -270,8 +270,11 @@ export const useWorkHealth = (
       } catch {
         // Ignore storage errors
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // The storage key derives only from the session; the key helper is
+    // re-created each render, so listing it would rebuild this callback
+    // every render for no change in behaviour.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [session]
   );
 
@@ -343,8 +346,11 @@ export const useWorkHealth = (
         },
         daysTracked: last7.length,
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // The storage key derives only from the session; the key helper is
+    // re-created each render, so listing it would rebuild this callback
+    // every render for no change in behaviour.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [session]
   );
 
@@ -578,8 +584,11 @@ export const useWorkHealth = (
           setIsAILoading(false);
         }
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // Deliberately keyed on the session only: the helpers are re-created
+    // each render and workHealth changes on every fetch, so listing them
+    // would rebuild the 5-minute poll interval constantly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [session, status]
   );
 

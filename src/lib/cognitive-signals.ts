@@ -84,11 +84,6 @@ export interface OutcomeLedger {
   }
 }
 
-const ALL_CATEGORIES: WorkCategory[] = [
-  'Administrative', 'Information Transfer', 'Coordination',
-  'Creation', 'Decision-making', 'Relationship', 'Non-work',
-]
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**

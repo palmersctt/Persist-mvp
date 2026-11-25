@@ -13,8 +13,8 @@
  * Exposure = % of work hours in process orientation
  */
 
-import { classifyEvent, classifyEvents, type WorkCategory, type WorkOrientation } from './cognitive-classification'
-import { buildBreakdown, computeLeverage, computeExposure, determineZone, generateOutcomeLedger, type CognitiveSignals, type OutcomeLedger } from './cognitive-signals'
+import { classifyEvents, type WorkCategory } from './cognitive-classification'
+import { buildBreakdown, computeLeverage, computeExposure, determineZone, generateOutcomeLedger, type CognitiveSignals } from './cognitive-signals'
 import type { CalendarEvent } from '../services/googleCalendar'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

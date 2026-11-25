@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import type { CognitiveAnalysis } from '../lib/cognitive-signals'
 
 export function useCognitivePositioning() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const [data, setData] = useState<CognitiveAnalysis | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

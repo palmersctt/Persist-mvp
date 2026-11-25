@@ -567,6 +567,7 @@ export default function WorkHealthDashboard() {
                 style={{ borderColor: showProfile ? '#23252B' : 'rgba(245,245,245,0.1)' }}
               >
                 {session?.user?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- tiny Google avatar; next/image adds a remote pattern and optimisation for no gain
                   <img
                     src={session.user.image}
                     alt=""
@@ -593,6 +594,7 @@ export default function WorkHealthDashboard() {
                   <div className="p-4 border-b" style={{ borderColor: '#23252B' }}>
                     <div className="flex items-center gap-3">
                       {session?.user?.image && (
+                        // eslint-disable-next-line @next/next/no-img-element -- tiny Google avatar; next/image adds a remote pattern and optimisation for no gain
                         <img
                           src={session.user.image}
                           alt=""
