@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: 0ade6a6
 ticket: thoughts/shared/tickets/2026-11-25-1-engine-input-contract.md
 research: thoughts/shared/research/2026-11-25-engine-input-contract.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: one engine entry point for any data source, with confidence
@@ -148,7 +148,16 @@ moods; card renderer untouched; `MOODS` untouched; no colors. Confidence
 shows only in `ReadinessExplain` as one text line using existing tokens —
 open question 1 if it should be on the card.
 
-## Open questions for you
+## Answers (2026-11-25)
+
+The user accepted every recommendation:
+1. Confidence shows in the "why" panel and the result only, not on the card.
+2. Confidence is capped at medium until a personal baseline exists (ticket 3).
+3. Ticket 2 is folded into this change (D1 b).
+4. Email is accepted and validated but not scored until feel ratings exist (D3 a).
+D2 a, D4 a, D5, D6 as recommended.
+
+## Open questions (answered above)
 
 1. Should confidence appear **on the card** (e.g. a small "low confidence"
    tag), or only in the "why" panel and the API? (Recommend: why panel only
