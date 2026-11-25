@@ -11,6 +11,7 @@ import PersistLogo from './PersistLogo';
 import { VERDICT_MOOD } from '../lib/mood';
 import { dashboardVerdict } from '../lib/dashboardModel';
 import { useWearable } from '../hooks/useWearable';
+import { useDayHistory } from '../hooks/useDayHistory';
 import { trackEvent } from '../lib/trackEvent';
 import { toPng } from 'html-to-image';
 import TrendsSection from './TrendsSection';
@@ -46,6 +47,7 @@ export default function WorkHealthDashboard() {
     connectionStartTime,
   } = useWorkHealth(activeTab);
   const wearable = useWearable();
+  const dayHistory = useDayHistory();
 
   // One model, one verdict: the unified readiness model (work + training load
   // vs your baseline, plus Work Index) drives the card's mood and verdict.
@@ -56,7 +58,9 @@ export default function WorkHealthDashboard() {
     ? dashboardVerdict(
         workHealth,
         wearable.stale ? null : wearable.actuals,
-        workHealth.week ?? null
+        workHealth.week ?? null,
+        undefined,
+        dayHistory.past
       )
     : null;
   const cardMood = cardModel ? VERDICT_MOOD[cardModel.verdict] : null;
@@ -64,6 +68,16 @@ export default function WorkHealthDashboard() {
   const cardLoad = cardModel?.load ?? 0;
   const cardBalance = cardModel?.balance ?? 0;
   const cardVerdict = cardModel?.label;
+
+  // Log today's model inputs as history once the day's signals are in: the
+  // calendar and the wearable have both loaded, and the history read is
+  // back (so a slow read can't race the write).
+  const todaysInputs =
+    cardModel && !wearable.isLoading && dayHistory.loaded ? cardModel.inputs : null;
+  const saveDay = dayHistory.save;
+  useEffect(() => {
+    if (todaysInputs) saveDay(todaysInputs);
+  }, [todaysInputs, saveDay]);
 
   const [connectionExpired, setConnectionExpired] = useState(false);
 

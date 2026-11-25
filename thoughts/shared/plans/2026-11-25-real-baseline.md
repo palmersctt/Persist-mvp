@@ -34,8 +34,13 @@ prior; trends UI.
 - `WorkHealthDashboard.tsx`: passes `past` to `dashboardVerdict`, saves
   `cardModel.inputs` when they change.
 ### Automated checks
-- [ ] route tests (401; own rows only; rejects other dates; missing table)
-- [ ] `npm run verify`
+- [x] route tests (401; own rows only; rejects other dates; missing table)
+- [x] `npm run verify`
+### Notes from implementation
+- The dashboard saves only once the wearable and the history read have both
+  loaded, so a half-loaded day isn't logged; identical repeats are skipped
+  client-side, and the upsert makes any extra write harmless.
+
 ### Manual checks
 - [ ] Apply the migration; dashboard loads; a row appears for today.
 
