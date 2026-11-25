@@ -17,6 +17,7 @@ import { toPng } from 'html-to-image';
 import TrendsSection from './TrendsSection';
 import WearableSection from './WearableSection';
 import FeelCheckin from './FeelCheckin';
+import ConnectedAssistants from './ConnectedAssistants';
 
 export default function WorkHealthDashboard() {
   const { data: session, status } = useSession();
@@ -829,6 +830,9 @@ export default function WorkHealthDashboard() {
 
             {/* Real trends — from persisted daily score history */}
             {workHealth && !isLoading && <TrendsSection history={scoreHistory} />}
+
+            {/* Tokens assistants use to call Persist (MCP) */}
+            {workHealth && !isLoading && <ConnectedAssistants />}
 
             {lastRefresh && (
               <div className="text-center pt-8">
