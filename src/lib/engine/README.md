@@ -56,8 +56,21 @@ title nor category counts as `COLLABORATIVE`, the same default an unmatched
 title gets. Each untitled meeting counts as its own topic for context
 switching.
 
+Placeholder titles from free/busy or privacy-stripped calendars (`Busy`,
+`Tentative`, `Blocked`, `Unavailable`, `Not available`, `Private`,
+`Private event`, `Private appointment`) count as no title, so a day of
+"Busy" blocks scores as a day of meetings at low confidence. (The Google
+Calendar path keeps its existing title handling for now.)
+
 `parseDayInput` rejects malformed fields with a list of errors and copies
-only known fields, so extra keys (a meeting body, notes) never travel on.
+only known fields, so extra keys (a meeting body, notes) never travel on. It
+also requires:
+
+- meeting times as ISO 8601 date-times **with an offset** (`Z` or `±hh:mm`);
+- each meeting to start on `date` in `timezone`;
+- a real calendar `date` (no `2026-02-31`);
+- at most 100 meetings;
+- `weekAhead` days in order, one per day.
 
 ## Result
 

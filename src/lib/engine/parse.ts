@@ -19,12 +19,27 @@ const CATEGORIES: readonly MeetingCategory[] = [
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
-const isDate = (v: unknown): v is string =>
-  typeof v === 'string' &&
-  /^\d{4}-\d{2}-\d{2}$/.test(v) &&
-  !Number.isNaN(Date.parse(`${v}T00:00:00Z`));
+/** A real calendar date, YYYY-MM-DD (rejects 2026-02-31). */
+const isDate = (v: unknown): v is string => {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+};
+/**
+ * An ISO 8601 date-time WITH an offset. Without one, the time would be read
+ * in the server's zone, not the user's.
+ */
 const isInstant = (v: unknown): v is string =>
-  typeof v === 'string' && !Number.isNaN(Date.parse(v));
+  typeof v === 'string' &&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/.test(v) &&
+  !Number.isNaN(Date.parse(v));
+
+/** More than this is not one person's day. */
+export const MAX_MEETINGS = 100;
+
+/** The local calendar date of an instant in a zone. */
+const localDateOf = (instant: string, timezone: string) =>
+  new Date(instant).toLocaleDateString('sv-SE', { timeZone: timezone });
 
 function isTimezone(v: unknown): v is string {
   if (typeof v !== 'string' || v.length === 0) return false;
@@ -68,12 +83,20 @@ export function parseDayInput(raw: unknown): ParseResult {
 
   if (raw.meetings !== undefined) {
     if (!Array.isArray(raw.meetings)) errors.push('meetings must be an array');
+    else if (raw.meetings.length > MAX_MEETINGS)
+      errors.push(`meetings must have at most ${MAX_MEETINGS} entries`);
     else
       raw.meetings.forEach((m: unknown, i: number) => {
         const p = `meetings[${i}]`;
         if (!isObj(m)) return errors.push(`${p} must be an object`);
-        if (!isInstant(m.start)) errors.push(`${p}.start must be an ISO date-time`);
-        if (!isInstant(m.end)) errors.push(`${p}.end must be an ISO date-time`);
+        if (!isInstant(m.start)) errors.push(`${p}.start must be an ISO date-time with an offset`);
+        else if (
+          isDate(raw.date) &&
+          isTimezone(raw.timezone) &&
+          localDateOf(m.start, raw.timezone) !== raw.date
+        )
+          errors.push(`${p}.start must fall on ${raw.date} in ${raw.timezone}`);
+        if (!isInstant(m.end)) errors.push(`${p}.end must be an ISO date-time with an offset`);
         if (isInstant(m.start) && isInstant(m.end) && Date.parse(m.end) <= Date.parse(m.start))
           errors.push(`${p}.end must be after start`);
         count(`${p}.attendees`, m.attendees, 1);
@@ -122,6 +145,11 @@ export function parseDayInput(raw: unknown): ParseResult {
         const p = `weekAhead[${i}]`;
         if (!isObj(d)) return errors.push(`${p} must be an object`);
         if (!isDate(d.date)) errors.push(`${p}.date must be YYYY-MM-DD`);
+        else if (i > 0) {
+          const prev = (raw.weekAhead as { date?: unknown }[])[i - 1]?.date;
+          if (isDate(prev) && d.date <= prev)
+            errors.push(`${p}.date must come after ${prev} (one entry per day, in order)`);
+        }
         if (!isNum(d.meetingHours) || d.meetingHours < 0 || d.meetingHours > 24)
           errors.push(`${p}.meetingHours must be between 0 and 24`);
       });

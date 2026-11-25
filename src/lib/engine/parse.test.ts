@@ -65,12 +65,33 @@ describe('parseDayInput', () => {
     ['not an object', null, 'input must be an object'],
     ['wrong version', { version: 2 }, 'version must be 1'],
     ['bad date', { date: '25/11/2026' }, 'date must be YYYY-MM-DD'],
+    ['impossible date', { date: '2026-02-31', meetings: [] }, 'date must be YYYY-MM-DD'],
     ['bad timezone', { timezone: 'Mars/Olympus' }, 'timezone must be an IANA time zone'],
     ['meetings not an array', { meetings: {} }, 'meetings must be an array'],
     [
       'unparseable start',
       { meetings: [{ start: 'nine', end: '2026-11-25T10:00:00Z' }] },
-      'meetings[0].start must be an ISO date-time',
+      'meetings[0].start must be an ISO date-time with an offset',
+    ],
+    [
+      'a time with no offset',
+      { meetings: [{ start: '2026-11-25T09:00', end: '2026-11-25T10:00-05:00' }] },
+      'meetings[0].start must be an ISO date-time with an offset',
+    ],
+    [
+      'a date where a time belongs',
+      { meetings: [{ start: '2026-11-25', end: '2026-11-25T10:00:00-05:00' }] },
+      'meetings[0].start must be an ISO date-time with an offset',
+    ],
+    [
+      'a meeting on another day',
+      { meetings: [{ start: '2026-11-24T09:00:00-05:00', end: '2026-11-24T10:00:00-05:00' }] },
+      'meetings[0].start must fall on 2026-11-25 in America/New_York',
+    ],
+    [
+      'too many meetings',
+      { meetings: Array.from({ length: 101 }, () => valid.meetings[1]) },
+      'meetings must have at most 100 entries',
     ],
     [
       'end before start',
@@ -106,10 +127,26 @@ describe('parseDayInput', () => {
       { weekAhead: [{ date: '2026-11-25', meetingHours: 30 }] },
       'weekAhead[0].meetingHours must be between 0 and 24',
     ],
+    [
+      'week days out of order',
+      {
+        weekAhead: [
+          { date: '2026-11-26', meetingHours: 1 },
+          { date: '2026-11-25', meetingHours: 2 },
+        ],
+      },
+      'weekAhead[1].date must come after 2026-11-26',
+    ],
   ])('rejects %s', (_name, patch, message) => {
     const errors =
       patch === null ? (parseDayInput(null) as { errors: string[] }).errors : errorsFor(patch);
     expect(errors.some((e) => e.startsWith(message))).toBe(true);
+  });
+
+  it('places a meeting on the local date, not the UTC one', () => {
+    // 19:00 in New York is already the 26th in UTC.
+    const evening = { start: '2026-11-26T00:00:00Z', end: '2026-11-26T01:00:00Z' };
+    expect(parseDayInput({ ...valid, meetings: [evening] }).ok).toBe(true);
   });
 
   it('reports every problem at once', () => {

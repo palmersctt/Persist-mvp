@@ -1016,9 +1016,32 @@ export function analyzeWorkDay(events: WorkEvent[], timezone: string): WorkDayAn
   };
 }
 
-/** A caller's meeting → the event the maths scores. */
+// Titles free/busy exports and privacy-stripped calendars put on every block.
+// They say a block exists, not what it is, so they count as no title: without
+// this, "Busy" matches a NEUTRAL keyword and a full day of meetings vanishes.
+const PLACEHOLDER_TITLES = new Set([
+  'busy',
+  'tentative',
+  'blocked',
+  'unavailable',
+  'not available',
+  'private',
+  'private event',
+  'private appointment',
+]);
+
+/** A real title, or undefined for an empty or placeholder one. */
+export function meaningfulTitle(title: string | undefined): string | undefined {
+  const t = title?.trim();
+  return t && !PLACEHOLDER_TITLES.has(t.toLowerCase()) ? t : undefined;
+}
+
+/**
+ * A caller's meeting → the event the maths scores. (The Google service maps
+ * its own events and keeps its long-standing title handling.)
+ */
 export function toWorkEvent(m: EngineMeeting, index: number): WorkEvent {
-  const title = m.title?.trim();
+  const title = meaningfulTitle(m.title);
   return {
     start: new Date(m.start),
     end: new Date(m.end),
@@ -1033,7 +1056,7 @@ export function toWorkEvent(m: EngineMeeting, index: number): WorkEvent {
 
 /**
  * Score raw meetings from any source. Meetings are put in start order first;
- * untitled meetings fall back to the caller's category, else COLLABORATIVE
+ * untitled meetings (and placeholder titles like "Busy") fall back to the caller's category, else COLLABORATIVE
  * (the same default an unmatched title gets).
  */
 export function scoreWork(meetings: EngineMeeting[], timezone: string): WorkDayAnalysis {

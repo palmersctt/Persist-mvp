@@ -19,7 +19,7 @@ import {
 import { sessionCall, type PlannedDay, type WeekDay } from '../weekPlan';
 import type { WeekDayHours } from '../weekAhead';
 import { confidenceFor, type CalendarDetail, type Confidence } from './confidence';
-import { scoreWork } from './workScores';
+import { meaningfulTitle, scoreWork } from './workScores';
 import type { DayInput, EmailCounts, TrainingInput } from './types';
 
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
@@ -183,10 +183,10 @@ export function scoreFromWork(
   };
 }
 
-/** full when every meeting has a title or category, busy when any is bare. */
+/** full when every meeting has a real title or a category, busy when any is bare. */
 function calendarDetail(input: DayInput): CalendarDetail {
   if (input.meetings === undefined) return 'unknown';
-  return input.meetings.every((m) => m.title?.trim() || m.category) ? 'full' : 'busy';
+  return input.meetings.every((m) => meaningfulTitle(m.title) || m.category) ? 'full' : 'busy';
 }
 
 /**

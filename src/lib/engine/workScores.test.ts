@@ -59,6 +59,19 @@ describe('scoreWork', () => {
     expect(scoreWork(busy, LA)).toEqual(scoreWork(asCollab, LA));
   });
 
+  it('reads placeholder titles like "Busy" as untitled meetings', () => {
+    const bare = toMeetings('fragmented 8h heavy').map(({ start, end }) => ({ start, end }));
+    for (const title of ['Busy', ' busy ', 'Tentative', 'Private event', 'Unavailable']) {
+      const titled = bare.map((m) => ({ ...m, title }));
+      expect(scoreWork(titled, LA)).toEqual(scoreWork(bare, LA));
+    }
+    // Only the exact placeholder is untitled: a real title containing the word
+    // still goes through the keyword categorizer unchanged ('busy' → NEUTRAL).
+    const real = scoreWork([{ ...bare[0], title: 'Busy season planning' }], LA);
+    expect(categorizeMeeting('Busy season planning')).toBe('NEUTRAL');
+    expect(real.schedule.meetingCount).toBe(0);
+  });
+
   it("lets the caller's category win over the title", () => {
     const [m] = toMeetings('bored standup');
     const asFocus = scoreWork([{ ...m, category: 'FOCUS_WORK' }], LA);

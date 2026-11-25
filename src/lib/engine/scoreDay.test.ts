@@ -76,6 +76,14 @@ describe('scoreDay', () => {
     expect(['bad', 'ok', 'good']).toContain(r.tier);
   });
 
+  it('counts a day of "Busy" blocks as meetings, at low confidence', () => {
+    const busy = heavyDay.map(({ start, end }) => ({ start, end, title: 'Busy' }));
+    const r = scoreDay(day({ meetings: busy }));
+    expect(r.workLoad).toBe(77);
+    expect(r.confidence.level).toBe('low');
+    expect(r.confidence.missing).toContain('meetingDetail');
+  });
+
   it('never calls an open day Survival', () => {
     const r = scoreDay(day({ meetings: [] }));
     expect(r.verdict).not.toBe('Survival');

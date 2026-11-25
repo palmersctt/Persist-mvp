@@ -193,3 +193,37 @@ status: ready
 - [ ] Dashboard: expand "Why your readiness" — the confidence line shows; the
       card itself is unchanged
 - [ ] Sandbox: score a custom day — same line shows
+
+## Phase 4: validation fixes (added after validation)
+
+Validation found three gaps in the raw-input path. Fixed in the engine only;
+the Google path and its golden snapshot are unchanged.
+
+### Changes
+1. `workScores.ts`: `meaningfulTitle()` treats placeholder titles (Busy,
+   Tentative, Blocked, Unavailable, Not available, Private, Private event,
+   Private appointment) as no title in `toWorkEvent`; `scoreDay`'s
+   `calendarDetail` uses it, so such days read as busy-only (low confidence).
+   "No title" is not on the list: it is Google's own fill-in and already
+   scores as untitled, and keeping it off preserves Google parity.
+2. `parse.ts`: meeting times must be ISO date-times with an offset; `date`
+   must be a real calendar date; each meeting must start on `date` in
+   `timezone`; at most 100 meetings (`MAX_MEETINGS`); `weekAhead` dates
+   strictly ascending.
+3. README documents both.
+
+### Automated checks
+- [x] `workScores.test.ts`: placeholder titles score like bare blocks; a real
+      title containing "busy" still goes through the categorizer
+- [x] `scoreDay.test.ts`: a day of "Busy" blocks → work load 77, low
+      confidence
+- [x] `parse.test.ts`: no offset, date-only time, meeting on another day,
+      too many meetings, impossible date, week out of order rejected; an
+      evening meeting that is the next day in UTC accepted
+- [x] `npm run verify`
+
+### Follow-up
+- `thoughts/shared/tickets/2026-11-25-6-google-busy-titles.md`: the same
+  "Busy" problem on the Google path (changes existing users' scores, so it
+  has its own ticket).
+
