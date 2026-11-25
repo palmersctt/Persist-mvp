@@ -35,7 +35,19 @@ model or the engine; the waitlist (ticket 12); card italics (ticket 11).
       reveal; `/sandbox` redirects.
 
 ## Phase 2: ask your assistant
-- [ ] prompt + paste door, `extractJson`, `explainErrors`; tests; verify
+### Changes
+- `src/lib/verdict/assistantPrompt.ts`: Copilot / ChatGPT / Claude prompt
+  (today, the visitor's zone, metadata-only JSON, category guide),
+  `extractJson` (raw or fenced), `explainErrors` (validation → fixes).
+- `src/components/verdict/AssistantDoor.tsx`: tabs, copy prompt, see
+  prompt, paste, "Get my verdict", fixes list. Wired on `/verdict` as the
+  first door; the result adds "Your assistant can do this daily".
+### Automated checks
+- [x] `assistantPrompt.test.ts` (prompt contents; its example parses;
+      extraction; fixes); `AssistantDoor.test.tsx`
+- [x] `npm run verify`
+### Manual checks
+- [ ] Run the prompt in a real Copilot / ChatGPT / Claude and paste the reply.
 
 ## Phase 3: sketch it + body chips
 - [ ] timeline + chips, `sketchToDayInput`; tests; verify

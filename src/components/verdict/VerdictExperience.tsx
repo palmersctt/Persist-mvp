@@ -195,6 +195,16 @@ export default function VerdictExperience({
             >
               {shareState === 'busy' ? 'Making your card…' : 'Share my card'}
             </button>
+            {doors && (
+              <button
+                type="button"
+                onClick={() => setStage('choose')}
+                className="w-full rounded-xl py-3.5 text-sm font-medium"
+                style={{ ...SURFACE, color: 'var(--text)' }}
+              >
+                Your assistant can do this daily
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setStage('choose')}
