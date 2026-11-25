@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import GoogleCalendarService, { MeetingCategory } from '../../src/services/googleCalendar'
+import { categorizeMeeting } from '../../src/lib/engine/workScores'
 import ClaudeAIService, { CalendarAnalysis } from '../../src/services/claudeAI'
 import { comicReliefGenerator } from '../../src/utils/comicReliefGenerator'
 
@@ -42,8 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const end = new Date(today)
       end.setHours(m.endHour, m.endMinute, 0, 0)
 
-      // Access the private categorizeEvent via bracket notation
-      const category = (service as unknown as Record<string, (s: string) => MeetingCategory>)['categorizeEvent'](m.title)
+      const category = categorizeMeeting(m.title)
 
       return {
         id: m.id,

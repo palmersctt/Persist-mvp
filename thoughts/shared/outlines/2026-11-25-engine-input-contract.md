@@ -1,7 +1,7 @@
 ---
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-engine-input-contract.md
-status: awaiting approval
+status: approved
 ---
 
 # Outline: one engine entry point, with confidence

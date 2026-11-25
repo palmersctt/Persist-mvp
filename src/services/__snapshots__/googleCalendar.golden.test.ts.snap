@@ -1,0 +1,318 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`analyzeWorkHealth golden days > back-to-back afternoon 1`] = `
+{
+  "adaptivePerformanceIndex": 55,
+  "breakdown": {
+    "contributors": [
+      "Focus: 55% (Moderate)",
+      "Strain: 55% (High)",
+      "Rhythm: 51% (Moderate)",
+    ],
+    "primaryFactors": [
+      "Balanced workload with manageable cognitive demands",
+      "3 back-to-back meetings creating significant mental switching costs",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 27,
+  "cognitiveResilience": 55,
+  "focusTime": 458,
+  "meetingDensity": 5,
+  "readiness": 52,
+  "schedule": {
+    "adequateBreaks": 1,
+    "afternoonMeetings": 3,
+    "backToBackCount": 3,
+    "bufferTime": 420,
+    "durationHours": 3.8,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 46,
+    "longestStretch": 4,
+    "meetingCount": 5,
+    "meetingRatio": 0.47,
+    "morningMeetings": 1,
+    "shortBreaks": 0,
+    "uniqueContexts": 5,
+  },
+  "status": "MODERATE",
+  "workRhythmRecovery": 51,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > bored standup 1`] = `
+{
+  "adaptivePerformanceIndex": 89,
+  "breakdown": {
+    "contributors": [
+      "Focus: 89% (Optimal)",
+      "Strain: 8% (Low)",
+      "Rhythm: 88% (Excellent)",
+    ],
+    "primaryFactors": [
+      "Excellent work health conditions with minimal meeting load and abundant focus time",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 85,
+  "cognitiveResilience": 8,
+  "focusTime": 480,
+  "meetingDensity": 1,
+  "readiness": 92,
+  "schedule": {
+    "adequateBreaks": 3,
+    "afternoonMeetings": 0,
+    "backToBackCount": 0,
+    "bufferTime": 690,
+    "durationHours": 0.3,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 85,
+    "longestStretch": 1,
+    "meetingCount": 1,
+    "meetingRatio": 0.03,
+    "morningMeetings": 1,
+    "shortBreaks": 0,
+    "uniqueContexts": 1,
+  },
+  "status": "OPTIMAL",
+  "workRhythmRecovery": 88,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > early and late 1`] = `
+{
+  "adaptivePerformanceIndex": 75,
+  "breakdown": {
+    "contributors": [
+      "Focus: 75% (Excellent)",
+      "Strain: 35% (Moderate)",
+      "Rhythm: 54% (Moderate)",
+    ],
+    "primaryFactors": [
+      "Good work health balance with light meeting schedule and adequate focus periods",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 53,
+  "cognitiveResilience": 35,
+  "focusTime": 480,
+  "meetingDensity": 3,
+  "readiness": 81,
+  "schedule": {
+    "adequateBreaks": 2,
+    "afternoonMeetings": 1,
+    "backToBackCount": 0,
+    "bufferTime": 495,
+    "durationHours": 3,
+    "earlyLateMeetings": 2,
+    "fragmentationScore": 67,
+    "longestStretch": 1,
+    "meetingCount": 3,
+    "meetingRatio": 0.38,
+    "morningMeetings": 2,
+    "shortBreaks": 0,
+    "uniqueContexts": 3,
+  },
+  "status": "EXCELLENT",
+  "workRhythmRecovery": 54,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > fragmented 8h heavy 1`] = `
+{
+  "adaptivePerformanceIndex": 25,
+  "breakdown": {
+    "contributors": [
+      "Focus: 25% (Needs Attention)",
+      "Strain: 69% (Very High)",
+      "Rhythm: 35% (Needs Attention)",
+    ],
+    "primaryFactors": [
+      "High cognitive strain due to context switching and decision fatigue",
+      "7 back-to-back meetings creating significant mental switching costs",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 15,
+  "cognitiveResilience": 69,
+  "focusTime": 222,
+  "meetingDensity": 8,
+  "readiness": 33,
+  "schedule": {
+    "adequateBreaks": 0,
+    "afternoonMeetings": 3,
+    "backToBackCount": 7,
+    "bufferTime": 120,
+    "durationHours": 8,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 0,
+    "longestStretch": 8,
+    "meetingCount": 8,
+    "meetingRatio": 1,
+    "morningMeetings": 3,
+    "shortBreaks": 0,
+    "uniqueContexts": 8,
+  },
+  "status": "NEEDS_ATTENTION",
+  "workRhythmRecovery": 35,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > mixed focus and beneficial 1`] = `
+{
+  "adaptivePerformanceIndex": 94,
+  "breakdown": {
+    "contributors": [
+      "Focus: 94% (Optimal)",
+      "Strain: 8% (Low)",
+      "Rhythm: 82% (Excellent)",
+    ],
+    "primaryFactors": [
+      "Excellent work health conditions with minimal meeting load and abundant focus time",
+      "2 wellness/self-care blocks supporting cognitive recovery",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 82,
+  "cognitiveResilience": 8,
+  "focusTime": 345,
+  "meetingDensity": 2,
+  "readiness": 90,
+  "schedule": {
+    "adequateBreaks": 1,
+    "afternoonMeetings": 1,
+    "backToBackCount": 0,
+    "bufferTime": 600,
+    "durationHours": 1.5,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 49,
+    "longestStretch": 1,
+    "meetingCount": 2,
+    "meetingRatio": 0.19,
+    "morningMeetings": 1,
+    "shortBreaks": 0,
+    "uniqueContexts": 2,
+  },
+  "status": "OPTIMAL",
+  "workRhythmRecovery": 82,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > open 1`] = `
+{
+  "adaptivePerformanceIndex": 90,
+  "breakdown": {
+    "contributors": [
+      "Focus: 90% (Optimal)",
+      "Strain: 12% (Low)",
+      "Rhythm: 90% (Excellent)",
+    ],
+    "primaryFactors": [
+      "Excellent work health conditions with minimal meeting load and abundant focus time",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 95,
+  "cognitiveResilience": 12,
+  "focusTime": 720,
+  "meetingDensity": 0,
+  "readiness": 96,
+  "schedule": {
+    "adequateBreaks": 4,
+    "afternoonMeetings": 0,
+    "backToBackCount": 0,
+    "bufferTime": 720,
+    "durationHours": 0,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 100,
+    "longestStretch": 0,
+    "meetingCount": 0,
+    "meetingRatio": 0,
+    "morningMeetings": 0,
+    "shortBreaks": 0,
+    "uniqueContexts": 0,
+  },
+  "status": "OPTIMAL",
+  "workRhythmRecovery": 90,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > unsorted sandbox input 1`] = `
+{
+  "adaptivePerformanceIndex": 80,
+  "breakdown": {
+    "contributors": [
+      "Focus: 80% (Excellent)",
+      "Strain: 26% (Moderate)",
+      "Rhythm: 69% (Good)",
+    ],
+    "primaryFactors": [
+      "Good work health balance with light meeting schedule and adequate focus periods",
+      "1 back-to-back session requiring transition management",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 63,
+  "cognitiveResilience": 26,
+  "focusTime": 480,
+  "meetingDensity": 3,
+  "readiness": 78,
+  "schedule": {
+    "adequateBreaks": 1,
+    "afternoonMeetings": 1,
+    "backToBackCount": 1,
+    "bufferTime": 540,
+    "durationHours": 2.3,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 53,
+    "longestStretch": 2,
+    "meetingCount": 3,
+    "meetingRatio": 0.28,
+    "morningMeetings": 2,
+    "shortBreaks": 0,
+    "uniqueContexts": 3,
+  },
+  "status": "EXCELLENT",
+  "workRhythmRecovery": 69,
+}
+`;
+
+exports[`analyzeWorkHealth golden days > untitled meetings 1`] = `
+{
+  "adaptivePerformanceIndex": 74,
+  "breakdown": {
+    "contributors": [
+      "Focus: 74% (Good)",
+      "Strain: 11% (Low)",
+      "Rhythm: 65% (Good)",
+    ],
+    "primaryFactors": [
+      "Good work health balance with light meeting schedule and adequate focus periods",
+      "1 back-to-back session requiring transition management",
+    ],
+    "source": "calendar",
+  },
+  "cognitiveAvailability": 60,
+  "cognitiveResilience": 11,
+  "focusTime": 480,
+  "meetingDensity": 3,
+  "readiness": 77,
+  "schedule": {
+    "adequateBreaks": 1,
+    "afternoonMeetings": 1,
+    "backToBackCount": 1,
+    "bufferTime": 465,
+    "durationHours": 3.5,
+    "earlyLateMeetings": 0,
+    "fragmentationScore": 53,
+    "longestStretch": 2,
+    "meetingCount": 3,
+    "meetingRatio": 0.44,
+    "morningMeetings": 2,
+    "shortBreaks": 0,
+    "uniqueContexts": 1,
+  },
+  "status": "GOOD",
+  "workRhythmRecovery": 65,
+}
+`;
