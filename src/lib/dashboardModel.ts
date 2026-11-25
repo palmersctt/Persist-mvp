@@ -43,6 +43,8 @@ export function dashboardVerdict(
       recovery: actuals?.recovery,
     },
     weekAhead,
-    todayDate
+    todayDate,
+    // Estimated work scores came from no calendar at all.
+    work.breakdown?.source === 'estimated' ? 'unknown' : 'full'
   );
 }

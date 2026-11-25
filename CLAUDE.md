@@ -62,6 +62,10 @@ instead, except at the two gates below.
   currency (work + training), a 21-day baseline **seeded from a prior** (a
   real verdict on day one), the Work Index, and a single verdict → **Readiness
   / Load / Balance**.
+- **`src/lib/engine/`** — the provider-neutral entry point: a versioned
+  `DayInput` (any subset of meetings, email, training, sleep) → `scoreDay` →
+  the card's verdict plus a confidence level. Work scoring (Focus/Strain/
+  Rhythm) lives here, not in the Google service. See its `README.md`.
 - **`src/lib/dashboardModel.ts`** — maps real calendar + Strava signals into
   the model. **`src/components/ReadinessExplain.tsx`** renders the "why" panel.
 - ONE verdict drives the card: the model's verdict → mood + tier + action.
@@ -130,6 +134,7 @@ All scores render at uniform 32px. Color-only emphasis — Readiness leads/pops.
 | `src/components/TrendsSection.tsx`       | Dashboard trends UI (sparklines, weekly/monthly)                         |
 | `src/lib/model.ts`                       | Unified readiness engine (load vs baseline + Work Index → verdict)       |
 | `src/lib/dashboardModel.ts`              | Maps real calendar + Strava signals into the model                       |
+| `src/lib/engine/`                       | Engine entry points: `DayInput` → verdict (`scoreDay`), work scores, confidence |
 | `src/lib/wearables/`                     | Wearable providers (Strava, demo, WHOOP) normalized to `WearableActuals` |
 | `src/components/WearableSection.tsx`     | Dashboard connect pitch + "Why your readiness" panel                     |
 | `src/components/ReadinessExplain.tsx`    | Shared verdict panel (Readiness/Load/Balance + why + drivers)            |

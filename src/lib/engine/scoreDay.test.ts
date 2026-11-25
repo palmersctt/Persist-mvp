@@ -83,8 +83,12 @@ describe('scoreDay', () => {
     expect(r.load).toBe(0);
   });
 
-  it('scores an unknown calendar as an open day', () => {
-    expect(scoreDay(day())).toEqual(scoreDay(day({ meetings: [] })));
+  it('scores an unknown calendar as an open day, with lower confidence', () => {
+    const { confidence: unknown, ...noCalendar } = scoreDay(day());
+    const { confidence: open, ...openDay } = scoreDay(day({ meetings: [] }));
+    expect(noCalendar).toEqual(openDay);
+    expect(unknown.missing).toContain('calendar');
+    expect(open.missing).not.toContain('calendar');
   });
 
   it('carries email through without scoring it', () => {
@@ -108,5 +112,42 @@ describe('scoreDay', () => {
     }));
     const r = scoreDay(day({ meetings: [], weekAhead }));
     expect(r.plan?.length).toBe(7);
+  });
+
+  describe('confidence', () => {
+    const training = { baseline: 40, loadToday: 20 };
+    const sleep = { performance: 75 };
+
+    it('is low for busy-only blocks alone', () => {
+      const busy = heavyDay.map(({ start, end }) => ({ start, end }));
+      expect(scoreDay(day({ meetings: busy })).confidence).toEqual({
+        level: 'low',
+        missing: ['meetingDetail', 'training', 'sleep', 'history'],
+      });
+    });
+
+    it('caps a full picture at medium until there is a personal baseline', () => {
+      expect(scoreDay(day({ meetings: heavyDay, training, sleep })).confidence).toEqual({
+        level: 'medium',
+        missing: ['history'],
+      });
+    });
+
+    it('never changes the verdict, scores or tier', () => {
+      const busy = heavyDay.map(({ start, end }) => ({ start, end }));
+      const categorized = busy.map((m) => ({ ...m, category: 'COLLABORATIVE' as const }));
+      const { confidence: a, ...low } = scoreDay(day({ meetings: busy }));
+      const { confidence: b, ...full } = scoreDay(day({ meetings: categorized }));
+      expect(a.level).toBe('low');
+      expect(b.level).toBe('medium');
+      expect(low).toEqual(full);
+    });
+
+    it('reads estimated dashboard scores as no calendar', () => {
+      const w = metricsFor(heavyDay);
+      const estimated = { ...w, breakdown: { source: 'estimated' } } as WorkHealthMetrics;
+      expect(dashboardVerdict(estimated, null).confidence.missing).toContain('calendar');
+      expect(dashboardVerdict(w, null).confidence.missing).not.toContain('calendar');
+    });
   });
 });

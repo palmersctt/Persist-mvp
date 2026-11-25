@@ -173,13 +173,21 @@ status: ready
    `src/lib/engine/`.
 
 ### Automated checks
-- [ ] `src/lib/engine/confidence.test.ts`: each rule row; the history cap;
+- [x] `src/lib/engine/confidence.test.ts`: each rule row; the history cap;
       `missing` contents
-- [ ] `scoreDay.test.ts`: busy-only → low; full calendar + training + sleep →
+- [x] `scoreDay.test.ts`: busy-only → low; full calendar + training + sleep →
       medium (capped) with only `history` missing; confidence never changes
       verdict/scores/tier
-- [ ] `ReadinessExplain.test.tsx`: the confidence line renders
-- [ ] `npm run verify`
+- [x] `ReadinessExplain.test.tsx`: the confidence line renders
+- [x] `npm run verify`
+
+### Notes from implementation
+- `scoreFromWork` takes the calendar detail as a fifth argument;
+  `historyDays` is fixed at 0 inside it until ticket 3 persists history.
+- Busy-only means *any* meeting lacks both title and category.
+- The `scoreDay` test written in phase 2 for an unknown calendar now
+  compares everything but `confidence`, and asserts the confidence differs —
+  the intended behaviour of this phase, not a weakened check.
 
 ### Manual checks
 - [ ] Dashboard: expand "Why your readiness" — the confidence line shows; the

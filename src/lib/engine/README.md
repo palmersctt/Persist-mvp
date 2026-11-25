@@ -1,0 +1,85 @@
+# Readiness engine
+
+One path from a day's signals to the card's verdict, whatever the source:
+Google Calendar, the sandbox, or an outside caller such as an AI assistant
+that already has the user's calendar.
+
+| Entry point                  | Takes                        | Used by                            |
+| ---------------------------- | ---------------------------- | ---------------------------------- |
+| `scoreDay(input)`            | a raw `DayInput`             | outside callers, future API        |
+| `scoreFromWork(work, …)`     | already-computed work scores | the dashboard (`dashboardVerdict`) |
+| `parseDayInput(raw)`         | untrusted JSON               | anything that accepts input        |
+| `scoreWork(meetings, tz)`    | raw meetings                 | `scoreDay`                         |
+| `analyzeWorkDay(events, tz)` | calendar events              | `GoogleCalendarService`            |
+
+Both entry points run the same model (`../model.ts`) and session call
+(`../weekPlan.ts`). Same input, same output: everything here is pure.
+
+## `DayInput` v1
+
+```jsonc
+{
+  "version": 1,
+  "date": "2026-11-25", // user's local date
+  "timezone": "America/New_York", // IANA; sets morning/afternoon/early/late
+  "meetings": [
+    // absent = calendar unknown; [] = open day
+    {
+      "start": "2026-11-25T09:00:00-05:00",
+      "end": "2026-11-25T10:00:00-05:00",
+      "attendees": 6, // optional, default 1
+      "title": "Sprint planning", // optional, only used to pick a category
+      "category": "COLLABORATIVE", // optional, wins over the title
+      "organizerIsMe": true, // optional, not scored yet
+    },
+  ],
+  "email": { "sent": 40, "sentAfterHours": 6, "received": 120 }, // not scored yet
+  "training": {
+    "loadToday": 45,
+    "baseline": 38,
+    "weekActivityCount": 4,
+    "keySessions": [{ "daysAgo": 2, "kind": "hard" }],
+  },
+  "sleep": { "performance": 81 }, // 0–100
+  "recovery": 66, // 0–100, gates intensity only
+  "weekAhead": [{ "date": "2026-11-25", "meetingHours": 1.5 }],
+}
+```
+
+Every section is optional. Absent means unknown, and unknown is neutral: a
+missing calendar scores the work side as an open day (never a hard one) and
+lowers confidence instead.
+
+Categories: `BENEFICIAL`, `NEUTRAL`, `FOCUS_WORK` (not counted as meetings),
+`LIGHT_MEETINGS`, `HEAVY_MEETINGS`, `COLLABORATIVE`. A meeting with neither
+title nor category counts as `COLLABORATIVE`, the same default an unmatched
+title gets. Each untitled meeting counts as its own topic for context
+switching.
+
+`parseDayInput` rejects malformed fields with a list of errors and copies
+only known fields, so extra keys (a meeting body, notes) never travel on.
+
+## Result
+
+The card's verdict (`DashboardVerdict`): Readiness, Load, Balance, verdict,
+tier, label, rec, why, the week plan, the Focus/Strain/Rhythm breakdown, plus:
+
+- `confidence: { level: 'low' | 'medium' | 'high', missing: [...] }`
+- `email`: the counts sent in, untouched (`scoreDay` only)
+
+## Confidence
+
+| Level  | When                                                                         |
+| ------ | ---------------------------------------------------------------------------- |
+| high   | full calendar (titles or categories) + training + sleep + 21 days of history |
+| medium | any calendar + training or sleep, or a full calendar alone                   |
+| low    | busy-only blocks alone, or no calendar                                       |
+
+Until per-day history is stored, `history` is always missing and confidence is
+capped at medium. Confidence never changes the verdict, scores or tier.
+
+## Not yet
+
+- Email does not move any score until it can be calibrated against how days
+  actually felt.
+- No per-day history: the baseline is the prior (day-one mode).

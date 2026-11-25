@@ -40,4 +40,13 @@ describe('ReadinessExplain', () => {
     expect(screen.getByText('Your body')).toBeTruthy();
     expect(screen.getByText('66%')).toBeTruthy();
   });
+
+  it('says how confident the read is', () => {
+    render(<ReadinessExplain model={dashboardVerdict(work, null)} />);
+    expect(
+      screen.getByText(
+        'Medium confidence — no training data, no sleep data, no personal baseline yet'
+      )
+    ).toBeTruthy();
+  });
 });

@@ -18,6 +18,7 @@ import {
 } from '../model';
 import { sessionCall, type PlannedDay, type WeekDay } from '../weekPlan';
 import type { WeekDayHours } from '../weekAhead';
+import { confidenceFor, type CalendarDetail, type Confidence } from './confidence';
 import { scoreWork } from './workScores';
 import type { DayInput, EmailCounts, TrainingInput } from './types';
 
@@ -52,6 +53,8 @@ export interface DashboardVerdict extends ModelResult {
   plan: PlannedDay[] | null;
   /** Whether the provider reports which recent sessions were hard or long. */
   knowsTraining: boolean;
+  /** How much data the verdict stood on. Never changes the verdict. */
+  confidence: Confidence;
 }
 
 /** What scoreDay returns: the card's verdict plus the inputs it carried. */
@@ -89,7 +92,9 @@ export function scoreFromWork(
   body: BodyIn,
   weekAhead: WeekDayHours[] | null,
   /** The user's local date (YYYY-MM-DD); the forecast is aligned to it. */
-  todayDate: string
+  todayDate: string,
+  /** How much the work side knew about the day. */
+  calendar: CalendarDetail
 ): DashboardVerdict {
   const { focus, strain, rhythm } = work;
   const wi = workIndex(focus, rhythm, strain);
@@ -169,13 +174,26 @@ export function scoreFromWork(
     trainingBaseline: training?.baseline ?? null,
     weekActivityCount: training?.weekActivityCount ?? null,
     trainingLoadToday: training?.loadToday ?? null,
+    confidence: confidenceFor({
+      calendar,
+      training: hasTraining,
+      sleep: typeof sleepPerformance === 'number',
+      historyDays: 0, // no per-day history is persisted yet
+    }),
   };
+}
+
+/** full when every meeting has a title or category, busy when any is bare. */
+function calendarDetail(input: DayInput): CalendarDetail {
+  if (input.meetings === undefined) return 'unknown';
+  return input.meetings.every((m) => m.title?.trim() || m.category) ? 'full' : 'busy';
 }
 
 /**
  * Score one day from raw signals. `meetings` absent (calendar unknown) and
  * `meetings: []` (an open day) both score the work side as an open day —
- * a missing calendar never reads as a hard one. Email is carried through.
+ * a missing calendar never reads as a hard one, only as low confidence.
+ * Email is carried through.
  */
 export function scoreDay(input: DayInput): EngineResult {
   const work = scoreWork(input.meetings ?? [], input.timezone);
@@ -192,7 +210,8 @@ export function scoreDay(input: DayInput): EngineResult {
       recovery: input.recovery,
     },
     input.weekAhead ?? null,
-    input.date
+    input.date,
+    calendarDetail(input)
   );
   return { ...verdict, email: input.email ? { ...input.email } : null };
 }

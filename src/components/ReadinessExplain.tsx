@@ -1,6 +1,7 @@
 'use client';
 
 import type { DashboardVerdict } from '../lib/dashboardModel';
+import { describeConfidence } from '../lib/engine/confidence';
 import type { PlannedDay } from '../lib/weekPlan';
 import type { WearableActuals } from '../lib/wearables/types';
 
@@ -46,6 +47,9 @@ export default function ReadinessExplain({
         <Op>=</Op>
         <Term value={`${model.acwr.toFixed(2)}×`} label={acwrWord} accent />
       </div>
+      <p className="text-[11px] px-1 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+        {describeConfidence(model.confidence)}
+      </p>
 
       {/* Your training */}
       {model.trainingBaseline != null && (
