@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The old demo lives on as Get your verdict.
+  async redirects() {
+    return [{ source: '/sandbox', destination: '/verdict', permanent: true }]
+  },
   // OAuth discovery for MCP connectors (RFC 8414 / RFC 9728).
   async rewrites() {
     return [

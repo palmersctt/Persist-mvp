@@ -402,3 +402,16 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Get your verdict: the good-tier card lands with one lime glow pulse. */
+@keyframes verdictGlow {
+  0%   { box-shadow: 0 0 0 0 var(--signal-edge); }
+  40%  { box-shadow: 0 0 48px 6px var(--signal-soft); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.verdict-glow {
+  border-radius: 20px;
+  animation: verdictGlow 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0s);
+}

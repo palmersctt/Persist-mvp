@@ -107,8 +107,8 @@ export default function LandingPage() {
           <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={handleGetStarted}>Sign in</button>
-            <Link href="/sandbox" className="lp-nav-cta">
-              See the demo &rarr;
+            <Link href="/verdict" className="lp-nav-cta">
+              Get your verdict &rarr;
             </Link>
           </div>
           <button
@@ -149,11 +149,11 @@ export default function LandingPage() {
             <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
             <button onClick={handleGetStarted}>Sign in</button>
             <Link
-              href="/sandbox"
+              href="/verdict"
               className="lp-mobile-cta"
               onClick={() => setMobileMenuOpen(false)}
             >
-              See the demo &rarr;
+              Get your verdict &rarr;
             </Link>
           </div>
         </div>
