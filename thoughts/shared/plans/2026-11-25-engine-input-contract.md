@@ -124,16 +124,25 @@ status: ready
    it is declared).
 
 ### Automated checks
-- [ ] Existing `dashboardModel.test.ts`, `ReadinessExplain.test.tsx`,
+- [x] Existing `dashboardModel.test.ts`, `ReadinessExplain.test.tsx`,
       `weekPlan.test.ts` pass with no edits
-- [ ] `src/lib/engine/parse.test.ts`: a full valid input; each rejection
-- [ ] `src/lib/engine/scoreDay.test.ts`: raw meetings → same verdict, scores
+- [x] `src/lib/engine/parse.test.ts`: a full valid input; each rejection
+- [x] `src/lib/engine/scoreDay.test.ts`: raw meetings → same verdict, scores
       and label as `dashboardVerdict` on the equivalent metrics; busy-only
       meetings score; `meetings: []` is never Survival/bad; absent meetings
       equals the open-day verdict; email-only input returns the email and the
       same verdict as with no email; identical input twice → deep-equal
       output.
-- [ ] `npm run verify`
+- [x] `npm run verify`
+
+### Notes from implementation
+- `scoreFromWork(work, body, weekAhead, todayDate)` takes the body signals
+  (`training`, `sleep` as a number, `recovery`) and the forecast as separate
+  arguments rather than one `rest` object.
+- `DashboardVerdict` moved to `engine/scoreDay.ts`; `dashboardModel.ts`
+  re-exports it, so its importers are unchanged.
+- `parseDayInput` copies only known fields into the result, so unknown keys
+  (e.g. a meeting body) never travel past validation.
 
 ### Manual checks
 - none
