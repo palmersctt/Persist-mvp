@@ -33,8 +33,19 @@ REST API; Copilot packaging; billing; teams.
   `getVerdict`, `getTrend`, `rateDay`.
 - `pages/api/mcp.ts`: Streamable HTTP, stateless, bearer token, rate limit.
 ### Automated checks
-- [ ] tools tests (in-memory store); MCP route test
-- [ ] `npm run verify`
+- [x] tools tests (in-memory store); MCP route test
+- [x] `npm run verify`
+### Notes from implementation
+- Also added: `zod` as a direct dependency (the SDK's schema library);
+  `src/lib/assistant/auth.ts` (token → user + rate limit);
+  `mcpServer.ts` (tool registration, testable over the SDK's in-memory
+  transport); an end-to-end HTTP test with the real Streamable HTTP
+  transport (`tests/api/mcp.http.test.ts`).
+- `log_day` accepts today or yesterday only, so an assistant can't rewrite
+  old history. Titles are dropped by the tool schema and never stored.
+- Route tests live in `tests/api/` (files under `pages/` become routes and
+  broke `next build`; fixed in a separate commit with a guard test).
+
 ### Manual checks
 - [ ] Connect a client with the token; ask for today's verdict.
 
