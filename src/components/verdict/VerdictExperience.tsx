@@ -8,6 +8,8 @@ import SwipeableQuoteCards from '../SwipeableQuoteCards';
 import ReadinessExplain from '../ReadinessExplain';
 import Reveal from './Reveal';
 import Receipt from './Receipt';
+import BodyChips from './BodyChips';
+import { withChips, type BodyChips as Chips } from '../../lib/verdict/sketch';
 import { VERDICT_MOOD } from '../../lib/mood';
 import { scoreDay, type EngineResult } from '../../lib/engine/scoreDay';
 import { scoreWork, type WorkDayAnalysis } from '../../lib/engine/workScores';
@@ -44,14 +46,18 @@ export default function VerdictExperience({
   const [scored, setScored] = useState<Scored | null>(null);
   const [stage, setStage] = useState<'choose' | 'reveal' | 'result'>('choose');
   const [shareState, setShareState] = useState<'idle' | 'busy'>('idle');
+  const [chips, setChips] = useState<Chips>({});
   const cardRef = useRef<HTMLDivElement | null>(null);
   const day = useMemo(() => browserDay(), []);
 
-  const score = useCallback((input: DayInput) => {
-    setScored(scoreInBrowser(input));
-    setStage('reveal');
-    window.scrollTo?.({ top: 0 });
-  }, []);
+  const score = useCallback(
+    (input: DayInput) => {
+      setScored(scoreInBrowser(withChips(input, chips)));
+      setStage('reveal');
+      window.scrollTo?.({ top: 0 });
+    },
+    [chips]
+  );
   const finishReveal = useCallback(() => setStage('result'), []);
 
   const share = async () => {
@@ -102,6 +108,10 @@ export default function VerdictExperience({
           </p>
 
           {doors && <div className="mt-8 flex flex-col gap-4">{doors(score)}</div>}
+
+          <div className="mt-4">
+            <BodyChips value={chips} onChange={setChips} />
+          </div>
 
           <div className="mt-8">
             <h2

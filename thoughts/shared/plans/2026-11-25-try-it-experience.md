@@ -50,7 +50,21 @@ model or the engine; the waitlist (ticket 12); card italics (ticket 11).
 - [ ] Run the prompt in a real Copilot / ChatGPT / Claude and paste the reply.
 
 ## Phase 3: sketch it + body chips
-- [ ] timeline + chips, `sketchToDayInput`; tests; verify
+### Changes
+- `src/lib/verdict/sketch.ts`: hours 6a–8p, `nextMark` (free → busy →
+  heavy), `sketchToDayInput`, `bodyFromChips` (Rest/Easy/Hard/Long against a
+  typical baseline of 40; Rough/OK/Great sleep = 40/65/88), `withChips`
+  (never overrides what the day already says).
+- `SketchDoor` (15 tappable hours, 44px targets) and `BodyChips` (optional,
+  applies to every door) on `/verdict`.
+### Automated checks
+- [x] `sketch.test.ts`; `SketchDoor.test.tsx` (incl. BodyChips)
+- [x] `npm run verify`
+### Notes from implementation
+- Sketch blocks are whole hours; adjacent hours read as back-to-back, as
+  they would on a real calendar.
+### Manual checks
+- [ ] Build a day by thumb on a phone.
 
 ## Phase 4: funnel and clean-up
 - [ ] `visitor-` analytics funnel; delete the sandbox; docs; verify
