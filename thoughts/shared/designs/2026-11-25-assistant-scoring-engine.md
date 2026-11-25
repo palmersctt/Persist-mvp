@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: cce0349
 ticket: thoughts/shared/tickets/2026-11-25-5-assistant-scoring-engine.md
 research: thoughts/shared/research/2026-11-25-assistant-scoring-engine.md
-status: awaiting decisions
+status: agreed
 depends_on:
   - thoughts/shared/designs/2026-11-25-real-baseline.md
   - thoughts/shared/designs/2026-11-25-daily-feel-checkin.md
@@ -92,3 +92,7 @@ the card, trend and rating; assistants are another way in.
 - `/api/ai-health` returns the Anthropic key's length and prefix, ungated.
 Recommend one urgent security ticket for these, ahead of opening any new
 API surface.
+
+## Answers (2026-11-25)
+
+Accepted: D1 MCP first; D2 personal access tokens (phase 1) then OAuth 2.1 (phase 2); D3 Claude first; D4 hashed tokens, revoke list, 60 calls/hour per token, tokens valid until revoked; D5 numbers only; D6 last write wins with a source column.

@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: 0ca0c27
 ticket: thoughts/shared/tickets/2026-11-11-clear-lint-warnings.md
 research: thoughts/shared/research/2026-11-11-clear-lint-warnings.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: zero lint warnings, no behaviour change
@@ -48,3 +48,7 @@ called; `cognitive-positioning.ts` keeps its own copy). **Recommend.**
 
 ## Out of scope
 - Tightening rules from warn to error; `next/image`; refactoring the hook.
+
+## Answers (2026-11-25)
+
+Accepted: D1 delete unused identifiers; D2 a (move each disable to the deps line, with a reason; no behaviour change); D3 a (keep `<img>` with a reasoned disable); D4 keep the diagnostic.

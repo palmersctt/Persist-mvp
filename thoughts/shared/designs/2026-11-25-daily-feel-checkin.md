@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: cce0349
 ticket: thoughts/shared/tickets/2026-11-25-4-daily-feel-checkin.md
 research: thoughts/shared/research/2026-11-25-daily-feel-checkin.md
-status: awaiting decisions
+status: agreed
 depends_on: thoughts/shared/designs/2026-11-25-real-baseline.md
 ---
 
@@ -65,3 +65,7 @@ selected one); no card change (it sits under the card, not in it).
 user's data to any signed-in user (`analytics/users.ts:7-80`,
 `events.ts:50-80`). Ratings must not be exposed the same way. Recommend a
 separate, urgent ticket to lock those two routes down.
+
+## Answers (2026-11-25)
+
+Accepted: D1 a (rating columns on `day_inputs`, which also stores verdict and readiness); D2 a (calibration only); D3 today and yesterday; D4 Drained / Heavy / OK / Good / Great; D5 no duplicate analytics event.

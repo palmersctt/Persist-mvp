@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: 0ca0c27
 ticket: thoughts/shared/tickets/2026-11-25-3-real-baseline.md
 research: thoughts/shared/research/2026-11-25-real-baseline.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: the verdict is measured against my own history
@@ -79,3 +79,7 @@ Supabase. A Supabase connection is available in this session.
 ## Out of scope
 - Backfill; server-side scoring; changing EWMA constants or the prior;
   trends UI; the feel rating (ticket 4).
+
+## Answers (2026-11-25)
+
+Accepted: D1 a (new `day_inputs` table); D2 a (dashboard posts its own day to a session-gated route; GET returns history); D3 a (logged days only, 42-day window); D4 backfill deferred to its own ticket; D5 I write the migration SQL and the user applies it (not applied from this session).

@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: 72115ef
 ticket: thoughts/shared/tickets/2026-11-25-7-try-it-experience.md
 research: thoughts/shared/research/2026-11-25-try-it-experience.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: "Get your verdict" — the no-signup experience
@@ -157,3 +157,7 @@ alone (see open question 4).
 - Real trends or history for visitors.
 - The landing page beyond its two demo links and their label.
 - The pre-existing analytics allow-list gaps for dashboard events.
+
+## Answers (2026-11-25)
+
+Accepted all recommendations: "Get your verdict" at `/verdict`; all three doors; local quotes via comicReliefGenerator; drop everything listed in D4; `visitor-` analytics funnel; no storage; browser time zone. Main ask after the reveal is Google sign-in plus the "your assistant can do this daily" prompt (waitlist = own ticket). The four example days as proposed. Card quote italics = separate ticket.

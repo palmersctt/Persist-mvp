@@ -3,7 +3,7 @@ date: 2026-11-25
 git_commit: 9f758ba
 ticket: thoughts/shared/tickets/2026-11-25-6-google-busy-titles.md
 research: thoughts/shared/research/2026-11-25-google-busy-titles.md
-status: awaiting decisions
+status: agreed
 ---
 
 # Design: Google calendar "Busy" blocks count as meetings
@@ -71,3 +71,7 @@ today; a "Busy" block marked free or a declined meeting would now count.
 - `cognitive-classification.ts` / `/api/cognitive-positioning` (own rules).
 - What titles the AI prompt sees (it still sees "Busy").
 - Any other keyword change.
+
+## Answers (2026-11-25)
+
+Accepted: D1 shared placeholder list; D2 a (category only, Google context counting unchanged); D3 file a follow-up ticket for free/declined events.
