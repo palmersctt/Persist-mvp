@@ -2,7 +2,7 @@
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-real-baseline.md
 outline: thoughts/shared/outlines/2026-11-25-real-baseline.md
-status: in progress
+status: implemented
 ---
 
 # Plan: verdicts against your own history
@@ -50,7 +50,7 @@ prior; trends UI.
   baseline" under the equation.
 - Engine README, WEARABLES.md.
 ### Automated checks
-- [ ] `ReadinessExplain.test.tsx` both states
-- [ ] `npm run verify`
+- [x] `ReadinessExplain.test.tsx` both states
+- [x] `npm run verify`
 ### Manual checks
 - [ ] Dashboard "why" panel shows the baseline line.

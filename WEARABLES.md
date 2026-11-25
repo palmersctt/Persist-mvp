@@ -22,6 +22,8 @@ hand us at connect, or an onboarding default) instead of accumulated over
 time — so there's a real verdict on **day one**. As days log, the EWMA drifts
 the baseline off the prior toward what you actually do; that's where trends
 sharpen it.
+Each day's model inputs are saved to `day_inputs` (`/api/day-inputs`) and
+read back as that history; the "why" panel says how many days are logged.
 
 A single **verdict** falls out — Survival / Grinding / Coasting / Locked In /
 Flow — which drives the card's mood, tier, and action (recover · keep it

@@ -1,7 +1,7 @@
 'use client';
 
 import type { DashboardVerdict } from '../lib/dashboardModel';
-import { describeConfidence } from '../lib/engine/confidence';
+import { describeConfidence, PERSONAL_BASELINE_DAYS } from '../lib/engine/confidence';
 import type { PlannedDay } from '../lib/weekPlan';
 import type { WearableActuals } from '../lib/wearables/types';
 
@@ -47,9 +47,14 @@ export default function ReadinessExplain({
         <Op>=</Op>
         <Term value={`${model.acwr.toFixed(2)}×`} label={acwrWord} accent />
       </div>
-      <p className="text-[11px] px-1 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-        {describeConfidence(model.confidence)}
-      </p>
+      <div className="px-1">
+        <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          {describeBaseline(model.days - 1)}
+        </p>
+        <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          {describeConfidence(model.confidence)}
+        </p>
+      </div>
 
       {/* Your training */}
       {model.trainingBaseline != null && (
@@ -282,4 +287,11 @@ function Bar({ label, value }: { label: string; value: number }) {
       </div>
     </div>
   );
+}
+
+/** "Your baseline · 26 days logged" or "Starting baseline · 3 of 21 days logged". */
+export function describeBaseline(daysLogged: number): string {
+  if (daysLogged >= PERSONAL_BASELINE_DAYS) return `Your baseline · ${daysLogged} days logged`;
+  if (daysLogged <= 0) return `Starting baseline · yours after ${PERSONAL_BASELINE_DAYS} days`;
+  return `Starting baseline · ${daysLogged} of ${PERSONAL_BASELINE_DAYS} days logged`;
 }

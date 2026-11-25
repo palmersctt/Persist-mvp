@@ -88,11 +88,19 @@ tier, label, rec, why, the week plan, the Focus/Strain/Rhythm breakdown, plus:
 | medium | any calendar + training or sleep, or a full calendar alone                   |
 | low    | busy-only blocks alone, or no calendar                                       |
 
-Until per-day history is stored, `history` is always missing and confidence is
-capped at medium. Confidence never changes the verdict, scores or tier.
+Confidence stays capped at medium until 21 days are logged in the last 21
+calendar days (see History). Confidence never changes the verdict, scores or tier.
+
+## History
+
+Each scored day's model inputs (work load, Work Index, training load,
+training feel, sleep — numbers only) are saved to `day_inputs` via
+`/api/day-inputs`. `historyFrom(rows, today)` (`history.ts`) turns the last 42
+days into the history `runModel` walks; gaps are skipped, not filled. Pass it
+as the last argument to `scoreDay` / `scoreFromWork` / `dashboardVerdict`.
+With no history the verdict is the day-one result against the prior.
 
 ## Not yet
 
 - Email does not move any score until it can be calibrated against how days
   actually felt.
-- No per-day history: the baseline is the prior (day-one mode).

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import ReadinessExplain from './ReadinessExplain';
+import ReadinessExplain, { describeBaseline } from './ReadinessExplain';
 import { dashboardVerdict } from '../lib/dashboardModel';
 import type { WorkHealthMetrics } from '../hooks/useWorkHealth';
 
@@ -48,5 +48,12 @@ describe('ReadinessExplain', () => {
         'Medium confidence — no training data, no sleep data, no personal baseline yet'
       )
     ).toBeTruthy();
+  });
+
+  it('says whether the baseline is yours yet', () => {
+    render(<ReadinessExplain model={dashboardVerdict(work, null)} />);
+    expect(screen.getByText(/Starting baseline · yours after 21 days/)).toBeTruthy();
+    expect(describeBaseline(3)).toBe('Starting baseline · 3 of 21 days logged');
+    expect(describeBaseline(26)).toBe('Your baseline · 26 days logged');
   });
 });
