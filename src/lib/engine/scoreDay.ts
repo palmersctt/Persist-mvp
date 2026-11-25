@@ -19,6 +19,7 @@ import {
 import { sessionCall, type PlannedDay, type WeekDay } from '../weekPlan';
 import type { WeekDayHours } from '../weekAhead';
 import { confidenceFor, type CalendarDetail, type Confidence } from './confidence';
+import { NO_HISTORY, type PastDays } from './history';
 import { meaningfulTitle, scoreWork } from './workScores';
 import type { DayInput, EmailCounts, TrainingInput } from './types';
 
@@ -55,6 +56,8 @@ export interface DashboardVerdict extends ModelResult {
   knowsTraining: boolean;
   /** How much data the verdict stood on. Never changes the verdict. */
   confidence: Confidence;
+  /** Today's model inputs, as saved to the user's history. */
+  inputs: DayInputs;
 }
 
 /** What scoreDay returns: the card's verdict plus the inputs it carried. */
@@ -94,7 +97,9 @@ export function scoreFromWork(
   /** The user's local date (YYYY-MM-DD); the forecast is aligned to it. */
   todayDate: string,
   /** How much the work side knew about the day. */
-  calendar: CalendarDetail
+  calendar: CalendarDetail,
+  /** The user's logged days before today (default: none, day-one mode). */
+  past: PastDays = NO_HISTORY
 ): DashboardVerdict {
   const { focus, strain, rhythm } = work;
   const wi = workIndex(focus, rhythm, strain);
@@ -125,7 +130,7 @@ export function scoreFromWork(
     sleep,
   };
 
-  const model = runModel(prior, [], today);
+  const model = runModel(prior, past.history, today);
 
   // The session call: the model's read, taken to the level of the week.
   // A cached forecast may start on an earlier day: drop the days already past,
@@ -178,8 +183,9 @@ export function scoreFromWork(
       calendar,
       training: hasTraining,
       sleep: typeof sleepPerformance === 'number',
-      historyDays: 0, // no per-day history is persisted yet
+      historyDays: past.historyDays,
     }),
+    inputs: today,
   };
 }
 
@@ -195,7 +201,7 @@ function calendarDetail(input: DayInput): CalendarDetail {
  * a missing calendar never reads as a hard one, only as low confidence.
  * Email is carried through.
  */
-export function scoreDay(input: DayInput): EngineResult {
+export function scoreDay(input: DayInput, past: PastDays = NO_HISTORY): EngineResult {
   const work = scoreWork(input.meetings ?? [], input.timezone);
   const verdict = scoreFromWork(
     {
@@ -211,7 +217,8 @@ export function scoreDay(input: DayInput): EngineResult {
     },
     input.weekAhead ?? null,
     input.date,
-    calendarDetail(input)
+    calendarDetail(input),
+    past
   );
   return { ...verdict, email: input.email ? { ...input.email } : null };
 }

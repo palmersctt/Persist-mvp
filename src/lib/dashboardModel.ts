@@ -1,4 +1,5 @@
 import { scoreFromWork, type DashboardVerdict } from './engine/scoreDay';
+import { NO_HISTORY, type PastDays } from './engine/history';
 import type { WorkHealthMetrics } from '../hooks/useWorkHealth';
 import type { WearableActuals } from './wearables/types';
 import type { WeekDayHours } from './weekAhead';
@@ -21,7 +22,9 @@ export function dashboardVerdict(
   actuals: WearableActuals | null,
   weekAhead: WeekDayHours[] | null = null,
   /** The user's local date (YYYY-MM-DD); the forecast is aligned to it. */
-  todayDate: string = new Date().toLocaleDateString('sv-SE')
+  todayDate: string = new Date().toLocaleDateString('sv-SE'),
+  /** The user's logged days before today (see engine/history.ts). */
+  past: PastDays = NO_HISTORY
 ): DashboardVerdict {
   return scoreFromWork(
     {
@@ -45,6 +48,7 @@ export function dashboardVerdict(
     weekAhead,
     todayDate,
     // Estimated work scores came from no calendar at all.
-    work.breakdown?.source === 'estimated' ? 'unknown' : 'full'
+    work.breakdown?.source === 'estimated' ? 'unknown' : 'full',
+    past
   );
 }

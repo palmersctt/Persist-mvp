@@ -158,4 +158,40 @@ describe('scoreDay', () => {
       expect(dashboardVerdict(w, null).confidence.missing).not.toContain('calendar');
     });
   });
+
+  describe('with history', () => {
+    const training = { baseline: 40, loadToday: 20 };
+    const sleep = { performance: 75 };
+    const today = day({ meetings: heavyDay, training, sleep });
+    const heavy = scoreDay(today).inputs;
+    const days = (n: number) => Array.from({ length: n }, () => ({ ...heavy }));
+
+    it('reports the inputs it scored', () => {
+      expect(heavy.workLoad).toBe(77);
+      expect(heavy.trainingLoad).toBe(20);
+      expect(heavy.sleep).toBe(75);
+    });
+
+    it('with no history equals day-one mode', () => {
+      expect(scoreDay(today, { history: [], historyDays: 0 })).toEqual(scoreDay(today));
+    });
+
+    it('moves the baseline toward the days logged', () => {
+      const dayOne = scoreDay(today);
+      const afterFive = scoreDay(today, { history: days(5), historyDays: 5 });
+      expect(afterFive.baseline).toBeGreaterThan(dayOne.baseline);
+      // the same heavy day is less of a spike against a heavier normal
+      expect(afterFive.acwr).toBeLessThan(dayOne.acwr);
+    });
+
+    it('lifts the confidence cap at 21 logged days', () => {
+      expect(scoreDay(today, { history: days(20), historyDays: 20 }).confidence.level).toBe(
+        'medium'
+      );
+      expect(scoreDay(today, { history: days(25), historyDays: 21 }).confidence).toEqual({
+        level: 'high',
+        missing: [],
+      });
+    });
+  });
 });
