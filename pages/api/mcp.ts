@@ -3,9 +3,11 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { authenticate } from '../../src/lib/assistant/auth';
 import { createPersistServer } from '../../src/lib/assistant/mcpServer';
 import { supabaseDayStore } from '../../src/lib/assistant/supabaseStore';
+import { baseUrl } from '../../src/lib/assistant/oauth';
 
 // Persist's MCP endpoint (Streamable HTTP, stateless, JSON responses).
-// Authenticate with a personal access token: Authorization: Bearer pst_…
+// Authenticate with Authorization: Bearer pst_… — a personal access token
+// from the dashboard, or one issued by the OAuth flow (/api/oauth/*).
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -13,7 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const auth = await authenticate(req.headers.authorization);
   if (!auth.ok) {
-    if (auth.status === 401) res.setHeader('WWW-Authenticate', 'Bearer');
+    // Points OAuth-capable clients at the authorization server (RFC 9728).
+    if (auth.status === 401) {
+      const base = baseUrl(process.env.NEXTAUTH_URL, req.headers.host);
+      res.setHeader(
+        'WWW-Authenticate',
+        `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`
+      );
+    }
     return res.status(auth.status).json({ error: auth.error });
   }
 

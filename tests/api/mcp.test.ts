@@ -55,7 +55,9 @@ describe('/api/mcp auth', () => {
   it('needs a bearer token', async () => {
     const out = await call({});
     expect(out.status).toBe(401);
-    expect(out.headers['WWW-Authenticate']).toBe('Bearer');
+    expect(out.headers['WWW-Authenticate']).toMatch(
+      /^Bearer resource_metadata=".*\/\.well-known\/oauth-protected-resource"$/
+    );
   });
 
   it('rejects unknown and revoked tokens', async () => {

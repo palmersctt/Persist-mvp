@@ -2,7 +2,7 @@
 date: 2026-11-25
 design: thoughts/shared/designs/2026-11-25-assistant-scoring-engine.md
 outline: thoughts/shared/outlines/2026-11-25-assistant-scoring-engine.md
-status: in progress
+status: implemented
 ---
 
 # Plan: assistants call Persist
@@ -53,6 +53,19 @@ REST API; Copilot packaging; billing; teams.
 ### Changes
 - Metadata, client registration, authorize + token with PKCE.
 ### Automated checks
-- [ ] PKCE/code tests; metadata test; `npm run verify`
+- [x] PKCE/code tests; metadata test; full-flow route test; `npm run verify`; `next build`
+### Notes from implementation
+- Endpoints: `/.well-known/oauth-authorization-server` and
+  `/.well-known/oauth-protected-resource` (rewrites to `/api/oauth/*`),
+  `/api/oauth/register` (RFC 7591, public clients), `/oauth/authorize`
+  (consent page; signs in with Google if needed), `/api/oauth/approve`,
+  `/api/oauth/token` (code + S256 PKCE, single-use 5-minute codes).
+- Issued access tokens are `api_tokens` rows labelled with the client's
+  name, so they show under Connected assistants and revoke the same way.
+- `/api/mcp` 401s now carry `WWW-Authenticate: Bearer resource_metadata=…`
+  so clients can discover the flow.
+- Migration `20261125_oauth.sql` (oauth_clients, oauth_codes).
+- `NEXTAUTH_URL` sets the issuer; without it the request host is used.
+
 ### Manual checks
 - [ ] Add Persist as a custom connector in Claude by URL.
