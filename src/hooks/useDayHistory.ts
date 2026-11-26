@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import type { DayInputs, Verdict } from '../lib/model';
 import {
+  dayBefore,
   historyFrom,
   NO_HISTORY,
   type DayRow,
@@ -56,9 +57,15 @@ export function useDayHistory() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body,
-      }).catch(() => {
-        lastSaved.current = null;
-      });
+      })
+        .then(async (r) => {
+          const stored = r.ok && (await r.json().catch(() => ({}))).stored === true;
+          // Not stored (rejected, or the table isn't there yet): allow a retry.
+          if (!stored && lastSaved.current === body) lastSaved.current = null;
+        })
+        .catch(() => {
+          if (lastSaved.current === body) lastSaved.current = null;
+        });
     },
     [today, timezone]
   );
@@ -90,5 +97,9 @@ export function useDayHistory() {
     [feel, timezone]
   );
 
-  return { past, loaded: rows !== null, save, today, feel, rate };
+  const yesterday = dayBefore(today);
+  /** Whether yesterday was scored (so it can still be rated). */
+  const yesterdayLogged = (rows ?? []).some((r) => r.date === yesterday);
+
+  return { past, loaded: rows !== null, save, today, yesterday, yesterdayLogged, feel, rate };
 }

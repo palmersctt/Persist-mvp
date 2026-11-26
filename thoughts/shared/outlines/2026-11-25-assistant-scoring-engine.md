@@ -7,7 +7,7 @@ status: approved
 # Outline: assistants call Persist (ticket 5; after tickets 3, 4, 8)
 
 ## Phase 1: personal access tokens
-- `supabase/migrations/20261125_api_tokens.sql`: `api_tokens` (id,
+- `supabase/migrations/20261125000003_api_tokens.sql`: `api_tokens` (id,
   user_email, label, token_hash, created_at, last_used_at, revoked_at,
   window_start, window_calls); RLS on, no anon policies.
 - `src/lib/assistant/tokens.ts`: `newToken()` (random, `pst_` prefix),

@@ -27,6 +27,7 @@ ALTER TABLE public.day_inputs ENABLE ROW LEVEL SECURITY;
 
 -- NextAuth (not Supabase Auth) signs users in, so API routes use the
 -- service-role client. The anon key gets read-own only, as for daily_scores.
+DROP POLICY IF EXISTS "Users can read own day inputs" ON public.day_inputs;
 CREATE POLICY "Users can read own day inputs" ON public.day_inputs
   FOR SELECT
   USING (auth.jwt() ->> 'email' = user_email);

@@ -50,6 +50,7 @@ export default function WorkHealthDashboard() {
   } = useWorkHealth(activeTab);
   const wearable = useWearable();
   const dayHistory = useDayHistory();
+  const [rateYesterday, setRateYesterday] = useState(false);
 
   // One model, one verdict: the unified readiness model (work + training load
   // vs your baseline, plus Work Index) drives the card's mood and verdict.
@@ -820,9 +821,32 @@ export default function WorkHealthDashboard() {
             {/* How did today actually feel? — stored for calibration only */}
             {cardModel && !isLoading && dayHistory.loaded && (
               <FeelCheckin
-                rating={dayHistory.feel[dayHistory.today]}
-                onRate={(rating) => void dayHistory.rate(dayHistory.today, rating)}
-              />
+                question={
+                  rateYesterday ? 'How did yesterday actually feel?' : 'How did today actually feel?'
+                }
+                rating={dayHistory.feel[rateYesterday ? dayHistory.yesterday : dayHistory.today]}
+                onRate={(rating) =>
+                  void dayHistory.rate(
+                    rateYesterday ? dayHistory.yesterday : dayHistory.today,
+                    rating
+                  )
+                }
+              >
+                {dayHistory.yesterdayLogged && (
+                  <button
+                    type="button"
+                    onClick={() => setRateYesterday((y) => !y)}
+                    className="mt-2 w-full text-center text-[11px]"
+                    style={{ color: 'var(--text-faint)' }}
+                  >
+                    {rateYesterday
+                      ? 'Back to today'
+                      : dayHistory.feel[dayHistory.yesterday]
+                        ? 'Change yesterday’s rating'
+                        : 'Rate yesterday instead'}
+                  </button>
+                )}
+              </FeelCheckin>
             )}
 
             {/* Why your readiness — explains the card's verdict (same model) */}

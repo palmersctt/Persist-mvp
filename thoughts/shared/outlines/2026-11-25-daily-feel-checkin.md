@@ -7,7 +7,7 @@ status: approved
 # Outline: one-tap feel rating (ticket 4; after ticket 3)
 
 ## Phase 1: store it
-- `supabase/migrations/20261125_day_feel.sql`: `day_inputs` adds
+- `supabase/migrations/20261125000002_day_feel.sql`: `day_inputs` adds
   `verdict text`, `readiness smallint`, `feel_rating smallint check 1-5`,
   `rated_at timestamptz`.
 - `POST /api/day-inputs` also saves verdict + readiness.

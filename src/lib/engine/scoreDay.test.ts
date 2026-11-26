@@ -184,6 +184,12 @@ describe('scoreDay', () => {
       expect(afterFive.acwr).toBeLessThan(dayOne.acwr);
     });
 
+    it('reports the same baseline-day count confidence uses', () => {
+      const r = scoreDay(today, { history: days(30), historyDays: 21 });
+      expect(r.baselineDays).toBe(21);
+      expect(scoreDay(today).baselineDays).toBe(0);
+    });
+
     it('lifts the confidence cap at 21 logged days', () => {
       expect(scoreDay(today, { history: days(20), historyDays: 20 }).confidence.level).toBe(
         'medium'

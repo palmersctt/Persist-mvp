@@ -12,7 +12,7 @@ REST API; Copilot packaging; billing; teams.
 
 ## Phase 1: personal access tokens
 ### Changes
-- `supabase/migrations/20261125_api_tokens.sql`.
+- `supabase/migrations/20261125000003_api_tokens.sql`.
 - `src/lib/assistant/tokens.ts`: `newToken`, `hashToken`, `bearerToken`,
   `checkRate` (60/hour), `cleanLabel`.
 - `pages/api/tokens.ts`: GET active, POST (shown once, max 10 active),
@@ -64,7 +64,7 @@ REST API; Copilot packaging; billing; teams.
   name, so they show under Connected assistants and revoke the same way.
 - `/api/mcp` 401s now carry `WWW-Authenticate: Bearer resource_metadata=…`
   so clients can discover the flow.
-- Migration `20261125_oauth.sql` (oauth_clients, oauth_codes).
+- Migration `20261125000004_oauth.sql` (oauth_clients, oauth_codes).
 - `NEXTAUTH_URL` sets the issuer; without it the request host is used.
 
 ### Manual checks

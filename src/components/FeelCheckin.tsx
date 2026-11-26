@@ -9,9 +9,14 @@ const RATINGS: FeelRating[] = [1, 2, 3, 4, 5];
 export default function FeelCheckin({
   rating,
   onRate,
+  question = 'How did today actually feel?',
+  children,
 }: {
   rating: FeelRating | undefined;
   onRate: (rating: FeelRating) => void;
+  question?: string;
+  /** Extra controls under the chips (e.g. switch to rating yesterday). */
+  children?: React.ReactNode;
 }) {
   return (
     <section className="max-w-xs mx-auto mt-5" aria-labelledby="feel-checkin-title">
@@ -20,7 +25,7 @@ export default function FeelCheckin({
         className="text-xs font-medium text-center mb-2.5"
         style={{ color: 'var(--text-muted)' }}
       >
-        How did today actually feel?
+        {question}
       </p>
       <div className="flex gap-1.5" role="radiogroup" aria-labelledby="feel-checkin-title">
         {RATINGS.map((r) => {
@@ -45,6 +50,7 @@ export default function FeelCheckin({
           );
         })}
       </div>
+      {children}
     </section>
   );
 }

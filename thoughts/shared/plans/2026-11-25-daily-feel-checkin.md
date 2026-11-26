@@ -12,7 +12,7 @@ Feeding the rating into the verdict; reminders; the assistant tool (ticket 5).
 
 ## Phase 1: store it
 ### Changes
-- `supabase/migrations/20261125_day_feel.sql`: verdict, readiness,
+- `supabase/migrations/20261125000002_day_feel.sql`: verdict, readiness,
   feel_rating (1–5), rated_at on `day_inputs`.
 - `history.ts`: `DayRow` gains optional verdict/readiness (validated);
   `parseFeel(raw, today)`, `FEEL_LABELS`, `dayBefore`.
@@ -30,7 +30,7 @@ Feeding the rating into the verdict; reminders; the assistant tool (ticket 5).
 - The missing-table GET response gained `feel: {}`; that route test's
   expectation was updated to the new shape.
 ### Manual checks
-- [ ] Apply `20261125_day_feel.sql` after `20261125_day_inputs.sql`.
+- [ ] Apply `20261125000002_day_feel.sql` after `20261125000001_day_inputs.sql`.
 
 ## Phase 2: the tap
 ### Changes

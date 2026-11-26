@@ -22,7 +22,7 @@ status: approved
   unchanged; `npm run verify`.
 
 ## Phase 2: saved and read back
-- `supabase/migrations/20261125_day_inputs.sql`: `day_inputs` (user_email,
+- `supabase/migrations/20261125000001_day_inputs.sql`: `day_inputs` (user_email,
   date, work_load, work_index, training_load, training_feel, sleep,
   engine_version, source, timestamps; unique (user_email, date); RLS on,
   read-own policy).

@@ -11,6 +11,7 @@ function Consent() {
   const params = useMemo(() => search ?? new URLSearchParams(), [search]);
   const { status } = useSession();
   const [client, setClient] = useState<string | null>(null);
+  const [host, setHost] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -25,9 +26,12 @@ function Consent() {
     fetch(
       `/api/oauth/approve?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}`
     )
-      .then(async (r) =>
-        r.ok ? setClient((await r.json()).client_name) : setProblem('Unknown app.')
-      )
+      .then(async (r) => {
+        if (!r.ok) return setProblem('Unknown app.');
+        const d = await r.json();
+        setClient(d.client_name);
+        setHost(d.redirect_host ?? null);
+      })
       .catch(() => setProblem('Persist could not check this app right now.'));
   }, [status, params, clientId, redirectUri]);
 
@@ -72,6 +76,12 @@ function Consent() {
           <h1 className="mt-6 text-xl font-semibold" style={{ color: 'var(--text)' }}>
             Connect <span style={{ color: 'var(--signal)' }}>{client}</span> to Persist?
           </h1>
+          {host && (
+            <p className="mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+              It will send you back to <span style={{ color: 'var(--text)' }}>{host}</span>. Only
+              allow it if you started this from that app.
+            </p>
+          )}
           <ul
             className="mt-4 text-sm leading-relaxed flex flex-col gap-1.5"
             style={{ color: 'var(--text-muted)' }}

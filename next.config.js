@@ -2,7 +2,23 @@
 const nextConfig = {
   // The old demo lives on as Get your verdict.
   async redirects() {
-    return [{ source: '/sandbox', destination: '/verdict', permanent: true }]
+    return [
+      { source: '/sandbox', destination: '/verdict', permanent: true },
+      { source: '/sandbox/:path*', destination: '/verdict', permanent: true },
+    ]
+  },
+  // Nothing here is meant to be embedded. Denying frames stops clickjacking,
+  // which matters most on the OAuth consent page (/oauth/authorize).
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+        ],
+      },
+    ]
   },
   // OAuth discovery for MCP connectors (RFC 8414 / RFC 9728).
   async rewrites() {

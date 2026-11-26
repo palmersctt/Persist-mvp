@@ -25,7 +25,7 @@ prior; trends UI.
 
 ## Phase 2: saved and read back
 ### Changes
-- `supabase/migrations/20261125_day_inputs.sql`.
+- `supabase/migrations/20261125000001_day_inputs.sql`.
 - `pages/api/day-inputs.ts`: GET `?days=42` own rows; POST today's row via
   `parseDayRow` (local date from `timezone`); missing table → GET `[]`,
   POST 202 with `stored: false`.

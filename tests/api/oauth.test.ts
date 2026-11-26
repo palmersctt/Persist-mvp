@@ -189,4 +189,45 @@ describe('OAuth flow', () => {
     const r = await call(register, { body: { redirect_uris: ['http://evil.example/cb'] } });
     expect(r.body).toEqual({ error: 'invalid_redirect_uri' });
   });
+
+  it('shows the consent screen where the app will send you', async () => {
+    const clientId = await registerClient();
+    const r = await call(approve, {
+      method: 'GET',
+      query: { client_id: clientId, redirect_uri: REDIRECT },
+    });
+    expect(r.body).toEqual({ client_name: 'Claude', redirect_host: 'claude.ai' });
+  });
+
+  it('replaces an app’s old token when it reconnects', async () => {
+    const clientId = await registerClient();
+    const exchange = async () => {
+      const { code } = await getCode(clientId);
+      return (
+        await call(token, {
+          body: {
+            grant_type: 'authorization_code',
+            code,
+            client_id: clientId,
+            redirect_uri: REDIRECT,
+            code_verifier: verifier,
+          },
+        })
+      ).body!.access_token as string;
+    };
+    const first = await exchange();
+    const second = await exchange();
+    expect((await authenticate(`Bearer ${first}`)).ok).toBe(false);
+    expect(await authenticate(`Bearer ${second}`)).toEqual({ ok: true, email: 'me@example.com' });
+    expect(db.current!.tables.api_tokens.filter((t) => !t.revoked_at)).toHaveLength(1);
+  });
+
+  it('rate-limits registration', async () => {
+    db.current!.tables.oauth_clients = Array.from({ length: 100 }, (_, i) => ({
+      client_id: `pc_${i}`,
+      created_at: new Date().toISOString(),
+    }));
+    const r = await call(register, { body: { client_name: 'X', redirect_uris: [REDIRECT] } });
+    expect(r.status).toBe(429);
+  });
 });

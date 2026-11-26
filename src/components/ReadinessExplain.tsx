@@ -49,7 +49,7 @@ export default function ReadinessExplain({
       </div>
       <div className="px-1">
         <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-          {describeBaseline(model.days - 1)}
+          {describeBaseline(model.baselineDays)}
         </p>
         <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
           {describeConfidence(model.confidence)}
@@ -289,7 +289,10 @@ function Bar({ label, value }: { label: string; value: number }) {
   );
 }
 
-/** "Your baseline · 26 days logged" or "Starting baseline · 3 of 21 days logged". */
+/**
+ * "Your baseline · 21 days logged" or "Starting baseline · 3 of 21 days
+ * logged" — counted over the same 21 days as confidence.
+ */
 export function describeBaseline(daysLogged: number): string {
   if (daysLogged >= PERSONAL_BASELINE_DAYS) return `Your baseline · ${daysLogged} days logged`;
   if (daysLogged <= 0) return `Starting baseline · yours after ${PERSONAL_BASELINE_DAYS} days`;

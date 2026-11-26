@@ -23,3 +23,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify
+      # verify doesn't build; a file under pages/ that isn't a route once
+      # broke the production build without failing any check.
+      - run: npm run build

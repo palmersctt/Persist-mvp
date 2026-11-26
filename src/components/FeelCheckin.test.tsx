@@ -23,4 +23,14 @@ describe('FeelCheckin', () => {
     expect(screen.getByText('Heavy').getAttribute('aria-checked')).toBe('true');
     expect(screen.getByText('Great').getAttribute('aria-checked')).toBe('false');
   });
+
+  it('can ask about yesterday and carry extra controls', () => {
+    render(
+      <FeelCheckin rating={undefined} onRate={() => {}} question="How did yesterday actually feel?">
+        <button type="button">Back to today</button>
+      </FeelCheckin>
+    );
+    expect(screen.getByText('How did yesterday actually feel?')).toBeTruthy();
+    expect(screen.getByText('Back to today')).toBeTruthy();
+  });
 });

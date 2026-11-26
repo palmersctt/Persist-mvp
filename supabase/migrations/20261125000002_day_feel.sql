@@ -1,5 +1,5 @@
 -- Migration: the verdict shown and the user's own rating, per day
--- Date: 2026-11-25 (apply after 20261125_day_inputs.sql)
+-- Date: 2026-11-25 (after 20261125000001_day_inputs.sql)
 --
 -- Adds to day_inputs what the user was shown (verdict, readiness) and how
 -- the day actually felt (1–5), so calibration is one query over one table.

@@ -58,10 +58,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     0,
     60
   );
-  const token = newToken();
-  const { error } = await supabaseAdmin
+  // One live token per app per user: reconnecting replaces the old one.
+  await supabaseAdmin
     .from('api_tokens')
-    .insert({ user_email: code.user_email, label, token_hash: hashToken(token) });
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('user_email', code.user_email)
+    .eq('client_id', code.client_id)
+    .is('revoked_at', null);
+  const token = newToken();
+  const { error } = await supabaseAdmin.from('api_tokens').insert({
+    user_email: code.user_email,
+    label,
+    token_hash: hashToken(token),
+    client_id: code.client_id,
+  });
   if (error) return res.status(503).json({ error: 'temporarily_unavailable' });
 
   return res.status(200).json({ access_token: token, token_type: 'Bearer', scope: SCOPE });

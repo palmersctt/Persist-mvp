@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '../../../lib/supabase';
 import { newClientId, parseRegistration } from '../../../src/lib/assistant/oauth';
 
+/** Registrations allowed across the whole service per rolling hour. */
+export const REGISTRATIONS_PER_HOUR = 100;
+
 // RFC 7591 dynamic client registration (public clients, PKCE only).
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,6 +14,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const reg = parseRegistration(req.body);
   if (!reg.ok) return res.status(400).json({ error: reg.error });
+  const since = new Date(Date.now() - 3_600_000).toISOString();
+  const { data: recent } = await supabaseAdmin
+    .from('oauth_clients')
+    .select('client_id')
+    .gte('created_at', since);
+  if ((recent ?? []).length >= REGISTRATIONS_PER_HOUR)
+    return res.status(429).json({ error: 'temporarily_unavailable' });
+
   const client_id = newClientId();
   const { error } = await supabaseAdmin
     .from('oauth_clients')

@@ -27,7 +27,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     const c = await findClient(req.query.client_id, req.query.redirect_uri);
     if (!c) return res.status(400).json({ error: 'Unknown app or redirect address' });
-    return res.status(200).json({ client_name: c.client_name });
+    // Shown on the consent screen: the app's self-chosen name isn't proof of
+    // who it is, but the address it sends you back to is.
+    return res
+      .status(200)
+      .json({
+        client_name: c.client_name,
+        redirect_host: new URL(req.query.redirect_uri as string).host,
+      });
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

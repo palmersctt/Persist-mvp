@@ -58,6 +58,8 @@ export interface DashboardVerdict extends ModelResult {
   confidence: Confidence;
   /** Today's model inputs, as saved to the user's history. */
   inputs: DayInputs;
+  /** Days logged in the personal-baseline window (same count confidence uses). */
+  baselineDays: number;
 }
 
 /** What scoreDay returns: the card's verdict plus the inputs it carried. */
@@ -186,6 +188,7 @@ export function scoreFromWork(
       historyDays: past.historyDays,
     }),
     inputs: today,
+    baselineDays: past.historyDays,
   };
 }
 
